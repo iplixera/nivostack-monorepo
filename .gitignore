@@ -1,20 +1,52 @@
-# Dependencies
-node_modules/
-.pnpm-store/
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Build outputs
-.next/
-build/
-*.apk
-*.aab
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# Flutter
-.dart_tool/
-.flutter-plugins
-.flutter-plugins.dependencies
-build/
+# testing
+/coverage
 
-# Large binaries
-*.node
-*.so
-*.dylib
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+/src/generated/prisma
+.env*.local
+vercel.properties
+
+# Dual remote setup files with tokens
+.vercel-ids
+.dual-remote-config
+*.token
+TEST*.md
+SETUP_COMPLETE.md

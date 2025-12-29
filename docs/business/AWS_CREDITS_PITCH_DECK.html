@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plixera - AWS Credits Application</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+            background: #fff;
+        }
+        h1 {
+            color: #1a73e8;
+            border-bottom: 3px solid #1a73e8;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+        h2 {
+            color: #4285f4;
+            margin-top: 25px;
+            border-left: 4px solid #4285f4;
+            padding-left: 10px;
+        }
+        h3 {
+            color: #5f6368;
+            margin-top: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .header h1 {
+            border: none;
+            color: #1a73e8;
+            margin: 0;
+            padding: 0;
+        }
+        .header p {
+            color: #5f6368;
+            margin: 5px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #4285f4;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+        li {
+            margin: 8px 0;
+        }
+        .highlight {
+            background-color: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .section {
+            margin: 30px 0;
+            page-break-inside: avoid;
+        }
+        @media print {
+            body {
+                max-width: 100%;
+                padding: 10px;
+            }
+            .section {
+                page-break-inside: avoid;
+            }
+            h1, h2 {
+                page-break-after: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Plixera - AWS Credits Application</h1>
+        <p><strong>DevBridge: Mobile App Monitoring & Configuration Platform</strong></p>
+        <p><strong>Date:</strong> December 2024</p>
+        <p><strong>Company:</strong> Plixera</p>
+        <p><strong>Product:</strong> DevBridge</p>
+        <p><strong>Request:</strong> AWS Credits for Infrastructure Scaling</p>
+    </div>
+
+    <div class="section">
+        <h1>Executive Summary</h1>
+        <p><strong>Plixera</strong> is a developer tools company building innovative solutions for mobile app development teams. Our flagship product, <strong>DevBridge</strong>, is a comprehensive mobile application monitoring and configuration platform that provides real-time visibility into API interactions, device management, error monitoring, and remote configuration capabilities.</p>
+        <p>We are requesting AWS credits to scale our infrastructure as we onboard enterprise customers and expand our platform capabilities. DevBridge currently serves mobile development teams and is positioned to capture a significant share of the $8.5B+ Application Performance Monitoring (APM) market.</p>
+    </div>
+
+    <div class="section">
+        <h1>1. Company Overview</h1>
+        
+        <h2>About Plixera</h2>
+        <p><strong>Plixera</strong> is a developer tools company focused on empowering mobile development teams with cutting-edge observability and configuration management solutions. We build developer-first products that solve real problems faced by mobile app teams daily.</p>
+        
+        <p><strong>Mission:</strong> Empower mobile developers with complete visibility and control over their applications.</p>
+        <p><strong>Vision:</strong> Become the single source of truth for mobile app observability, combining monitoring, debugging, and configuration management in one unified platform.</p>
+        
+        <h2>Company Details</h2>
+        <ul>
+            <li><strong>Founded:</strong> 2024</li>
+            <li><strong>Industry:</strong> Developer Tools / SaaS</li>
+            <li><strong>Focus:</strong> Mobile Application Monitoring & Configuration</li>
+            <li><strong>Target Market:</strong> Mobile app development teams, QA engineers, DevOps teams</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h1>2. Product Overview: DevBridge</h1>
+        
+        <h2>What is DevBridge?</h2>
+        <p>DevBridge is a comprehensive <strong>BFF (Backend For Frontend) monitoring and debugging platform</strong> specifically designed for mobile applications. It acts as a bridge between mobile apps and backend services, providing real-time visibility into:</p>
+        <ul>
+            <li><strong>API Traffic Monitoring</strong> - Every HTTP request/response with full headers and bodies</li>
+            <li><strong>Device Management</strong> - Track all connected devices with detailed metadata</li>
+            <li><strong>Error Monitoring</strong> - Automatic detection and alerting for API errors</li>
+            <li><strong>Cost Analytics</strong> - Track API costs per endpoint, device, or session</li>
+            <li><strong>User Flow Analytics</strong> - Visualize how users navigate through apps</li>
+            <li><strong>Remote Configuration</strong> - Manage app configs without app updates</li>
+            <li><strong>Session Tracking</strong> - Complete user session timelines with events</li>
+        </ul>
+        
+        <h2>Product Positioning</h2>
+        <p><strong>Think of DevBridge as:</strong> Datadog + Sentry + Charles Proxy + Firebase Remote Config, but specifically designed for mobile BFF monitoring.</p>
+        
+        <h2>Key Differentiators</h2>
+        <ol>
+            <li><strong>Mobile-First Design</strong> - Built specifically for mobile app monitoring, not adapted from web tools</li>
+            <li><strong>Human-Readable Device Codes</strong> - Unique device identification system for support scenarios</li>
+            <li><strong>Per-Device Debug Mode</strong> - Selective tracking for production debugging without affecting all users</li>
+            <li><strong>Unified Platform</strong> - Monitoring, configuration, and analytics in one place</li>
+            <li><strong>Developer-Friendly</strong> - Simple SDK integration (&lt; 30 minutes), intuitive dashboard</li>
+            <li><strong>Cost-Effective</strong> - Competitive pricing compared to enterprise alternatives</li>
+        </ol>
+        
+        <h2>Core Features</h2>
+        
+        <h3>API Tracing & Monitoring</h3>
+        <ul>
+            <li>Full HTTP request/response capture</li>
+            <li>Screen context tracking</li>
+            <li>Network type, carrier, geo-location metadata</li>
+            <li>Configurable body capture (privacy-focused)</li>
+            <li>Sensitive data sanitization</li>
+            <li>Real-time error detection</li>
+        </ul>
+        
+        <h3>Device Management</h3>
+        <ul>
+            <li>Automatic device registration</li>
+            <li>Device metadata tracking (OS, app version, model)</li>
+            <li>User association (link devices to app users)</li>
+            <li>Debug mode per device</li>
+            <li>Device code system for support</li>
+            <li>Comprehensive filtering and search</li>
+        </ul>
+        
+        <h3>Error Monitoring & Alerts</h3>
+        <ul>
+            <li>One-click monitoring from traces</li>
+            <li>Custom status code monitoring</li>
+            <li>Body-based error detection</li>
+            <li>Multi-channel notifications (Email, Webhook)</li>
+            <li>Affected devices and sessions tracking</li>
+            <li>Resolution workflow</li>
+        </ul>
+        
+        <h3>Remote Configuration</h3>
+        <ul>
+            <li>Feature flags (global kill switches)</li>
+            <li>SDK settings (fine-grained control)</li>
+            <li>Business configuration (key-value store)</li>
+            <li>Force update management</li>
+            <li>Maintenance mode</li>
+            <li>Localization management</li>
+        </ul>
+        
+        <h3>Analytics & Insights</h3>
+        <ul>
+            <li>Cost tracking per endpoint/device/session</li>
+            <li>User flow visualization</li>
+            <li>Session timeline view</li>
+            <li>Device adoption metrics</li>
+            <li>API usage patterns</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h1>3. Market Opportunity</h1>
+        
+        <h2>Market Size</h2>
+        <ul>
+            <li><strong>Application Performance Monitoring (APM) Market:</strong> $8.5B+ (2024)</li>
+            <li><strong>Mobile App Development Tools Market:</strong> $4.2B+ (2024)</li>
+            <li><strong>Remote Configuration Market:</strong> $1.2B+ (2024)</li>
+            <li><strong>Annual Growth Rate:</strong> 12-15% CAGR</li>
+        </ul>
+        
+        <h2>Target Market</h2>
+        <p><strong>Primary Customers:</strong></p>
+        <ul>
+            <li>Mobile app development teams (iOS/Android/Flutter)</li>
+            <li>QA engineers and testing teams</li>
+            <li>DevOps and platform engineering teams</li>
+            <li>Startups to mid-market companies (10-500 employees)</li>
+        </ul>
+        
+        <p><strong>Market Segments:</strong></p>
+        <ol>
+            <li><strong>E-commerce & Retail Apps</strong> - High API volume, need for monitoring</li>
+            <li><strong>FinTech Apps</strong> - Critical error monitoring, compliance needs</li>
+            <li><strong>Healthcare Apps</strong> - Reliability and monitoring requirements</li>
+            <li><strong>Gaming Apps</strong> - Performance monitoring, user flow analytics</li>
+            <li><strong>SaaS Mobile Apps</strong> - Configuration management, feature flags</li>
+        </ol>
+        
+        <h2>Competitive Landscape</h2>
+        <p><strong>Direct Competitors:</strong></p>
+        <ul>
+            <li>Datadog Mobile (enterprise-focused, expensive)</li>
+            <li>Sentry (error-focused, limited monitoring)</li>
+            <li>New Relic Mobile (enterprise, complex setup)</li>
+            <li>Firebase Performance Monitoring (limited features)</li>
+        </ul>
+        
+        <p><strong>Competitive Advantages:</strong></p>
+        <ul>
+            <li>Lower cost than enterprise alternatives</li>
+            <li>Mobile-first design vs. adapted web tools</li>
+            <li>Unified platform vs. multiple tools</li>
+            <li>Developer-friendly vs. enterprise complexity</li>
+            <li>Unique features (device codes, per-device debug mode)</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h1>4. Technology Stack & AWS Usage</h1>
+        
+        <h2>Current Architecture</h2>
+        <p><strong>Frontend:</strong></p>
+        <ul>
+            <li>Next.js 16 (App Router)</li>
+            <li>React 18</li>
+            <li>TypeScript 5.0</li>
+            <li>Tailwind CSS</li>
+            <li>Deployed on Vercel</li>
+        </ul>
+        
+        <p><strong>Backend:</strong></p>
+        <ul>
+            <li>Next.js API Routes</li>
+            <li>PostgreSQL (Supabase/Neon)</li>
+            <li>Prisma ORM</li>
+            <li>JWT Authentication</li>
+        </ul>
+        
+        <p><strong>Mobile SDK:</strong></p>
+        <ul>
+            <li>Flutter/Dart</li>
+            <li>iOS (Swift) support</li>
+            <li>Android (Kotlin) support</li>
+        </ul>
+        
+        <p><strong>Infrastructure:</strong></p>
+        <ul>
+            <li>Vercel (hosting)</li>
+            <li>PostgreSQL database (Supabase/Neon)</li>
+            <li>Current: Limited AWS usage</li>
+        </ul>
+        
+        <h2>Planned AWS Services</h2>
+        <p><strong>Immediate Needs (Requesting Credits For):</strong></p>
+        
+        <table>
+            <tr>
+                <th>Service</th>
+                <th>Purpose</th>
+                <th>Estimated Monthly Cost</th>
+            </tr>
+            <tr>
+                <td>Amazon RDS (PostgreSQL)</td>
+                <td>Production database hosting, Multi-AZ, backups</td>
+                <td>$200-500</td>
+            </tr>
+            <tr>
+                <td>Amazon S3</td>
+                <td>Image storage, log files, backups</td>
+                <td>$50-150</td>
+            </tr>
+            <tr>
+                <td>Amazon CloudFront</td>
+                <td>CDN for static assets, API caching, global distribution</td>
+                <td>$100-300</td>
+            </tr>
+            <tr>
+                <td>Amazon EC2 / ECS</td>
+                <td>Background jobs, cron jobs, worker processes</td>
+                <td>$100-250</td>
+            </tr>
+            <tr>
+                <td>Amazon CloudWatch</td>
+                <td>Monitoring, logging, metrics, alarms</td>
+                <td>$50-100</td>
+            </tr>
+            <tr>
+                <td>Amazon SES</td>
+                <td>Email notifications, transactional emails</td>
+                <td>$20-50</td>
+            </tr>
+            <tr>
+                <td><strong>Total</strong></td>
+                <td></td>
+                <td><strong>$520-1,350/month</strong></td>
+            </tr>
+        </table>
+        
+        <p><strong>Annual AWS Costs:</strong> $6,240-16,200/year</p>
+        
+        <h2>Why AWS?</h2>
+        <ol>
+            <li><strong>Scalability</strong> - Handle growth from startups to enterprise customers</li>
+            <li><strong>Reliability</strong> - 99.9%+ uptime SLA for mission-critical monitoring</li>
+            <li><strong>Global Reach</strong> - CloudFront CDN for low-latency global access</li>
+            <li><strong>Security</strong> - Enterprise-grade security and compliance</li>
+            <li><strong>Cost Efficiency</strong> - Pay-as-you-grow model vs. fixed infrastructure</li>
+            <li><strong>Integration</strong> - Easy integration with other AWS services</li>
+        </ol>
+    </div>
+
+    <div class="section">
+        <h1>5. Use Case for AWS Credits</h1>
+        
+        <h2>Current Situation</h2>
+        <ul>
+            <li><strong>Current Infrastructure:</strong> Vercel + Supabase/Neon (limited scalability)</li>
+            <li><strong>Customer Growth:</strong> Preparing for enterprise customers</li>
+            <li><strong>Data Volume:</strong> Expecting 10K+ devices, 100K+ API traces/day</li>
+            <li><strong>Geographic Expansion:</strong> Need global CDN for low latency</li>
+        </ul>
+        
+        <h2>How AWS Credits Will Be Used</h2>
+        
+        <h3>Phase 1: Infrastructure Migration (Months 1-3)</h3>
+        <ul>
+            <li>Migrate PostgreSQL to Amazon RDS</li>
+            <li>Set up S3 for image and log storage</li>
+            <li>Configure CloudFront CDN</li>
+            <li>Set up CloudWatch monitoring</li>
+            <li><strong>Credits Needed:</strong> $2,000-3,000</li>
+        </ul>
+        
+        <h3>Phase 2: Scaling & Optimization (Months 4-6)</h3>
+        <ul>
+            <li>Scale RDS instances for increased load</li>
+            <li>Optimize CloudFront caching strategies</li>
+            <li>Set up EC2/ECS for background jobs</li>
+            <li>Implement SES for email notifications</li>
+            <li><strong>Credits Needed:</strong> $3,000-5,000</li>
+        </ul>
+        
+        <h3>Phase 3: Enterprise Features (Months 7-12)</h3>
+        <ul>
+            <li>Multi-region deployment</li>
+            <li>Enhanced monitoring and alerting</li>
+            <li>Data retention and archival</li>
+            <li>Advanced analytics processing</li>
+            <li><strong>Credits Needed:</strong> $5,000-8,000</li>
+        </ul>
+        
+        <p><strong>Total Credits Request:</strong> $10,000-16,000 over 12 months</p>
+        
+        <h2>Expected Outcomes</h2>
+        <ol>
+            <li><strong>Scalability</strong> - Support 100+ projects, 10K+ devices, 1M+ API traces/month</li>
+            <li><strong>Reliability</strong> - 99.9%+ uptime for enterprise customers</li>
+            <li><strong>Performance</strong> - &lt; 3s dashboard load time, &lt; 100ms API response time</li>
+            <li><strong>Global Reach</strong> - Low-latency access worldwide via CloudFront</li>
+            <li><strong>Cost Efficiency</strong> - Optimize costs as we scale</li>
+        </ol>
+    </div>
+
+    <div class="section">
+        <h1>6. Business Model & Traction</h1>
+        
+        <h2>Business Model</h2>
+        <p><strong>SaaS Subscription Model:</strong></p>
+        
+        <table>
+            <tr>
+                <th>Plan</th>
+                <th>Price</th>
+                <th>Features</th>
+            </tr>
+            <tr>
+                <td><strong>Starter</strong></td>
+                <td>$49/month</td>
+                <td>Up to 5 projects, 10K traces/month, basic monitoring, email support</td>
+            </tr>
+            <tr>
+                <td><strong>Professional</strong></td>
+                <td>$149/month</td>
+                <td>Up to 20 projects, 100K traces/month, advanced analytics, priority support</td>
+            </tr>
+            <tr>
+                <td><strong>Enterprise</strong></td>
+                <td>Custom</td>
+                <td>Unlimited projects/traces, custom features, dedicated support, SLA</td>
+            </tr>
+        </table>
+        
+        <h2>Revenue Projections</h2>
+        <ul>
+            <li><strong>Month 1-3:</strong> $500-2,000 MRR (10-40 customers)</li>
+            <li><strong>Month 4-6:</strong> $2,000-5,000 MRR (40-100 customers)</li>
+            <li><strong>Month 7-12:</strong> $5,000-15,000 MRR (100-300 customers)</li>
+        </ul>
+        
+        <h2>Current Traction</h2>
+        <ul>
+            <li><strong>Product Status:</strong> v1.5.0 (Production-ready)</li>
+            <li><strong>Live Demo:</strong> https://devbridge-eta.vercel.app</li>
+            <li><strong>SDK Integration:</strong> Flutter SDK available, iOS/Android in development</li>
+            <li><strong>Documentation:</strong> Comprehensive developer documentation</li>
+            <li><strong>Performance:</strong> 93% faster SDK init (4.3s → 290ms)</li>
+        </ul>
+        
+        <h2>Customer Validation</h2>
+        <p><strong>Target Customers:</strong> Mobile app development teams</p>
+        <p><strong>Pain Points Solved:</strong></p>
+        <ul>
+            <li>Debugging API issues in production</li>
+            <li>Monitoring mobile app performance</li>
+            <li>Managing remote configurations</li>
+            <li>Tracking user flows and errors</li>
+        </ul>
+        <p><strong>Value Proposition:</strong> Save 10+ hours/week on debugging and monitoring</p>
+    </div>
+
+    <div class="section">
+        <h1>7. Team & Roadmap</h1>
+        
+        <h2>Team</h2>
+        <p><strong>Core Team:</strong></p>
+        <ul>
+            <li>Full-stack developers (Next.js, React, TypeScript)</li>
+            <li>Mobile SDK developers (Flutter, iOS, Android)</li>
+            <li>DevOps/Infrastructure expertise</li>
+            <li>Product management</li>
+        </ul>
+        
+        <h2>Product Roadmap</h2>
+        
+        <h3>Q1 2025</h3>
+        <ul>
+            <li>Enterprise features (multi-tenancy, RBAC)</li>
+            <li>Enhanced analytics and reporting</li>
+            <li>iOS/Android SDKs (native)</li>
+            <li>API rate limiting and quotas</li>
+        </ul>
+        
+        <h3>Q2 2025</h3>
+        <ul>
+            <li>Real-time WebSocket updates</li>
+            <li>Advanced targeting and rollouts</li>
+            <li>Experimentation framework</li>
+            <li>Export functionality (CSV, JSON)</li>
+        </ul>
+        
+        <h3>Q3 2025</h3>
+        <ul>
+            <li>Multi-region deployment</li>
+            <li>Advanced security features (SSO, audit logs)</li>
+            <li>Custom dashboards</li>
+            <li>Webhook integrations</li>
+        </ul>
+        
+        <h3>Q4 2025</h3>
+        <ul>
+            <li>AI-powered insights and recommendations</li>
+            <li>Predictive error detection</li>
+            <li>Performance optimization suggestions</li>
+            <li>Advanced collaboration features</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h1>8. Why AWS Credits Matter</h1>
+        
+        <h2>Impact on Business</h2>
+        <ol>
+            <li><strong>Faster Time to Market</strong> - Infrastructure ready for enterprise customers</li>
+            <li><strong>Cost Efficiency</strong> - Avoid upfront infrastructure costs during growth phase</li>
+            <li><strong>Scalability</strong> - Handle customer growth without infrastructure bottlenecks</li>
+            <li><strong>Reliability</strong> - Enterprise-grade infrastructure for mission-critical monitoring</li>
+            <li><strong>Innovation</strong> - Focus resources on product development vs. infrastructure</li>
+        </ol>
+        
+        <h2>Commitment to AWS</h2>
+        <ul>
+            <li><strong>Long-term AWS Customer</strong> - Plan to use AWS as primary cloud provider</li>
+            <li><strong>AWS Best Practices</strong> - Follow AWS Well-Architected Framework</li>
+            <li><strong>AWS Marketplace</strong> - Consider listing DevBridge on AWS Marketplace</li>
+            <li><strong>AWS Integration</strong> - Integrate with AWS services (CloudWatch, S3, SES, etc.)</li>
+            <li><strong>Case Study</strong> - Willing to provide case study and testimonials</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h1>9. Request Summary</h1>
+        
+        <h2>Credits Requested</h2>
+        <p><strong>Total:</strong> $10,000-16,000 in AWS credits</p>
+        <p><strong>Duration:</strong> 12 months</p>
+        <p><strong>Purpose:</strong> Infrastructure scaling and migration</p>
+        
+        <h2>Use Cases</h2>
+        <ol>
+            <li><strong>Database Migration</strong> - PostgreSQL to Amazon RDS</li>
+            <li><strong>Storage</strong> - S3 for images, logs, backups</li>
+            <li><strong>CDN</strong> - CloudFront for global distribution</li>
+            <li><strong>Compute</strong> - EC2/ECS for background jobs</li>
+            <li><strong>Monitoring</strong> - CloudWatch for metrics and logging</li>
+            <li><strong>Email</strong> - SES for notifications</li>
+        </ol>
+        
+        <h2>Expected ROI</h2>
+        <ul>
+            <li><strong>Customer Growth:</strong> Support 100-300 customers in Year 1</li>
+            <li><strong>Revenue:</strong> $60K-180K ARR by end of Year 1</li>
+            <li><strong>Infrastructure:</strong> Scale to handle 10K+ devices, 1M+ traces/month</li>
+            <li><strong>AWS Spend:</strong> $6K-16K/year (credits enable growth without upfront costs)</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h1>10. Conclusion</h1>
+        <p><strong>Plixera</strong> and <strong>DevBridge</strong> represent a significant opportunity in the mobile app monitoring market. With AWS credits, we can:</p>
+        <ol>
+            <li><strong>Scale Infrastructure</strong> - Support enterprise customers from day one</li>
+            <li><strong>Improve Reliability</strong> - 99.9%+ uptime for mission-critical monitoring</li>
+            <li><strong>Reduce Costs</strong> - Optimize infrastructure costs as we grow</li>
+            <li><strong>Accelerate Growth</strong> - Focus on product vs. infrastructure challenges</li>
+        </ol>
+        <p>We are committed to AWS as our cloud provider and will use credits responsibly to build a scalable, reliable platform that serves mobile development teams worldwide.</p>
+        <p><strong>We respectfully request $10,000-16,000 in AWS credits to accelerate our growth and scale DevBridge to serve the mobile app development community.</strong></p>
+    </div>
+
+    <div class="section">
+        <h1>Appendix</h1>
+        
+        <h2>Contact Information</h2>
+        <p><strong>Company:</strong> Plixera</p>
+        <p><strong>Product:</strong> DevBridge</p>
+        <p><strong>Website:</strong> https://devbridge-eta.vercel.app</p>
+        <p><strong>Email:</strong> [Your Contact Email]</p>
+        <p><strong>Phone:</strong> [Your Phone Number]</p>
+        
+        <h2>Additional Resources</h2>
+        <ul>
+            <li><strong>Product Documentation:</strong> [Link to docs]</li>
+            <li><strong>Live Demo:</strong> https://devbridge-eta.vercel.app</li>
+            <li><strong>GitHub Repository:</strong> [If public]</li>
+            <li><strong>Product Roadmap:</strong> [Link to roadmap]</li>
+        </ul>
+        
+        <h2>Technical Specifications</h2>
+        <ul>
+            <li><strong>Architecture:</strong> Microservices-ready, serverless-capable</li>
+            <li><strong>Database:</strong> PostgreSQL (migrating to RDS)</li>
+            <li><strong>API:</strong> RESTful API, GraphQL planned</li>
+            <li><strong>SDK:</strong> Flutter (available), iOS/Android (planned)</li>
+            <li><strong>Security:</strong> JWT auth, API keys, encryption at rest and in transit</li>
+            <li><strong>Compliance:</strong> GDPR-ready, SOC 2 planned</li>
+        </ul>
+    </div>
+
+    <div style="text-align: center; margin-top: 50px; padding: 20px; border-top: 2px solid #ddd;">
+        <p><strong>Thank you for considering our application for AWS credits.</strong></p>
+        <p><em>This document is confidential and proprietary to Plixera.</em></p>
+    </div>
+</body>
+</html>
+
+
+
+

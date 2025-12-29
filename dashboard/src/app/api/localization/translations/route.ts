@@ -1,0 +1,407 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { verifyToken } from '@/lib/auth'
+
+// GET - Fetch translations for a project (SDK endpoint optimized format)
+export async function GET(request: NextRequest) {
+  try {
+    const languageCode = request.nextUrl.searchParams.get('lang')
+    let projectId: string
+
+    // Check for API key first (SDK access)
+    const apiKey = request.headers.get('x-api-key')
+    if (apiKey) {
+      const project = await prisma.project.findUnique({
+        where: { apiKey }
+      })
+      if (!project) {
+        return NextResponse.json({ error: 'Invalid API key' }, { status: 401 })
+      }
+
+      // Project ID is derived from API key
+      projectId = project.id
+
+      // Validate subscription and feature access
+      const { validateSubscription } = await import('@/lib/subscription-validation')
+      const validation = await validateSubscription(project.userId)
+      if (!validation.valid) {
+        return NextResponse.json({
+          translations: {},
+          error: validation.error || 'Subscription invalid',
+          message: validation.error || 'Please upgrade to continue using DevBridge.'
+        }, { status: 403 })
+      }
+    } else {
+      // Dashboard access via JWT - requires projectId in query params
+      const queryProjectId = request.nextUrl.searchParams.get('projectId')
+      if (!queryProjectId) {
+        return NextResponse.json({ error: 'Missing projectId' }, { status: 400 })
+      }
+      projectId = queryProjectId
+
+      const authHeader = request.headers.get('authorization')
+      if (!authHeader) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+
+      const token = authHeader.replace('Bearer ', '')
+      const payload = verifyToken(token)
+
+      if (!payload) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+
+      // Verify project ownership
+      const project = await prisma.project.findFirst({
+        where: { id: projectId, userId: payload.userId }
+      })
+
+      if (!project) {
+        return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+      }
+    }
+
+    // Find the language by code or get default
+    let language
+    if (languageCode) {
+      language = await prisma.language.findFirst({
+        where: { projectId, code: languageCode, isEnabled: true }
+      })
+    }
+
+    // If no language found or not specified, get default
+    if (!language) {
+      language = await prisma.language.findFirst({
+        where: { projectId, isDefault: true, isEnabled: true }
+      })
+    }
+
+    // If still no language, get the first enabled language
+    if (!language) {
+      language = await prisma.language.findFirst({
+        where: { projectId, isEnabled: true }
+      })
+    }
+
+    if (!language) {
+      return NextResponse.json({
+        translations: {},
+        language: null,
+        message: 'No languages configured'
+      })
+    }
+
+    // Get all translations for this language
+    const translations = await prisma.translation.findMany({
+      where: {
+        projectId,
+        languageId: language.id
+      },
+      include: {
+        key: {
+          select: {
+            key: true,
+            category: true
+          }
+        }
+      }
+    })
+
+    // Format as key-value object for SDK consumption
+    const translationsObject: Record<string, string> = {}
+    for (const t of translations) {
+      translationsObject[t.key.key] = t.value
+    }
+
+    return NextResponse.json({
+      translations: translationsObject,
+      language: {
+        code: language.code,
+        name: language.name,
+        isRTL: language.isRTL
+      }
+    })
+  } catch (error) {
+    console.error('Get translations error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+// POST - Create or update a translation
+export async function POST(request: NextRequest) {
+  try {
+    const authHeader = request.headers.get('authorization')
+
+    if (!authHeader) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const token = authHeader.replace('Bearer ', '')
+    const payload = verifyToken(token)
+
+    if (!payload) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { keyId, languageId, value } = body
+
+    if (!keyId || !languageId) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    // Find the key and verify ownership
+    const localizationKey = await prisma.localizationKey.findUnique({
+      where: { id: keyId },
+      include: { project: true }
+    })
+
+    if (!localizationKey || localizationKey.project.userId !== payload.userId) {
+      return NextResponse.json({ error: 'Key not found' }, { status: 404 })
+    }
+
+    // Verify language belongs to same project
+    const language = await prisma.language.findUnique({
+      where: { id: languageId }
+    })
+
+    if (!language || language.projectId !== localizationKey.projectId) {
+      return NextResponse.json({ error: 'Language not found' }, { status: 404 })
+    }
+
+    // Get existing translation for history tracking
+    const existingTranslation = await prisma.translation.findUnique({
+      where: {
+        keyId_languageId: {
+          keyId,
+          languageId
+        }
+      }
+    })
+
+    // Upsert the translation
+    const translation = await prisma.translation.upsert({
+      where: {
+        keyId_languageId_pluralForm: {
+          keyId,
+          languageId,
+          pluralForm: body.pluralForm || null
+        }
+      },
+      update: {
+        value: value || '',
+        isReviewed: body.isReviewed ?? false,
+        translationProvider: body.translationProvider || null,
+        translationConfidence: body.translationConfidence || null,
+        translationCost: body.translationCost || null,
+        hasVariables: body.hasVariables ?? false
+      },
+      create: {
+        projectId: localizationKey.projectId,
+        keyId,
+        languageId,
+        value: value || '',
+        isReviewed: body.isReviewed ?? false,
+        translationProvider: body.translationProvider || null,
+        translationConfidence: body.translationConfidence || null,
+        translationCost: body.translationCost || null,
+        pluralForm: body.pluralForm || null,
+        hasVariables: body.hasVariables ?? false
+      },
+      include: {
+        key: {
+          select: {
+            key: true
+          }
+        },
+        language: {
+          select: {
+            code: true,
+            name: true
+          }
+        }
+      }
+    })
+
+    // Track history if value changed
+    if (existingTranslation && existingTranslation.value !== translation.value) {
+      await prisma.translationHistory.create({
+        data: {
+          translationId: translation.id,
+          projectId: localizationKey.projectId,
+          userId: payload.userId,
+          userName: payload.name || payload.email,
+          oldValue: existingTranslation.value,
+          newValue: translation.value,
+          changeType: 'updated',
+          metadata: {
+            provider: translation.translationProvider,
+            confidence: translation.translationConfidence
+          }
+        }
+      })
+    } else if (!existingTranslation) {
+      // Track creation
+      await prisma.translationHistory.create({
+        data: {
+          translationId: translation.id,
+          projectId: localizationKey.projectId,
+          userId: payload.userId,
+          userName: payload.name || payload.email,
+          newValue: translation.value,
+          changeType: 'created',
+          metadata: {
+            provider: translation.translationProvider,
+            confidence: translation.translationConfidence
+          }
+        }
+      })
+    }
+
+    // Update translation memory if source language is available
+    if (value && body.sourceLanguageId && body.sourceText) {
+      await prisma.translationMemory.upsert({
+        where: {
+          projectId_sourceLanguageId_targetLanguageId_sourceText: {
+            projectId: localizationKey.projectId,
+            sourceLanguageId: body.sourceLanguageId,
+            targetLanguageId: languageId,
+            sourceText: body.sourceText
+          }
+        },
+        update: {
+          targetText: value,
+          usageCount: { increment: 1 },
+          lastUsedAt: new Date()
+        },
+        create: {
+          projectId: localizationKey.projectId,
+          sourceLanguageId: body.sourceLanguageId,
+          targetLanguageId: languageId,
+          sourceText: body.sourceText,
+          targetText: value
+        }
+      })
+    }
+
+    return NextResponse.json({ translation })
+  } catch (error) {
+    console.error('Save translation error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+// PUT - Bulk update translations
+export async function PUT(request: NextRequest) {
+  try {
+    const authHeader = request.headers.get('authorization')
+
+    if (!authHeader) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const token = authHeader.replace('Bearer ', '')
+    const payload = verifyToken(token)
+
+    if (!payload) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { projectId, translations } = body
+
+    if (!projectId || !translations || !Array.isArray(translations)) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    // Verify project ownership
+    const project = await prisma.project.findFirst({
+      where: { id: projectId, userId: payload.userId }
+    })
+
+    if (!project) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    }
+
+    // Process bulk updates
+    const results = []
+    for (const t of translations) {
+      const { keyId, languageId, value } = t
+
+      if (!keyId || !languageId) continue
+
+      const translation = await prisma.translation.upsert({
+        where: {
+          keyId_languageId: {
+            keyId,
+            languageId
+          }
+        },
+        update: {
+          value: value || ''
+        },
+        create: {
+          projectId,
+          keyId,
+          languageId,
+          value: value || ''
+        }
+      })
+
+      results.push(translation)
+    }
+
+    return NextResponse.json({ updated: results.length })
+  } catch (error) {
+    console.error('Bulk update translations error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+// DELETE - Delete a translation
+export async function DELETE(request: NextRequest) {
+  try {
+    const authHeader = request.headers.get('authorization')
+    const translationId = request.nextUrl.searchParams.get('id')
+
+    if (!authHeader) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const token = authHeader.replace('Bearer ', '')
+    const payload = verifyToken(token)
+
+    if (!payload) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    if (!translationId) {
+      return NextResponse.json({ error: 'Missing translation id' }, { status: 400 })
+    }
+
+    // Find the translation and verify ownership through key
+    const translation = await prisma.translation.findUnique({
+      where: { id: translationId },
+      include: {
+        key: {
+          include: {
+            project: true
+          }
+        }
+      }
+    })
+
+    if (!translation || translation.key.project.userId !== payload.userId) {
+      return NextResponse.json({ error: 'Translation not found' }, { status: 404 })
+    }
+
+    await prisma.translation.delete({
+      where: { id: translationId }
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Delete translation error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

@@ -1,0 +1,78 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { getAuthUser } from '@/lib/auth'
+
+/**
+ * POST /api/business-config/[id]/deploy/rollback
+ * Rollback a deployment
+ */
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getAuthUser(request)
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { id } = await params
+    const { reason } = await request.json()
+
+    const config = await prisma.businessConfig.findUnique({
+      where: { id },
+      include: { project: true }
+    })
+
+    if (!config) {
+      return NextResponse.json({ error: 'Config not found' }, { status: 404 })
+    }
+
+    // Verify project ownership
+    if (config.project.userId !== user.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+
+    // Find active deployment
+    const deployment = await prisma.configDeployment.findFirst({
+      where: {
+        configId: id,
+        status: { in: ['pending', 'running'] }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    if (!deployment) {
+      return NextResponse.json(
+        { error: 'No active deployment found' },
+        { status: 404 }
+      )
+    }
+
+    // Rollback: set rollout percentage to 0
+    await prisma.businessConfig.update({
+      where: { id },
+      data: { rolloutPercentage: 0 }
+    })
+
+    // Update deployment status
+    await prisma.configDeployment.update({
+      where: { id: deployment.id },
+      data: {
+        status: 'rolled_back',
+        rolledBackAt: new Date(),
+        rolledBackBy: user.id,
+        rollbackReason: reason || null
+      }
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Rollback deployment error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+

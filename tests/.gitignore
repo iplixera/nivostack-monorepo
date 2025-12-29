@@ -1,0 +1,9 @@
+# Test output files
+*.log
+test-results/
+coverage/
+
+# Test database (if using separate test DB)
+*.test.db
+*.test.sqlite
+

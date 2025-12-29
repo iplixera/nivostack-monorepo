@@ -1,0 +1,77 @@
+{
+    "folders": [
+        {
+            "path": ".",
+            "name": "NivoStack Monorepo"
+        },
+        {
+            "path": "./dashboard",
+            "name": "📦 NivoStack Studio"
+        },
+        {
+            "path": "./dashboard/src",
+            "name": "💻 Source Code"
+        },
+        {
+            "path": "./dashboard/src/app",
+            "name": "🚀 App Routes & API"
+        },
+        {
+            "path": "./dashboard/src/components",
+            "name": "🧩 Components"
+        },
+        {
+            "path": "./dashboard/prisma",
+            "name": "🗄️ Database"
+        },
+        {
+            "path": "./packages",
+            "name": "📦 SDK Packages"
+        },
+        {
+            "path": "./docs",
+            "name": "📚 Documentation"
+        },
+        {
+            "path": "./scripts",
+            "name": "🔧 Scripts"
+        }
+    ],
+    "settings": {
+        "files.exclude": {
+            "**/node_modules": true,
+            "**/build": true,
+            "**/.gradle": true,
+            "**/DerivedData": true,
+            "**/.dart_tool": true,
+            "**/coverage": true,
+            "**/.next": true,
+            "**/Pods": true,
+            "**/dist": true
+        },
+        "search.exclude": {
+            "**/node_modules": true,
+            "**/build": true,
+            "**/dist": true,
+            "**/coverage": true,
+            "**/.next": true,
+            "**/Pods": true
+        },
+        "files.watcherExclude": {
+            "**/node_modules/**": true,
+            "**/build/**": true,
+            "**/.gradle/**": true,
+            "**/.next/**": true
+        },
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit"
+        }
+    },
+    "extensions": {
+        "recommendations": [
+            "dart-code.dart-code",
+            "ms-vscode.vscode-typescript-next"
+        ]
+    }
+}

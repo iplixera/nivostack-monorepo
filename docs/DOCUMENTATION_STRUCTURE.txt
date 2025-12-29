@@ -1,0 +1,37 @@
+Documentation Structure
+=======================
+
+releases/
+├── sdk/                    # SDK release notes
+│   ├── RELEASE_NOTES_FLUTTER_v1.0.0.md
+│   └── RELEASE_NOTES_ANDROID_v1.0.0.md
+└── dashboard/              # Dashboard release notes
+
+prds/                       # Product Requirements Documents
+├── PRD.md
+├── *_PRD.md (feature PRDs)
+
+best-practices/             # Best practices and guidelines
+├── SDK_VERSIONING_STRATEGY.md
+├── SDK_PUBLISHING_GUIDE.md
+├── SDK_PUBLISHING_SUMMARY.md
+└── BRANCHING_STRATEGY.md
+
+technical/                  # Technical documentation
+├── architecture/           # Architecture docs
+├── performance/            # Performance docs
+├── setup/                  # Technical setup
+└── *.md (other technical)
+
+guides/                     # Developer guides
+├── development/            # Development workflows
+└── setup/                  # Setup guides
+
+features/                   # Feature-specific docs
+├── *_PRD.md
+├── *_IMPLEMENTATION*.md
+└── *_CHANGELOG.md
+
+business/                   # Business documentation
+
+knowledge-base/             # Troubleshooting and FAQs

@@ -1,0 +1,115 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { getAuthUser } from '@/lib/auth'
+
+/**
+ * GET /api/devices/compare
+ * Compare multiple devices side-by-side
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const user = await getAuthUser(request)
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const deviceIds = searchParams.get('ids')?.split(',') || []
+
+    if (deviceIds.length < 2) {
+      return NextResponse.json({ error: 'At least 2 device IDs are required' }, { status: 400 })
+    }
+
+    if (deviceIds.length > 5) {
+      return NextResponse.json({ error: 'Maximum 5 devices can be compared' }, { status: 400 })
+    }
+
+    // Fetch all devices with counts (only active devices)
+    const devices = await prisma.device.findMany({
+      where: {
+        id: { in: deviceIds },
+        status: 'active', // Only compare active devices
+        project: {
+          userId: user.id
+        }
+      },
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        _count: {
+          select: {
+            logs: true,
+            crashes: true,
+            apiTraces: true,
+            sessions: true
+          }
+        }
+      }
+    })
+
+    if (devices.length !== deviceIds.length) {
+      return NextResponse.json({ error: 'Some devices were not found or access denied' }, { status: 404 })
+    }
+
+    // Format comparison data
+    const comparison = {
+      devices: devices.map(device => ({
+        id: device.id,
+        deviceId: device.deviceId,
+        deviceCode: device.deviceCode,
+        platform: device.platform,
+        osVersion: device.osVersion,
+        appVersion: device.appVersion,
+        model: device.model,
+        manufacturer: device.manufacturer,
+        deviceCategory: device.deviceCategory,
+        deviceBrand: device.deviceBrand,
+        locale: device.locale,
+        language: device.language,
+        timeZone: device.timeZone,
+        timeZoneOffset: device.timeZoneOffset,
+        appId: device.appId,
+        appInstanceId: device.appInstanceId,
+        advertisingId: device.advertisingId,
+        vendorId: device.vendorId,
+        limitedAdTracking: device.limitedAdTracking,
+        firstOpenAt: device.firstOpenAt?.toISOString() || null,
+        firstPurchaseAt: device.firstPurchaseAt?.toISOString() || null,
+        user: device.userEmail || device.userName || device.userId || null,
+        debugModeEnabled: device.debugModeEnabled,
+        debugModeExpiresAt: device.debugModeExpiresAt,
+        fingerprint: device.fingerprint,
+        batteryLevel: device.batteryLevel,
+        storageFree: device.storageFree ? Number(device.storageFree) : null,
+        memoryTotal: device.memoryTotal ? Number(device.memoryTotal) : null,
+        networkType: device.networkType,
+        screenWidth: device.screenWidth,
+        screenHeight: device.screenHeight,
+        screenDensity: device.screenDensity,
+        cpuArchitecture: device.cpuArchitecture,
+        tags: device.tags,
+        state: device.state,
+        lastSeenAt: device.lastSeenAt.toISOString(),
+        createdAt: device.createdAt.toISOString(),
+        stats: {
+          logs: device._count.logs,
+          crashes: device._count.crashes,
+          apiTraces: device._count.apiTraces,
+          sessions: device._count.sessions
+        },
+        metadata: device.metadata
+      })),
+      comparedAt: new Date().toISOString()
+    }
+
+    return NextResponse.json({ comparison })
+  } catch (error) {
+    console.error('Compare devices error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+

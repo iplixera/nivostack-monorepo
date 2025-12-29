@@ -1,0 +1,67 @@
+{
+  "buildCommand": "cd dashboard && pnpm install && pnpm build",
+  "outputDirectory": "dashboard/.next",
+  "framework": "nextjs",
+  "routes": [
+    {
+      "src": "/api/devices",
+      "dest": "/api/devices",
+      "methods": ["POST"]
+    },
+    {
+      "src": "/api/traces",
+      "dest": "/api/traces",
+      "methods": ["POST"]
+    },
+    {
+      "src": "/api/logs",
+      "dest": "/api/logs",
+      "methods": ["POST"]
+    },
+    {
+      "src": "/api/crashes",
+      "dest": "/api/crashes",
+      "methods": ["POST"]
+    },
+    {
+      "src": "/api/sessions",
+      "dest": "/api/sessions",
+      "methods": ["POST", "PUT", "PATCH"]
+    },
+    {
+      "src": "/api/devices/(.*)/user",
+      "dest": "/api/devices/$1/user",
+      "methods": ["PATCH", "DELETE"]
+    },
+    {
+      "src": "/api/health",
+      "dest": "/api/health",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/health",
+      "status": 404
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "POST, PUT, PATCH, DELETE"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, X-API-Key"
+        }
+      ]
+    }
+  ]
+}
+

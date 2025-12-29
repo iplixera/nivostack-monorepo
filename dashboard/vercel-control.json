@@ -1,0 +1,121 @@
+{
+  "buildCommand": "cd dashboard && pnpm install && pnpm build",
+  "outputDirectory": "dashboard/.next",
+  "framework": "nextjs",
+  "routes": [
+    {
+      "src": "/api/sdk-init",
+      "dest": "/api/sdk-init",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/business-config",
+      "dest": "/api/business-config",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/localization/(.*)",
+      "dest": "/api/localization/$1",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/feature-flags",
+      "dest": "/api/feature-flags",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/sdk-settings",
+      "dest": "/api/sdk-settings",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/projects",
+      "dest": "/api/projects"
+    },
+    {
+      "src": "/api/projects/(.*)",
+      "dest": "/api/projects/$1"
+    },
+    {
+      "src": "/api/devices",
+      "dest": "/api/devices",
+      "methods": ["GET", "DELETE"]
+    },
+    {
+      "src": "/api/devices/(.*)",
+      "dest": "/api/devices/$1",
+      "methods": ["GET", "DELETE", "PATCH"]
+    },
+    {
+      "src": "/api/sessions",
+      "dest": "/api/sessions",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/sessions/(.*)",
+      "dest": "/api/sessions/$1",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/traces",
+      "dest": "/api/traces",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/logs",
+      "dest": "/api/logs",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/crashes",
+      "dest": "/api/crashes",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/admin/(.*)",
+      "dest": "/api/admin/$1"
+    },
+    {
+      "src": "/api/auth/(.*)",
+      "dest": "/api/auth/$1"
+    },
+    {
+      "src": "/api/subscription/(.*)",
+      "dest": "/api/subscription/$1"
+    },
+    {
+      "src": "/api/health",
+      "dest": "/api/health",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/health",
+      "status": 404
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, PATCH, DELETE"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization, X-API-Key"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, s-maxage=3600"
+        }
+      ]
+    }
+  ]
+}
+

@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.next/
+build/
+*.apk
+*.aab
+
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins.dependencies
+build/
+
+# Large binaries
+*.node
+*.so
+*.dylib

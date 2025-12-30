@@ -34,7 +34,9 @@ if [[ "$*" == *"add prisma"* ]]; then
   exit 0
 fi
 # For other commands, use real pnpm
-exec /usr/local/bin/pnpm "$@"
+# Find real pnpm (could be in different locations)
+REAL_PNPM=$(command -v pnpm 2>/dev/null || echo "/usr/local/bin/pnpm")
+exec "$REAL_PNPM" "$@"
 EOF
 chmod +x "$FAKE_PNPM_DIR/pnpm"
 

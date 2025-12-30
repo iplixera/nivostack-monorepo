@@ -68,6 +68,7 @@ export async function GET(request: NextRequest) {
       .slice(0, 10) // Return top 10 suggestions
 
     return NextResponse.json({ suggestions })
+    */
   } catch (error) {
     console.error('TM suggestions error:', error)
     return NextResponse.json(

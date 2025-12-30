@@ -163,7 +163,7 @@ export async function evaluateEnforcementState(
 
   const meters = [
     'devices',
-    'apiTraces',
+    'apiRequests', // Changed from apiTraces to apiRequests
     'logs',
     'sessions',
     'crashes',
@@ -174,7 +174,7 @@ export async function evaluateEnforcementState(
   let hasHardThreshold = false
 
   for (const meterKey of meters) {
-    const meter = usage[meterKey]
+    const meter = (usage as any)[meterKey]
     if (!meter || meter.limit === null) continue
 
     const percentage = meter.percentage
@@ -183,14 +183,14 @@ export async function evaluateEnforcementState(
       hasHardThreshold = true
       triggeredMetrics.push({
         metric: meterKey,
-        usage: meter.used,
+        usage: meter.usage || meter.used || 0,
         limit: meter.limit,
         percentage,
       })
     } else if (percentage >= config.warnThreshold!) {
       triggeredMetrics.push({
         metric: meterKey,
-        usage: meter.used,
+        usage: meter.usage || meter.used || 0,
         limit: meter.limit,
         percentage,
       })

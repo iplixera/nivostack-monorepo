@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateToken } from '@/lib/auth'
+import { validateToken, verifyToken } from '@/lib/auth'
 import { getEnforcementState, evaluateEnforcementState, updateEnforcementState } from '@/lib/enforcement'
 import { getSubscription } from '@/lib/subscription'
 
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     }
 
     const token = authHeader.replace('Bearer ', '')
-    const payload = validateToken(token)
+    const payload = await verifyToken(token)
 
     if (!payload) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })

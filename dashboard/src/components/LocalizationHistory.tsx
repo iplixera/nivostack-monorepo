@@ -40,7 +40,7 @@ export default function LocalizationHistory({
     try {
       setLoading(true)
       const data = await api.localization.getHistory(projectId, translationId, keyId, 50, token)
-      setHistory(data.history)
+      setHistory(data.history as any)
     } catch (error) {
       console.error('Failed to load history:', error)
     } finally {

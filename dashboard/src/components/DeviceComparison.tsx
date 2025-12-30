@@ -70,7 +70,7 @@ export default function DeviceComparison({ deviceIds, token, onClose }: DeviceCo
       setLoading(true)
       setError(null)
       const data = await api.devices.compare(deviceIds, token)
-      setComparison(data.comparison)
+      setComparison(data.comparison as any)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load comparison')
     } finally {
@@ -216,7 +216,7 @@ export default function DeviceComparison({ deviceIds, token, onClose }: DeviceCo
                       }
 
                       const displayValue = field.format
-                        ? field.format(value)
+                        ? (field.format as any)(value)
                         : value !== null && value !== undefined
                         ? String(value)
                         : '-'

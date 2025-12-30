@@ -40,7 +40,7 @@ export default function LocalizationComments({
     try {
       setLoading(true)
       const data = await api.localization.getComments(translationId, projectId, token)
-      setComments(data.comments)
+      setComments(data.comments as any)
     } catch (error) {
       console.error('Failed to load comments:', error)
     } finally {
@@ -54,7 +54,7 @@ export default function LocalizationComments({
     try {
       setSaving(true)
       const data = await api.localization.createComment(translationId, projectId, newComment, token)
-      setComments([data.comment, ...comments])
+      setComments([data.comment as any, ...comments])
       setNewComment('')
     } catch (error) {
       alert('Failed to add comment: ' + (error instanceof Error ? error.message : 'Unknown error'))

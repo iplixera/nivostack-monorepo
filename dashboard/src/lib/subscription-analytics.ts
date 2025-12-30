@@ -28,7 +28,7 @@ export type SubscriptionAnalytics = {
   planDistribution: PlanDistribution[]
   usageSegmentation: {
     devices: UsageSegmentStats[]
-    apiTraces: UsageSegmentStats[]
+    apiRequests: UsageSegmentStats[]
     logs: UsageSegmentStats[]
     sessions: UsageSegmentStats[]
   }
@@ -144,7 +144,7 @@ export async function getSubscriptionAnalytics(): Promise<SubscriptionAnalytics>
 
   // Segment users by usage percentage
   function segmentByUsage(
-    meterKey: 'devices' | 'apiTraces' | 'logs' | 'sessions'
+    meterKey: 'devices' | 'apiRequests' | 'logs' | 'sessions'
   ): UsageSegmentStats[] {
     const segments: Record<UsageSegment, typeof usageData> = {
       low: [],
@@ -154,7 +154,8 @@ export async function getSubscriptionAnalytics(): Promise<SubscriptionAnalytics>
     }
 
     usageData.forEach((data) => {
-      const meter = data.usage[meterKey]
+      if (!data.usage) return
+      const meter = (data.usage as any)[meterKey]
       if (!meter) return
 
       const percentage = meter.percentage
@@ -182,16 +183,16 @@ export async function getSubscriptionAnalytics(): Promise<SubscriptionAnalytics>
         label: 'Low Usage (0-50%)',
         count: segments.low.length,
         percentage: usageData.length > 0 ? (segments.low.length / usageData.length) * 100 : 0,
-        users: segments.low.map((d) => ({
+        users: segments.low.filter(d => d.usage).map((d) => ({
           userId: d.userId,
           email: d.email,
           planName: d.planName,
-          usagePercentage: d.usage[meterKey]?.percentage || 0,
+          usagePercentage: d.usage![meterKey]?.percentage || 0,
           meters: {
-            devices: d.usage.devices,
-            apiTraces: d.usage.apiTraces,
-            logs: d.usage.logs,
-            sessions: d.usage.sessions,
+            devices: d.usage!.devices,
+            apiRequests: d.usage!.apiRequests,
+            logs: d.usage!.logs,
+            sessions: d.usage!.sessions,
           },
         })),
       },
@@ -200,16 +201,16 @@ export async function getSubscriptionAnalytics(): Promise<SubscriptionAnalytics>
         label: 'Medium Usage (50-80%)',
         count: segments.medium.length,
         percentage: usageData.length > 0 ? (segments.medium.length / usageData.length) * 100 : 0,
-        users: segments.medium.map((d) => ({
+        users: segments.medium.filter(d => d.usage).map((d) => ({
           userId: d.userId,
           email: d.email,
           planName: d.planName,
-          usagePercentage: d.usage[meterKey]?.percentage || 0,
+          usagePercentage: d.usage![meterKey]?.percentage || 0,
           meters: {
-            devices: d.usage.devices,
-            apiTraces: d.usage.apiTraces,
-            logs: d.usage.logs,
-            sessions: d.usage.sessions,
+            devices: d.usage!.devices,
+            apiRequests: d.usage!.apiRequests,
+            logs: d.usage!.logs,
+            sessions: d.usage!.sessions,
           },
         })),
       },
@@ -218,16 +219,16 @@ export async function getSubscriptionAnalytics(): Promise<SubscriptionAnalytics>
         label: 'High Usage (80-100%)',
         count: segments.high.length,
         percentage: usageData.length > 0 ? (segments.high.length / usageData.length) * 100 : 0,
-        users: segments.high.map((d) => ({
+        users: segments.high.filter(d => d.usage).map((d) => ({
           userId: d.userId,
           email: d.email,
           planName: d.planName,
-          usagePercentage: d.usage[meterKey]?.percentage || 0,
+          usagePercentage: d.usage![meterKey]?.percentage || 0,
           meters: {
-            devices: d.usage.devices,
-            apiTraces: d.usage.apiTraces,
-            logs: d.usage.logs,
-            sessions: d.usage.sessions,
+            devices: d.usage!.devices,
+            apiRequests: d.usage!.apiRequests,
+            logs: d.usage!.logs,
+            sessions: d.usage!.sessions,
           },
         })),
       },
@@ -236,16 +237,16 @@ export async function getSubscriptionAnalytics(): Promise<SubscriptionAnalytics>
         label: 'Exceeded Limit (100%+)',
         count: segments.exceeded.length,
         percentage: usageData.length > 0 ? (segments.exceeded.length / usageData.length) * 100 : 0,
-        users: segments.exceeded.map((d) => ({
+        users: segments.exceeded.filter(d => d.usage).map((d) => ({
           userId: d.userId,
           email: d.email,
           planName: d.planName,
-          usagePercentage: d.usage[meterKey]?.percentage || 0,
+          usagePercentage: d.usage![meterKey]?.percentage || 0,
           meters: {
-            devices: d.usage.devices,
-            apiTraces: d.usage.apiTraces,
-            logs: d.usage.logs,
-            sessions: d.usage.sessions,
+            devices: d.usage!.devices,
+            apiRequests: d.usage!.apiRequests,
+            logs: d.usage!.logs,
+            sessions: d.usage!.sessions,
           },
         })),
       },
@@ -255,15 +256,16 @@ export async function getSubscriptionAnalytics(): Promise<SubscriptionAnalytics>
   // At-risk users (80%+ usage on any meter)
   const atRiskUsers = usageData
     .filter((d) => {
-      const meters = [d.usage.devices, d.usage.apiTraces, d.usage.logs, d.usage.sessions]
+      const meters = d.usage ? [d.usage.devices, d.usage.apiRequests, d.usage.logs, d.usage.sessions] : []
       return meters.some((m) => m && m.limit !== null && m.percentage >= 80 && m.percentage < 100)
     })
+    .filter(d => d.usage)
     .map((d) => {
       const meters = {
-        devices: d.usage.devices,
-        apiTraces: d.usage.apiTraces,
-        logs: d.usage.logs,
-        sessions: d.usage.sessions,
+        devices: d.usage!.devices,
+        apiRequests: d.usage!.apiRequests,
+        logs: d.usage!.logs,
+        sessions: d.usage!.sessions,
       }
       const highestUsage = Object.entries(meters)
         .map(([key, meter]) => ({ meter: key, percentage: meter.percentage }))
@@ -282,15 +284,16 @@ export async function getSubscriptionAnalytics(): Promise<SubscriptionAnalytics>
   // At-limit users (100%+ usage on any meter)
   const atLimitUsers = usageData
     .filter((d) => {
-      const meters = [d.usage.devices, d.usage.apiTraces, d.usage.logs, d.usage.sessions]
+      const meters = d.usage ? [d.usage.devices, d.usage.apiRequests, d.usage.logs, d.usage.sessions] : []
       return meters.some((m) => m && m.limit !== null && m.percentage >= 100)
     })
+    .filter(d => d.usage)
     .map((d) => {
       const meters = {
-        devices: d.usage.devices,
-        apiTraces: d.usage.apiTraces,
-        logs: d.usage.logs,
-        sessions: d.usage.sessions,
+        devices: d.usage!.devices,
+        apiRequests: d.usage!.apiRequests,
+        logs: d.usage!.logs,
+        sessions: d.usage!.sessions,
       }
       const exceededMeters = Object.entries(meters)
         .filter(([_, meter]) => meter.limit !== null && meter.percentage >= 100)
@@ -311,9 +314,9 @@ export async function getSubscriptionAnalytics(): Promise<SubscriptionAnalytics>
   
   usageData.forEach((d) => {
     const currentPlanIndex = planHierarchy.indexOf(d.planName)
-    if (currentPlanIndex === -1 || currentPlanIndex === planHierarchy.length - 1) return
+    if (currentPlanIndex === -1 || currentPlanIndex === planHierarchy.length - 1 || !d.usage) return
 
-    const meters = [d.usage.devices, d.usage.apiTraces, d.usage.logs, d.usage.sessions]
+    const meters = [d.usage.devices, d.usage.apiRequests, d.usage.logs, d.usage.sessions]
     const maxUsage = Math.max(...meters.map((m) => m?.percentage || 0))
 
     if (maxUsage >= 80) {
@@ -330,8 +333,8 @@ export async function getSubscriptionAnalytics(): Promise<SubscriptionAnalytics>
   })
 
   // Calculate summary
-  const totalUsagePercentages = usageData.map((d) => {
-    const meters = [d.usage.devices, d.usage.apiTraces, d.usage.logs, d.usage.sessions]
+  const totalUsagePercentages = usageData.filter(d => d.usage).map((d) => {
+    const meters = [d.usage!.devices, d.usage!.apiRequests, d.usage!.logs, d.usage!.sessions]
     return Math.max(...meters.map((m) => m?.percentage || 0))
   })
   const averageUsagePercentage =
@@ -343,7 +346,7 @@ export async function getSubscriptionAnalytics(): Promise<SubscriptionAnalytics>
     planDistribution,
     usageSegmentation: {
       devices: segmentByUsage('devices'),
-      apiTraces: segmentByUsage('apiTraces'),
+      apiRequests: segmentByUsage('apiRequests'),
       logs: segmentByUsage('logs'),
       sessions: segmentByUsage('sessions'),
     },

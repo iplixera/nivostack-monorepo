@@ -280,6 +280,41 @@
             table {
                 page-break-inside: avoid;
             }
+
+            /* Hide any file:// URLs or headers */
+            @page {
+                margin: 1in;
+
+                @top-left {
+                    content: "";
+                }
+
+                @top-center {
+                    content: "";
+                }
+
+                @top-right {
+                    content: "";
+                }
+
+                @bottom-left {
+                    content: "";
+                }
+
+                @bottom-center {
+                    content: "";
+                }
+
+                @bottom-right {
+                    content: "";
+                }
+            }
+        }
+
+        /* Hide any potential file:// URLs */
+        body::before,
+        body::after {
+            display: none !important;
         }
     </style>
 </head>
@@ -302,29 +337,37 @@
 
         <div class="executive-summary">
             <h2>Executive Summary</h2>
-            <p><strong>Plixera</strong> (Founded 2023) is a developer tools company building innovative solutions for Small and Medium Startups. Our flagship product, <strong>NivoStack</strong>, is a complete stack platform for engineering teams that combines runtime tools, content management, analytics, and SDKs for multiple frontend stacks (JavaScript/React/Next.js, Android, Flutter, iOS).</p>
-            
-            <p><strong>The Problem:</strong> Small and Medium Startups spend $500-2000+/month on multiple expensive SaaS tools (MixPanel, Firebase, Datadog, Sentry, Glassbox, Backstage, Cortex) with fragmented data and complex integrations.</p>
-            
-            <p><strong>The Solution:</strong> NivoStack replaces these expensive tools with one unified, affordable platform ($49-149/month) that provides:</p>
-            <ul>
-                <li><strong>Control Plane (NivoStack Studio):</strong> Comprehensive digital UI for configuration, analytics, customer behavior, business observation, ticketing systems, and mini CRM</li>
-                <li><strong>Data Plane (SDKs):</strong> Lightweight SDKs for data ingestion across multiple platforms</li>
-                <li><strong>Internal Developer Tools:</strong> Backstage/Cortex alternative for engineering teams</li>
-                <li><strong>Content Management:</strong> Easy UI for product and business teams</li>
-                <li><strong>QA & Testing Tools:</strong> Device tracking, testing data, and API traces for Quality Engineers</li>
-            </ul>
-            
-            <p>We are requesting AWS credits to scale our infrastructure as we onboard SMB customers and expand our platform capabilities. NivoStack is positioned to capture a significant share of the $8.5B+ Application Performance Monitoring (APM) market by offering a cost-effective alternative to expensive enterprise tools.</p>
+
+            <p><strong>Plixera</strong> (Founded 2023) provides comprehensive services for Small and Medium Startups
+                across all products, commercial, and engineering teams at low cost. Our flagship product,
+                <strong>NivoStack</strong>, delivers the same functionalities as big players (MixPanel, Datadog,
+                Firebase, Sentry, Glassbox, Backstage, Cortex) but at 90% lower cost.
+            </p>
+
+            <p><strong>The Problem:</strong> SMBs spend $500-2000+/month on multiple expensive SaaS tools with
+                fragmented data, complex integrations, and data discrepancy issues between Product, Marketing, and
+                Engineering teams.</p>
+
+            <p><strong>The Solution:</strong> NivoStack replaces these tools with one unified platform ($49-149/month)
+                that builds an integrated ecosystem where all tools work together seamlessly, eliminating data silos.
+            </p>
+
+            <p><strong>Platform Components:</strong> Control Plane (NivoStack Studio) for configuration, analytics,
+                customer behavior, business insights, ticketing, and mini CRM. Data Plane with lightweight SDKs
+                (JavaScript/React/Next.js, Android, Flutter, iOS) for data ingestion. Internal developer tools, content
+                management, and QA/testing capabilities.</p>
+
+            <p>We are requesting AWS credits to scale infrastructure as we onboard SMB customers. NivoStack targets the
+                $8.5B+ APM market by offering enterprise features at SMB-friendly prices.</p>
 
             <div class="key-points">
                 <h3>Key Highlights:</h3>
                 <ul>
-                    <li>Production-ready platform (v1.5.0) with 93% performance improvement achieved</li>
-                    <li>Comprehensive SDK support: JavaScript/React/Next.js, Flutter, Android (Kotlin), iOS (Swift) in development</li>
-                    <li>Replaces $500-2000+/month in SaaS tools with $49-149/month unified platform</li>
-                    <li>Bridges gap between Product, Marketing, and Business teams</li>
-                    <li>Strong market opportunity targeting Small and Medium Startups</li>
+                    <li>Production-ready platform (v1.5.0) with 93% performance improvement</li>
+                    <li>Multi-platform SDKs: JavaScript/React/Next.js, Flutter, Android, iOS</li>
+                    <li>90% cost savings: $500-2000+/month → $49-149/month</li>
+                    <li>Unified ecosystem eliminating data discrepancies across teams</li>
+                    <li>Strong SMB market opportunity</li>
                     <li>Requesting $10,000-16,000 in AWS credits over 12 months</li>
                 </ul>
             </div>
@@ -337,10 +380,81 @@
             cutting-edge observability and configuration management solutions. We build developer-first products that
             solve real problems faced by mobile app teams daily.</p>
 
-        <p><strong>Mission:</strong> Empower mobile developers with complete visibility and control over their
-            applications.</p>
-        <p><strong>Vision:</strong> Become the single source of truth for mobile app observability, combining
-            monitoring, debugging, and configuration management in one unified platform.</p>
+        <p><strong>Mission:</strong> Empower Small and Medium Startups with enterprise-grade tools and services at
+            affordable prices, eliminating data silos and tool fragmentation.</p>
+
+        <p><strong>Vision:</strong> Plixera provides comprehensive services for Small and Medium Startups across all
+            products, commercial, and engineering teams at low cost. We deliver the same functionalities as big players
+            (MixPanel, Datadog, Firebase, etc.) but at a fraction of the cost. Our platform builds an integrated
+            ecosystem where different tools work together seamlessly, solving data discrepancy issues that plague teams
+            using multiple disconnected solutions.</p>
+
+        <div
+            style="background: #eff6ff; border-left: 4px solid #2563eb; padding: 12pt; margin: 15pt 0; border-radius: 4pt;">
+            <h3 style="margin-top: 0; color: #1e40af;">The Problem We Solve</h3>
+            <p style="margin-bottom: 8pt;">Small and Medium Startups face three critical challenges:</p>
+            <ol style="margin-left: 20pt;">
+                <li><strong>High Costs:</strong> Enterprise tools cost $500-2000+/month, unaffordable for SMBs</li>
+                <li><strong>Data Silos:</strong> Multiple tools create data discrepancies between Product, Marketing,
+                    and Engineering teams</li>
+                <li><strong>Tool Fragmentation:</strong> No unified ecosystem - tools don't work together, causing
+                    workflow inefficiencies</li>
+            </ol>
+        </div>
+
+        <div
+            style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 12pt; margin: 15pt 0; border-radius: 4pt;">
+            <h3 style="margin-top: 0; color: #059669;">Our Solution</h3>
+            <p style="margin-bottom: 8pt;">NivoStack provides:</p>
+            <ol style="margin-left: 20pt;">
+                <li><strong>Affordable Enterprise Features:</strong> Same functionality as big players at 90% lower cost
+                </li>
+                <li><strong>Unified Data Platform:</strong> Single source of truth eliminating data discrepancies</li>
+                <li><strong>Integrated Ecosystem:</strong> All tools work together seamlessly across teams</li>
+            </ol>
+        </div>
+
+        <h3>Plixera Vision: Unified Ecosystem</h3>
+        <div style="background: #ffffff; border: 2px solid #10b981; border-radius: 8pt; padding: 15pt; margin: 15pt 0;">
+            <div style="text-align: center; margin-bottom: 12pt;">
+                <div
+                    style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 2px solid #10b981; border-radius: 6pt; padding: 12pt; display: inline-block; min-width: 80%;">
+                    <strong style="color: #059669; font-size: 12pt; display: block; margin-bottom: 8pt;">NIVOSTACK
+                        UNIFIED PLATFORM</strong>
+                    <div
+                        style="font-size: 9pt; color: #047857; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8pt; text-align: left;">
+                        <div>
+                            <strong>Product Team</strong><br>
+                            • Analytics<br>
+                            • Config Management<br>
+                            • Feature Flags
+                        </div>
+                        <div>
+                            <strong>Marketing Team</strong><br>
+                            • Customer Behavior<br>
+                            • Campaign Tracking<br>
+                            • Business Insights
+                        </div>
+                        <div>
+                            <strong>Engineering Team</strong><br>
+                            • API Monitoring<br>
+                            • Error Tracking<br>
+                            • Dev Tools
+                        </div>
+                    </div>
+                    <div
+                        style="margin-top: 10pt; padding-top: 10pt; border-top: 1px solid #10b981; font-size: 8pt; color: #065f46;">
+                        <strong>Single Source of Truth</strong> - No data discrepancies, unified insights across all
+                        teams
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; color: #6b7280; font-size: 9pt; margin-top: 10pt;">
+                <strong>vs. Traditional Approach:</strong> Multiple disconnected tools → Data silos → Inconsistent
+                insights → Higher costs
+            </div>
+        </div>
 
         <h2>Company Details</h2>
         <ul>
@@ -357,10 +471,22 @@
         <h1>2. Product Overview: NivoStack</h1>
 
         <h2>What is NivoStack?</h2>
-        <p>NivoStack is a comprehensive <strong>mobile application monitoring and configuration platform</strong>
-            specifically designed for mobile applications. It acts as a bridge between mobile apps and backend services,
-            providing real-time visibility into:</p>
+        <p>NivoStack is a comprehensive <strong>complete stack platform for engineering teams</strong> targeting Small
+            and Medium Startups. It provides a unified solution combining runtime tools, content management, analytics,
+            and SDKs for different frontend stacks including JavaScript/React/Next.js, Android, Flutter, iOS, and more.
+        </p>
 
+        <p>NivoStack bridges the gap between Product, Marketing, and Business Insights by merging market-leading tools
+            (MixPanel, Firebase, Glassbox, Backstage, Cortex) into a single, cost-effective platform. It serves as both
+            internal developer tools for engineers and content management for product and business teams.</p>
+
+        <p><strong>Control Plane (NivoStack Studio):</strong> A comprehensive digital UI layer for managing all
+            configurations, analytics, customer behavior, business observation, ticketing systems, and a mini CRM.</p>
+
+        <p><strong>Data Plane (SDKs):</strong> Lightweight SDKs responsible for data ingestion across multiple
+            platforms.</p>
+
+        <p>NivoStack provides real-time visibility into:</p>
         <ul>
             <li><strong>API Traffic Monitoring</strong> - Every HTTP request/response with full headers and bodies</li>
             <li><strong>Device Management</strong> - Track all connected devices with detailed metadata</li>
@@ -371,23 +497,36 @@
             <li><strong>Session Tracking</strong> - Complete user session timelines with events</li>
             <li><strong>Localization Management</strong> - Remote translation management</li>
             <li><strong>Feature Flags</strong> - Remote feature toggles and SDK control</li>
+            <li><strong>Customer Behavior Analytics</strong> - MixPanel alternative for product insights</li>
+            <li><strong>Business Observation</strong> - Unified dashboards for business teams</li>
+            <li><strong>Ticketing System</strong> - Integrated issue tracking</li>
+            <li><strong>Mini CRM</strong> - Customer relationship management</li>
         </ul>
 
         <h2>Product Positioning</h2>
-        <p><strong>Think of NivoStack as:</strong> Datadog + Sentry + Charles Proxy + Firebase Remote Config, but
-            specifically designed for mobile BFF monitoring.</p>
+        <p><strong>Think of NivoStack as:</strong> MixPanel + Firebase + Datadog + Sentry + Glassbox + Backstage +
+            Cortex, but unified in one affordable platform designed for Small and Medium Startups.</p>
 
         <h2>Key Differentiators</h2>
         <ol>
-            <li><strong>Mobile-First Design</strong> - Built specifically for mobile app monitoring, not adapted from
-                web tools</li>
-            <li><strong>Human-Readable Device Codes</strong> - Unique device identification system (e.g., "A7B3-X9K2")
-                for support scenarios</li>
-            <li><strong>Per-Device Debug Mode</strong> - Selective tracking for production debugging without affecting
-                all users</li>
-            <li><strong>Unified Platform</strong> - Monitoring, configuration, and analytics in one place</li>
-            <li><strong>Developer-Friendly</strong> - Simple SDK integration (&lt; 30 minutes), intuitive dashboard</li>
-            <li><strong>Cost-Effective</strong> - Competitive pricing compared to enterprise alternatives</li>
+            <li><strong>Complete Stack Solution</strong> - Runtime tools, content management, analytics, and SDKs in one
+                platform</li>
+            <li><strong>Multi-Platform SDK Support</strong> - JavaScript/React/Next.js, Android, Flutter, iOS, and more
+            </li>
+            <li><strong>Unified Tool Replacement</strong> - Replaces expensive SaaS tools (MixPanel, Firebase, Glassbox,
+                Backstage, Cortex) with one affordable solution</li>
+            <li><strong>Cross-Functional Platform</strong> - Bridges Product, Marketing, and Business teams with unified
+                insights</li>
+            <li><strong>Internal Developer Tools</strong> - Serves as Backstage/Cortex alternative for engineering teams
+            </li>
+            <li><strong>Content Management</strong> - Easy digital UI for product and business teams to manage
+                configurations</li>
+            <li><strong>QA & Testing Tools</strong> - Track devices, testing data, and API traces for Quality Engineers
+            </li>
+            <li><strong>Localization & Configuration</strong> - Manage localizations and business configurations with
+                intuitive UI</li>
+            <li><strong>Cost-Effective for SMBs</strong> - Replaces multiple expensive tools with one affordable
+                platform</li>
             <li><strong>Performance Optimized</strong> - 93% faster SDK initialization (4.3s → 290ms)</li>
         </ol>
 
@@ -415,10 +554,24 @@
         <h2>Target Market</h2>
         <p><strong>Primary Customers:</strong></p>
         <ul>
-            <li>Mobile app development teams (iOS/Android/Flutter)</li>
+            <li><strong>Small and Medium Startups</strong> (10-500 employees) - Our primary target</li>
+            <li>Engineering teams looking to replace expensive SaaS tools</li>
+            <li>Mobile app development teams (iOS/Android/Flutter/React)</li>
             <li>QA engineers and testing teams</li>
             <li>DevOps and platform engineering teams</li>
-            <li>Startups to mid-market companies (10-500 employees)</li>
+            <li>Product and Business teams needing unified insights</li>
+            <li>Marketing teams requiring customer behavior analytics</li>
+        </ul>
+
+        <h3>Market Pain Points:</h3>
+        <ul>
+            <li><strong>Tool Sprawl</strong> - Using multiple expensive tools (MixPanel $25+/month, Firebase $25+/month,
+                Glassbox $100+/month, etc.)</li>
+            <li><strong>Cost Burden</strong> - Small startups spending $500-2000/month on multiple SaaS tools</li>
+            <li><strong>Data Silos</strong> - Data scattered across different platforms</li>
+            <li><strong>Complexity</strong> - Multiple integrations and learning curves</li>
+            <li><strong>Lack of Unified Insights</strong> - No single source of truth for Product, Marketing, and
+                Business teams</li>
         </ul>
 
         <h2>Market Segments</h2>
@@ -430,7 +583,101 @@
             <li><strong>SaaS Mobile Apps</strong> - Configuration management, feature flags</li>
         </ol>
 
-        <h1>4. Technology Stack & AWS Usage</h1>
+        <h1>4. Architecture & Technology Stack</h1>
+
+        <h2>System Architecture (High-Level Design)</h2>
+        <p>NivoStack follows a <strong>Control Plane / Data Plane</strong> architecture with integrated monitoring and
+            services:</p>
+
+        <div style="background: #ffffff; border: 2px solid #2563eb; border-radius: 8pt; padding: 15pt; margin: 15pt 0;">
+            <div style="display: flex; flex-direction: column; gap: 12pt; align-items: center;">
+                <!-- End Users Layer -->
+                <div style="width: 100%; text-align: center;">
+                    <div
+                        style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px solid #2563eb; border-radius: 6pt; padding: 10pt; display: inline-block; min-width: 60%;">
+                        <strong style="color: #1e40af; font-size: 11pt; display: block; margin-bottom: 6pt;">END USERS /
+                            CLIENT SDKs</strong>
+                        <div style="font-size: 9pt; color: #1e3a8a;">
+                            JavaScript/React/Next.js • Android (Kotlin)<br>
+                            Flutter (Dart) • iOS (Swift)
+                        </div>
+                    </div>
+                </div>
+
+                <div style="color: #2563eb; font-size: 12pt; font-weight: bold;">↓ Data Ingestion & Configuration ↓
+                </div>
+
+                <!-- Backend Layer -->
+                <div style="width: 100%; text-align: center;">
+                    <div
+                        style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #0ea5e9; border-radius: 6pt; padding: 10pt; display: inline-block; min-width: 70%;">
+                        <strong style="color: #0369a1; font-size: 11pt; display: block; margin-bottom: 6pt;">BACKEND
+                            SERVICES (Vercel - Non-Production)</strong>
+                        <div
+                            style="font-size: 9pt; color: #0c4a6e; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6pt; text-align: left; margin-top: 6pt;">
+                            <div>• Ingest API<br>• Control API<br>• Studio Dashboard</div>
+                            <div>• Monitoring Service<br>• Analytics Engine<br>• Notification Service</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="color: #2563eb; font-size: 12pt; font-weight: bold;">↓ Storage & Compute ↓</div>
+
+                <!-- Infrastructure Layer -->
+                <div style="width: 100%; text-align: center;">
+                    <div
+                        style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b; border-radius: 6pt; padding: 10pt; display: inline-block; min-width: 70%;">
+                        <strong
+                            style="color: #92400e; font-size: 11pt; display: block; margin-bottom: 6pt;">INFRASTRUCTURE
+                            (AWS - Production)</strong>
+                        <div
+                            style="font-size: 9pt; color: #78350f; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6pt; text-align: left; margin-top: 6pt;">
+                            <div>• RDS (PostgreSQL)<br>• S3 (Storage)<br>• CloudFront (CDN)</div>
+                            <div>• EC2/ECS (Compute)<br>• CloudWatch (Monitoring)<br>• SES (Notifications)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p
+            style="font-size: 9pt; color: #6b7280; margin-top: 8pt; font-style: italic; padding: 8pt; background: #f9fafb; border-radius: 4pt;">
+            <strong>Note:</strong> Current implementation uses Vercel for non-production environment and testing.
+            Production migration to AWS infrastructure planned with credits. Monitoring, analytics, and notification
+            services are integrated throughout the platform.
+        </p>
+
+        <h2>Technology Stack</h2>
+
+        <p><strong>Frontend (NivoStack Studio - Control Plane):</strong></p>
+        <ul>
+            <li>Next.js 16 (App Router)</li>
+            <li>React 18</li>
+            <li>TypeScript 5.0</li>
+            <li>Tailwind CSS</li>
+            <li>Deployed on Vercel (non-production/testing)</li>
+        </ul>
+
+        <p><strong>Backend APIs:</strong></p>
+        <p style="font-size: 9pt; color: #6b7280; font-style: italic; margin-bottom: 8pt;"><strong>Current
+                Implementation:</strong> Using Vercel for non-production environment and testing. Production migration
+            to AWS planned with credits.</p>
+        <ul>
+            <li><strong>Ingest API</strong> (`ingest.nivostack.com`) - High-volume data ingestion</li>
+            <li><strong>Control API</strong> (`api.nivostack.com`) - Configuration and CRUD operations</li>
+            <li>Next.js API Routes</li>
+            <li>PostgreSQL (migrating to AWS RDS)</li>
+            <li>Prisma ORM</li>
+            <li>JWT Authentication (Dashboard) / API Keys (SDKs)</li>
+        </ul>
+
+        <p><strong>Mobile SDKs (Data Plane):</strong></p>
+        <ul>
+            <li><strong>JavaScript/React/Next.js SDK</strong> - Web applications</li>
+            <li><strong>Flutter SDK</strong> - Production-ready (v1.2.0+)</li>
+            <li><strong>Android SDK</strong> - Production-ready (v1.0.0)</li>
+            <li><strong>iOS SDK</strong> - In development</li>
+        </ul>
 
         <h2>Planned AWS Services</h2>
 
@@ -520,39 +767,210 @@
 
         <h2>Business Model</h2>
 
+        <p><strong>Value Proposition:</strong> Replace expensive SaaS tools with one affordable, unified platform</p>
+
+        <h3>Cost Comparison</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tool Category</th>
+                    <th>Current Solutions</th>
+                    <th>Monthly Cost</th>
+                    <th>NivoStack Alternative</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Analytics</td>
+                    <td>MixPanel, Amplitude</td>
+                    <td>$25-200+</td>
+                    <td>✅ Included</td>
+                </tr>
+                <tr>
+                    <td>Monitoring</td>
+                    <td>Datadog, New Relic</td>
+                    <td>$31-200+</td>
+                    <td>✅ Included</td>
+                </tr>
+                <tr>
+                    <td>Error Tracking</td>
+                    <td>Sentry</td>
+                    <td>$26-80+</td>
+                    <td>✅ Included</td>
+                </tr>
+                <tr>
+                    <td>Remote Config</td>
+                    <td>Firebase Remote Config</td>
+                    <td>$25+</td>
+                    <td>✅ Included</td>
+                </tr>
+                <tr>
+                    <td>Session Replay</td>
+                    <td>Glassbox, LogRocket</td>
+                    <td>$100-300+</td>
+                    <td>✅ Included</td>
+                </tr>
+                <tr>
+                    <td>Internal Tools</td>
+                    <td>Backstage, Cortex</td>
+                    <td>$50-200+</td>
+                    <td>✅ Included</td>
+                </tr>
+                <tr style="background-color: #fef3c7; font-weight: bold;">
+                    <td><strong>Total Cost</strong></td>
+                    <td><strong>Multiple Tools</strong></td>
+                    <td><strong>$500-2000+/month</strong></td>
+                    <td><strong>$49-149/month</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>SaaS Subscription Plans</h3>
         <table>
             <thead>
                 <tr>
                     <th>Plan</th>
                     <th>Price</th>
                     <th>Features</th>
+                    <th>Replaces</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td><strong>Starter</strong></td>
-                    <td>$49/month</td>
-                    <td>5 projects, 10K traces/month, basic monitoring</td>
+                    <td>$49/month<br><small style="color: #059669;">Save $450+/month</small></td>
+                    <td>5 projects, 10K traces/month, basic monitoring & analytics, content management</td>
+                    <td>Basic MixPanel + Firebase + Sentry</td>
                 </tr>
                 <tr>
                     <td><strong>Professional</strong></td>
-                    <td>$149/month</td>
-                    <td>20 projects, 100K traces/month, advanced analytics</td>
+                    <td>$149/month<br><small style="color: #059669;">Save $850+/month</small></td>
+                    <td>20 projects, 100K traces/month, advanced analytics, customer behavior tracking, business
+                        observation, ticketing, mini CRM</td>
+                    <td>MixPanel + Datadog + Sentry + Glassbox + Firebase</td>
                 </tr>
                 <tr>
                     <td><strong>Enterprise</strong></td>
                     <td>Custom</td>
-                    <td>Unlimited projects, custom features, SLA</td>
+                    <td>Unlimited projects, custom features, dedicated support, SLA, SSO</td>
+                    <td>Full enterprise tool stack</td>
                 </tr>
             </tbody>
         </table>
 
         <h2>Revenue Projections</h2>
-        <ul>
-            <li>Month 1-3: $500-2,000 MRR (10-40 customers)</li>
-            <li>Month 4-6: $2,000-5,000 MRR (40-100 customers)</li>
-            <li>Month 7-12: $5,000-15,000 MRR (100-300 customers)</li>
-        </ul>
+
+        <h3>Monthly Recurring Revenue (MRR) Growth</h3>
+        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8pt; padding: 15pt; margin: 15pt 0;">
+            <table style="width: 100%; font-size: 9pt;">
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th>MRR</th>
+                        <th>Customers</th>
+                        <th>Visual</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Months 1-3</td>
+                        <td><strong>$500-2,000</strong></td>
+                        <td>10-40</td>
+                        <td>
+                            <div style="background: #3b82f6; height: 8pt; width: 10%; border-radius: 2pt;"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Months 4-6</td>
+                        <td><strong>$2,000-5,000</strong></td>
+                        <td>40-100</td>
+                        <td>
+                            <div style="background: #3b82f6; height: 8pt; width: 30%; border-radius: 2pt;"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Months 7-12</td>
+                        <td><strong>$5,000-15,000</strong></td>
+                        <td>100-300</td>
+                        <td>
+                            <div style="background: #3b82f6; height: 8pt; width: 80%; border-radius: 2pt;"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Annual Revenue Run Rate (ARR) Projection</h3>
+        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8pt; padding: 15pt; margin: 15pt 0;">
+            <table style="width: 100%; font-size: 9pt;">
+                <thead>
+                    <tr>
+                        <th>Timeframe</th>
+                        <th>ARR</th>
+                        <th>Visual</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>End of Year 1</td>
+                        <td><strong>$60K-180K</strong></td>
+                        <td>
+                            <div style="background: #10b981; height: 8pt; width: 15%; border-radius: 2pt;"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>End of Year 2</td>
+                        <td><strong>$300K-600K</strong></td>
+                        <td>
+                            <div style="background: #10b981; height: 8pt; width: 50%; border-radius: 2pt;"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>End of Year 3</td>
+                        <td><strong>$1M-2M</strong></td>
+                        <td>
+                            <div style="background: #10b981; height: 8pt; width: 100%; border-radius: 2pt;"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>AWS Infrastructure Cost vs Revenue</h3>
+        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8pt; padding: 15pt; margin: 15pt 0;">
+            <table style="width: 100%; font-size: 9pt;">
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th>AWS Cost/Month</th>
+                        <th>Revenue/Month</th>
+                        <th>Net Margin</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Months 1-3</td>
+                        <td>$550-1,430</td>
+                        <td>$500-2,000</td>
+                        <td style="color: #ef4444;">Break-even</td>
+                    </tr>
+                    <tr>
+                        <td>Months 4-6</td>
+                        <td>$550-1,430</td>
+                        <td>$2,000-5,000</td>
+                        <td style="color: #10b981;">+40-70%</td>
+                    </tr>
+                    <tr>
+                        <td>Months 7-12</td>
+                        <td>$550-1,430</td>
+                        <td>$5,000-15,000</td>
+                        <td style="color: #10b981;">+70-90%</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="font-size: 8pt; color: #6b7280; margin-top: 8pt;"><em>Note: AWS costs remain relatively stable
+                    while revenue scales, improving margins over time.</em></p>
+        </div>
 
         <h1>7. Why AWS Credits Matter</h1>
 

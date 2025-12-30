@@ -52,8 +52,9 @@ export default function PieChart({ data, size = 200, showLegend = true }: PieCha
         stroke="#1f2937"
         strokeWidth="2"
         className="hover:opacity-80 transition-opacity"
-        title={`${item.label}: ${item.value} (${percentage.toFixed(1)}%)`}
-      />
+      >
+        <title>{`${item.label}: ${item.value} (${percentage.toFixed(1)}%)`}</title>
+      </path>
     )
   })
 

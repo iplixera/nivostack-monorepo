@@ -38,7 +38,7 @@ export type Plan = {
 export async function getPlan(planId: string): Promise<Plan | null> {
   return prisma.plan.findUnique({
     where: { id: planId },
-  })
+  }) as unknown as Promise<Plan | null>
 }
 
 /**
@@ -47,7 +47,7 @@ export async function getPlan(planId: string): Promise<Plan | null> {
 export async function getPlanByName(name: string): Promise<Plan | null> {
   return prisma.plan.findUnique({
     where: { name },
-  })
+  }) as unknown as Promise<Plan | null>
 }
 
 /**
@@ -61,7 +61,7 @@ export async function getPublicPlans(): Promise<Plan[]> {
     orderBy: {
       price: 'asc',
     },
-  })
+  }) as unknown as Promise<Plan[]>
 }
 
 /**

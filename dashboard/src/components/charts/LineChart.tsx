@@ -61,8 +61,9 @@ export default function LineChart({ data, height = 200, color = '#3b82f6' }: Lin
             r="1.5"
             fill={color}
             className="hover:r-2 transition-all"
-            title={`${point.label}: ${point.value}`}
-          />
+          >
+            <title>{`${point.label}: ${point.value}`}</title>
+          </circle>
         ))}
       </svg>
       {/* X-axis labels */}

@@ -92,21 +92,29 @@ export async function POST(request: NextRequest) {
     if (paymentMethodId) {
       try {
         // Attach payment method to customer if not already attached
-        await stripe.paymentMethods.attach(paymentMethodId, {
-          customer: customerId,
-        })
-
-        // Set as default if no default exists
-        const customer = await stripe.customers.retrieve(customerId)
-        if (typeof customer !== 'deleted' && !customer.invoice_settings?.default_payment_method) {
-          await stripe.customers.update(customerId, {
-            invoice_settings: {
-              default_payment_method: paymentMethodId,
-            },
+        if (customerId) {
+          await stripe.paymentMethods.attach(paymentMethodId, {
+            customer: customerId,
           })
         }
 
+        // Set as default if no default exists
+        if (customerId) {
+          const customer = await stripe.customers.retrieve(customerId)
+          if (customer && !('deleted' in customer) && !customer.invoice_settings?.default_payment_method) {
+              await stripe.customers.update(customerId, {
+              invoice_settings: {
+                default_payment_method: paymentMethodId,
+              },
+            })
+          }
+        }
+
         // Charge the payment method
+        if (!customerId) {
+          return NextResponse.json({ error: 'Customer ID is required' }, { status: 400 })
+        }
+        
         const chargeResult = await chargePaymentMethod(
           paymentMethodId,
           customerId,
@@ -132,7 +140,7 @@ export async function POST(request: NextRequest) {
             currentPeriodEnd: addMonths(now, targetPlan.interval === 'year' ? 12 : 1),
             status: 'active',
             enabled: true,
-          },
+          } as any,
         })
 
         // Create invoice
@@ -147,7 +155,7 @@ export async function POST(request: NextRequest) {
             periodEnd: addMonths(now, targetPlan.interval === 'year' ? 12 : 1),
             dueDate: addMonths(now, targetPlan.interval === 'year' ? 12 : 1),
             stripePaymentIntentId: chargeResult.paymentIntentId || null,
-          },
+          } as any,
         })
 
         return NextResponse.json({
@@ -165,6 +173,10 @@ export async function POST(request: NextRequest) {
       }
     } else {
       // No payment method provided - create payment intent for frontend confirmation
+      if (!customerId) {
+        return NextResponse.json({ error: 'Customer ID is required' }, { status: 400 })
+      }
+      
       const paymentIntent = await createPaymentIntent(
         customerId,
         upgradeAmount,

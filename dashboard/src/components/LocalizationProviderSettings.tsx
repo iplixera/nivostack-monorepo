@@ -44,7 +44,7 @@ export default function LocalizationProviderSettings({
     try {
       setLoading(true)
       const data = await api.localization.getProviders(projectId, token)
-      setProviders(data.providers)
+      setProviders(data.providers as any)
     } catch (error) {
       console.error('Failed to load providers:', error)
     } finally {

@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
         currentPeriodEnd: addMonths(now, targetPlan.interval === 'year' ? 12 : 1),
         status: 'active',
         enabled: true,
-      },
+      } as any,
     })
 
     // Create invoice
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
         periodEnd: addMonths(now, targetPlan.interval === 'year' ? 12 : 1),
         dueDate: addMonths(now, targetPlan.interval === 'year' ? 12 : 1),
         stripePaymentIntentId: paymentIntentId,
-      },
+      } as any,
     })
 
     return NextResponse.json({

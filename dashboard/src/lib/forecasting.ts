@@ -53,17 +53,17 @@ export async function calculateChurnRisk(): Promise<ForecastMetrics['churnRisk']
         continue
       }
 
-      const meters = [usage.devices, usage.apiTraces, usage.logs, usage.sessions]
+      const meters = [usage.devices, usage.apiRequests, usage.logs, usage.sessions]
       const maxUsage = Math.max(...meters.map((m) => m?.percentage || 0))
 
       // Check grace period
-      const inGracePeriod = sub.gracePeriodEnd && sub.gracePeriodEnd > new Date()
+      const inGracePeriod = (sub as any).gracePeriodEnd && (sub as any).gracePeriodEnd > new Date()
 
       // Check payment retry count
-      const paymentIssues = sub.paymentRetryCount > 0
+      const paymentIssues = ((sub as any).paymentRetryCount || 0) > 0
 
       // High risk: 100%+ usage OR in grace period OR multiple payment retries
-      if (maxUsage >= 100 || inGracePeriod || sub.paymentRetryCount >= 3) {
+      if (maxUsage >= 100 || inGracePeriod || ((sub as any).paymentRetryCount || 0) >= 3) {
         highRisk++
       }
       // Medium risk: 80-100% usage OR payment retries
@@ -101,7 +101,7 @@ export async function calculateRevenueForecast(): Promise<ForecastMetrics['reven
 
   // Current MRR (Monthly Recurring Revenue)
   const currentMRR = subscriptions.reduce((sum, sub) => {
-    return sum + (sub.discountedPrice || sub.plan.price)
+    return sum + ((sub as any).discountedPrice || sub.plan.price)
   }, 0)
 
   // Potential MRR from upgrades (assuming 30% conversion rate)
@@ -127,9 +127,9 @@ export async function calculateRevenueForecast(): Promise<ForecastMetrics['reven
   const highRiskMRR = subscriptions
     .filter((sub) => {
       // Simplified - would need to check actual risk
-      return sub.paymentRetryCount >= 3 || (sub.gracePeriodEnd && sub.gracePeriodEnd > new Date())
+      return ((sub as any).paymentRetryCount || 0) >= 3 || ((sub as any).gracePeriodEnd && (sub as any).gracePeriodEnd > new Date())
     })
-    .reduce((sum, sub) => sum + (sub.discountedPrice || sub.plan.price), 0)
+    .reduce((sum, sub) => sum + ((sub as any).discountedPrice || sub.plan.price), 0)
 
   const churnRiskMRR = highRiskMRR * 0.5 // Assume 50% churn probability for high-risk users
 
@@ -195,7 +195,7 @@ export async function calculateUsageTrends(): Promise<ForecastMetrics['usageTren
       const usage = await getUsageStats(sub.userId)
       if (!usage) continue
 
-      const meters = [usage.devices, usage.apiTraces, usage.logs, usage.sessions]
+      const meters = [usage.devices, usage.apiRequests, usage.logs, usage.sessions]
       const maxUsage = Math.max(...meters.map((m) => m?.percentage || 0))
 
       totalUsage += maxUsage

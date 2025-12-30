@@ -8,9 +8,36 @@ This guide explains how to generate a professional PDF from the NivoStack AWS Cr
 2. **NIVOSTACK_AWS_CREDITS_PITCH_DECK.html** - HTML version (ready for PDF conversion)
 3. **generate_pdf_pitch_deck.py** - Python script for automated PDF generation
 
-## Method 1: Browser Print to PDF (Easiest - Recommended)
+## Method 1: Automated Chrome Script (Best Quality - Recommended) ⭐
 
-This is the simplest and most reliable method:
+**This is the fastest and produces the highest quality PDF!**
+
+Simply run:
+```bash
+cd docs/business
+./generate_pdf_chrome.sh
+```
+
+The script will:
+- Automatically detect Chrome/Chromium
+- Generate a professional PDF with proper formatting
+- Open the PDF automatically (on macOS)
+
+**Requirements:**
+- Google Chrome or Chromium installed
+- No additional dependencies needed
+
+**Output:**
+- File: `NIVOSTACK_AWS_CREDITS_PITCH_DECK.pdf`
+- Size: ~400KB
+- Pages: 8 pages
+- Quality: Professional, print-ready
+
+---
+
+## Method 2: Browser Print to PDF (Manual)
+
+This is the simplest manual method:
 
 1. **Open the HTML file in your browser:**
    ```bash

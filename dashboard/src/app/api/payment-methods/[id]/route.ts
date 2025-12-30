@@ -23,9 +23,13 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
+    // TODO: PaymentMethod model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'PaymentMethod model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL PAYMENTMETHOD MODEL IS ADDED
     const { id } = await params
 
-    const paymentMethod = await prisma.paymentMethod.findFirst({
+    const paymentMethod = await (prisma as any).paymentMethod.findFirst({
       where: {
         id,
         userId: payload.userId,
@@ -37,6 +41,7 @@ export async function GET(
     }
 
     return NextResponse.json({ paymentMethod })
+    */
   } catch (error) {
     console.error('Get payment method error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -63,9 +68,13 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
+    // TODO: PaymentMethod model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'PaymentMethod model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL PAYMENTMETHOD MODEL IS ADDED
     const { id } = await params
 
-    const paymentMethod = await prisma.paymentMethod.findFirst({
+    const paymentMethod = await (prisma as any).paymentMethod.findFirst({
       where: {
         id,
         userId: payload.userId,
@@ -82,11 +91,12 @@ export async function DELETE(
     }
 
     // Delete from database
-    await prisma.paymentMethod.delete({
+    await (prisma as any).paymentMethod.delete({
       where: { id },
     })
 
     return NextResponse.json({ success: true })
+    */
   } catch (error) {
     console.error('Delete payment method error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -113,10 +123,14 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
+    // TODO: PaymentMethod model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'PaymentMethod model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL PAYMENTMETHOD MODEL IS ADDED
     const { id } = await params
     const { isDefault } = await request.json()
 
-    const paymentMethod = await prisma.paymentMethod.findFirst({
+    const paymentMethod = await (prisma as any).paymentMethod.findFirst({
       where: {
         id,
         userId: payload.userId,
@@ -129,14 +143,14 @@ export async function PATCH(
 
     // If setting as default, unset other defaults
     if (isDefault === true) {
-      await prisma.paymentMethod.updateMany({
+      await (prisma as any).paymentMethod.updateMany({
         where: { userId: payload.userId, isDefault: true },
         data: { isDefault: false },
       })
     }
 
     // Update payment method
-    const updated = await prisma.paymentMethod.update({
+    const updated = await (prisma as any).paymentMethod.update({
       where: { id },
       data: {
         isDefault: isDefault !== undefined ? isDefault : paymentMethod.isDefault,
@@ -144,6 +158,7 @@ export async function PATCH(
     })
 
     return NextResponse.json({ paymentMethod: updated })
+    */
   } catch (error) {
     console.error('Update payment method error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

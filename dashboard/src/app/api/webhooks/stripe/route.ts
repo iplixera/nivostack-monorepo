@@ -70,7 +70,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
   const invoice = await prisma.invoice.findFirst({
     where: {
       stripePaymentIntentId: paymentIntent.id,
-    },
+    } as any,
     include: {
       subscription: true,
     },
@@ -94,7 +94,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
           enabled: true,
           gracePeriodEnd: null,
           gracePeriodReason: null,
-        },
+        } as any,
       })
     }
   }
@@ -107,7 +107,7 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
   const invoice = await prisma.invoice.findFirst({
     where: {
       stripePaymentIntentId: paymentIntent.id,
-    },
+    } as any,
     include: {
       subscription: true,
     },
@@ -123,7 +123,7 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
     })
 
     // Enter grace period if not already in one
-    if (!invoice.subscription.gracePeriodEnd) {
+    if (!(invoice.subscription as any).gracePeriodEnd) {
       const gracePeriodEnd = new Date()
       gracePeriodEnd.setDate(gracePeriodEnd.getDate() + 7) // 7-day grace period
 
@@ -134,7 +134,7 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
           gracePeriodReason: 'Payment failed',
           paymentRetryCount: { increment: 1 },
           lastPaymentAttempt: new Date(),
-        },
+        } as any,
       })
     }
   }

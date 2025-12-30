@@ -890,7 +890,7 @@ export const api = {
     }, apiKey: string) =>
       fetchApi<{ receivesRollout: boolean; value: any; matchedTargeting?: boolean; reason?: string }>(
         '/api/business-config/evaluate',
-        { method: 'POST', body: { configKey, context }, customHeaders: { 'X-API-Key': apiKey } }
+        { method: 'POST', body: { configKey, context }, headers: { 'X-API-Key': apiKey } }
       ),
     // Analytics
     getAnalytics: (projectId: string, configKey: string | undefined, startDate: string | undefined, endDate: string | undefined, token: string) =>
@@ -1013,12 +1013,12 @@ export const api = {
     assign: (experimentId: string, deviceId: string | undefined, userId: string | undefined, context: any, apiKey: string) =>
       fetchApi<{ variantIndex: number; variantName: string; value: any }>(
         `/api/experiments/${experimentId}/assign`,
-        { method: 'POST', body: { deviceId, userId, context }, customHeaders: { 'X-API-Key': apiKey } }
+        { method: 'POST', body: { deviceId, userId, context }, headers: { 'X-API-Key': apiKey } }
       ),
     trackEvent: (experimentId: string, deviceId: string | undefined, userId: string | undefined, eventType: string, eventName: string, eventValue: number | undefined, metadata: any, apiKey: string) =>
       fetchApi<{ success: boolean }>(
         `/api/experiments/${experimentId}/events`,
-        { method: 'POST', body: { deviceId, userId, eventType, eventName, eventValue, metadata }, customHeaders: { 'X-API-Key': apiKey } }
+        { method: 'POST', body: { deviceId, userId, eventType, eventName, eventValue, metadata }, headers: { 'X-API-Key': apiKey } }
       ),
   },
   deployments: {
@@ -1560,12 +1560,12 @@ export const api = {
     checkOTA: (projectId: string, currentVersion: string | undefined, languageCode: string, apiKey: string) =>
       fetchApi<{ updateAvailable: boolean; latestVersion: number; delta?: { added: Record<string, string>; updated: Record<string, string>; deleted: string[] }; fullPayload?: Record<string, string> }>(
         `/api/localization/ota/check?projectId=${projectId}${currentVersion ? `&currentVersion=${currentVersion}` : ''}&languageCode=${languageCode}`,
-        { customHeaders: { 'X-API-Key': apiKey } }
+        { headers: { 'X-API-Key': apiKey } }
       ),
     logOTAUpdate: (projectId: string, deviceId: string, fromVersion: number, toVersion: number, languageCode: string, apiKey: string) =>
       fetchApi<{ success: boolean }>(
         '/api/localization/ota/update',
-        { method: 'POST', body: { projectId, deviceId, fromVersion, toVersion, languageCode }, customHeaders: { 'X-API-Key': apiKey } }
+        { method: 'POST', body: { projectId, deviceId, fromVersion, toVersion, languageCode }, headers: { 'X-API-Key': apiKey } }
       ),
   },
   subscription: {

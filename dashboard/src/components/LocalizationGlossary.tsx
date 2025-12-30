@@ -49,7 +49,7 @@ export default function LocalizationGlossary({
     try {
       setLoading(true)
       const data = await api.localization.getGlossary(projectId, category || undefined, search || undefined, token)
-      setGlossary(data.glossary)
+      setGlossary(data.glossary as any)
     } catch (error) {
       console.error('Failed to load glossary:', error)
     } finally {

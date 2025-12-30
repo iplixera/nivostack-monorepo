@@ -104,7 +104,7 @@ export default function BusinessConfigDeployment({
                   min="1"
                   max="50"
                   value={deploymentConfig.canaryPercentage}
-                  onChange={(e) => setDeploymentConfig(prev => ({ ...prev, canaryPercentage: parseInt(e.target.value) || 10 }))}
+                  onChange={(e) => setDeploymentConfig((prev: any) => ({ ...prev, canaryPercentage: parseInt(e.target.value) || 10 }))}
                   className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                 />
                 <p className="text-gray-500 text-xs mt-1">Percentage of users to receive config initially</p>
@@ -115,7 +115,7 @@ export default function BusinessConfigDeployment({
                   type="number"
                   min="5"
                   value={deploymentConfig.canaryDuration}
-                  onChange={(e) => setDeploymentConfig(prev => ({ ...prev, canaryDuration: parseInt(e.target.value) || 60 }))}
+                  onChange={(e) => setDeploymentConfig((prev: any) => ({ ...prev, canaryDuration: parseInt(e.target.value) || 60 }))}
                   className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                 />
                 <p className="text-gray-500 text-xs mt-1">Wait time before rolling out to 100%</p>
@@ -132,7 +132,7 @@ export default function BusinessConfigDeployment({
                   min="2"
                   max="20"
                   value={deploymentConfig.linearSteps}
-                  onChange={(e) => setDeploymentConfig(prev => ({ ...prev, linearSteps: parseInt(e.target.value) || 5 }))}
+                  onChange={(e) => setDeploymentConfig((prev: any) => ({ ...prev, linearSteps: parseInt(e.target.value) || 5 }))}
                   className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                 />
                 <p className="text-gray-500 text-xs mt-1">Number of equal increments (e.g., 5 steps = 20% per step)</p>
@@ -143,7 +143,7 @@ export default function BusinessConfigDeployment({
                   type="number"
                   min="5"
                   value={deploymentConfig.linearInterval}
-                  onChange={(e) => setDeploymentConfig(prev => ({ ...prev, linearInterval: parseInt(e.target.value) || 30 }))}
+                  onChange={(e) => setDeploymentConfig((prev: any) => ({ ...prev, linearInterval: parseInt(e.target.value) || 30 }))}
                   className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                 />
               </div>
@@ -160,7 +160,7 @@ export default function BusinessConfigDeployment({
                     min="1"
                     max="20"
                     value={deploymentConfig.exponentialBase}
-                    onChange={(e) => setDeploymentConfig(prev => ({ ...prev, exponentialBase: parseInt(e.target.value) || 5 }))}
+                    onChange={(e) => setDeploymentConfig((prev: any) => ({ ...prev, exponentialBase: parseInt(e.target.value) || 5 }))}
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                   />
                 </div>
@@ -171,7 +171,7 @@ export default function BusinessConfigDeployment({
                     min="1.5"
                     step="0.1"
                     value={deploymentConfig.exponentialMultiplier}
-                    onChange={(e) => setDeploymentConfig(prev => ({ ...prev, exponentialMultiplier: parseFloat(e.target.value) || 2 }))}
+                    onChange={(e) => setDeploymentConfig((prev: any) => ({ ...prev, exponentialMultiplier: parseFloat(e.target.value) || 2 }))}
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                   />
                 </div>
@@ -183,7 +183,7 @@ export default function BusinessConfigDeployment({
                     type="number"
                     min="5"
                     value={deploymentConfig.exponentialInterval}
-                    onChange={(e) => setDeploymentConfig(prev => ({ ...prev, exponentialInterval: parseInt(e.target.value) || 15 }))}
+                    onChange={(e) => setDeploymentConfig((prev: any) => ({ ...prev, exponentialInterval: parseInt(e.target.value) || 15 }))}
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                   />
                 </div>
@@ -194,7 +194,7 @@ export default function BusinessConfigDeployment({
                     min="5"
                     max="50"
                     value={deploymentConfig.exponentialMax}
-                    onChange={(e) => setDeploymentConfig(prev => ({ ...prev, exponentialMax: parseInt(e.target.value) || 20 }))}
+                    onChange={(e) => setDeploymentConfig((prev: any) => ({ ...prev, exponentialMax: parseInt(e.target.value) || 20 }))}
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                   />
                 </div>

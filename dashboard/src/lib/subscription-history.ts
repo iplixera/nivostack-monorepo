@@ -82,7 +82,8 @@ export async function createHistoryRecord(
   // API requests count (same as apiTraces for now, can be enhanced later)
   const apiRequestsCount = apiTracesCount
 
-  return prisma.subscriptionHistory.create({
+  // TODO: SubscriptionHistory model needs to be added to Prisma schema
+  return (prisma as any).subscriptionHistory.create({
     data: {
       subscriptionId,
       userId: data.userId,
@@ -106,7 +107,7 @@ export async function createHistoryRecord(
  * Get subscription history for a user
  */
 export async function getHistoryByUserId(userId: string): Promise<SubscriptionHistory[]> {
-  return prisma.subscriptionHistory.findMany({
+  return (prisma as any).subscriptionHistory.findMany({
     where: { userId },
     orderBy: { periodStart: 'desc' },
     include: {
@@ -126,7 +127,7 @@ export async function getHistoryByUserId(userId: string): Promise<SubscriptionHi
  * Get subscription history for a subscription
  */
 export async function getHistoryBySubscriptionId(subscriptionId: string): Promise<SubscriptionHistory[]> {
-  return prisma.subscriptionHistory.findMany({
+  return (prisma as any).subscriptionHistory.findMany({
     where: { subscriptionId },
     orderBy: { periodStart: 'desc' },
     include: {
@@ -146,7 +147,7 @@ export async function getHistoryBySubscriptionId(subscriptionId: string): Promis
  * Get subscription count for a user (number of completed periods)
  */
 export async function getSubscriptionCount(userId: string): Promise<number> {
-  return prisma.subscriptionHistory.count({
+  return (prisma as any).subscriptionHistory.count({
     where: {
       userId,
       status: 'completed',

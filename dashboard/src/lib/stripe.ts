@@ -7,7 +7,7 @@ if (!stripeSecretKey) {
 }
 
 export const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, {
-  apiVersion: '2024-12-18.acacia',
+  apiVersion: '2025-12-15.clover' as any,
   typescript: true,
 }) : null
 
@@ -56,6 +56,10 @@ export async function attachPaymentMethod(
     throw new Error('Stripe is not configured')
   }
 
+  if (!customerId) {
+    throw new Error('Customer ID is required')
+  }
+  
   const paymentMethod = await stripe.paymentMethods.attach(paymentMethodId, {
     customer: customerId,
   })

@@ -476,7 +476,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowAddKey(true)}
-                disabled={localizationKeysUsage && localizationKeysUsage.limit !== null && localizationKeysUsage.percentage >= 100}
+                disabled={!!(localizationKeysUsage && localizationKeysUsage.limit !== null && localizationKeysUsage.percentage >= 100)}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 + Add Key
@@ -755,7 +755,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
             <h2 className="text-xl font-semibold text-white">Languages</h2>
             <button
               onClick={() => setShowAddLanguage(true)}
-              disabled={localizationLanguagesUsage && localizationLanguagesUsage.limit !== null && localizationLanguagesUsage.percentage >= 100}
+              disabled={!!(localizationLanguagesUsage && localizationLanguagesUsage.limit !== null && localizationLanguagesUsage.percentage >= 100)}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
             >
               + Add Language

@@ -323,13 +323,13 @@ export default function BuildsSubTab({ projectId, featureType, featureLabel, tok
           />
           <button
             onClick={handleCreateBuild}
-            disabled={creating || 
+            disabled={!!(creating || 
               (featureType === 'business_config' && businessConfigUsage && businessConfigUsage.limit !== null && businessConfigUsage.percentage >= 100) ||
               (featureType === 'localization' && (
                 (localizationLanguagesUsage && localizationLanguagesUsage.limit !== null && localizationLanguagesUsage.percentage >= 100) ||
                 (localizationKeysUsage && localizationKeysUsage.limit !== null && localizationKeysUsage.percentage >= 100)
               ))
-            }
+            )}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             title={
               featureType === 'business_config' && businessConfigUsage && businessConfigUsage.limit !== null && businessConfigUsage.percentage >= 100 

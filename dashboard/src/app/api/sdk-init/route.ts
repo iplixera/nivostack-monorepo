@@ -192,7 +192,7 @@ export async function GET(request: NextRequest) {
 
       // Device (if deviceId provided) - for device-specific config
       deviceId
-        ? prisma.device.findUnique({
+        ? (prisma.device.findUnique as any)({
             where: {
               projectId_deviceId: {
                 projectId,

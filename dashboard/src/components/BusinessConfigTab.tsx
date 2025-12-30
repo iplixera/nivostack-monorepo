@@ -7,6 +7,7 @@ import BuildsSubTab from './BuildsSubTab'
 import BusinessConfigTargeting from './BusinessConfigTargeting'
 import BusinessConfigHistory from './BusinessConfigHistory'
 import BusinessConfigAnalytics from './BusinessConfigAnalytics'
+import ExperimentsTab from './ExperimentsTab'
 
 type BusinessConfig = {
   id: string
@@ -386,7 +387,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
     setError(null)
     try {
       const res = await api.businessConfig.list(projectId, token, selectedCategory || undefined)
-      setConfigs(res.configs)
+      setConfigs(res.configs as any)
       setCategories(res.categories)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch configs')
@@ -506,8 +507,11 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
       valueType: 'string',
       value: '',
       category: '',
-      isEnabled: true
-    })
+      isEnabled: true,
+      targetingRules: null,
+      defaultValue: null,
+      rolloutPercentage: 100,
+    } as any)
     setEditingConfig(null)
     setShowAddForm(false)
   }
@@ -521,8 +525,11 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
       valueType: config.valueType as ValueType,
       value: getConfigValue(config) ?? '',
       category: config.category || '',
-      isEnabled: config.isEnabled
-    })
+      isEnabled: config.isEnabled,
+      targetingRules: (config as any).targetingRules || null,
+      defaultValue: (config as any).defaultValue || null,
+      rolloutPercentage: (config as any).rolloutPercentage || 100,
+    } as any)
     setShowAddForm(true)
   }
 
@@ -567,7 +574,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
           targetingRules: formData.targetingRules,
           defaultValue: formData.defaultValue,
           rolloutPercentage: formData.rolloutPercentage
-        })
+        } as any)
       } else {
         await api.businessConfig.create(projectId, token, {
           key: formData.key,
@@ -580,7 +587,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
           targetingRules: formData.targetingRules,
           defaultValue: formData.defaultValue,
           rolloutPercentage: formData.rolloutPercentage
-        })
+        } as any)
       }
 
       resetForm()
@@ -1068,7 +1075,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
               resetForm()
               setShowAddForm(true)
             }}
-            disabled={businessConfigUsage && businessConfigUsage.limit !== null && businessConfigUsage.percentage >= 100}
+            disabled={!!(businessConfigUsage && businessConfigUsage.limit !== null && businessConfigUsage.percentage >= 100)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             + Add Config
@@ -1543,7 +1550,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
                 id: targetingConfig.id,
                 targetingRules,
                 defaultValue
-              })
+              } as any)
               setShowTargeting(false)
               fetchConfigs()
             } catch (err) {

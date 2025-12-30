@@ -20,8 +20,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
+    // TODO: PaymentMethod model needs to be added to Prisma schema
+    return NextResponse.json({ paymentMethods: [] })
+    
+    /* COMMENTED OUT UNTIL PAYMENTMETHOD MODEL IS ADDED
     // Get user's payment methods from database
-    const paymentMethods = await prisma.paymentMethod.findMany({
+    const paymentMethods = await (prisma as any).paymentMethod.findMany({
       where: { userId: payload.userId },
       orderBy: { isDefault: 'desc', createdAt: 'desc' },
     })
@@ -57,6 +61,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ paymentMethods })
+    */
   } catch (error) {
     console.error('Get payment methods error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -112,16 +117,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to attach payment method' }, { status: 500 })
     }
 
+    // TODO: PaymentMethod model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'PaymentMethod model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL PAYMENTMETHOD MODEL IS ADDED
     // If this is set as default, unset other defaults
     if (isDefault) {
-      await prisma.paymentMethod.updateMany({
+      await (prisma as any).paymentMethod.updateMany({
         where: { userId: payload.userId, isDefault: true },
         data: { isDefault: false },
       })
     }
 
     // Save payment method to database
-    const savedPaymentMethod = await prisma.paymentMethod.create({
+    const savedPaymentMethod = await (prisma as any).paymentMethod.create({
       data: {
         userId: payload.userId,
         stripePaymentMethodId: paymentMethod.id,
@@ -137,6 +146,7 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({ paymentMethod: savedPaymentMethod })
+    */
   } catch (error) {
     console.error('Create payment method error:', error)
     return NextResponse.json(

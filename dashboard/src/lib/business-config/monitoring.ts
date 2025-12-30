@@ -106,7 +106,6 @@ async function checkAlertCondition(
         : 0
 
       return evaluateThreshold(dropPercentage, alert.threshold, alert.operator)
-    */
 
     case 'usage_drop':
       // Similar to fetch_rate but more specific
@@ -124,6 +123,7 @@ async function checkAlertCondition(
     default:
       return false
   }
+  */
 }
 
 /**

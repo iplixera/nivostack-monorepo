@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "pnpm exec prisma generate --schema=../prisma/schema.prisma && next build --webpack",
+    "build": "bash scripts/generate-prisma-safe.sh && next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "echo 'Skipping prisma generate in postinstall'",

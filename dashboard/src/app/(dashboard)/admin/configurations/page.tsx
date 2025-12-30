@@ -132,7 +132,7 @@ export default function AdminConfigurationsPage() {
   const loadConfigurations = async () => {
     try {
       setLoading(true)
-      const data = await api.admin.getConfigurations(token, activeCategory)
+      const data = await api.admin.getConfigurations(token, activeCategory || undefined)
       setConfigurations(data.configurations)
       
       // Initialize form data with existing values

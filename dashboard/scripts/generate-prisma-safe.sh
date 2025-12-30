@@ -32,8 +32,8 @@ REAL_PNPM=$(command -v pnpm 2>/dev/null || echo "/usr/local/bin/pnpm")
 
 cat > "$FAKE_PNPM_DIR/pnpm" << EOF
 #!/bin/bash
-# Fake pnpm that prevents Prisma from installing itself
-if [[ "\$*" == *"add prisma"* ]]; then
+# Fake pnpm that prevents Prisma from installing itself or @prisma/client
+if [[ "\$*" == *"add prisma"* ]] || [[ "\$*" == *"add @prisma/client"* ]]; then
   echo "Prisma install blocked by workaround"
   exit 0
 fi

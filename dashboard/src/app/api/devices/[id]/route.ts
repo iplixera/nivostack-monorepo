@@ -34,7 +34,7 @@ export async function DELETE(
     }
 
     // Verify user owns the project
-    if (device.project.userId !== user.id) {
+    if (!device.project || device.project.userId !== user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
@@ -139,7 +139,7 @@ export async function GET(
     }
 
     // Verify user owns the project
-    if (device.project.userId !== user.id) {
+    if (!device.project || device.project.userId !== user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
@@ -167,33 +167,33 @@ export async function GET(
         debugModeExpiresAt: device.debugModeExpiresAt?.toISOString() || null,
         lastSeenAt: device.lastSeenAt?.toISOString() || null,
         createdAt: device.createdAt?.toISOString() || null,
-        // Firebase-like device properties
-        deviceCategory: device.deviceCategory,
-        deviceBrand: device.deviceBrand,
-        locale: device.locale,
-        language: device.language,
-        timeZone: device.timeZone,
-        timeZoneOffset: device.timeZoneOffset,
-        advertisingId: device.advertisingId,
-        vendorId: device.vendorId,
-        limitedAdTracking: device.limitedAdTracking,
-        appId: device.appId,
-        appInstanceId: device.appInstanceId,
-        firstOpenAt: device.firstOpenAt?.toISOString() || null,
-        firstPurchaseAt: device.firstPurchaseAt?.toISOString() || null,
-        // Enhanced fingerprinting
-        fingerprint: device.fingerprint,
-        batteryLevel: device.batteryLevel,
-        storageFree: device.storageFree ? Number(device.storageFree) : null,
-        memoryTotal: device.memoryTotal ? Number(device.memoryTotal) : null,
-        networkType: device.networkType,
-        screenWidth: device.screenWidth,
-        screenHeight: device.screenHeight,
-        screenDensity: device.screenDensity,
-        cpuArchitecture: device.cpuArchitecture,
-        tags: device.tags,
-        state: device.state,
-        projectName: device.project.name,
+        // Firebase-like device properties (using type assertions as these may not exist in schema)
+        deviceCategory: (device as any).deviceCategory,
+        deviceBrand: (device as any).deviceBrand,
+        locale: (device as any).locale,
+        language: (device as any).language,
+        timeZone: (device as any).timeZone,
+        timeZoneOffset: (device as any).timeZoneOffset,
+        advertisingId: (device as any).advertisingId,
+        vendorId: (device as any).vendorId,
+        limitedAdTracking: (device as any).limitedAdTracking,
+        appId: (device as any).appId,
+        appInstanceId: (device as any).appInstanceId,
+        firstOpenAt: (device as any).firstOpenAt?.toISOString() || null,
+        firstPurchaseAt: (device as any).firstPurchaseAt?.toISOString() || null,
+        // Enhanced fingerprinting (using type assertions as these may not exist in schema)
+        fingerprint: (device as any).fingerprint,
+        batteryLevel: (device as any).batteryLevel,
+        storageFree: (device as any).storageFree ? Number((device as any).storageFree) : null,
+        memoryTotal: (device as any).memoryTotal ? Number((device as any).memoryTotal) : null,
+        networkType: (device as any).networkType,
+        screenWidth: (device as any).screenWidth,
+        screenHeight: (device as any).screenHeight,
+        screenDensity: (device as any).screenDensity,
+        cpuArchitecture: (device as any).cpuArchitecture,
+        tags: (device as any).tags,
+        state: (device as any).state,
+        projectName: device.project?.name || null,
         stats: {
           logs: device._count.logs,
           crashes: device._count.crashes,

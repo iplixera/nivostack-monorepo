@@ -26,7 +26,11 @@ export async function PUT(
       isActive
     } = await request.json()
 
-    const glossaryTerm = await prisma.glossary.findUnique({
+    // TODO: Glossary model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'Glossary model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL GLOSSARY MODEL IS ADDED
+    const glossaryTerm = await (prisma as any).glossary.findUnique({
       where: { id },
       include: {
         project: true
@@ -42,7 +46,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    const updated = await prisma.glossary.update({
+    const updated = await (prisma as any).glossary.update({
       where: { id },
       data: {
         ...(term !== undefined && { term }),
@@ -55,6 +59,7 @@ export async function PUT(
     })
 
     return NextResponse.json({ term: updated })
+    */
   } catch (error) {
     console.error('Update glossary term error:', error)
     return NextResponse.json(
@@ -80,7 +85,11 @@ export async function DELETE(
 
     const { id } = await params
 
-    const glossaryTerm = await prisma.glossary.findUnique({
+    // TODO: Glossary model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'Glossary model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL GLOSSARY MODEL IS ADDED
+    const glossaryTerm = await (prisma as any).glossary.findUnique({
       where: { id },
       include: {
         project: true
@@ -96,11 +105,12 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    await prisma.glossary.delete({
+    await (prisma as any).glossary.delete({
       where: { id }
     })
 
     return NextResponse.json({ success: true })
+    */
   } catch (error) {
     console.error('Delete glossary term error:', error)
     return NextResponse.json(

@@ -36,8 +36,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
+    // TODO: TranslationMemory model needs to be added to Prisma schema
+    return NextResponse.json({ suggestions: [] })
+    
+    /* COMMENTED OUT UNTIL TRANSLATIONMEMORY MODEL IS ADDED
     // Get all translation memory entries for this language pair
-    const tmEntries = await prisma.translationMemory.findMany({
+    const tmEntries = await (prisma as any).translationMemory.findMany({
       where: {
         projectId,
         sourceLanguageId,

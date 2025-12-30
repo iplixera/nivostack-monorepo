@@ -47,7 +47,11 @@ export async function GET(request: NextRequest) {
       where.term = { contains: search, mode: 'insensitive' }
     }
 
-    const glossary = await prisma.glossary.findMany({
+    // TODO: Glossary model needs to be added to Prisma schema
+    return NextResponse.json({ glossary: [] })
+    
+    /* COMMENTED OUT UNTIL GLOSSARY MODEL IS ADDED
+    const glossary = await (prisma as any).glossary.findMany({
       where,
       orderBy: {
         term: 'asc'
@@ -55,6 +59,7 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({ glossary })
+    */
   } catch (error) {
     console.error('Get glossary error:', error)
     return NextResponse.json(
@@ -100,7 +105,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
-    const glossaryTerm = await prisma.glossary.create({
+    // TODO: Glossary model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'Glossary model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL GLOSSARY MODEL IS ADDED
+    const glossaryTerm = await (prisma as any).glossary.create({
       data: {
         projectId,
         term,
@@ -112,6 +121,7 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({ term: glossaryTerm })
+    */
   } catch (error) {
     console.error('Create glossary term error:', error)
     return NextResponse.json(

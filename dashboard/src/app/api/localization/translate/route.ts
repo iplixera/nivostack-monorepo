@@ -80,7 +80,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Get translation provider configuration
-    const providerConfig = await prisma.translationProvider.findUnique({
+    // TODO: TranslationProvider model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'TranslationProvider model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL TRANSLATIONPROVIDER MODEL IS ADDED
+    const providerConfig = await (prisma as any).translationProvider.findUnique({
       where: {
         projectId_provider: {
           projectId: translationKey.projectId,
@@ -166,6 +170,7 @@ export async function POST(request: NextRequest) {
         cost
       }
     })
+    */
   } catch (error) {
     console.error('Translation error:', error)
     return NextResponse.json(

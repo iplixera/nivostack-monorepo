@@ -225,7 +225,7 @@ export async function POST(request: NextRequest) {
 
     // Track history if value changed
     // TODO: TranslationHistory model needs to be added to Prisma schema
-    /** COMMENTED OUT UNTIL TRANSLATIONHISTORY MODEL IS ADDED
+    /* COMMENTED OUT UNTIL TRANSLATIONHISTORY MODEL IS ADDED
     if (existingTranslation && existingTranslation.value !== translation.value) {
       await (prisma as any).translationHistory.create({
         data: {
@@ -258,7 +258,7 @@ export async function POST(request: NextRequest) {
           }
         }
       })
-    */
+    }
 
     // Update translation memory if source language is available
     if (value && body.sourceLanguageId && body.sourceText) {

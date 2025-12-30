@@ -16,10 +16,14 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // TODO: TranslationComment model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'TranslationComment model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL TRANSLATIONCOMMENT MODEL IS ADDED
     const { id } = await params
     const { isResolved } = await request.json()
 
-    const comment = await prisma.translationComment.findUnique({
+    const comment = await (prisma as any).translationComment.findUnique({
       where: { id },
       include: {
         translation: {
@@ -43,7 +47,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    const updatedComment = await prisma.translationComment.update({
+    const updatedComment = await (prisma as any).translationComment.update({
       where: { id },
       data: {
         isResolved: isResolved ?? comment.isResolved,
@@ -53,6 +57,7 @@ export async function PATCH(
     })
 
     return NextResponse.json({ comment: updatedComment })
+    */
   } catch (error) {
     console.error('Update comment error:', error)
     return NextResponse.json(
@@ -76,9 +81,13 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // TODO: TranslationComment model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'TranslationComment model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL TRANSLATIONCOMMENT MODEL IS ADDED
     const { id } = await params
 
-    const comment = await prisma.translationComment.findUnique({
+    const comment = await (prisma as any).translationComment.findUnique({
       where: { id },
       include: {
         translation: {
@@ -102,11 +111,12 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    await prisma.translationComment.delete({
+    await (prisma as any).translationComment.delete({
       where: { id }
     })
 
     return NextResponse.json({ success: true })
+    */
   } catch (error) {
     console.error('Delete comment error:', error)
     return NextResponse.json(

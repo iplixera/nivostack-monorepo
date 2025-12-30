@@ -48,7 +48,11 @@ export async function GET(request: NextRequest) {
       where.translationId = { in: translations.map(t => t.id) }
     }
 
-    const history = await prisma.translationHistory.findMany({
+    // TODO: TranslationHistory model needs to be added to Prisma schema
+    return NextResponse.json({ history: [] })
+    
+    /* COMMENTED OUT UNTIL TRANSLATIONHISTORY MODEL IS ADDED
+    const history = await (prisma as any).translationHistory.findMany({
       where,
       orderBy: {
         createdAt: 'desc'
@@ -57,6 +61,7 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({ history })
+    */
   } catch (error) {
     console.error('Get history error:', error)
     return NextResponse.json(

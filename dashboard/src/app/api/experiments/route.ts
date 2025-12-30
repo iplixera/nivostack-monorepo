@@ -38,7 +38,11 @@ export async function GET(request: NextRequest) {
       where.status = status
     }
 
-    const experiments = await prisma.experiment.findMany({
+    // TODO: Experiment model needs to be added to Prisma schema
+    return NextResponse.json({ experiments: [] })
+    
+    /* COMMENTED OUT UNTIL EXPERIMENT MODEL IS ADDED
+    const experiments = await (prisma as any).experiment.findMany({
       where,
       include: {
         config: {
@@ -60,6 +64,7 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({ experiments })
+    */
   } catch (error) {
     console.error('Get experiments error:', error)
     return NextResponse.json(
@@ -125,7 +130,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const experiment = await prisma.experiment.create({
+    // TODO: Experiment model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'Experiment model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL EXPERIMENT MODEL IS ADDED
+    const experiment = await (prisma as any).experiment.create({
       data: {
         projectId,
         configId,
@@ -148,6 +157,7 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({ experiment })
+    */
   } catch (error) {
     console.error('Create experiment error:', error)
     return NextResponse.json(

@@ -18,7 +18,11 @@ export async function GET(
 
     const { id } = await params
 
-    const experiment = await prisma.experiment.findUnique({
+    // TODO: Experiment model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'Experiment model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL EXPERIMENT MODEL IS ADDED
+    const experiment = await (prisma as any).experiment.findUnique({
       where: { id },
       include: {
         config: {
@@ -51,6 +55,7 @@ export async function GET(
     }
 
     return NextResponse.json({ experiment })
+    */
   } catch (error) {
     console.error('Get experiment error:', error)
     return NextResponse.json(
@@ -77,7 +82,11 @@ export async function PATCH(
     const { id } = await params
     const body = await request.json()
 
-    const experiment = await prisma.experiment.findUnique({
+    // TODO: Experiment model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'Experiment model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL EXPERIMENT MODEL IS ADDED
+    const experiment = await (prisma as any).experiment.findUnique({
       where: { id },
       include: { project: true }
     })
@@ -115,7 +124,7 @@ export async function PATCH(
       updateData.startDate = new Date()
     }
 
-    const updated = await prisma.experiment.update({
+    const updated = await (prisma as any).experiment.update({
       where: { id },
       data: updateData,
       include: {
@@ -129,6 +138,7 @@ export async function PATCH(
     })
 
     return NextResponse.json({ experiment: updated })
+    */
   } catch (error) {
     console.error('Update experiment error:', error)
     return NextResponse.json(
@@ -154,7 +164,11 @@ export async function DELETE(
 
     const { id } = await params
 
-    const experiment = await prisma.experiment.findUnique({
+    // TODO: Experiment model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'Experiment model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL EXPERIMENT MODEL IS ADDED
+    const experiment = await (prisma as any).experiment.findUnique({
       where: { id },
       include: { project: true }
     })
@@ -168,11 +182,12 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    await prisma.experiment.delete({
+    await (prisma as any).experiment.delete({
       where: { id }
     })
 
     return NextResponse.json({ success: true })
+    */
   } catch (error) {
     console.error('Delete experiment error:', error)
     return NextResponse.json(

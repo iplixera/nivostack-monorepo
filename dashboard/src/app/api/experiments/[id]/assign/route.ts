@@ -17,10 +17,14 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid API key' }, { status: 401 })
     }
 
+    // TODO: Experiment model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'Experiment model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL EXPERIMENT MODEL IS ADDED
     const { id } = await params
     const { deviceId, userId, context } = await request.json()
 
-    const experiment = await prisma.experiment.findUnique({
+    const experiment = await (prisma as any).experiment.findUnique({
       where: { id },
       include: {
         config: true
@@ -58,7 +62,7 @@ export async function POST(
     }
 
     // Check for existing assignment
-    const existingAssignment = await prisma.experimentAssignment.findUnique({
+    const existingAssignment = await (prisma as any).experimentAssignment.findUnique({
       where: {
         experimentId_deviceId_userId: {
           experimentId: id,
@@ -93,7 +97,7 @@ export async function POST(
     }
 
     // Store assignment
-    await prisma.experimentAssignment.create({
+    await (prisma as any).experimentAssignment.create({
       data: {
         experimentId: id,
         deviceId: deviceId || null,
@@ -108,6 +112,7 @@ export async function POST(
       variantName: assignment.variant.name,
       value: assignment.variant.value
     })
+    */
   } catch (error) {
     console.error('Assign experiment error:', error)
     return NextResponse.json(

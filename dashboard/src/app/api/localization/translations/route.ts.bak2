@@ -224,41 +224,41 @@ export async function POST(request: NextRequest) {
     })
 
     // Track history if value changed
-    // TODO: TranslationHistory model needs to be added to Prisma schema
-    /** COMMENTED OUT UNTIL TRANSLATIONHISTORY MODEL IS ADDED
-    if (existingTranslation && existingTranslation.value !== translation.value) {
-      await (prisma as any).translationHistory.create({
-        data: {
-          translationId: translation.id,
-          projectId: localizationKey.projectId,
-          userId: payload.userId,
-          userName: payload.name || payload.email,
-          oldValue: existingTranslation.value,
-          newValue: translation.value,
-          changeType: 'updated',
-          metadata: {
-            provider: translation.translationProvider,
-            confidence: translation.translationConfidence
-          }
-        }
-      })
-    } else if (!existingTranslation) {
-      // Track creation
-      await (prisma as any).translationHistory.create({
-        data: {
-          translationId: translation.id,
-          projectId: localizationKey.projectId,
-          userId: payload.userId,
-          userName: payload.name || payload.email,
-          newValue: translation.value,
-          changeType: 'created',
-          metadata: {
-            provider: translation.translationProvider,
-            confidence: translation.translationConfidence
-          }
-        }
-      })
-    */
+//     // TODO: TranslationHistory model needs to be added to Prisma schema
+//     /* COMMENTED OUT UNTIL TRANSLATIONHISTORY MODEL IS ADDED
+//     if (existingTranslation && existingTranslation.value !== translation.value) {
+//       await (prisma as any).translationHistory.create({
+//         data: {
+//           translationId: translation.id,
+//           projectId: localizationKey.projectId,
+//           userId: payload.userId,
+//           userName: payload.name || payload.email,
+//           oldValue: existingTranslation.value,
+//           newValue: translation.value,
+//           changeType: 'updated',
+//           metadata: {
+//             provider: translation.translationProvider,
+//             confidence: translation.translationConfidence
+//           }
+//         }
+//       })
+//     } else if (!existingTranslation) {
+//       // Track creation
+//       await (prisma as any).translationHistory.create({
+//         data: {
+//           translationId: translation.id,
+//           projectId: localizationKey.projectId,
+//           userId: payload.userId,
+//           userName: payload.name || payload.email,
+//           newValue: translation.value,
+//           changeType: 'created',
+//           metadata: {
+//             provider: translation.translationProvider,
+//             confidence: translation.translationConfidence
+//           }
+//         }
+//       })
+//     }
 
     // Update translation memory if source language is available
     if (value && body.sourceLanguageId && body.sourceText) {

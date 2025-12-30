@@ -19,7 +19,11 @@ export async function GET(
 
     const { id } = await params
 
-    const experiment = await prisma.experiment.findUnique({
+    // TODO: Experiment model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'Experiment model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL EXPERIMENT MODEL IS ADDED
+    const experiment = await (prisma as any).experiment.findUnique({
       where: { id },
       include: { project: true }
     })
@@ -34,7 +38,7 @@ export async function GET(
     }
 
     // Get assignments
-    const assignments = await prisma.experimentAssignment.findMany({
+    const assignments = await (prisma as any).experimentAssignment.findMany({
       where: { experimentId: id },
       select: {
         variantIndex: true,
@@ -43,7 +47,7 @@ export async function GET(
     })
 
     // Get all assignments first for efficient lookup
-    const allAssignments = await prisma.experimentAssignment.findMany({
+    const allAssignments = await (prisma as any).experimentAssignment.findMany({
       where: { experimentId: id }
     })
     
@@ -55,7 +59,7 @@ export async function GET(
     })
 
     // Get events with device/user info
-    const events = await prisma.experimentEvent.findMany({
+    const events = await (prisma as any).experimentEvent.findMany({
       where: { experimentId: id },
       select: {
         deviceId: true,
@@ -124,6 +128,7 @@ export async function GET(
       significance: significanceResults,
       totalEvents: events.length
     })
+    */
   } catch (error) {
     console.error('Get experiment results error:', error)
     return NextResponse.json(

@@ -32,7 +32,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
-    const providers = await prisma.translationProvider.findMany({
+    // TODO: TranslationProvider model needs to be added to Prisma schema
+    return NextResponse.json({ providers: [] })
+    
+    /* COMMENTED OUT UNTIL TRANSLATIONPROVIDER MODEL IS ADDED
+    const providers = await (prisma as any).translationProvider.findMany({
       where: { projectId },
       select: {
         id: true,
@@ -47,6 +51,7 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({ providers })
+    */
   } catch (error) {
     console.error('Get providers error:', error)
     return NextResponse.json(
@@ -105,7 +110,11 @@ export async function POST(request: NextRequest) {
     // TODO: Encrypt API keys before storing
     // For now, store as-is (should use encryption in production)
 
-    const translationProvider = await prisma.translationProvider.upsert({
+    // TODO: TranslationProvider model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'TranslationProvider model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL TRANSLATIONPROVIDER MODEL IS ADDED
+    const translationProvider = await (prisma as any).translationProvider.upsert({
       where: {
         projectId_provider: {
           projectId,
@@ -134,6 +143,7 @@ export async function POST(request: NextRequest) {
     const { apiKey: _, apiSecret: __, ...response } = translationProvider
 
     return NextResponse.json({ provider: response })
+    */
   } catch (error) {
     console.error('Create/update provider error:', error)
     return NextResponse.json(

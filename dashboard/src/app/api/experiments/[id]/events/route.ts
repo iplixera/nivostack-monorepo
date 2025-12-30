@@ -26,7 +26,11 @@ export async function POST(
       )
     }
 
-    const experiment = await prisma.experiment.findUnique({
+    // TODO: Experiment model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'Experiment model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL EXPERIMENT MODEL IS ADDED
+    const experiment = await (prisma as any).experiment.findUnique({
       where: { id }
     })
 
@@ -40,7 +44,7 @@ export async function POST(
     }
 
     // Get assignment to get variant index
-    const assignment = await prisma.experimentAssignment.findUnique({
+    const assignment = await (prisma as any).experimentAssignment.findUnique({
       where: {
         experimentId_deviceId_userId: {
           experimentId: id,
@@ -57,7 +61,7 @@ export async function POST(
     }
 
     // Create event
-    await prisma.experimentEvent.create({
+    await (prisma as any).experimentEvent.create({
       data: {
         experimentId: id,
         deviceId: deviceId || null,
@@ -70,6 +74,7 @@ export async function POST(
     })
 
     return NextResponse.json({ success: true })
+    */
   } catch (error) {
     console.error('Track experiment event error:', error)
     return NextResponse.json(

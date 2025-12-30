@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
 
-type ConfigurationCategory = 
+type ConfigurationCategory =
   | 'notifications'
   | 'payment'
   | 'machine_translation'
@@ -135,7 +135,7 @@ export default function AdminConfigurationsPage() {
       setLoading(true)
       const data = await api.admin.getConfigurations(token, activeCategory)
       setConfigurations(data.configurations)
-      
+
       // Initialize form data with existing values
       const formDataInit: Record<string, string> = {}
       data.configurations.forEach(config => {
@@ -150,10 +150,11 @@ export default function AdminConfigurationsPage() {
   }
 
   const handleSave = async (key: string, value: string, encrypted: boolean) => {
+    if (!token) return
     try {
       setSaving(true)
       const configDef = CATEGORY_CONFIGS[activeCategory].defaultConfigs.find(c => c.key === key)
-      
+
       await api.admin.saveConfiguration({
         category: activeCategory,
         key,
@@ -162,7 +163,7 @@ export default function AdminConfigurationsPage() {
         description: configDef?.description,
         isActive: true
       }, token)
-      
+
       await loadConfigurations()
       setEditingConfig(null)
       setTestResult(null)
@@ -174,12 +175,13 @@ export default function AdminConfigurationsPage() {
   }
 
   const handleTest = async (key: string, testType: string) => {
+    if (!token) return
     try {
       setTesting(key)
       setTestResult(null)
-      
+
       let testData: any = {}
-      
+
       // Prepare test data based on category and key
       if (activeCategory === 'machine_translation') {
         testData = {
@@ -193,7 +195,7 @@ export default function AdminConfigurationsPage() {
       } else if (activeCategory === 'payment' && key === 'stripe_secret_key') {
         testData = {}
       }
-      
+
       const result = await api.admin.testConfiguration(activeCategory, key, testType, testData, token)
       setTestResult({ key, ...result.testResult })
     } catch (error) {
@@ -246,11 +248,10 @@ export default function AdminConfigurationsPage() {
               setEditingConfig(null)
               setTestResult(null)
             }}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              activeCategory === category
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeCategory === category
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-750'
-            }`}
+              }`}
           >
             {CATEGORY_CONFIGS[category].label}
           </button>
@@ -271,8 +272,8 @@ export default function AdminConfigurationsPage() {
           const value = isEditing
             ? editingConfig.value
             : existingConfig
-            ? (existingConfig.encrypted ? '[ENCRYPTED]' : existingConfig.value || '')
-            : ''
+              ? (existingConfig.encrypted ? '[ENCRYPTED]' : existingConfig.value || '')
+              : ''
           const isEncrypted = configDef.encrypted || existingConfig?.encrypted || false
 
           return (
@@ -324,11 +325,10 @@ export default function AdminConfigurationsPage() {
 
               {/* Test Result */}
               {testResult && testResult.key === configDef.key && (
-                <div className={`mb-3 p-3 rounded-lg border ${
-                  testResult.success
+                <div className={`mb-3 p-3 rounded-lg border ${testResult.success
                     ? 'bg-green-900/20 border-green-600 text-green-300'
                     : 'bg-red-900/20 border-red-600 text-red-300'
-                }`}>
+                  }`}>
                   <p className="text-sm font-medium">{testResult.success ? '✓ Test Passed' : '✗ Test Failed'}</p>
                   <p className="text-xs mt-1">{testResult.message}</p>
                   {testResult.result && (

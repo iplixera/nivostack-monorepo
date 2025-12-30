@@ -566,7 +566,7 @@ function AnalyticsView({
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                     className="px-3 py-1 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded text-sm"
                   >
@@ -576,7 +576,7 @@ function AnalyticsView({
                     Page {currentPage} of {totalPages}
                   </span>
                   <button
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                     className="px-3 py-1 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded text-sm"
                   >
@@ -646,7 +646,7 @@ function AnalyticsView({
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                     className="px-3 py-1 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded text-sm"
                   >
@@ -656,7 +656,7 @@ function AnalyticsView({
                     Page {currentPage} of {totalPages}
                   </span>
                   <button
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                     className="px-3 py-1 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded text-sm"
                   >
@@ -733,7 +733,7 @@ function AnalyticsView({
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                     className="px-3 py-1 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded text-sm"
                   >
@@ -743,7 +743,7 @@ function AnalyticsView({
                     Page {currentPage} of {totalPages}
                   </span>
                   <button
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                     className="px-3 py-1 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded text-sm"
                   >

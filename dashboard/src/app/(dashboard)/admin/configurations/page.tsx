@@ -249,8 +249,8 @@ export default function AdminConfigurationsPage() {
               setTestResult(null)
             }}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeCategory === category
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-750'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-750'
               }`}
           >
             {CATEGORY_CONFIGS[category].label}
@@ -326,8 +326,8 @@ export default function AdminConfigurationsPage() {
               {/* Test Result */}
               {testResult && testResult.key === configDef.key && (
                 <div className={`mb-3 p-3 rounded-lg border ${testResult.success
-                    ? 'bg-green-900/20 border-green-600 text-green-300'
-                    : 'bg-red-900/20 border-red-600 text-red-300'
+                  ? 'bg-green-900/20 border-green-600 text-green-300'
+                  : 'bg-red-900/20 border-red-600 text-red-300'
                   }`}>
                   <p className="text-sm font-medium">{testResult.success ? '✓ Test Passed' : '✗ Test Failed'}</p>
                   <p className="text-xs mt-1">{testResult.message}</p>

@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx prisma generate --schema=../prisma/schema.prisma && next build --webpack",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "echo 'Skipping prisma generate in postinstall'",
+    "postinstall": "npx prisma generate --schema=../prisma/schema.prisma",
     "db:seed": "tsx ../prisma/seed.ts",
     "db:health": "tsx ../scripts/db-health-check.ts",
     "env:check": "bash ../scripts/check-env.sh",

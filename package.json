@@ -1,0 +1,30 @@
+{
+  "name": "nivostack-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "dashboard",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter @nivostack/studio dev",
+    "build": "pnpm --filter @nivostack/studio build",
+    "start": "pnpm --filter @nivostack/studio start",
+    "lint": "pnpm --filter @nivostack/studio lint",
+    "db:seed": "pnpm --filter @nivostack/studio db:seed",
+    "db:health": "pnpm --filter @nivostack/studio db:health",
+    "env:check": "pnpm --filter @nivostack/studio env:check",
+    "test": "pnpm --filter @nivostack/studio test",
+    "test:manual": "pnpm --filter @nivostack/studio test:manual",
+    "test:throttling": "pnpm --filter @nivostack/studio test:throttling",
+    "test:create-users": "pnpm --filter @nivostack/studio test:create-users",
+    "create:expired-disabled": "pnpm --filter @nivostack/studio create:expired-disabled",
+    "clean:test-data": "pnpm --filter @nivostack/studio clean:test-data",
+    "test:plans": "pnpm --filter @nivostack/studio test:plans",
+    "test:subscriptions": "pnpm --filter @nivostack/studio test:subscriptions",
+    "test:generate-data": "pnpm --filter @nivostack/studio test:generate-data"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}

@@ -1,0 +1,1038 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  password     String
+  name         String?
+  isAdmin      Boolean       @default(false) // Admin flag for platform management
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  projects     Project[]
+  subscription Subscription?
+
+  @@index([isAdmin])
+}
+
+model Project {
+  id                   String                @id @default(cuid())
+  name                 String
+  apiKey               String                @unique @default(cuid())
+  userId               String
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  devices              Device[]
+  logs                 Log[]
+  crashes              Crash[]
+  apiTraces            ApiTrace[]
+  apiConfigs           ApiConfig[]
+  sessions             Session[]
+  notificationSettings NotificationSettings?
+  apiAlerts            ApiAlert[]
+  builds               Build[]
+  buildMode            BuildMode?
+  mockEnvironments     MockEnvironment[]
+  businessConfigs      BusinessConfig[]
+  configAlerts         ConfigAlert[]
+  configApprovals      ConfigApproval[]
+  languages            Language[]
+  localizationKeys     LocalizationKey[]
+  featureFlags         FeatureFlags?
+  sdkSettings          SdkSettings?
+  configCategories     ConfigCategory[]
+
+  @@index([userId])
+}
+
+model Device {
+  id           String   @id @default(cuid())
+  projectId    String?  // Nullable to allow devices to exist after project deletion
+  project      Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  deviceId     String // Unique device identifier from client
+  platform     String // ios, android
+  osVersion    String?
+  appVersion   String?
+  model        String?
+  manufacturer String?
+  metadata     Json?
+  lastSeenAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Device Code - short, human-readable identifier (e.g., "A7B3-X9K2")
+  deviceCode String? @unique // SDK-generated, displayed in app for support
+
+  // User Association - link device to app's logged-in user
+  userId    String? // App's user ID
+  userEmail String? // User email for easy search
+  userName  String? // User display name
+
+  // Debug Mode - enable selective tracking for this device
+  debugModeEnabled   Boolean   @default(false)
+  debugModeEnabledAt DateTime?
+  debugModeExpiresAt DateTime? // Auto-disable after this time
+  debugModeEnabledBy String? // Dashboard user who enabled debug mode
+
+  // Soft Delete - mark as deleted when project is deleted (for analytics)
+  status    String    @default("active") // active, deleted
+  deletedAt DateTime? // When device was marked as deleted
+
+  // Relations
+  logs      Log[]
+  crashes   Crash[]
+  apiTraces ApiTrace[]
+  sessions  Session[]
+
+  // Note: Unique constraint removed because projectId is nullable
+  // Uniqueness is enforced at application level for active devices
+  @@index([projectId, deviceId])
+  @@index([projectId])
+  @@index([deviceCode])
+  @@index([projectId, userId])
+  @@index([projectId, userEmail])
+  @@index([projectId, debugModeEnabled])
+  @@index([status])
+  @@index([projectId, status])
+}
+
+model Log {
+  id           String   @id @default(cuid())
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  deviceId     String?
+  device       Device?  @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  sessionId    String?
+  session      Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  level        String   @default("info") // verbose, debug, info, warn, error, assert
+  message      String   @db.Text
+  tag          String? // Log tag (e.g., "NetworkManager", "AuthService")
+  data         Json?
+  // Source info
+  fileName     String? // Source file name
+  lineNumber   Int? // Line number in source
+  functionName String? // Function/method name
+  className    String? // Class name
+  // Context
+  screenName   String? // Current screen when log was captured
+  threadName   String? // Thread name (main, background, etc.)
+  // Timestamps
+  timestamp    DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  @@index([projectId])
+  @@index([deviceId])
+  @@index([sessionId])
+  @@index([timestamp])
+  @@index([level])
+  @@index([tag])
+}
+
+model Crash {
+  id         String   @id @default(cuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  deviceId   String?
+  device     Device?  @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  message    String
+  stackTrace String?  @db.Text
+  metadata   Json?
+  timestamp  DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([projectId])
+  @@index([deviceId])
+  @@index([timestamp])
+}
+
+model ApiTrace {
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  deviceId        String?
+  device          Device?  @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  sessionId       String?
+  session         Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  url             String
+  method          String
+  statusCode      Int?
+  requestHeaders  Json?
+  requestBody     String?  @db.Text
+  responseHeaders Json?
+  responseBody    String?  @db.Text
+  duration        Int? // milliseconds
+  error           String?
+  // Enhanced metadata fields
+  screenName      String? // Current screen/activity name
+  networkType     String? // wifi, cellular, offline
+  country         String? // Country code from device
+  carrier         String? // Mobile carrier name
+  ipAddress       String? // Client IP address
+  userAgent       String? // Full user agent string
+  // Cost tracking (calculated from ApiConfig)
+  cost            Float? // Cost of this request based on ApiConfig
+  timestamp       DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@index([projectId])
+  @@index([deviceId])
+  @@index([sessionId])
+  @@index([timestamp])
+  @@index([screenName])
+}
+
+// Remote API Configuration - define cost per endpoint
+model ApiConfig {
+  id                  String   @id @default(cuid())
+  projectId           String
+  project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  endpoint            String // API endpoint pattern (e.g., "/api/users", "/api/transactions/*")
+  method              String? // HTTP method (GET, POST, etc.) - null means all methods
+  name                String? // Friendly name for the endpoint
+  description         String? // Description of what this endpoint does
+  costPerRequest      Float    @default(0) // Cost per request in your chosen currency unit
+  isEnabled           Boolean  @default(true)
+  // Logging control per endpoint
+  enableLogs          Boolean  @default(true) // Enable tracing for this endpoint
+  captureRequestBody  Boolean  @default(true) // Override: capture request body
+  captureResponseBody Boolean  @default(true) // Override: capture response body
+  metadata            Json? // Additional metadata
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([projectId, endpoint, method])
+  @@index([projectId])
+  @@index([projectId, isEnabled]) // Composite index for SDK init query
+}
+
+// Session tracking - each app launch creates a new session
+model Session {
+  id             String     @id @default(cuid())
+  projectId      String
+  project        Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  deviceId       String?
+  device         Device?    @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  sessionToken   String     @unique // Unique token generated by device per session
+  startedAt      DateTime   @default(now())
+  endedAt        DateTime? // When session ended (app backgrounded/closed)
+  isActive       Boolean    @default(true)
+  // Session context
+  appVersion     String? // App version at session start
+  osVersion      String? // OS version at session start
+  locale         String? // Device locale (e.g., "en_US")
+  timezone       String? // Device timezone
+  networkType    String? // Network type at session start (wifi, cellular, etc.)
+  // Session flow tracking
+  screenFlow     String[] // Ordered list of screens visited during session
+  entryScreen    String? // First screen of the session
+  exitScreen     String? // Last screen before session ended
+  // Session metrics
+  duration       Int? // Total session duration in seconds (calculated on end)
+  screenCount    Int        @default(0) // Number of unique screens visited
+  eventCount     Int        @default(0) // Number of events/actions in session
+  errorCount     Int        @default(0) // Number of errors during session
+  // Additional metadata
+  metadata       Json? // Additional session metadata
+  userProperties Json? // User-defined properties (userId, plan, etc.)
+  // Relations
+  apiTraces      ApiTrace[]
+  logs           Log[]
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@index([projectId])
+  @@index([deviceId])
+  @@index([sessionToken])
+  @@index([startedAt])
+  @@index([isActive])
+}
+
+// Notification Settings - per project notification configuration
+model NotificationSettings {
+  id             String   @id @default(cuid())
+  projectId      String   @unique
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // Email settings
+  emailEnabled   Boolean  @default(false)
+  emailAddresses String[] // Array of email addresses
+  // Push notification settings
+  pushEnabled    Boolean  @default(false)
+  pushToken      String? // FCM/APNs token
+  // SMS settings
+  smsEnabled     Boolean  @default(false)
+  smsNumbers     String[] // Array of phone numbers
+  // Webhook settings
+  webhookEnabled Boolean  @default(false)
+  webhookUrl     String?
+  webhookSecret  String? // For verifying webhook signatures
+  webhookHeaders Json? // Custom headers for webhook
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// API Monitor Alert - configuration for monitoring API errors
+model ApiAlert {
+  id                    String           @id @default(cuid())
+  projectId             String
+  project               Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title                 String // Alert title/name
+  description           String? // Optional description
+  endpoint              String? // Specific endpoint to monitor (null = all endpoints)
+  method                String? // HTTP method to monitor (null = all methods)
+  isEnabled             Boolean          @default(true)
+  // Error code conditions
+  monitorStandardErrors Boolean          @default(true) // Monitor 4xx and 5xx
+  standardErrorCodes    Int[] // Specific standard codes to monitor (e.g., [400, 401, 403, 404, 500, 502, 503])
+  customStatusCodes     Int[] // Custom status codes to monitor
+  // Body/Header error detection
+  bodyErrorField        String? // JSON path to error field in body (e.g., "error.code")
+  bodyErrorValues       String[] // Values to match in body error field
+  headerErrorField      String? // Header name to check for errors
+  headerErrorValues     String[] // Values to match in header error field
+  // Notification preferences
+  notifyEmail           Boolean          @default(true)
+  notifyPush            Boolean          @default(false)
+  notifySms             Boolean          @default(false)
+  notifyWebhook         Boolean          @default(false)
+  // Throttling
+  cooldownMinutes       Int              @default(5) // Minimum time between alerts for same error
+  monitoredErrors       MonitoredError[]
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  @@index([projectId])
+  @@index([endpoint])
+}
+
+// Monitored Error - tracked errors that matched alert conditions
+model MonitoredError {
+  id                String    @id @default(cuid())
+  alertId           String
+  alert             ApiAlert  @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  projectId         String
+  // Error details
+  errorType         String // "status_code", "body_error", "header_error"
+  errorCode         String // The actual error code/value that triggered
+  endpoint          String // The endpoint that caused the error
+  method            String // HTTP method
+  statusCode        Int? // HTTP status code
+  // Request/Response data
+  requestBody       String?   @db.Text
+  responseBody      String?   @db.Text
+  // Occurrence tracking
+  firstOccurrence   DateTime  @default(now())
+  lastOccurrence    DateTime  @default(now())
+  occurrenceCount   Int       @default(1)
+  // Related traces/sessions/devices
+  affectedDevices   String[] // Array of device IDs that experienced this error
+  affectedSessions  String[] // Array of session IDs
+  lastTraceId       String? // Reference to the most recent trace
+  // Notification tracking
+  lastNotifiedAt    DateTime?
+  notificationCount Int       @default(0)
+  // Status
+  isResolved        Boolean   @default(false)
+  resolvedAt        DateTime?
+  resolvedBy        String? // User ID who resolved
+  notes             String? // Resolution notes
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([alertId])
+  @@index([projectId])
+  @@index([errorType])
+  @@index([firstOccurrence])
+  @@index([isResolved])
+}
+
+// Business Configuration - key-value configs for mobile apps
+model BusinessConfig {
+  id           String           @id @default(cuid())
+  projectId    String
+  project      Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  key          String // Unique key within project (e.g., "feature_enabled", "api_timeout")
+  label        String? // Human-readable label for display
+  description  String? // Description of what this config does
+  valueType    String // "string", "integer", "boolean", "decimal", "json", "image"
+  // Value storage - only one will be populated based on valueType
+  stringValue  String?          @db.Text
+  integerValue Int?
+  booleanValue Boolean?
+  decimalValue Float?
+  jsonValue    Json?
+  imageUrl     String? // URL to uploaded image
+  // Metadata
+  category     String? // Optional category for grouping configs
+  isEnabled    Boolean          @default(true) // Whether this config is active
+  version      Int              @default(1) // Version number for change tracking
+  metadata     Json? // Additional metadata
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  // Relations
+  alerts       ConfigAlert[]
+  approvals    ConfigApproval[]
+
+  @@unique([projectId, key])
+  @@index([projectId])
+  @@index([category])
+  @@index([isEnabled])
+  @@index([projectId, isEnabled]) // Composite index for SDK init query
+}
+
+// Uploaded files storage tracking
+model UploadedFile {
+  id         String   @id @default(cuid())
+  projectId  String
+  filename   String // Original filename
+  storedName String // Name used in storage (UUID-based)
+  mimeType   String // MIME type (image/png, image/jpeg, etc.)
+  size       Int // File size in bytes
+  url        String // Public URL to access the file
+  uploadedBy String? // User ID who uploaded
+  createdAt  DateTime @default(now())
+
+  @@index([projectId])
+}
+
+// Localization - Language configuration for a project
+model Language {
+  id           String        @id @default(cuid())
+  projectId    String
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  code         String // Language code (e.g., "en", "ar", "fr", "es")
+  name         String // Display name (e.g., "English", "Arabic", "French")
+  nativeName   String? // Native name (e.g., "العربية" for Arabic)
+  isDefault    Boolean       @default(false) // Is this the default/fallback language
+  isEnabled    Boolean       @default(true) // Whether this language is active
+  isRTL        Boolean       @default(false) // Right-to-left language
+  translations Translation[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([projectId, code])
+  @@index([projectId])
+  @@index([isDefault])
+}
+
+// Localization Key - the unique keys for translations
+model LocalizationKey {
+  id           String        @id @default(cuid())
+  projectId    String
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  key          String // Unique key (e.g., "welcome_message", "button.submit")
+  description  String? // Description to help translators understand context
+  category     String? // Category for grouping (e.g., "buttons", "errors", "screens")
+  platform     String? // Platform-specific key (e.g., "ios", "android", "all")
+  maxLength    Int? // Maximum character length for translations
+  screenshot   String? // URL to screenshot showing context
+  translations Translation[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([projectId, key])
+  @@index([projectId])
+  @@index([category])
+}
+
+// Translation - actual translated values
+model Translation {
+  id         String          @id @default(cuid())
+  projectId  String
+  keyId      String
+  key        LocalizationKey @relation(fields: [keyId], references: [id], onDelete: Cascade)
+  languageId String
+  language   Language        @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  value      String          @db.Text // The translated text
+  isReviewed Boolean         @default(false) // Has this translation been reviewed
+  reviewedBy String? // User ID who reviewed
+  reviewedAt DateTime?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@unique([keyId, languageId])
+  @@index([projectId])
+  @@index([keyId])
+  @@index([languageId])
+}
+
+// SDK Feature Flags - Control which SDK features are enabled per project
+model FeatureFlags {
+  id              String   @id @default(cuid())
+  projectId       String   @unique
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // Master kill switch - disables entire SDK when false
+  sdkEnabled      Boolean  @default(true) // Master switch to disable entire SDK
+  // Core SDK features
+  apiTracking     Boolean  @default(true) // Track API requests/responses
+  screenTracking  Boolean  @default(true) // Track screen views/navigation
+  crashReporting  Boolean  @default(true) // Report crashes and errors
+  logging         Boolean  @default(true) // Send logs to dashboard
+  // Additional features
+  deviceTracking  Boolean  @default(true) // Register and track devices
+  sessionTracking Boolean  @default(true) // Track user sessions
+  businessConfig  Boolean  @default(true) // Enable business configuration
+  localization    Boolean  @default(true) // Enable remote localization
+  // Performance & network
+  offlineSupport  Boolean  @default(false) // Queue events when offline
+  batchEvents     Boolean  @default(true) // Batch events before sending
+  // Metadata
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// SDK Settings - Detailed configuration for SDK behavior
+model SdkSettings {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Tracking Mode - Controls which devices are tracked
+  // "all" = track all devices (development/testing)
+  // "debug_only" = only track devices with debugModeEnabled (production recommended)
+  // "none" = disable all API/session tracking
+  trackingMode String @default("all")
+
+  // Security settings
+  captureRequestBodies   Boolean  @default(true) // Capture request body in API traces
+  captureResponseBodies  Boolean  @default(true) // Capture response body in API traces
+  capturePrintStatements Boolean  @default(false) // Auto-capture print() statements as logs
+  sanitizeSensitiveData  Boolean  @default(true) // Automatically redact sensitive data (passwords, tokens, etc.)
+  sensitiveFieldPatterns String[] // Custom patterns to sanitize (e.g., "password", "token", "secret")
+
+  // Performance settings
+  maxLogQueueSize      Int     @default(100) // Max number of logs to queue before flushing
+  maxTraceQueueSize    Int     @default(50) // Max number of traces to queue before flushing
+  flushIntervalSeconds Int     @default(30) // How often to flush queued events (in seconds)
+  enableBatching       Boolean @default(true) // Batch events before sending
+
+  // Log control settings
+  minLogLevel   String  @default("debug") // Minimum log level to capture: verbose, debug, info, warn, error
+  verboseErrors Boolean @default(false) // Include stack traces and extra context in error logs
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// Config Category - Categories for organizing business configs
+model ConfigCategory {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name        String // Category name (e.g., "branding", "features", "api")
+  label       String? // Display label
+  description String? // Category description
+  icon        String? // Icon name or URL
+  order       Int      @default(0) // Display order
+  isEnabled   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([projectId, name])
+  @@index([projectId])
+}
+
+// Subscription Plans - Available subscription tiers
+model Plan {
+  id          String  @id @default(cuid())
+  name        String  @unique // "free", "pro", "team"
+  displayName String // "Free Plan", "Pro Plan", "Team Plan"
+  description String?
+  price       Float   @default(0) // Monthly price in USD
+  currency    String  @default("USD")
+  interval    String  @default("month") // month, year
+  isActive    Boolean @default(true)
+  isPublic    Boolean @default(true) // Show in pricing page
+
+  // Feature Limits
+  maxProjects            Int? // null = unlimited
+  maxDevices             Int? // null = unlimited
+  maxMockEndpoints       Int? // Mock endpoints, null = unlimited
+  maxApiEndpoints        Int? // Unique API endpoints, null = unlimited
+  maxApiRequests         Int? // Total API requests per month, null = unlimited
+  maxLogs                Int? // Per month, null = unlimited
+  maxSessions            Int? // Per month, null = unlimited
+  maxCrashes             Int? // Per month, null = unlimited
+  maxBusinessConfigKeys  Int? // Business config keys, null = unlimited
+  maxLocalizationLanguages Int? // Localization languages, null = unlimited
+  maxLocalizationKeys    Int? // Localization keys, null = unlimited
+  retentionDays          Int? // Data retention period, null = unlimited
+
+  // Feature Flags
+  allowApiTracking     Boolean @default(true)
+  allowScreenTracking  Boolean @default(true)
+  allowCrashReporting  Boolean @default(true)
+  allowLogging         Boolean @default(true)
+  allowBusinessConfig  Boolean @default(true)
+  allowLocalization    Boolean @default(true)
+  allowCustomDomains   Boolean @default(false)
+  allowWebhooks        Boolean @default(false)
+  allowTeamMembers     Boolean @default(false)
+  allowPrioritySupport Boolean @default(false)
+
+  // Metadata
+  features Json? // Additional features list
+
+  // Enforcement Configuration (Admin-controlled)
+  enforcementConfig Json? // Enforcement settings: thresholds, grace period, degradation rules
+  // Structure:
+  // {
+  //   warnThreshold: 80,           // Percentage to trigger warnings (default: 80)
+  //   hardThreshold: 100,          // Percentage to enter grace period (default: 100)
+  //   gracePeriodHours: 48,        // Hours in grace period (default: 48)
+  //   overageBufferPercent: 10,    // Optional buffer before degradation (default: 0)
+  //   moduleRules: {               // Per-module degradation rules
+  //     apiTraces: {
+  //       samplingRate: 10,        // Sample 1 in N requests when degraded
+  //       dropResponseBodies: true // Drop response bodies first
+  //     },
+  //     logs: {
+  //       prioritizeCrashes: true, // Keep crashes, drop DEBUG logs first
+  //       minRetentionDays: 7      // Minimum retention when degraded
+  //     },
+  //     sessions: {
+  //       samplingRate: 10,        // Sample 1 in N sessions
+  //       capEventsPerSession: 100 // Cap events per sampled session
+  //     },
+  //     businessConfig: {
+  //       freezePublishing: true,  // Freeze publishing when degraded
+  //       serveLastPublished: true // Continue serving last published
+  //     },
+  //     localization: {
+  //       freezePublishing: true,  // Freeze publishing when degraded
+  //       serveLastPublished: true // Continue serving last published
+  //     }
+  //   }
+  // }
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subscriptions Subscription[]
+
+  @@index([isActive])
+  @@index([isPublic])
+}
+
+// User Subscriptions - One subscription per user
+model Subscription {
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId             String
+  plan               Plan      @relation(fields: [planId], references: [id])
+  status             String    @default("active") // active, expired, cancelled, suspended, disabled
+  enabled            Boolean   @default(true) // Admin control - if false, SDK disabled globally
+  trialStartDate     DateTime  @default(now())
+  trialEndDate       DateTime // 30 days from trialStartDate
+  currentPeriodStart DateTime  @default(now())
+  currentPeriodEnd   DateTime
+  cancelledAt        DateTime?
+  cancelledReason    String?
+  disabledBy         String? // Admin user ID who disabled
+  disabledAt         DateTime? // When admin disabled
+  enabledBy          String? // Admin user ID who enabled
+  enabledAt          DateTime? // When admin enabled
+  
+  // Quota Overrides (null = use plan default, number = override plan limit)
+  quotaMaxProjects            Int?
+  quotaMaxDevices             Int?
+  quotaMaxMockEndpoints       Int?
+  quotaMaxApiEndpoints        Int?
+  quotaMaxApiRequests         Int?
+  quotaMaxLogs                Int?
+  quotaMaxSessions            Int?
+  quotaMaxCrashes             Int?
+  quotaMaxBusinessConfigKeys  Int?
+  quotaMaxLocalizationLanguages Int?
+  quotaMaxLocalizationKeys    Int?
+  
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  invoices         Invoice[]
+  enforcementState EnforcementState?
+
+  @@index([userId])
+  @@index([status])
+  @@index([enabled])
+  @@index([trialEndDate])
+}
+
+// Enforcement State - Tracks current enforcement state per subscription
+model EnforcementState {
+  id             String       @id @default(cuid())
+  subscriptionId String       @unique
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  // Current state: ACTIVE, WARN, GRACE, DEGRADED, SUSPENDED
+  state String @default("ACTIVE") // ACTIVE, WARN, GRACE, DEGRADED, SUSPENDED
+
+  // State timestamps
+  warnEnteredAt     DateTime? // When entered WARN state
+  graceEnteredAt    DateTime? // When entered GRACE state
+  graceEndsAt       DateTime? // When grace period ends
+  degradedEnteredAt DateTime? // When entered DEGRADED state
+
+  // Effective policy (sampling rates, retention, etc.)
+  effectivePolicy Json? // Current effective enforcement policy
+  // Structure:
+  // {
+  //   sampling: {
+  //     apiTraces: { rate: 10, enabled: false },
+  //     sessions: { rate: 10, enabled: false },
+  //     logs: { prioritizeCrashes: true, dropDebug: false }
+  //   },
+  //   retention: {
+  //     apiTraces: 30,
+  //     logs: 30,
+  //     sessions: 30
+  //   },
+  //   freezes: {
+  //     businessConfig: false,
+  //     localization: false
+  //   }
+  // }
+
+  // Metrics that triggered current state
+  triggeredMetrics Json? // Array of metrics that exceeded thresholds
+  // Example: [{ metric: "apiTraces", usage: 1050, limit: 1000, percentage: 105 }]
+
+  // Last evaluation
+  lastEvaluatedAt  DateTime @default(now())
+  nextEvaluationAt DateTime // When to re-evaluate state
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([subscriptionId])
+  @@index([state])
+  @@index([graceEndsAt])
+  @@index([nextEvaluationAt])
+}
+
+// Billing Invoices - Invoice history for subscriptions
+model Invoice {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  invoiceNumber  String       @unique // Format: INV-YYYYMMDD-XXXX
+  status         String       @default("draft") // draft, open, paid, void, uncollectible
+  amount         Float
+  currency       String       @default("USD")
+  periodStart    DateTime
+  periodEnd      DateTime
+  dueDate        DateTime
+  paidAt         DateTime?
+  pdfUrl         String? // Link to PDF invoice
+  lineItems      Json? // Breakdown of charges
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([invoiceNumber])
+}
+
+// Build - Version snapshot of consumer-managed features (Business Config, Localization, etc.)
+model Build {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  version     Int // Auto-increment per project (v1, v2, v3...)
+  name        String? // User-editable name (e.g., "Production Release v1.2")
+  description String? // User-editable description/notes
+  mode        String? // "preview" | "production" | null (unassigned)
+  isActive    Boolean  @default(false) // Active for its mode
+  createdBy   String? // User ID who created the build
+  createdAt   DateTime @default(now())
+
+  // Snapshot data (immutable JSON - cached API response format)
+  businessConfigSnapshot Json? // Cached business config API response
+  localizationSnapshot   Json? // Cached localization API response
+
+  // Metadata
+  configCount      Int @default(0) // Number of configs in snapshot
+  translationCount Int @default(0) // Number of translations in snapshot
+
+  // Relations
+  features       BuildFeature[]
+  changeLogs     BuildChangeLog[]
+  previewMode    BuildMode?       @relation("PreviewBuild")
+  productionMode BuildMode?       @relation("ProductionBuild")
+
+  @@unique([projectId, version])
+  @@index([projectId])
+  @@index([projectId, mode, isActive])
+  @@index([createdAt])
+}
+
+// Build Feature - Links builds to feature types (for extensibility and change tracking)
+model BuildFeature {
+  id           String   @id @default(cuid())
+  buildId      String
+  build        Build    @relation(fields: [buildId], references: [id], onDelete: Cascade)
+  featureType  String // "business_config" | "localization" | future features
+  snapshotData Json // Feature-specific snapshot data (immutable)
+  itemCount    Int // Number of items in this feature snapshot
+  createdAt    DateTime @default(now())
+
+  @@unique([buildId, featureType])
+  @@index([buildId])
+  @@index([featureType])
+}
+
+// Build Mode - Track active builds per mode per project
+model BuildMode {
+  id                String   @id @default(cuid())
+  projectId         String   @unique
+  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  previewBuildId    String?  @unique // Currently active preview build
+  productionBuildId String?  @unique // Currently active production build
+  updatedAt         DateTime @updatedAt
+
+  previewBuild    Build? @relation("PreviewBuild", fields: [previewBuildId], references: [id], onDelete: SetNull)
+  productionBuild Build? @relation("ProductionBuild", fields: [productionBuildId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+}
+
+// Build Change Log - Track changes made by users (added/deleted/changed)
+model BuildChangeLog {
+  id          String   @id @default(cuid())
+  buildId     String
+  build       Build    @relation(fields: [buildId], references: [id], onDelete: Cascade)
+  featureType String // "business_config" | "localization"
+  changeType  String // "added" | "deleted" | "changed"
+  itemKey     String // Key/ID of the item that changed
+  itemLabel   String? // Human-readable label/name
+  oldValue    Json? // Previous value (for changed items)
+  newValue    Json? // New value (for added/changed items)
+  changedBy   String? // User ID who made the change
+  changedAt   DateTime @default(now())
+
+  @@index([buildId])
+  @@index([featureType])
+  @@index([changeType])
+  @@index([changedAt])
+}
+
+// Mock Environment - Container for mock endpoints
+model MockEnvironment {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name        String // e.g., "Development", "Staging", "Test"
+  description String?
+  basePath    String? // Optional base path prefix (e.g., "/mock/v1")
+  mode        String   @default("selective") // "selective" | "global" | "whitelist" | "blacklist"
+  whitelist   String[] // Array of endpoint patterns to mock (if mode = "whitelist")
+  blacklist   String[] // Array of endpoint patterns to exclude from mocking (if mode = "blacklist")
+  isEnabled   Boolean  @default(true)
+  isDefault   Boolean  @default(false) // Default environment for project
+  createdBy   String? // User ID
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  endpoints MockEndpoint[]
+
+  @@unique([projectId, name])
+  @@index([projectId])
+  @@index([projectId, isEnabled])
+  @@index([projectId, isDefault])
+}
+
+// Mock Endpoint - API endpoint to mock
+model MockEndpoint {
+  id            String          @id @default(cuid())
+  environmentId String
+  environment   MockEnvironment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  path          String // e.g., "/api/users", "/api/users/:id"
+  method        String // GET, POST, PUT, DELETE, PATCH
+  description   String?
+  isEnabled     Boolean         @default(true)
+  order         Int             @default(0) // Priority order for matching
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  responses  MockResponse[]
+  conditions MockCondition[]
+
+  @@unique([environmentId, path, method])
+  @@index([environmentId])
+  @@index([environmentId, isEnabled])
+  @@index([environmentId, path, method])
+}
+
+// Mock Response - Response configuration for an endpoint
+model MockResponse {
+  id              String       @id @default(cuid())
+  endpointId      String
+  endpoint        MockEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  statusCode      Int // HTTP status code (200, 400, 404, 500, etc.)
+  name            String? // e.g., "Success", "Not Found", "Validation Error"
+  description     String?
+  responseBody    Json? // Response body (JSON object)
+  responseHeaders Json? // Response headers
+  delay           Int          @default(0) // Delay in milliseconds (for testing slow APIs)
+  isDefault       Boolean      @default(false) // Default response if no conditions match
+  isEnabled       Boolean      @default(true)
+  order           Int          @default(0) // Priority order for matching
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  conditions MockCondition[]
+
+  @@index([endpointId])
+  @@index([endpointId, statusCode])
+  @@index([endpointId, isDefault])
+  @@index([endpointId, isEnabled, order])
+}
+
+// Mock Condition - Conditions for when to return a specific response
+model MockCondition {
+  id              String        @id @default(cuid())
+  responseId      String?
+  response        MockResponse? @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  endpointId      String?
+  endpoint        MockEndpoint? @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  type            String // "path_param", "query_param", "header", "body", "body_json_path"
+  key             String // Parameter name, header name, or JSON path
+  operator        String // "equals", "contains", "matches", "exists", "not_exists", "greater_than", "less_than"
+  value           String? // Value to match against
+  isCaseSensitive Boolean       @default(false)
+  order           Int           @default(0) // Evaluation order
+  createdAt       DateTime      @default(now())
+
+  @@index([responseId])
+  @@index([endpointId])
+  @@index([type])
+}
+
+// Config Alert - Alert rules for business configs
+model ConfigAlert {
+  id              String          @id @default(cuid())
+  projectId       String
+  project         Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  configId        String?
+  config          BusinessConfig? @relation(fields: [configId], references: [id], onDelete: Cascade)
+  // Alert configuration
+  name            String
+  description     String?
+  // Conditions
+  condition       String // "error_rate", "fetch_rate", "usage_drop", "validation_failure"
+  threshold       Float // Threshold value
+  operator        String          @default(">") // ">", "<", ">=", "<=", "=="
+  // Time window
+  timeWindow      Int             @default(60) // Minutes
+  minOccurrences  Int             @default(1) // Minimum occurrences to trigger
+  // Actions
+  enabled         Boolean         @default(true)
+  webhookUrl      String?         @db.Text
+  emailRecipients Json? // Array of email addresses
+  // Status
+  lastTriggered   DateTime?
+  triggerCount    Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  events ConfigAlertEvent[]
+
+  @@index([projectId])
+  @@index([configId])
+  @@index([enabled])
+  @@index([projectId, enabled])
+}
+
+// Config Alert Event - Track alert triggers
+model ConfigAlertEvent {
+  id             String      @id @default(cuid())
+  alertId        String
+  alert          ConfigAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  projectId      String
+  configId       String?
+  // Event details
+  severity       String      @default("warning") // "info", "warning", "error", "critical"
+  message        String      @db.Text
+  metadata       Json? // Additional event data
+  // Status
+  acknowledged   Boolean     @default(false)
+  acknowledgedBy String?
+  acknowledgedAt DateTime?
+  createdAt      DateTime    @default(now())
+
+  @@index([alertId])
+  @@index([projectId])
+  @@index([configId])
+  @@index([acknowledged])
+  @@index([createdAt])
+}
+
+// Config Approval - Approval workflow for config changes
+model ConfigApproval {
+  id                String         @id @default(cuid())
+  projectId         String
+  project           Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  configId          String
+  config            BusinessConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+  // Approval details
+  changeType        String // "create", "update", "deploy"
+  changeData        Json // Snapshot of the change
+  // Workflow
+  status            String         @default("pending") // "pending", "approved", "rejected", "cancelled"
+  requiredApprovals Int            @default(1) // Number of approvals required
+  currentApprovals  Int            @default(0) // Current number of approvals
+  // Approvers
+  approvers         Json // Array of user IDs who can approve
+  approvals         Json // Array of approval records [{ userId, status, comment, timestamp }]
+  // Request
+  requestedBy       String // User ID who requested
+  requestedAt       DateTime       @default(now())
+  // Decision
+  decidedBy         String?
+  decidedAt         DateTime?
+  decisionComment   String?        @db.Text
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([projectId])
+  @@index([configId])
+  @@index([status])
+  @@index([projectId, status])
+  @@index([requestedBy])
+}
+
+// System Configuration - Admin-managed system-wide settings
+model SystemConfiguration {
+  id          String   @id @default(cuid())
+  category    String // "notifications", "payment", "machine_translation", "email", "sms", "webhooks", "general"
+  key         String // Configuration key (e.g., "stripe_secret_key", "smtp_host")
+  value       String?  @db.Text // Configuration value (encrypted if encrypted=true)
+  encrypted   Boolean  @default(false) // Whether the value is encrypted
+  description String?  @db.Text // Description of what this config does
+  isActive    Boolean  @default(true) // Whether this configuration is active
+  metadata    Json? // Additional metadata
+  updatedBy   String? // User ID who last updated this config
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([category, key])
+  @@index([category])
+  @@index([category, key])
+  @@index([isActive])
+}

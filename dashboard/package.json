@@ -1,0 +1,56 @@
+{
+  "name": "@nivostack/studio",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "bash scripts/generate-prisma-safe.sh && next build --webpack",
+    "start": "next start",
+    "lint": "eslint",
+    "postinstall": "echo 'Skipping prisma generate in postinstall'",
+    "db:seed": "tsx ../prisma/seed.ts",
+    "db:health": "tsx ../scripts/db-health-check.ts",
+    "env:check": "bash ../scripts/check-env.sh",
+    "test": "tsx ../tests/api-test-suite.ts",
+    "test:manual": "tsx ../tests/manual-api-test.ts",
+    "test:throttling": "tsx ../tests/throttling-test.ts",
+    "test:create-users": "tsx ../tests/create-test-users.ts",
+    "create:expired-disabled": "tsx ../scripts/create-expired-disabled-subscriptions.ts",
+    "clean:test-data": "tsx ../scripts/clean-test-data.ts",
+    "test:plans": "tsx ../tests/admin-plans.test.ts",
+    "test:subscriptions": "tsx ../tests/admin-subscriptions.test.ts",
+    "test:generate-data": "tsx ../tests/data-generator.ts"
+  },
+  "prisma": {
+    "schema": "../prisma/schema.prisma",
+    "seed": "tsx ../prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "5.22.0",
+    "@vercel/blob": "^2.0.0",
+    "@vercel/postgres": "^0.10.0",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
+    "jsonwebtoken": "^9.0.3",
+    "next": "16.0.8",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
+    "stripe": "^20.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/bcrypt": "^5.0.2",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "dotenv": "^17.2.3",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.8",
+    "prisma": "5.22.0",
+    "tailwindcss": "^4",
+    "tsx": "^4.7.0",
+    "typescript": "^5"
+  }
+}

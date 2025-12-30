@@ -1,0 +1,31 @@
+name: nivostack_flutter_example
+description: Example app for testing NivoStack Core SDK features
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # NivoStack SDK (local path)
+  nivostack_sdk:
+    path: ../
+  
+  # HTTP client for testing API calls
+  dio: ^5.7.0
+  
+  # UI dependencies
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+

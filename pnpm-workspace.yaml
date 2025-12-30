@@ -1,0 +1,8 @@
+packages:
+  - 'dashboard'
+  - 'packages/*'
+
+ignoredBuiltDependencies:
+  - '@prisma/engines'
+  - bufferutil
+  - prisma

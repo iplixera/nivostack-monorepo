@@ -1,0 +1,57 @@
+{
+  "buildCommand": "pnpm install && pnpm build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "installCommand": "pnpm install",
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/expire-trials",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/renew-subscriptions",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/retry-payments",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/send-reminders",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/create-offers",
+      "schedule": "0 10 * * *"
+    }
+  ]
+}

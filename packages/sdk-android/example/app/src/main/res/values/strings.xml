@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NivoStack Example</string>
+    <string name="sdk_status">SDK Status</string>
+    <string name="test_api_call">Test External API</string>
+    <string name="test_nivostack_api">Test NivoStack API</string>
+    <string name="test_logging">Send Test Log</string>
+    <string name="test_crash">Send Test Crash</string>
+    <string name="refresh_business_config">Refresh Business Config</string>
+    <string name="refresh_localization">Refresh Localization</string>
+    <string name="set_user">Set User</string>
+    <string name="clear_user">Clear User</string>
+    <string name="track_screen">Track Screen</string>
+    <string name="status_message">Status: Ready</string>
+</resources>
+

@@ -29,14 +29,23 @@ export async function POST(request: NextRequest) {
     // Run Prisma db push to sync schema
     const { exec } = await import('child_process')
     const { promisify } = await import('util')
+    const path = await import('path')
     const execAsync = promisify(exec)
 
     try {
+      // Get the correct path to prisma schema (relative to dashboard directory)
+      const schemaPath = path.join(process.cwd(), '..', 'prisma', 'schema.prisma')
+      
+      console.log('🔄 Running database migration...')
+      console.log('Schema path:', schemaPath)
+      console.log('Working directory:', process.cwd())
+      
       const { stdout, stderr } = await execAsync(
-        `POSTGRES_PRISMA_URL="${dbUrl}" POSTGRES_URL_NON_POOLING="${dbUrl}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate`,
+        `POSTGRES_PRISMA_URL="${dbUrl}" POSTGRES_URL_NON_POOLING="${dbUrl}" pnpm dlx prisma@5.22.0 db push --schema="${schemaPath}" --accept-data-loss --skip-generate`,
         {
           cwd: process.cwd(),
           timeout: 60000,
+          maxBuffer: 10 * 1024 * 1024, // 10MB
         }
       )
 

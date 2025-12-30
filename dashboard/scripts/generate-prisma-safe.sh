@@ -2,36 +2,57 @@
 set -e
 
 # Safe Prisma generation script that prevents Prisma from installing itself
-# This script ensures Prisma CLI is available before generating
+# Workaround for Prisma's internal install check in pnpm workspaces
 
 cd "$(dirname "$0")/.."
 
-echo "Checking Prisma CLI availability..."
+echo "Generating Prisma client..."
 
-# Try to find Prisma binary
+# Set environment variables
+export PRISMA_SKIP_POSTINSTALL_GENERATE=true
+export SKIP_ENV_VALIDATION=true
+
+# Find Prisma binary
 PRISMA_BIN=""
 if [ -f "node_modules/.bin/prisma" ]; then
   PRISMA_BIN="node_modules/.bin/prisma"
 elif [ -f "../node_modules/.bin/prisma" ]; then
   PRISMA_BIN="../node_modules/.bin/prisma"
-elif command -v prisma &> /dev/null; then
-  PRISMA_BIN="prisma"
 else
-  echo "Prisma CLI not found. Attempting to use pnpm exec..."
+  # Fallback: use pnpm exec
   PRISMA_BIN="pnpm exec prisma"
 fi
 
-echo "Using Prisma: $PRISMA_BIN"
-echo "Generating Prisma client..."
+# Workaround: Create a fake pnpm that Prisma can use
+# This prevents Prisma from trying to install itself
+FAKE_PNPM_DIR=$(mktemp -d)
+cat > "$FAKE_PNPM_DIR/pnpm" << 'EOF'
+#!/bin/bash
+# Fake pnpm that prevents Prisma from installing itself
+if [[ "$*" == *"add prisma"* ]]; then
+  echo "Prisma install blocked by workaround"
+  exit 0
+fi
+# For other commands, use real pnpm
+exec /usr/local/bin/pnpm "$@"
+EOF
+chmod +x "$FAKE_PNPM_DIR/pnpm"
 
-# Set environment variable to prevent Prisma from trying to install
-export PRISMA_SKIP_POSTINSTALL_GENERATE=true
-export SKIP_ENV_VALIDATION=true
+# Temporarily add fake pnpm to PATH (before real pnpm)
+export PATH="$FAKE_PNPM_DIR:$PATH"
 
-# Generate Prisma client using pnpm dlx with explicit package
-# This bypasses Prisma's installation check
-echo "Using pnpm dlx to generate Prisma client..."
-pnpm dlx --package prisma@5.22.0 prisma generate --schema=../prisma/schema.prisma
+# Generate Prisma client
+echo "Running Prisma generate..."
+if [ -f "$PRISMA_BIN" ]; then
+  "$PRISMA_BIN" generate --schema=../prisma/schema.prisma || {
+    echo "Direct binary failed, trying pnpm exec..."
+    pnpm exec prisma generate --schema=../prisma/schema.prisma
+  }
+else
+  $PRISMA_BIN generate --schema=../prisma/schema.prisma
+fi
+
+# Cleanup
+rm -rf "$FAKE_PNPM_DIR"
 
 echo "Prisma client generated successfully"
-

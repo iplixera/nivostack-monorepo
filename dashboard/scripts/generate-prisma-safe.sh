@@ -28,12 +28,10 @@ echo "Generating Prisma client..."
 export PRISMA_SKIP_POSTINSTALL_GENERATE=true
 export SKIP_ENV_VALIDATION=true
 
-# Generate Prisma client
-if [ -f "$PRISMA_BIN" ]; then
-  "$PRISMA_BIN" generate --schema=../prisma/schema.prisma
-else
-  $PRISMA_BIN generate --schema=../prisma/schema.prisma
-fi
+# Generate Prisma client using pnpm dlx with explicit package
+# This bypasses Prisma's installation check
+echo "Using pnpm dlx to generate Prisma client..."
+pnpm dlx --package prisma@5.22.0 prisma generate --schema=../prisma/schema.prisma
 
 echo "Prisma client generated successfully"
 

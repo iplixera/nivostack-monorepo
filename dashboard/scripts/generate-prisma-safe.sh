@@ -32,9 +32,15 @@ REAL_PNPM=$(command -v pnpm 2>/dev/null || echo "/usr/local/bin/pnpm")
 
 cat > "$FAKE_PNPM_DIR/pnpm" << EOF
 #!/bin/bash
-# Fake pnpm that prevents Prisma from installing itself or @prisma/client
+# Fake pnpm that makes Prisma think packages are already installed
 if [[ "\$*" == *"add prisma"* ]] || [[ "\$*" == *"add @prisma/client"* ]]; then
-  echo "Prisma install blocked by workaround"
+  # Check if package already exists in package.json
+  if grep -q "\"prisma\"" package.json 2>/dev/null || grep -q "\"@prisma/client\"" package.json 2>/dev/null; then
+    echo "Package already installed (workaround)"
+    exit 0
+  fi
+  # Even if not found, return success to fool Prisma
+  echo "Package install simulated (workaround)"
   exit 0
 fi
 # For other commands, use real pnpm (use full path to avoid recursion)

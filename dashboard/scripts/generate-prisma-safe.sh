@@ -26,17 +26,19 @@ fi
 # Workaround: Create a fake pnpm that Prisma can use
 # This prevents Prisma from trying to install itself
 FAKE_PNPM_DIR=$(mktemp -d)
-cat > "$FAKE_PNPM_DIR/pnpm" << 'EOF'
+
+# Find real pnpm first (before we modify PATH)
+REAL_PNPM=$(command -v pnpm 2>/dev/null || echo "/usr/local/bin/pnpm")
+
+cat > "$FAKE_PNPM_DIR/pnpm" << EOF
 #!/bin/bash
 # Fake pnpm that prevents Prisma from installing itself
-if [[ "$*" == *"add prisma"* ]]; then
+if [[ "\$*" == *"add prisma"* ]]; then
   echo "Prisma install blocked by workaround"
   exit 0
 fi
-# For other commands, use real pnpm
-# Find real pnpm (could be in different locations)
-REAL_PNPM=$(command -v pnpm 2>/dev/null || echo "/usr/local/bin/pnpm")
-exec "$REAL_PNPM" "$@"
+# For other commands, use real pnpm (use full path to avoid recursion)
+exec "$REAL_PNPM" "\$@"
 EOF
 chmod +x "$FAKE_PNPM_DIR/pnpm"
 

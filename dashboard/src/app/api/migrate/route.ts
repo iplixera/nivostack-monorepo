@@ -40,12 +40,18 @@ export async function POST(request: NextRequest) {
       console.log('Schema path:', schemaPath)
       console.log('Working directory:', process.cwd())
       
+      // Use npx instead of pnpm dlx (pnpm not available in Vercel runtime)
       const { stdout, stderr } = await execAsync(
-        `POSTGRES_PRISMA_URL="${dbUrl}" POSTGRES_URL_NON_POOLING="${dbUrl}" pnpm dlx prisma@5.22.0 db push --schema="${schemaPath}" --accept-data-loss --skip-generate`,
+        `npx prisma@5.22.0 db push --schema="${schemaPath}" --accept-data-loss --skip-generate`,
         {
           cwd: process.cwd(),
           timeout: 60000,
           maxBuffer: 10 * 1024 * 1024, // 10MB
+          env: {
+            ...process.env,
+            POSTGRES_PRISMA_URL: dbUrl,
+            POSTGRES_URL_NON_POOLING: dbUrl,
+          },
         }
       )
 

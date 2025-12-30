@@ -23,21 +23,29 @@ export async function GET(request: NextRequest) {
             migrationRunning = true
 
             try {
-                // Get the correct path to prisma schema
-                const schemaPath = path.join(process.cwd(), '..', 'prisma', 'schema.prisma')
-
-                console.log('🔄 Running database migration...')
-                console.log('Schema path:', schemaPath)
-
-                // Run migration (blocking for health check to ensure it completes)
-                const { stdout, stderr } = await execAsync(
-                    `POSTGRES_PRISMA_URL="${dbUrl}" POSTGRES_URL_NON_POOLING="${dbUrl}" pnpm dlx prisma@5.22.0 db push --schema="${schemaPath}" --accept-data-loss --skip-generate`,
-                    {
-                        cwd: process.cwd(),
-                        timeout: 60000, // 60 seconds
-                        maxBuffer: 10 * 1024 * 1024, // 10MB
-                    }
-                )
+        // Get the correct path to prisma schema
+        // In Vercel, we're in /var/task, need to go up to find prisma
+        const schemaPath = path.join(process.cwd(), '..', 'prisma', 'schema.prisma')
+        
+        console.log('🔄 Running database migration...')
+        console.log('Schema path:', schemaPath)
+        console.log('Working directory:', process.cwd())
+        
+        // Use npx instead of pnpm dlx (pnpm not available in Vercel runtime)
+        // npx is available and will use the locally installed prisma
+        const { stdout, stderr } = await execAsync(
+          `npx prisma@5.22.0 db push --schema="${schemaPath}" --accept-data-loss --skip-generate`,
+          {
+            cwd: process.cwd(),
+            timeout: 60000, // 60 seconds
+            maxBuffer: 10 * 1024 * 1024, // 10MB
+            env: {
+              ...process.env,
+              POSTGRES_PRISMA_URL: dbUrl,
+              POSTGRES_URL_NON_POOLING: dbUrl,
+            },
+          }
+        )
 
                 migrationChecked = true
                 migrationRunning = false

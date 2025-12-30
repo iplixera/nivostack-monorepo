@@ -1632,12 +1632,6 @@ export const api = {
         { method: 'DELETE', token }
       ),
   },
-  plans: {
-    list: () =>
-      fetchApi<{ plans: Array<{ id: string; name: string; displayName: string; price: number; description: string | null }> }>(
-        '/api/plans'
-      ),
-  },
   admin: {
     getUsers: (token: string) =>
       fetchApi<{ users: any[] }>(

@@ -40,6 +40,10 @@ export async function GET(request: NextRequest) {
       where.configId = configId
     }
 
+    // TODO: ConfigChangeLog model needs to be added to Prisma schema
+    return NextResponse.json({ changes: [] })
+    
+    /* COMMENTED OUT UNTIL CONFIGCHANGELOG MODEL IS ADDED
     const changes = await prisma.configChangeLog.findMany({
       where,
       orderBy: {
@@ -57,6 +61,7 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({ changes })
+    */
   } catch (error) {
     console.error('Get config changes error:', error)
     return NextResponse.json(

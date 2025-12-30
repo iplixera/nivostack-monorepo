@@ -41,6 +41,10 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
+    // TODO: ConfigDeployment model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'ConfigDeployment model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL CONFIGDEPLOYMENT MODEL IS ADDED
     // Check for existing active deployment
     const activeDeployment = await prisma.configDeployment.findFirst({
       where: {
@@ -100,6 +104,7 @@ export async function POST(
     }
 
     return NextResponse.json({ deployment })
+    */
   } catch (error) {
     console.error('Deploy config error:', error)
     return NextResponse.json(

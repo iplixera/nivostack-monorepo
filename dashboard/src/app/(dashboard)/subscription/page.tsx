@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
 
@@ -820,7 +821,7 @@ function EnforcementBanner({ enforcement, onUpgrade }: { enforcement: Enforcemen
               <ul className="list-disc list-inside mt-1 space-y-1">
                 {enforcement.triggeredMetrics.map((metric, idx) => (
                   <li key={idx}>
-                    {metric.metric}: {metric.percentage.toFixed(1)}% ({metric.used.toLocaleString()} / {metric.limit?.toLocaleString()})
+                    {metric.metric}: {metric.percentage.toFixed(1)}% ({metric.usage.toLocaleString()} / {metric.limit?.toLocaleString()})
                   </li>
                 ))}
               </ul>

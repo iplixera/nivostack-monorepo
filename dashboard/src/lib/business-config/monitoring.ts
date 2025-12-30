@@ -53,6 +53,10 @@ async function checkAlertCondition(
   const now = new Date()
   const windowStart = new Date(now.getTime() - alert.timeWindow * 60 * 1000)
 
+  // TODO: ConfigUsageMetric model needs to be added to Prisma schema
+  return false
+  
+  /* COMMENTED OUT UNTIL CONFIGUSAGEMETRIC MODEL IS ADDED
   switch (alert.condition) {
     case 'error_rate':
       // Check validation failures or fetch errors
@@ -102,6 +106,7 @@ async function checkAlertCondition(
         : 0
 
       return evaluateThreshold(dropPercentage, alert.threshold, alert.operator)
+    */
 
     case 'usage_drop':
       // Similar to fetch_rate but more specific
@@ -256,6 +261,10 @@ export async function getConfigMetrics(
     where.configId = configId
   }
 
+  // TODO: ConfigUsageMetric model needs to be added to Prisma schema
+  return []
+  
+  /* COMMENTED OUT UNTIL CONFIGUSAGEMETRIC MODEL IS ADDED
   const metrics = await prisma.configUsageMetric.findMany({
     where,
     select: {
@@ -299,5 +308,6 @@ export async function getConfigMetrics(
       ...data
     }))
   }
+  */
 }
 

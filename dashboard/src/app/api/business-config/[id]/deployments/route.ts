@@ -32,12 +32,17 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
+    // TODO: ConfigDeployment model needs to be added to Prisma schema
+    return NextResponse.json({ deployments: [] })
+    
+    /* COMMENTED OUT UNTIL CONFIGDEPLOYMENT MODEL IS ADDED
     const deployments = await prisma.configDeployment.findMany({
       where: { configId: id },
       orderBy: { createdAt: 'desc' }
     })
 
     return NextResponse.json({ deployments })
+    */
   } catch (error) {
     console.error('Get deployments error:', error)
     return NextResponse.json(

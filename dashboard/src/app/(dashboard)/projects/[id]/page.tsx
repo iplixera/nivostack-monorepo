@@ -13,6 +13,8 @@ import BusinessConfigTab from '@/components/BusinessConfigTab'
 import LocalizationTab from '@/components/LocalizationTab'
 import MocksPage from './mocks/page'
 import Sidebar from '@/components/Sidebar'
+import DeviceComparison from '@/components/DeviceComparison'
+import DeviceNotes from '@/components/DeviceNotes'
 
 type Device = {
   id: string
@@ -98,7 +100,7 @@ type Crash = {
   stackTrace: string | null
   metadata: Record<string, unknown> | null
   timestamp: string
-  device?: { deviceId: string; platform: string; model: string }
+  device?: { deviceId: string; platform: string; model: string | null }
 }
 
 type Trace = {
@@ -457,7 +459,7 @@ export default function ProjectDetailPage() {
     localizationLanguages?: { used: number; limit: number | null; percentage: number }
     localizationKeys?: { used: number; limit: number | null; percentage: number }
   } | null>(null)
-  
+
   // Legacy enforcement and usage state (kept for backward compatibility, will use shared state)
   const [enforcement, setEnforcement] = useState<{
     state: string
@@ -550,7 +552,7 @@ export default function ProjectDetailPage() {
   const [crashEndDate, setCrashEndDate] = useState<string>('')
   const [crashSearch, setCrashSearch] = useState<string>('')
   const [crashPlatforms, setCrashPlatforms] = useState<string[]>([])
-  const [crashDevices, setCrashDevices] = useState<Array<{ id: string; deviceId: string; platform: string; model: string }>>([])
+  const [crashDevices, setCrashDevices] = useState<Array<{ id: string; deviceId: string; platform: string; model: string | null }>>([])
   const [crashesTotal, setCrashesTotal] = useState(0)
   const [crashesLoading, setCrashesLoading] = useState(false)
   const [expandedCrash, setExpandedCrash] = useState<string | null>(null)
@@ -613,7 +615,7 @@ export default function ProjectDetailPage() {
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings | null>(null)
   const [alerts, setAlerts] = useState<ApiAlert[]>([])
   const [featureFlags, setFeatureFlags] = useState<FeatureFlags | null>(null)
-  
+
   // Subscription state
   const [subscriptionStatus, setSubscriptionStatus] = useState<{ status: string; trialActive: boolean; daysRemaining: number; enabled: boolean } | null>(null)
   const [featureFlagsLoading, setFeatureFlagsLoading] = useState(false)
@@ -892,7 +894,7 @@ export default function ProjectDetailPage() {
 
   const handleCleanupData = async (type: 'devices' | 'traces' | 'logs' | 'sessions' | 'crashes' | 'screens' | 'all') => {
     if (!token || !projectId) return
-    
+
     try {
       const res = await fetch('/api/cleanup', {
         method: 'DELETE',
@@ -902,12 +904,12 @@ export default function ProjectDetailPage() {
         },
         body: JSON.stringify({ projectId, type })
       })
-      
+
       const data = await res.json()
-      
+
       if (res.ok) {
         alert(`✅ Success!\n\n${data.message}\n\nDeleted items: ${data.deletedCount || 0}`)
-        
+
         // Reload the page to refresh all data
         window.location.reload()
       } else {
@@ -1241,11 +1243,11 @@ export default function ProjectDetailPage() {
           api.subscription.getEnforcement(token).catch(() => null),
           api.subscription.getUsage(token).catch(() => null)
         ])
-        
+
         if (enforcementRes) {
           setSharedEnforcement(enforcementRes)
         }
-        
+
         if (usageRes?.usage) {
           setSharedUsage(usageRes.usage)
         }
@@ -1266,17 +1268,17 @@ export default function ProjectDetailPage() {
       try {
         // Fetch subscription status
         fetchSubscriptionStatus()
-        
+
         // Only fetch project info and default tab (devices) on initial load
         const [devicesRes, projectsRes] = await Promise.all([
           api.devices.list(projectId, token),
           api.projects.list(token)
         ])
-        
+
         setDevices(devicesRes.devices as Device[])
         setDeviceStats(devicesRes.stats)
         setDevicesPagination(devicesRes.pagination)
-        
+
         const project = projectsRes.projects.find(p => p.id === projectId)
         if (project) {
           setApiKey(project.apiKey)
@@ -1360,26 +1362,26 @@ export default function ProjectDetailPage() {
       }
     }
   }, [sharedEnforcement, sharedUsage, activeTab])
-  
+
   // Separate effects to ensure usage state is set when sharedUsage changes (fallback)
   useEffect(() => {
     if (sharedUsage?.devices && !deviceUsage) {
       setDeviceUsage(sharedUsage.devices)
     }
   }, [sharedUsage, deviceUsage])
-  
+
   useEffect(() => {
     if (sharedUsage?.logs && !logsUsage) {
       setLogsUsage(sharedUsage.logs)
     }
   }, [sharedUsage, logsUsage])
-  
+
   useEffect(() => {
     if (sharedUsage?.crashes && !crashesUsage) {
       setCrashesUsage(sharedUsage.crashes)
     }
   }, [sharedUsage, crashesUsage])
-  
+
   useEffect(() => {
     if (sharedUsage?.apiRequests && sharedUsage?.apiEndpoints && !apiTracesUsage) {
       setApiTracesUsage({
@@ -1409,7 +1411,7 @@ export default function ProjectDetailPage() {
       setDevices(devicesRes.devices as Device[])
       setDeviceStats(devicesRes.stats)
       setDevicesPagination(devicesRes.pagination)
-      
+
       // Use shared enforcement/usage data (already fetched at top level)
       if (activeTab === 'devices' && sharedEnforcement && sharedUsage) {
         setDeviceEnforcement(sharedEnforcement)
@@ -1823,7 +1825,7 @@ export default function ProjectDetailPage() {
 
       <div className="flex gap-6">
         {/* Sidebar Navigation */}
-        <Sidebar 
+        <Sidebar
           onTabChange={(tab) => setActiveTab(tab as Tab)}
           activeTab={activeTab}
           counts={{
@@ -1835,4829 +1837,458 @@ export default function ProjectDetailPage() {
             monitor: monitorSummary?.unresolvedCount ?? 0,
           }}
         />
-        
+
         {/* Main Content Area */}
         <div className="flex-1 min-w-0">
-      {activeTab === 'devices' && (
-        <div className="space-y-4">
-          {/* Sub-tabs */}
-          <div className="border-b border-gray-800">
-            <nav className="flex space-x-8">
-              <button
-                onClick={() => setDeviceSubTab('list')}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  deviceSubTab === 'list'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-white'
-                }`}
-              >
-                Device List
-              </button>
-              <button
-                onClick={() => setDeviceSubTab('settings')}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  deviceSubTab === 'settings'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-white'
-                }`}
-              >
-                Settings
-              </button>
-            </nav>
-          </div>
+          {activeTab === 'devices' && (
+            <div className="space-y-4">
+              {/* Sub-tabs */}
+              <div className="border-b border-gray-800">
+                <nav className="flex space-x-8">
+                  <button
+                    onClick={() => setDeviceSubTab('list')}
+                    className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${deviceSubTab === 'list'
+                        ? 'border-blue-500 text-blue-400'
+                        : 'border-transparent text-gray-400 hover:text-white'
+                      }`}
+                  >
+                    Device List
+                  </button>
+                  <button
+                    onClick={() => setDeviceSubTab('settings')}
+                    className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${deviceSubTab === 'settings'
+                        ? 'border-blue-500 text-blue-400'
+                        : 'border-transparent text-gray-400 hover:text-white'
+                      }`}
+                  >
+                    Settings
+                  </button>
+                </nav>
+              </div>
 
-          {deviceSubTab === 'list' && (
-            <>
-          {/* Enforcement Warning Banner for Device Registration */}
-          {(() => {
-            // Use deviceUsage if available, otherwise fallback to sharedUsage.devices
-            const usage = deviceUsage || sharedUsage?.devices
-            if (!usage) {
-              return null
-            }
-            if (usage.limit === null || usage.limit === undefined || usage.limit <= 0) {
-              return null
-            }
-            
-            // Calculate percentage if not provided
-            const percentage = usage.percentage !== undefined 
-              ? usage.percentage 
-              : usage.limit > 0 
-                ? (usage.used / usage.limit) * 100 
-                : 0
-            const warnThreshold = 80 // Default warn threshold
-            const hardThreshold = 100 // Default hard threshold
-            
-            // Show banner if quota exceeded (used >= limit) or percentage >= 100
-            const isExceeded = usage.used >= usage.limit || percentage >= hardThreshold
-            const isApproaching = !isExceeded && percentage >= warnThreshold
-            
-            if (isExceeded) {
-                // HARD threshold exceeded
-                return (
-                  <div className="bg-red-900/20 border-l-4 border-red-600 p-4 rounded mb-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="text-red-400 font-semibold mb-2 flex items-center gap-2">
-                          <span>🚫</span>
-                          Device Registration Quota Exceeded
-                        </h3>
-                        <p className="text-gray-300 text-sm mb-2">
-                          You have reached your device registration limit: <strong>{usage.used}/{usage.limit} devices</strong> ({percentage.toFixed(1)}%).
-                        </p>
-                        <p className="text-gray-300 text-sm">
-                          New device registrations will be blocked. Please upgrade your plan to register more devices.
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => router.push('/subscription')}
-                        className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
-                      >
-                        Upgrade Plan
-                      </button>
-                    </div>
-                  </div>
-                )
-              } else if (isApproaching) {
-                // WARN threshold exceeded
-                return (
-                  <div className="bg-yellow-900/20 border-l-4 border-yellow-600 p-4 rounded mb-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="text-yellow-400 font-semibold mb-2 flex items-center gap-2">
-                          <span>⚠️</span>
-                          Approaching Device Registration Limit
-                        </h3>
-                        <p className="text-gray-300 text-sm mb-2">
-                          You are approaching your device registration limit: <strong>{usage.used}/{usage.limit} devices</strong> ({percentage.toFixed(1)}%).
-                        </p>
-                        <p className="text-gray-300 text-sm">
-                          You can register {Math.max(0, usage.limit - usage.used)} more device{usage.limit - usage.used !== 1 ? 's' : ''} before reaching your limit.
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => router.push('/subscription')}
-                        className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
-                      >
-                        Upgrade Plan
-                      </button>
-                    </div>
-                  </div>
-                )
-              }
-              return null
-            })()}
-
-          {/* Action Bar */}
-          <div className="flex items-center justify-between bg-gray-900 rounded-lg p-4 border border-gray-800">
-            <div className="flex items-center gap-4">
-              {selectedDevices.size > 0 && (
+              {deviceSubTab === 'list' && (
                 <>
-                  <span className="text-gray-300 text-sm">
-                    {selectedDevices.size} device{selectedDevices.size > 1 ? 's' : ''} selected
-                  </span>
-                  <button
-                    onClick={() => {
-                      if (selectedDevices.size >= 2 && selectedDevices.size <= 5) {
-                        setShowComparison(true)
-                      } else {
-                        alert('Please select 2-5 devices to compare')
-                      }
-                    }}
-                    disabled={selectedDevices.size < 2 || selectedDevices.size > 5}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-750 text-white rounded-lg text-sm font-medium transition-colors border border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Compare Selected
-                  </button>
-                  <button
-                    onClick={() => setSelectedDevices(new Set())}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-750 text-gray-300 rounded-lg text-sm font-medium transition-colors border border-gray-700"
-                  >
-                    Clear Selection
-                  </button>
-                </>
-              )}
-            </div>
-            <button
-              onClick={() => {
-                if (token) {
-                  const format = confirm('Export as CSV? (Click Cancel for JSON)') ? 'csv' : 'json'
-                  api.devices.export(projectId, format, token)
-                    .then((data) => {
-                      if (format === 'csv') {
-                        const blob = new Blob([data as string], { type: 'text/csv' })
-                        const url = window.URL.createObjectURL(blob)
-                        const a = document.createElement('a')
-                        a.href = url
-                        a.download = `devices-${projectId}-${new Date().toISOString().split('T')[0]}.csv`
-                        a.click()
-                      } else {
-                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-                        const url = window.URL.createObjectURL(blob)
-                        const a = document.createElement('a')
-                        a.href = url
-                        a.download = `devices-${projectId}-${new Date().toISOString().split('T')[0]}.json`
-                        a.click()
-                      }
-                    })
-                    .catch((err) => {
-                      console.error('Export failed:', err)
-                      alert('Failed to export devices')
-                    })
-                }
-              }}
-              className="px-4 py-2 bg-gray-800 hover:bg-gray-750 text-white rounded-lg text-sm font-medium transition-colors border border-gray-700"
-            >
-              Export Devices
-            </button>
-          </div>
-
-          {/* Stats Cards - Clean Professional Design */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-            <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-              <div className="text-gray-400 text-xs mb-1">Total Devices</div>
-              <div className="text-2xl font-bold text-white">{deviceStats.total}</div>
-            </div>
-            <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-              <div className="text-gray-400 text-xs mb-1">Android</div>
-              <div className="text-2xl font-bold text-white">{deviceStats.android}</div>
-            </div>
-            <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-              <div className="text-gray-400 text-xs mb-1">iOS</div>
-              <div className="text-2xl font-bold text-white">{deviceStats.ios}</div>
-            </div>
-            <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-              <div className="text-gray-400 text-xs mb-1">Debug Mode</div>
-              <div className="text-2xl font-bold text-white">{deviceStats.debugModeCount}</div>
-            </div>
-            <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-              <div className="text-gray-400 text-xs mb-1">Today</div>
-              <div className="text-2xl font-bold text-white">{deviceStats.today}</div>
-            </div>
-            <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-              <div className="text-gray-400 text-xs mb-1">This Week</div>
-              <div className="text-2xl font-bold text-white">{deviceStats.thisWeek}</div>
-            </div>
-            <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-              <div className="text-gray-400 text-xs mb-1">This Month</div>
-              <div className="text-2xl font-bold text-white">{deviceStats.thisMonth}</div>
-            </div>
-          </div>
-
-          {/* Filters */}
-          <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-            <div className="flex flex-wrap items-center gap-4">
-              {/* Search */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={deviceSearch}
-                  onChange={(e) => setDeviceSearch(e.target.value)}
-                  placeholder="Search device code, user..."
-                  className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none w-56"
-                />
-                {deviceSearch && (
-                  <button
-                    onClick={() => setDeviceSearch('')}
-                    className="px-2 py-1.5 bg-gray-800 text-gray-400 hover:text-white rounded-lg text-sm border border-gray-700"
-                    title="Clear search"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-
-              {/* Platform Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400 text-sm">Platform:</span>
-                <select
-                  value={devicePlatformFilter}
-                  onChange={(e) => setDevicePlatformFilter(e.target.value)}
-                  className="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none"
-                >
-                  <option value="">All</option>
-                  <option value="android">Android</option>
-                  <option value="ios">iOS</option>
-                </select>
-              </div>
-
-              {/* Debug Mode Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400 text-sm">Debug:</span>
-                <select
-                  value={deviceDebugModeFilter}
-                  onChange={(e) => setDeviceDebugModeFilter(e.target.value)}
-                  className="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none"
-                >
-                  <option value="">All</option>
-                  <option value="enabled">Debug Only</option>
-                </select>
-              </div>
-
-              {/* Device Category Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400 text-sm">Category:</span>
-                <select
-                  value={deviceCategoryFilter}
-                  onChange={(e) => setDeviceCategoryFilter(e.target.value)}
-                  className="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none"
-                >
-                  <option value="">All</option>
-                  <option value="mobile">Mobile</option>
-                  <option value="tablet">Tablet</option>
-                  <option value="desktop">Desktop</option>
-                  <option value="tv">TV</option>
-                </select>
-              </div>
-
-              {/* Device Brand Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400 text-sm">Brand:</span>
-                <input
-                  type="text"
-                  value={deviceBrandFilter}
-                  onChange={(e) => setDeviceBrandFilter(e.target.value)}
-                  placeholder="Filter by brand..."
-                  className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none w-32"
-                />
-                {deviceBrandFilter && (
-                  <button
-                    onClick={() => setDeviceBrandFilter('')}
-                    className="px-2 py-1.5 bg-gray-800 text-gray-400 hover:text-white rounded-lg text-sm border border-gray-700"
-                    title="Clear brand filter"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-
-              {/* Language Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400 text-sm">Language:</span>
-                <input
-                  type="text"
-                  value={deviceLanguageFilter}
-                  onChange={(e) => setDeviceLanguageFilter(e.target.value)}
-                  placeholder="e.g., en, fr..."
-                  className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none w-24"
-                />
-                {deviceLanguageFilter && (
-                  <button
-                    onClick={() => setDeviceLanguageFilter('')}
-                    className="px-2 py-1.5 bg-gray-800 text-gray-400 hover:text-white rounded-lg text-sm border border-gray-700"
-                    title="Clear language filter"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-
-              {/* Date Range Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400 text-sm">Registered:</span>
-                <input
-                  type="date"
-                  value={deviceStartDate}
-                  onChange={(e) => setDeviceStartDate(e.target.value)}
-                  className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none"
-                  placeholder="From"
-                />
-                <span className="text-gray-400">to</span>
-                <input
-                  type="date"
-                  value={deviceEndDate}
-                  onChange={(e) => setDeviceEndDate(e.target.value)}
-                  className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none"
-                  placeholder="To"
-                />
-                {(deviceStartDate || deviceEndDate) && (
-                  <button
-                    onClick={() => {
-                      setDeviceStartDate('')
-                      setDeviceEndDate('')
-                    }}
-                    className="px-2 py-1.5 bg-gray-800 text-gray-400 hover:text-white rounded-lg text-sm border border-gray-700"
-                    title="Clear date filter"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-
-              {/* Loading indicator */}
-              {devicesLoading && (
-                <div className="text-gray-500 text-sm flex items-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Loading...
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Device List */}
-          {devicesLoading && devices.length === 0 ? (
-            <SkeletonDeviceList count={6} />
-          ) : devices.length === 0 ? (
-            <p className="text-gray-400 text-center py-8">
-              {devicePlatformFilter || deviceStartDate || deviceEndDate || debouncedDeviceSearch
-                ? 'No devices match the current filters'
-                : 'No devices registered yet'}
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {/* Pagination at top */}
-              {devicesPagination.totalPages > 1 && (
-                <Pagination
-                  pagination={devicesPagination}
-                  onPageChange={handleDevicePageChange}
-                  onLimitChange={handleDeviceLimitChange}
-                  className="bg-gray-900 rounded-lg p-4"
-                />
-              )}
-              {devices.map((device) => (
-                <DeviceCard
-                  key={device.id}
-                  device={device}
-                  togglingDebugMode={togglingDebugMode}
-                  onToggleDebugMode={toggleDeviceDebugMode}
-                  deletingDevice={deletingDevice}
-                  onDeleteDevice={deleteDevice}
-                  trackingMode={sdkSettings?.trackingMode || 'all'}
-                  selected={selectedDevices.has(device.id)}
-                  onSelect={(selected) => {
-                    const newSet = new Set(selectedDevices)
-                    if (selected) {
-                      newSet.add(device.id)
-                    } else {
-                      newSet.delete(device.id)
-                    }
-                    setSelectedDevices(newSet)
-                  }}
-                  onViewDetails={() => setSelectedDeviceForDetails(device.id)}
-                />
-              ))}
-              {/* Pagination at bottom */}
-              {devicesPagination.totalPages > 1 && (
-                <Pagination
-                  pagination={devicesPagination}
-                  onPageChange={handleDevicePageChange}
-                  onLimitChange={handleDeviceLimitChange}
-                  showLimitSelector={false}
-                  className="bg-gray-900 rounded-lg p-4"
-                />
-              )}
-            </div>
-          )}
-            </>
-          )}
-
-          {/* Device Comparison Modal */}
-          {showComparison && token && selectedDevices.size >= 2 && (
-            <DeviceComparison
-              deviceIds={Array.from(selectedDevices)}
-              token={token}
-              onClose={() => {
-                setShowComparison(false)
-                setSelectedDevices(new Set())
-              }}
-            />
-          )}
-
-          {/* Device Details Modal */}
-          {selectedDeviceForDetails && token && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="bg-gray-900 rounded-lg border border-gray-800 max-w-4xl w-full max-h-[90vh] overflow-auto">
-                <div className="sticky top-0 bg-gray-900 border-b border-gray-800 p-6 flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-white">Device Details</h2>
-                  <button
-                    onClick={() => setSelectedDeviceForDetails(null)}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-750 text-white rounded-lg text-sm font-medium transition-colors border border-gray-700"
-                  >
-                    Close
-                  </button>
-                </div>
-                <div className="p-6">
-                  <DeviceNotes deviceId={selectedDeviceForDetails} token={token} />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {deviceSubTab === 'settings' && token && sdkSettings && (
-            <div className="space-y-6">
-              {/* Tracking Mode */}
-              <div className="bg-gray-900 rounded-lg p-4">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="text-2xl">📡</span>
-                  <div>
-                    <h3 className="text-white font-medium">Tracking Mode</h3>
-                    <p className="text-gray-400 text-sm">Control which devices send API traces and session data</p>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div
-                    className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                      sdkSettings.trackingMode === 'all'
-                        ? 'bg-blue-600/20 border-2 border-blue-500'
-                        : 'bg-gray-800 hover:bg-gray-750 border-2 border-transparent'
-                    }`}
-                    onClick={() => updateSdkSetting({ trackingMode: 'all' })}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg">🌍</span>
-                      <div>
-                        <p className="text-white text-sm font-medium">All Devices</p>
-                        <p className="text-gray-500 text-xs">Track all devices (recommended for development/testing)</p>
-                      </div>
-                    </div>
-                    {sdkSettings.trackingMode === 'all' && (
-                      <span className="text-blue-400 text-lg">✓</span>
-                    )}
-                  </div>
-
-                  <div
-                    className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                      sdkSettings.trackingMode === 'debug_only'
-                        ? 'bg-orange-600/20 border-2 border-orange-500'
-                        : 'bg-gray-800 hover:bg-gray-750 border-2 border-transparent'
-                    }`}
-                    onClick={() => updateSdkSetting({ trackingMode: 'debug_only' })}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg">🐛</span>
-                      <div>
-                        <p className="text-white text-sm font-medium">Debug Devices Only</p>
-                        <p className="text-gray-500 text-xs">Only track devices with debug mode enabled (recommended for production)</p>
-                      </div>
-                    </div>
-                    {sdkSettings.trackingMode === 'debug_only' && (
-                      <span className="text-orange-400 text-lg">✓</span>
-                    )}
-                  </div>
-
-                  <div
-                    className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                      sdkSettings.trackingMode === 'none'
-                        ? 'bg-red-600/20 border-2 border-red-500'
-                        : 'bg-gray-800 hover:bg-gray-750 border-2 border-transparent'
-                    }`}
-                    onClick={() => updateSdkSetting({ trackingMode: 'none' })}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg">🚫</span>
-                      <div>
-                        <p className="text-white text-sm font-medium">Disabled</p>
-                        <p className="text-gray-500 text-xs">No devices will send API traces or session data</p>
-                      </div>
-                    </div>
-                    {sdkSettings.trackingMode === 'none' && (
-                      <span className="text-red-400 text-lg">✓</span>
-                    )}
-                  </div>
-                </div>
-                {sdkSettings.trackingMode === 'debug_only' && (
-                  <div className="mt-4 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg">
-                    <p className="text-orange-400 text-sm">
-                      💡 <strong>Tip:</strong> Enable debug mode on specific devices from the Device List tab to start tracking them.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'logs' && (
-        <div className="space-y-4">
-          {/* Sub-tabs */}
-          <div className="border-b border-gray-800">
-            <nav className="flex space-x-8">
-              <button
-                onClick={() => setLogsSubTab('list')}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  logsSubTab === 'list'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-white'
-                }`}
-              >
-                Logs
-              </button>
-              <button
-                onClick={() => setLogsSubTab('settings')}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  logsSubTab === 'settings'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-white'
-                }`}
-              >
-                Settings
-              </button>
-            </nav>
-          </div>
-
-          {logsSubTab === 'list' && (
-            <>
-          {/* Enforcement Banner for Logs */}
-          {(() => {
-            // Use logsUsage if available, otherwise fallback to sharedUsage.logs
-            const usage = logsUsage || sharedUsage?.logs
-            if (!usage || usage.limit === null || usage.limit === undefined || usage.limit <= 0) {
-              return null
-            }
-            
-            const percentage = usage.percentage !== undefined 
-              ? usage.percentage 
-              : usage.limit > 0 
-                ? (usage.used / usage.limit) * 100 
-                : 0
-            const warnThreshold = 80
-            const hardThreshold = 100
-            
-            // Show banner if quota exceeded (used >= limit) or percentage >= 100
-            const isExceeded = usage.used >= usage.limit || percentage >= hardThreshold
-            const isApproaching = !isExceeded && percentage >= warnThreshold
-            
-            if (isExceeded) {
-              return (
-                <div className="bg-red-900/20 border-l-4 border-red-600 p-4 rounded mb-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-red-400 font-semibold mb-2 flex items-center gap-2">
-                        <span>🚫</span>
-                        <span>Logs Quota Exceeded</span>
-                      </h3>
-                      <p className="text-gray-300 text-sm mb-2">
-                        You have reached your logs limit: <strong>{usage.used}/{usage.limit} logs</strong> ({percentage.toFixed(1)}%).
-                      </p>
-                          <p className="text-gray-300 text-sm">
-                            New logs will be blocked. Please upgrade your plan to continue logging.
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => router.push('/subscription')}
-                          className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
-                        >
-                          Upgrade Plan
-                        </button>
-                      </div>
-                    </div>
-                  )
-            } else if (isApproaching) {
-              return (
-                <div className="bg-yellow-900/20 border-l-4 border-yellow-600 p-4 rounded mb-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-yellow-400 font-semibold mb-2 flex items-center gap-2">
-                        <span>⚠️</span>
-                        <span>Approaching Logs Limit</span>
-                      </h3>
-                      <p className="text-gray-300 text-sm mb-2">
-                        You are approaching your logs limit: <strong>{usage.used}/{usage.limit} logs</strong> ({percentage.toFixed(1)}%).
-                      </p>
-                      <p className="text-gray-300 text-sm">
-                        You can log {Math.max(0, usage.limit - usage.used)} more log{usage.limit - usage.used !== 1 ? 's' : ''} before reaching your limit.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => router.push('/subscription')}
-                      className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
-                    >
-                      Upgrade Plan
-                    </button>
-                  </div>
-                </div>
-              )
-            }
-            return null
-          })()}
-          {/* Log Level Summary */}
-          <div className="flex flex-wrap gap-2 p-4 bg-gray-900 rounded-lg">
-            <button
-              onClick={() => setLogLevelFilter('')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                logLevelFilter === '' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-              }`}
-            >
-              All ({logsTotal})
-            </button>
-            {logLevels.verbose > 0 && (
-              <button
-                onClick={() => setLogLevelFilter('verbose')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  logLevelFilter === 'verbose' ? 'bg-gray-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                }`}
-              >
-                Verbose ({logLevels.verbose})
-              </button>
-            )}
-            {logLevels.debug > 0 && (
-              <button
-                onClick={() => setLogLevelFilter('debug')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  logLevelFilter === 'debug' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-purple-400 hover:bg-gray-700'
-                }`}
-              >
-                Debug ({logLevels.debug})
-              </button>
-            )}
-            {logLevels.info > 0 && (
-              <button
-                onClick={() => setLogLevelFilter('info')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  logLevelFilter === 'info' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-blue-400 hover:bg-gray-700'
-                }`}
-              >
-                Info ({logLevels.info})
-              </button>
-            )}
-            {logLevels.warn > 0 && (
-              <button
-                onClick={() => setLogLevelFilter('warn')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  logLevelFilter === 'warn' ? 'bg-yellow-600 text-white' : 'bg-gray-800 text-yellow-400 hover:bg-gray-700'
-                }`}
-              >
-                Warn ({logLevels.warn})
-              </button>
-            )}
-            {logLevels.error > 0 && (
-              <button
-                onClick={() => setLogLevelFilter('error')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  logLevelFilter === 'error' ? 'bg-red-600 text-white' : 'bg-gray-800 text-red-400 hover:bg-gray-700'
-                }`}
-              >
-                Error ({logLevels.error})
-              </button>
-            )}
-            {logLevels.assert > 0 && (
-              <button
-                onClick={() => setLogLevelFilter('assert')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  logLevelFilter === 'assert' ? 'bg-red-800 text-white' : 'bg-gray-800 text-red-500 hover:bg-gray-700'
-                }`}
-              >
-                Assert ({logLevels.assert})
-              </button>
-            )}
-          </div>
-
-          {/* Search and Filters */}
-          <div className="flex flex-wrap items-center gap-3 p-4 bg-gray-900 rounded-lg">
-            {/* Search Input */}
-            <div className="flex-1 min-w-[200px]">
-              <input
-                type="text"
-                placeholder="Search logs (message, tag, class, function)..."
-                value={logSearch}
-                onChange={(e) => setLogSearch(e.target.value)}
-                className="w-full bg-gray-800 text-gray-300 text-sm rounded-lg px-4 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-
-            {/* Tag Filter */}
-            {logTags.length > 0 && (
-              <div className="flex items-center gap-2">
-                <label className="text-gray-400 text-sm">Tag:</label>
-                <select
-                  value={logTagFilter}
-                  onChange={(e) => setLogTagFilter(e.target.value)}
-                  className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
-                >
-                  <option value="">All Tags</option>
-                  {logTags.map((tag) => (
-                    <option key={tag} value={tag}>{tag}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Screen Filter */}
-            {logScreenNames.length > 0 && (
-              <div className="flex items-center gap-2">
-                <label className="text-gray-400 text-sm">Screen:</label>
-                <select
-                  value={logScreenFilter}
-                  onChange={(e) => setLogScreenFilter(e.target.value)}
-                  className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
-                >
-                  <option value="">All Screens</option>
-                  {logScreenNames.map((screen) => (
-                    <option key={screen} value={screen}>{screen}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Spacer */}
-            <div className="flex-1" />
-
-            {/* Clear Logs Button */}
-            <button
-              onClick={() => clearLogs(logLevelFilter || undefined)}
-              disabled={clearingLogs || logs.length === 0}
-              className="px-4 py-1.5 bg-red-900/50 hover:bg-red-800/50 text-red-400 text-sm rounded border border-red-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {clearingLogs ? 'Clearing...' : logLevelFilter ? `Clear ${logLevelFilter} logs` : 'Clear All Logs'}
-            </button>
-          </div>
-
-          {/* Logs List */}
-          {logsLoading && logs.length === 0 ? (
-            <SkeletonLogList count={10} />
-          ) : logs.length === 0 ? (
-            <p className="text-gray-400 text-center py-8">
-              {debouncedLogSearch || logLevelFilter || logTagFilter || logScreenFilter
-                ? 'No logs match your filters'
-                : 'No logs yet. Integrate the SDK to start capturing console logs.'}
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {/* Pagination at top */}
-              {logsPagination.totalPages > 1 && (
-                <Pagination
-                  pagination={logsPagination}
-                  onPageChange={handleLogsPageChange}
-                  onLimitChange={handleLogsLimitChange}
-                  className="bg-gray-900 rounded-lg p-4"
-                />
-              )}
-              {logs.map((log) => (
-                <LogItem
-                  key={log.id}
-                  log={log}
-                  isExpanded={expandedLog === log.id}
-                  onToggleExpand={() => setExpandedLog(expandedLog === log.id ? null : log.id)}
-                />
-              ))}
-              {/* Pagination at bottom */}
-              {logsPagination.totalPages > 1 && (
-                <Pagination
-                  pagination={logsPagination}
-                  onPageChange={handleLogsPageChange}
-                  onLimitChange={handleLogsLimitChange}
-                  showLimitSelector={false}
-                  className="bg-gray-900 rounded-lg p-4"
-                />
-              )}
-            </div>
-          )}
-            </>
-          )}
-
-          {logsSubTab === 'settings' && token && sdkSettings && (
-            <div className="space-y-6">
-              {/* Capture Print Statements */}
-              <div className="bg-gray-900 rounded-lg p-4">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="text-2xl">🖨️</span>
-                  <div>
-                    <h3 className="text-white font-medium">Capture Print Statements</h3>
-                    <p className="text-gray-400 text-sm">Auto-capture print() statements as logs</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg">📝</span>
-                    <div>
-                      <p className="text-white text-sm font-medium">Enable Print Statement Capture</p>
-                      <p className="text-gray-500 text-xs">Automatically capture print() statements and send them as log entries</p>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={sdkSettings.capturePrintStatements}
-                      onChange={(e) => updateSdkSetting({ capturePrintStatements: e.target.checked })}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                  </label>
-                </div>
-              </div>
-
-              {/* Log Control */}
-              <div className="bg-gray-900 rounded-lg p-4">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="text-2xl">🎛️</span>
-                  <div>
-                    <h3 className="text-white font-medium">Log Control</h3>
-                    <p className="text-gray-400 text-sm">Control log levels and filtering</p>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="p-3 bg-gray-800 rounded-lg">
-                    <p className="text-white text-sm font-medium mb-2">Minimum Log Level</p>
-                    <p className="text-gray-500 text-xs mb-3">Only logs at or above this level will be captured</p>
-                    <div className="flex gap-2">
-                      {['verbose', 'debug', 'info', 'warn', 'error'].map((level) => (
-                        <button
-                          key={level}
-                          className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                            sdkSettings.minLogLevel === level
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                          }`}
-                          onClick={() => updateSdkSetting({ minLogLevel: level })}
-                        >
-                          {level.charAt(0).toUpperCase() + level.slice(1)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg">📊</span>
-                      <div>
-                        <p className="text-white text-sm font-medium">Enable Log Sampling</p>
-                        <p className="text-gray-500 text-xs">Sample logs to reduce volume (e.g., capture 1 in 10 logs)</p>
-                      </div>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={sdkSettings.logSamplingEnabled || false}
-                        onChange={(e) => updateSdkSetting({ logSamplingEnabled: e.target.checked })}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-                  {sdkSettings.logSamplingEnabled && (
-                    <div className="p-3 bg-gray-800 rounded-lg">
-                      <label className="text-white text-sm font-medium mb-2 block">Sampling Rate</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="100"
-                        value={sdkSettings.logSamplingRate || 10}
-                        onChange={(e) => updateSdkSetting({ logSamplingRate: parseInt(e.target.value) || 10 })}
-                        className="w-full px-3 py-1.5 bg-gray-700 text-gray-300 rounded text-sm border border-gray-600 focus:border-blue-500 focus:outline-none"
-                        placeholder="10"
-                      />
-                      <p className="text-gray-500 text-xs mt-1">Capture 1 in {sdkSettings.logSamplingRate || 10} logs</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'crashes' && (
-        <div className="space-y-4">
-          {/* Enforcement Banner for Crashes */}
-          {(() => {
-            // Use crashesUsage if available, otherwise fallback to sharedUsage.crashes
-            const usage = crashesUsage || sharedUsage?.crashes
-            if (!usage || usage.limit === null || usage.limit === undefined || usage.limit <= 0) {
-              return null
-            }
-            
-            const percentage = usage.percentage !== undefined 
-              ? usage.percentage 
-              : usage.limit > 0 
-                ? (usage.used / usage.limit) * 100 
-                : 0
-            const warnThreshold = 80
-            const hardThreshold = 100
-            
-            // Show banner if quota exceeded (used >= limit) or percentage >= 100
-            const isExceeded = usage.used >= usage.limit || percentage >= hardThreshold
-            const isApproaching = !isExceeded && percentage >= warnThreshold
-            
-            if (isExceeded) {
-              return (
-                <div className="bg-red-900/20 border-l-4 border-red-600 p-4 rounded mb-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-red-400 font-semibold mb-2 flex items-center gap-2">
-                        <span>🚫</span>
-                        <span>Crashes Quota Exceeded</span>
-                      </h3>
-                      <p className="text-gray-300 text-sm mb-2">
-                        You have reached your crashes limit: <strong>{usage.used}/{usage.limit} crashes</strong> ({percentage.toFixed(1)}%).
-                      </p>
-                          <p className="text-gray-300 text-sm">
-                            New crash reports will be blocked. Please upgrade your plan to continue crash reporting.
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => router.push('/subscription')}
-                          className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
-                        >
-                          Upgrade Plan
-                        </button>
-                      </div>
-                    </div>
-                  )
-            } else if (isApproaching) {
-              return (
-                <div className="bg-yellow-900/20 border-l-4 border-yellow-600 p-4 rounded mb-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-yellow-400 font-semibold mb-2 flex items-center gap-2">
-                        <span>⚠️</span>
-                        <span>Approaching Crashes Limit</span>
-                      </h3>
-                      <p className="text-gray-300 text-sm mb-2">
-                        You are approaching your crashes limit: <strong>{usage.used}/{usage.limit} crashes</strong> ({percentage.toFixed(1)}%).
-                      </p>
-                      <p className="text-gray-300 text-sm">
-                        You can report {Math.max(0, usage.limit - usage.used)} more crash{usage.limit - usage.used !== 1 ? 'es' : ''} before reaching your limit.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => router.push('/subscription')}
-                      className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
-                    >
-                      Upgrade Plan
-                    </button>
-                  </div>
-                </div>
-              )
-            }
-            return null
-          })()}
-          {/* Filters and Search Bar */}
-          <div className="flex flex-wrap items-center gap-3 p-4 bg-gray-900 rounded-lg">
-            {/* Search */}
-            <div className="flex-1 min-w-[200px]">
-              <input
-                type="text"
-                value={crashSearch}
-                onChange={(e) => setCrashSearch(e.target.value)}
-                placeholder="Search crashes by message or stack trace..."
-                className="w-full px-3 py-1.5 bg-gray-800 text-gray-300 rounded text-sm border border-gray-700 focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-
-            {/* Platform Filter */}
-            <div className="flex items-center gap-2">
-              <label className="text-gray-400 text-sm">Platform:</label>
-              <select
-                value={crashPlatformFilter}
-                onChange={(e) => setCrashPlatformFilter(e.target.value)}
-                className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
-              >
-                <option value="">All Platforms</option>
-                {crashPlatforms.map((platform) => (
-                  <option key={platform} value={platform}>{platform}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Device Filter */}
-            <div className="flex items-center gap-2">
-              <label className="text-gray-400 text-sm">Device:</label>
-              <select
-                value={crashDeviceFilter}
-                onChange={(e) => setCrashDeviceFilter(e.target.value)}
-                className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none min-w-[200px]"
-              >
-                <option value="">All Devices</option>
-                {crashDevices.map((device) => (
-                  <option key={device.id} value={device.deviceId}>
-                    {device.deviceId} ({device.platform} {device.model ? `- ${device.model}` : ''})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Date Range */}
-            <div className="flex items-center gap-2">
-              <label className="text-gray-400 text-sm">From:</label>
-              <input
-                type="date"
-                value={crashStartDate}
-                onChange={(e) => setCrashStartDate(e.target.value)}
-                className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-gray-400 text-sm">To:</label>
-              <input
-                type="date"
-                value={crashEndDate}
-                onChange={(e) => setCrashEndDate(e.target.value)}
-                className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-
-            {/* Clear Filters */}
-            {(crashPlatformFilter || crashDeviceFilter || crashStartDate || crashEndDate || crashSearch) && (
-              <button
-                onClick={() => {
-                  setCrashPlatformFilter('')
-                  setCrashDeviceFilter('')
-                  setCrashStartDate('')
-                  setCrashEndDate('')
-                  setCrashSearch('')
-                }}
-                className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded text-sm transition-colors"
-              >
-                Clear Filters
-              </button>
-            )}
-          </div>
-
-          {/* Crashes List */}
-          {crashesLoading ? (
-            <SkeletonCrashList />
-          ) : crashes.length === 0 ? (
-            <p className="text-gray-400 text-center py-8">No crashes found</p>
-          ) : (
-            <>
-              <div className="space-y-3">
-                {crashes.map((crash) => (
-                  <div key={crash.id} className="p-4 bg-gray-900 rounded-lg border border-red-900/50 hover:border-red-800/70 transition-colors">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <span className="text-red-400 font-medium">{crash.message}</span>
-                        {crash.device && (
-                          <div className="text-gray-500 text-sm mt-1">
-                            <span className="inline-block px-2 py-0.5 bg-gray-800 rounded text-xs mr-2">
-                              {crash.device.platform}
-                            </span>
-                            {crash.device.model || crash.device.deviceId}
-                          </div>
-                        )}
-                      </div>
-                      <span className="text-gray-500 text-sm whitespace-nowrap ml-4">{formatTime(crash.timestamp)}</span>
-                    </div>
-                    {crash.stackTrace && (
-                      <div className="mt-3">
-                        <button
-                          onClick={() => setExpandedCrash(expandedCrash === crash.id ? null : crash.id)}
-                          className="text-blue-400 hover:text-blue-300 text-sm mb-2"
-                        >
-                          {expandedCrash === crash.id ? '▼ Hide' : '▶ Show'} Stack Trace
-                        </button>
-                        {expandedCrash === crash.id && (
-                          <pre className="mt-2 p-3 bg-gray-950 rounded text-sm text-gray-300 overflow-x-auto max-h-96">
-                            {crash.stackTrace}
-                          </pre>
-                        )}
-                      </div>
-                    )}
-                    {crash.metadata && Object.keys(crash.metadata).length > 0 && (
-                      <div className="mt-3">
-                        <button
-                          onClick={() => setExpandedCrash(expandedCrash === crash.id ? null : crash.id)}
-                          className="text-blue-400 hover:text-blue-300 text-sm mb-2"
-                        >
-                          {expandedCrash === crash.id ? '▼ Hide' : '▶ Show'} Metadata
-                        </button>
-                        {expandedCrash === crash.id && (
-                          <pre className="mt-2 p-3 bg-gray-950 rounded text-sm text-gray-300 overflow-x-auto">
-                            {JSON.stringify(crash.metadata, null, 2)}
-                          </pre>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Pagination */}
-              {crashesPagination.totalPages > 1 && (
-                <div className="flex items-center justify-between pt-4">
-                  <div className="text-gray-400 text-sm">
-                    Showing {((crashesPagination.page - 1) * crashesPagination.limit) + 1} to {Math.min(crashesPagination.page * crashesPagination.limit, crashesPagination.total)} of {crashesPagination.total} crashes
-                  </div>
-                  <Pagination
-                    currentPage={crashesPagination.page}
-                    totalPages={crashesPagination.totalPages}
-                    onPageChange={handleCrashesPageChange}
-                    onLimitChange={handleCrashesLimitChange}
-                    limit={crashesPagination.limit}
-                    total={crashesPagination.total}
-                  />
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'traces' && (
-        <div className="space-y-4">
-          {/* Sub-tabs */}
-          <div className="border-b border-gray-800">
-            <nav className="flex space-x-8">
-              <button
-                onClick={() => setTracesSubTab('list')}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  tracesSubTab === 'list'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-white'
-                }`}
-              >
-                API Traces
-              </button>
-              <button
-                onClick={() => setTracesSubTab('security')}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  tracesSubTab === 'security'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-white'
-                }`}
-              >
-                Security Settings
-              </button>
-            </nav>
-          </div>
-
-          {tracesSubTab === 'list' && (
-            <>
-          {/* Enforcement Banner for API Traces */}
-          {(() => {
-            // Use apiTracesUsage if available, otherwise fallback to sharedUsage
-            const tracesUsage = apiTracesUsage || (sharedUsage?.apiRequests && sharedUsage?.apiEndpoints ? {
-              apiRequests: sharedUsage.apiRequests,
-              apiEndpoints: sharedUsage.apiEndpoints
-            } : null)
-            
-            if (!tracesUsage || (tracesUsage.apiRequests.limit === null && tracesUsage.apiEndpoints.limit === null)) {
-              return null
-            }
-            
-            const apiRequestsUsage = tracesUsage.apiRequests
-            const apiEndpointsUsage = tracesUsage.apiEndpoints
-            const requestsPercentage = apiRequestsUsage.percentage !== undefined 
-              ? apiRequestsUsage.percentage 
-              : apiRequestsUsage.limit && apiRequestsUsage.limit > 0 
-                ? (apiRequestsUsage.used / apiRequestsUsage.limit) * 100 
-                : 0
-            const endpointsPercentage = apiEndpointsUsage.percentage !== undefined 
-              ? apiEndpointsUsage.percentage 
-              : apiEndpointsUsage.limit && apiEndpointsUsage.limit > 0 
-                ? (apiEndpointsUsage.used / apiEndpointsUsage.limit) * 100 
-                : 0
-            const warnThreshold = 80
-            const hardThreshold = 100
-            
-            // Check if either meter is at hard threshold
-            const requestsExceeded = apiRequestsUsage.limit !== null && (apiRequestsUsage.used >= apiRequestsUsage.limit || requestsPercentage >= hardThreshold)
-            const endpointsExceeded = apiEndpointsUsage.limit !== null && (apiEndpointsUsage.used >= apiEndpointsUsage.limit || endpointsPercentage >= hardThreshold)
-            
-            if (requestsExceeded || endpointsExceeded) {
-              const exceededMeter = requestsExceeded ? 'API Requests' : 'API Endpoints'
-              const exceededUsage = requestsExceeded ? apiRequestsUsage : apiEndpointsUsage
-                  return (
-                    <div className="bg-red-900/20 border-l-4 border-red-600 p-4 rounded mb-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="text-red-400 font-semibold mb-2 flex items-center gap-2">
-                            <span>🚫</span>
-                            <span>API Traces Quota Exceeded</span>
-                          </h3>
-                          <p className="text-gray-300 text-sm mb-2">
-                            You have reached your {exceededMeter.toLowerCase()} limit: <strong>{exceededUsage.used}/{exceededUsage.limit}</strong> ({exceededUsage.percentage.toFixed(1)}%).
-                          </p>
-                          <p className="text-gray-300 text-sm">
-                            New API traces will be blocked. Please upgrade your plan to continue tracking API requests.
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => router.push('/subscription')}
-                          className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
-                        >
-                          Upgrade Plan
-                        </button>
-                      </div>
-                    </div>
-                  )
-            }
-            
-            // Check if either meter is at warn threshold (but not exceeded)
-            const requestsApproaching = apiRequestsUsage.limit !== null && !requestsExceeded && requestsPercentage >= warnThreshold
-            const endpointsApproaching = apiEndpointsUsage.limit !== null && !endpointsExceeded && endpointsPercentage >= warnThreshold
-            
-            if (requestsApproaching || endpointsApproaching) {
-              const warningMeter = requestsApproaching ? 'API Requests' : 'API Endpoints'
-              const warningUsage = requestsApproaching ? apiRequestsUsage : apiEndpointsUsage
-              return (
-                <div className="bg-yellow-900/20 border-l-4 border-yellow-600 p-4 rounded mb-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-yellow-400 font-semibold mb-2 flex items-center gap-2">
-                        <span>⚠️</span>
-                        <span>Approaching API Traces Limit</span>
-                      </h3>
-                      <p className="text-gray-300 text-sm mb-2">
-                        You are approaching your {warningMeter.toLowerCase()} limit: <strong>{warningUsage.used}/{warningUsage.limit}</strong> ({warningUsage.limit ? ((warningUsage.used / warningUsage.limit) * 100).toFixed(1) : '0'}%).
-                      </p>
-                      <p className="text-gray-300 text-sm">
-                        You can track {Math.max(0, (warningUsage.limit || 0) - warningUsage.used)} more {warningMeter.toLowerCase()} before reaching your limit.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => router.push('/subscription')}
-                      className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
-                    >
-                      Upgrade Plan
-                    </button>
-                  </div>
-                </div>
-              )
-            }
-            
-            return null
-          })()}
-          {/* Filters and Actions Bar */}
-          <div className="flex flex-wrap items-center gap-3 p-4 bg-gray-900 rounded-lg">
-            {/* Screen Name Filter */}
-            <div className="flex items-center gap-2">
-              <label className="text-gray-400 text-sm">Screen:</label>
-              <select
-                value={selectedScreen}
-                onChange={(e) => setSelectedScreen(e.target.value)}
-                className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
-              >
-                <option value="">All Screens</option>
-                {screenNames.map((name) => (
-                  <option key={name} value={name}>{name}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Device Filter */}
-            <div className="flex items-center gap-2">
-              <label className="text-gray-400 text-sm">Device:</label>
-              <select
-                value={selectedDevice}
-                onChange={(e) => setSelectedDevice(e.target.value)}
-                className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
-              >
-                <option value="">All Devices</option>
-                {traceDevices.map((device) => (
-                  <option key={device.id} value={device.id}>
-                    {device.model || device.deviceId.slice(0, 8)} ({device.platform})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Group By Dropdown */}
-            <div className="flex items-center gap-2">
-              <label className="text-gray-400 text-sm">Group by:</label>
-              <select
-                value={groupBy}
-                onChange={(e) => setGroupBy(e.target.value as 'none' | 'device' | 'screen' | 'endpoint')}
-                className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
-              >
-                <option value="none">None</option>
-                <option value="screen">Screen Name</option>
-                <option value="endpoint">API Endpoint</option>
-                <option value="device">Device</option>
-              </select>
-            </div>
-
-            {/* Spacer */}
-            <div className="flex-1" />
-
-            {/* Loading indicator */}
-            {tracesLoading && (
-              <div className="text-gray-500 text-sm flex items-center gap-2">
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                Loading...
-              </div>
-            )}
-
-            {/* Clear Traces Button */}
-            <button
-              onClick={clearTraces}
-              disabled={clearing || traces.length === 0}
-              className="px-4 py-1.5 bg-red-900/50 hover:bg-red-800/50 text-red-400 text-sm rounded border border-red-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {clearing ? 'Clearing...' : 'Clear Traces'}
-            </button>
-          </div>
-
-          {/* Traces List */}
-          {tracesLoading && traces.length === 0 ? (
-            <SkeletonTraceList count={10} />
-          ) : traces.length === 0 ? (
-            <p className="text-gray-400 text-center py-8">
-              {selectedScreen || selectedDevice ? 'No API traces match your filters' : 'No API traces yet'}
-            </p>
-          ) : groupBy !== 'none' && groupedTraces ? (
-            /* Grouped View */
-            <div className="space-y-3">
-              {groupedTraces.map((group) => (
-                <div key={group.key} className="bg-gray-900 rounded-lg overflow-hidden">
-                  {/* Group Header */}
-                  <button
-                    onClick={() => setExpandedGroup(expandedGroup === group.key ? null : group.key)}
-                    className="w-full p-4 text-left hover:bg-gray-800/50 transition-colors flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-gray-500">{expandedGroup === group.key ? '▼' : '▶'}</span>
-                      <span className="text-white font-medium">{group.label}</span>
-                      <span className="px-2 py-0.5 bg-blue-900/50 text-blue-400 text-xs rounded-full">
-                        {group.count} {group.count === 1 ? 'request' : 'requests'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="text-green-400">
-                        {group.traces.filter(t => t.statusCode >= 200 && t.statusCode < 300).length} ok
-                      </span>
-                      <span className="text-red-400">
-                        {group.traces.filter(t => t.statusCode >= 400 || t.statusCode === 0).length} errors
-                      </span>
-                    </div>
-                  </button>
-
-                  {/* Expanded Group Traces */}
-                  {expandedGroup === group.key && (
-                    <div className="border-t border-gray-800">
-                      {group.traces.map((trace) => (
-                        <div key={trace.id} className="border-b border-gray-800/50 last:border-b-0">
-                          <button
-                            onClick={() => setExpandedTrace(expandedTrace === trace.id ? null : trace.id)}
-                            className="w-full p-3 pl-10 text-left hover:bg-gray-800/30 transition-colors"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-3 min-w-0">
-                                <span className="px-2 py-0.5 bg-gray-700 rounded text-xs font-medium text-gray-300 flex-shrink-0">
-                                  {trace.method}
-                                </span>
-                                <span className={`font-medium flex-shrink-0 ${getStatusColor(trace.statusCode)}`}>
-                                  {trace.statusCode || 'ERR'}
-                                </span>
-                                <span className="text-gray-400 font-mono text-xs truncate">
-                                  {trace.url}
-                                </span>
-                              </div>
-                              <div className="flex items-center space-x-3 text-xs flex-shrink-0 ml-4">
-                                {trace.duration && (
-                                  <span className="text-gray-400">{trace.duration}ms</span>
-                                )}
-                                <span className="text-gray-500">{formatTime(trace.timestamp)}</span>
-                                <span className="text-gray-500">{expandedTrace === trace.id ? '▼' : '▶'}</span>
-                              </div>
-                            </div>
-                            {/* Metadata Row for Grouped View */}
-                            <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-500">
-                              {trace.screenName && (
-                                <span className="px-2 py-0.5 bg-blue-900/30 text-blue-400 rounded">
-                                  {trace.screenName}
-                                </span>
-                              )}
-                              {trace.device && (
-                                <span className="px-2 py-0.5 bg-gray-700/50 text-gray-400 rounded">
-                                  {trace.device.platform} - {trace.device.model || trace.device.deviceId.slice(0, 8)}
-                                </span>
-                              )}
-                              {trace.networkType && (
-                                <span>{getNetworkIcon(trace.networkType)} {trace.networkType}</span>
-                              )}
-                              {trace.country && <span>{trace.country}</span>}
-                              {trace.carrier && <span>{trace.carrier}</span>}
-                              {trace.ipAddress && <span>IP: {trace.ipAddress}</span>}
-                              {trace.userAgent && (
-                                <span className="truncate max-w-[200px]" title={trace.userAgent}>
-                                  {trace.userAgent.slice(0, 40)}...
-                                </span>
-                              )}
-                            </div>
-                          </button>
-
-                          {/* Expanded Trace Details */}
-                          {expandedTrace === trace.id && (
-                            <div className="border-t border-gray-800 p-4 pl-10 space-y-4 bg-gray-950/50">
-                              {/* Request */}
-                              <div>
-                                <h4 className="text-sm font-medium text-gray-300 mb-2">Request</h4>
-                                {trace.requestHeaders && Object.keys(trace.requestHeaders).length > 0 && (
-                                  <div className="mb-2">
-                                    <span className="text-xs text-gray-500">Headers:</span>
-                                    <pre className="mt-1 p-2 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-32">
-                                      {JSON.stringify(trace.requestHeaders, null, 2)}
-                                    </pre>
-                                  </div>
-                                )}
-                                {trace.requestBody && (
-                                  <div>
-                                    <span className="text-xs text-gray-500">Body:</span>
-                                    <pre className="mt-1 p-2 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-48">
-                                      {formatBody(trace.requestBody)}
-                                    </pre>
-                                  </div>
-                                )}
-                              </div>
-                              {/* Response */}
-                              <div>
-                                <h4 className="text-sm font-medium text-gray-300 mb-2">Response</h4>
-                                {trace.responseBody && (
-                                  <div>
-                                    <span className="text-xs text-gray-500">Body:</span>
-                                    <pre className="mt-1 p-2 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-64">
-                                      {formatBody(trace.responseBody)}
-                                    </pre>
-                                  </div>
-                                )}
-                              </div>
-                              {/* Monitoring Toggle */}
-                              <div className="border-t border-gray-800 pt-4 flex items-center justify-between">
-                                <div>
-                                  <h4 className="text-sm font-medium text-gray-300">Monitor Endpoint</h4>
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    {isEndpointMonitored(trace.url, trace.method)
-                                      ? 'This endpoint is being monitored for errors'
-                                      : 'Enable to track errors automatically'}
-                                  </p>
-                                </div>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={isEndpointMonitored(trace.url, trace.method)}
-                                    onChange={(e) => {
-                                      if (e.target.checked) {
-                                        handleQuickEnableMonitoring(trace.url, trace.method, trace.statusCode)
-                                      } else {
-                                        handleDisableMonitoring(trace.url, trace.method)
-                                      }
-                                    }}
-                                    className="sr-only peer"
-                                  />
-                                  <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                </label>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            /* Flat View */
-            <div className="space-y-2">
-              {/* Pagination at top */}
-              {tracesPagination.totalPages > 1 && (
-                <Pagination
-                  pagination={tracesPagination}
-                  onPageChange={handleTracesPageChange}
-                  onLimitChange={handleTracesLimitChange}
-                  className="bg-gray-900 rounded-lg p-4"
-                />
-              )}
-              {traces.map((trace) => (
-                <TraceItem
-                  key={trace.id}
-                  trace={trace}
-                  isExpanded={expandedTrace === trace.id}
-                  onToggleExpand={() => setExpandedTrace(expandedTrace === trace.id ? null : trace.id)}
-                  isMonitored={isEndpointMonitored(trace.url, trace.method)}
-                  onToggleMonitor={(enabled) => {
-                    if (enabled) {
-                      handleQuickEnableMonitoring(trace.url, trace.method, trace.statusCode)
-                    } else {
-                      handleDisableMonitoring(trace.url, trace.method)
-                    }
-                  }}
-                />
-              ))}
-              {/* Pagination at bottom */}
-              {tracesPagination.totalPages > 1 && (
-                <Pagination
-                  pagination={tracesPagination}
-                  onPageChange={handleTracesPageChange}
-                  onLimitChange={handleTracesLimitChange}
-                  showLimitSelector={false}
-                  className="bg-gray-900 rounded-lg p-4"
-                />
-              )}
-            </div>
-          )}
-            </>
-          )}
-
-          {tracesSubTab === 'security' && token && sdkSettings && (
-            <div className="space-y-6">
-              {/* Security Settings */}
-              <div className="bg-gray-900 rounded-lg p-4">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="text-2xl">🔒</span>
-                  <div>
-                    <h3 className="text-white font-medium">Security Settings</h3>
-                    <p className="text-gray-400 text-sm">Control data capture and privacy settings</p>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg">📤</span>
-                      <div>
-                        <p className="text-white text-sm font-medium">Capture Request Bodies</p>
-                        <p className="text-gray-500 text-xs">Include request body content in API traces</p>
-                      </div>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={sdkSettings.captureRequestBodies}
-                        onChange={(e) => updateSdkSetting({ captureRequestBodies: e.target.checked })}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg">📥</span>
-                      <div>
-                        <p className="text-white text-sm font-medium">Capture Response Bodies</p>
-                        <p className="text-gray-500 text-xs">Include response body content in API traces</p>
-                      </div>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={sdkSettings.captureResponseBodies}
-                        onChange={(e) => updateSdkSetting({ captureResponseBodies: e.target.checked })}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg">🔐</span>
-                      <div>
-                        <p className="text-white text-sm font-medium">Sanitize Sensitive Data</p>
-                        <p className="text-gray-500 text-xs">Automatically redact sensitive fields from traces</p>
-                      </div>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={sdkSettings.sanitizeSensitiveData}
-                        onChange={(e) => updateSdkSetting({ sanitizeSensitiveData: e.target.checked })}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-
-                  {/* Sensitive Field Patterns */}
-                  {sdkSettings.sanitizeSensitiveData && (
-                    <div className="p-3 bg-gray-800 rounded-lg">
-                      <p className="text-white text-sm font-medium mb-2">Sensitive Field Patterns</p>
-                      <p className="text-gray-500 text-xs mb-3">Fields matching these patterns will be redacted</p>
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {sdkSettings.sensitiveFieldPatterns?.map((pattern, idx) => (
-                          <span key={idx} className="px-3 py-1 bg-gray-700 text-gray-300 rounded-full text-sm flex items-center gap-2">
-                            {pattern}
-                            <button
-                              onClick={() => updateSdkSetting({
-                                sensitiveFieldPatterns: sdkSettings.sensitiveFieldPatterns?.filter((_, i) => i !== idx) || []
-                              })}
-                              className="text-gray-500 hover:text-red-400"
-                            >×</button>
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Add pattern (e.g., password, token)"
-                          className="flex-1 px-3 py-1.5 bg-gray-700 text-gray-300 rounded text-sm border border-gray-600 focus:border-blue-500 focus:outline-none"
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              const input = e.currentTarget
-                              const pattern = input.value.trim()
-                              if (pattern && !sdkSettings.sensitiveFieldPatterns?.includes(pattern)) {
-                                updateSdkSetting({
-                                  sensitiveFieldPatterns: [...(sdkSettings.sensitiveFieldPatterns || []), pattern]
-                                })
-                                input.value = ''
-                              }
-                            }
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'config' && (
-        <div className="space-y-6">
-          {/* Add New Config */}
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-white">API Cost Configuration</h2>
-            <button
-              onClick={() => setShowAddConfig(true)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
-            >
-              + Add Endpoint
-            </button>
-          </div>
-
-          {/* Add Config Form */}
-          {showAddConfig && (
-            <div className="bg-gray-900 rounded-lg p-4 space-y-4">
-              <h3 className="text-white font-medium">Add New Endpoint Config</h3>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-gray-400 text-sm mb-1">Endpoint Path</label>
-                  <input
-                    type="text"
-                    placeholder="/api/users/*"
-                    value={newConfig.endpoint}
-                    onChange={(e) => setNewConfig({ ...newConfig, endpoint: e.target.value })}
-                    className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-400 text-sm mb-1">Method (optional)</label>
-                  <select
-                    value={newConfig.method}
-                    onChange={(e) => setNewConfig({ ...newConfig, method: e.target.value })}
-                    className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none"
-                  >
-                    <option value="">All Methods</option>
-                    <option value="GET">GET</option>
-                    <option value="POST">POST</option>
-                    <option value="PUT">PUT</option>
-                    <option value="DELETE">DELETE</option>
-                    <option value="PATCH">PATCH</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-gray-400 text-sm mb-1">Name (optional)</label>
-                  <input
-                    type="text"
-                    placeholder="User API"
-                    value={newConfig.name}
-                    onChange={(e) => setNewConfig({ ...newConfig, name: e.target.value })}
-                    className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-400 text-sm mb-1">Cost Per Request</label>
-                  <input
-                    type="number"
-                    step="0.001"
-                    placeholder="0.00"
-                    value={newConfig.costPerRequest}
-                    onChange={(e) => setNewConfig({ ...newConfig, costPerRequest: parseFloat(e.target.value) || 0 })}
-                    className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleCreateConfig}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => {
-                    setShowAddConfig(false)
-                    setNewConfig({ endpoint: '', method: '', name: '', costPerRequest: 0 })
-                  }}
-                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Suggested Endpoints from Traces */}
-          {suggestedEndpoints.length > 0 && (
-            <div className="bg-gray-900/50 rounded-lg p-4">
-              <h3 className="text-gray-300 font-medium mb-3">Suggested Endpoints (from traces)</h3>
-              <div className="flex flex-wrap gap-2">
-                {suggestedEndpoints.slice(0, 10).map((ep, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => addSuggestedEndpoint(ep)}
-                    className="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs rounded border border-gray-700 transition-colors"
-                  >
-                    <span className="text-blue-400">{ep.method}</span> {ep.endpoint}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Existing Configs */}
-          {configs.length === 0 ? (
-            <p className="text-gray-400 text-center py-8">No API configurations yet. Add endpoints to track costs.</p>
-          ) : (
-            <div className="space-y-2">
-              {configs.map((config) => (
-                <div key={config.id} className="bg-gray-900 rounded-lg p-4">
-                  {editingConfig?.id === config.id ? (
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-                      <div>
-                        <label className="block text-gray-400 text-xs mb-1">Endpoint</label>
-                        <input
-                          type="text"
-                          value={editingConfig.endpoint}
-                          onChange={(e) => setEditingConfig({ ...editingConfig, endpoint: e.target.value })}
-                          className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-400 text-xs mb-1">Method</label>
-                        <select
-                          value={editingConfig.method || ''}
-                          onChange={(e) => setEditingConfig({ ...editingConfig, method: e.target.value || null })}
-                          className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
-                        >
-                          <option value="">All</option>
-                          <option value="GET">GET</option>
-                          <option value="POST">POST</option>
-                          <option value="PUT">PUT</option>
-                          <option value="DELETE">DELETE</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-gray-400 text-xs mb-1">Name</label>
-                        <input
-                          type="text"
-                          value={editingConfig.name || ''}
-                          onChange={(e) => setEditingConfig({ ...editingConfig, name: e.target.value || null })}
-                          className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-400 text-xs mb-1">Cost</label>
-                        <input
-                          type="number"
-                          step="0.001"
-                          value={editingConfig.costPerRequest}
-                          onChange={(e) => setEditingConfig({ ...editingConfig, costPerRequest: parseFloat(e.target.value) || 0 })}
-                          className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleUpdateConfig(editingConfig)}
-                          className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => setEditingConfig(null)}
-                          className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          {config.method && (
-                            <span className="px-2 py-0.5 bg-blue-900/50 text-blue-400 text-xs rounded">
-                              {config.method}
-                            </span>
-                          )}
-                          <span className="text-white font-mono text-sm">{config.endpoint}</span>
-                        </div>
-                        {config.name && (
-                          <span className="text-gray-400 text-sm">({config.name})</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className="text-green-400 font-medium">${config.costPerRequest.toFixed(2)} USD</span>
-                        <span className={`px-2 py-0.5 rounded text-xs ${config.isEnabled ? 'bg-green-900/50 text-green-400' : 'bg-gray-700 text-gray-400'}`}>
-                          {config.isEnabled ? 'Active' : 'Disabled'}
-                        </span>
-                        {/* Monitoring Toggle */}
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500">Monitor</span>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={isEndpointMonitored(config.endpoint, config.method || undefined)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  handleQuickEnableMonitoring(config.endpoint, config.method || '', undefined)
-                                } else {
-                                  handleDisableMonitoring(config.endpoint, config.method || undefined)
-                                }
-                              }}
-                              className="sr-only peer"
-                            />
-                            <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                          </label>
-                        </div>
-                        <button
-                          onClick={() => setEditingConfig(config)}
-                          className="text-gray-400 hover:text-white text-sm"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteConfig(config.id)}
-                          className="text-red-400 hover:text-red-300 text-sm"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'analytics' && (
-        <div className="space-y-6">
-          {analyticsLoading ? (
-            <p className="text-gray-400 text-center py-8">Loading analytics...</p>
-          ) : !analytics ? (
-            <p className="text-gray-400 text-center py-8">No analytics data available</p>
-          ) : (
-            <>
-              {/* Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-gray-900 rounded-lg p-4">
-                  <p className="text-gray-400 text-sm">Total Cost</p>
-                  <p className="text-2xl font-bold text-green-400">${analytics.summary.totalCost.toFixed(2)} <span className="text-sm font-normal">USD</span></p>
-                </div>
-                <div className="bg-gray-900 rounded-lg p-4">
-                  <p className="text-gray-400 text-sm">Total Requests</p>
-                  <p className="text-2xl font-bold text-white">{analytics.summary.totalRequests.toLocaleString()}</p>
-                </div>
-                <div className="bg-gray-900 rounded-lg p-4">
-                  <p className="text-gray-400 text-sm">Avg Cost/Request</p>
-                  <p className="text-2xl font-bold text-blue-400">${analytics.summary.avgCostPerRequest.toFixed(2)} <span className="text-sm font-normal">USD</span></p>
-                </div>
-                <div className="bg-gray-900 rounded-lg p-4">
-                  <p className="text-gray-400 text-sm">Unique Endpoints Cost</p>
-                  <p className="text-2xl font-bold text-purple-400">${analytics.summary.uniqueEndpointsCost.toFixed(2)} <span className="text-sm font-normal">USD</span></p>
-                </div>
-              </div>
-
-              {/* Cost by Device */}
-              <div className="bg-gray-900 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-white font-medium">Cost by Device</h3>
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-500 text-xs">Sort by:</span>
-                    <button
-                      onClick={() => {
-                        if (deviceSortField === 'requestCount') setDeviceSortDir(d => d === 'asc' ? 'desc' : 'asc')
-                        else { setDeviceSortField('requestCount'); setDeviceSortDir('desc') }
-                      }}
-                      className={`px-2 py-1 text-xs rounded ${deviceSortField === 'requestCount' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
-                    >
-                      Requests {deviceSortField === 'requestCount' && (deviceSortDir === 'desc' ? '↓' : '↑')}
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (deviceSortField === 'totalCost') setDeviceSortDir(d => d === 'asc' ? 'desc' : 'asc')
-                        else { setDeviceSortField('totalCost'); setDeviceSortDir('desc') }
-                      }}
-                      className={`px-2 py-1 text-xs rounded ${deviceSortField === 'totalCost' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
-                    >
-                      Cost {deviceSortField === 'totalCost' && (deviceSortDir === 'desc' ? '↓' : '↑')}
-                    </button>
-                  </div>
-                </div>
-                {analytics.deviceCosts.length === 0 ? (
-                  <p className="text-gray-400 text-sm">No device costs recorded.</p>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-gray-800">
-                          <th className="text-left text-gray-400 py-2 px-3">Device</th>
-                          <th className="text-right text-gray-400 py-2 px-3">Requests</th>
-                          <th className="text-right text-gray-400 py-2 px-3">Cost/Request</th>
-                          <th className="text-right text-gray-400 py-2 px-3">Total Cost</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[...analytics.deviceCosts]
-                          .sort((a, b) => {
-                            const aVal = deviceSortField === 'requestCount' ? a.requestCount : a.totalCost
-                            const bVal = deviceSortField === 'requestCount' ? b.requestCount : b.totalCost
-                            return deviceSortDir === 'desc' ? bVal - aVal : aVal - bVal
-                          })
-                          .map((dc, idx) => (
-                          <tr key={idx} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                            <td className="py-2 px-3">
-                              <div className="flex items-center gap-2">
-                                <span>{dc.device?.platform === 'android' ? '🤖' : '🍎'}</span>
-                                <div>
-                                  <p className="text-white">{dc.device?.model || 'Unknown'}</p>
-                                  <p className="text-gray-500 text-xs font-mono">{dc.device?.deviceId.slice(0, 12)}...</p>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="py-2 px-3 text-right text-gray-300">{dc.requestCount.toLocaleString()}</td>
-                            <td className="py-2 px-3 text-right text-blue-400">${dc.requestCount > 0 ? (dc.totalCost / dc.requestCount).toFixed(2) : '0.00'} USD</td>
-                            <td className="py-2 px-3 text-right text-green-400 font-medium">${dc.totalCost.toFixed(2)} USD</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-
-              {/* Cost by Session */}
-              <div className="bg-gray-900 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-white font-medium">Cost by Session</h3>
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-500 text-xs">Sort by:</span>
-                    <button
-                      onClick={() => {
-                        if (sessionSortField === 'startedAt') setSessionSortDir(d => d === 'asc' ? 'desc' : 'asc')
-                        else { setSessionSortField('startedAt'); setSessionSortDir('desc') }
-                      }}
-                      className={`px-2 py-1 text-xs rounded ${sessionSortField === 'startedAt' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
-                    >
-                      Date {sessionSortField === 'startedAt' && (sessionSortDir === 'desc' ? '↓' : '↑')}
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (sessionSortField === 'requestCount') setSessionSortDir(d => d === 'asc' ? 'desc' : 'asc')
-                        else { setSessionSortField('requestCount'); setSessionSortDir('desc') }
-                      }}
-                      className={`px-2 py-1 text-xs rounded ${sessionSortField === 'requestCount' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
-                    >
-                      Requests {sessionSortField === 'requestCount' && (sessionSortDir === 'desc' ? '↓' : '↑')}
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (sessionSortField === 'totalCost') setSessionSortDir(d => d === 'asc' ? 'desc' : 'asc')
-                        else { setSessionSortField('totalCost'); setSessionSortDir('desc') }
-                      }}
-                      className={`px-2 py-1 text-xs rounded ${sessionSortField === 'totalCost' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
-                    >
-                      Cost {sessionSortField === 'totalCost' && (sessionSortDir === 'desc' ? '↓' : '↑')}
-                    </button>
-                  </div>
-                </div>
-                {analytics.sessionCosts.length === 0 ? (
-                  <p className="text-gray-400 text-sm">No session costs recorded.</p>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-gray-800">
-                          <th className="text-left text-gray-400 py-2 px-3">Session</th>
-                          <th className="text-left text-gray-400 py-2 px-3">Device</th>
-                          <th className="text-left text-gray-400 py-2 px-3">Time</th>
-                          <th className="text-right text-gray-400 py-2 px-3">Requests</th>
-                          <th className="text-right text-gray-400 py-2 px-3">Cost/Request</th>
-                          <th className="text-right text-gray-400 py-2 px-3">Total Cost</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[...analytics.sessionCosts]
-                          .sort((a, b) => {
-                            if (sessionSortField === 'startedAt') {
-                              const aVal = new Date(a.startedAt).getTime()
-                              const bVal = new Date(b.startedAt).getTime()
-                              return sessionSortDir === 'desc' ? bVal - aVal : aVal - bVal
-                            }
-                            const aVal = sessionSortField === 'requestCount' ? a.requestCount : a.totalCost
-                            const bVal = sessionSortField === 'requestCount' ? b.requestCount : b.totalCost
-                            return sessionSortDir === 'desc' ? bVal - aVal : aVal - bVal
-                          })
-                          .map((session) => (
-                          <tr key={session.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                            <td className="py-2 px-3">
-                              <div className="flex items-center gap-2">
-                                <div className={`w-2 h-2 rounded-full ${session.isActive ? 'bg-green-400' : 'bg-gray-500'}`} />
-                                <span className="text-white font-mono text-xs">{session.sessionToken}</span>
-                              </div>
-                            </td>
-                            <td className="py-2 px-3 text-gray-300">
-                              {session.device ? `${session.device.model || session.device.deviceId.slice(0, 8)}` : '-'}
-                            </td>
-                            <td className="py-2 px-3 text-gray-400 text-xs">
-                              {formatTime(session.startedAt)}
-                            </td>
-                            <td className="py-2 px-3 text-right text-gray-300">{session.requestCount.toLocaleString()}</td>
-                            <td className="py-2 px-3 text-right text-blue-400">${session.requestCount > 0 ? (session.totalCost / session.requestCount).toFixed(2) : '0.00'} USD</td>
-                            <td className="py-2 px-3 text-right text-green-400 font-medium">${session.totalCost.toFixed(2)} USD</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-
-              {/* Cost by Endpoint */}
-              <div className="bg-gray-900 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-white font-medium">Cost by Endpoint</h3>
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-500 text-xs">Sort by:</span>
-                    <button
-                      onClick={() => {
-                        if (endpointSortField === 'requestCount') setEndpointSortDir(d => d === 'asc' ? 'desc' : 'asc')
-                        else { setEndpointSortField('requestCount'); setEndpointSortDir('desc') }
-                      }}
-                      className={`px-2 py-1 text-xs rounded ${endpointSortField === 'requestCount' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
-                    >
-                      Requests {endpointSortField === 'requestCount' && (endpointSortDir === 'desc' ? '↓' : '↑')}
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (endpointSortField === 'avgCostPerRequest') setEndpointSortDir(d => d === 'asc' ? 'desc' : 'asc')
-                        else { setEndpointSortField('avgCostPerRequest'); setEndpointSortDir('desc') }
-                      }}
-                      className={`px-2 py-1 text-xs rounded ${endpointSortField === 'avgCostPerRequest' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
-                    >
-                      Avg Cost {endpointSortField === 'avgCostPerRequest' && (endpointSortDir === 'desc' ? '↓' : '↑')}
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (endpointSortField === 'totalCost') setEndpointSortDir(d => d === 'asc' ? 'desc' : 'asc')
-                        else { setEndpointSortField('totalCost'); setEndpointSortDir('desc') }
-                      }}
-                      className={`px-2 py-1 text-xs rounded ${endpointSortField === 'totalCost' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
-                    >
-                      Total Cost {endpointSortField === 'totalCost' && (endpointSortDir === 'desc' ? '↓' : '↑')}
-                    </button>
-                  </div>
-                </div>
-                {analytics.endpointCosts.length === 0 ? (
-                  <p className="text-gray-400 text-sm">No endpoint costs. Configure API costs first.</p>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-gray-800">
-                          <th className="text-left text-gray-400 py-2 px-3">Method</th>
-                          <th className="text-left text-gray-400 py-2 px-3">Endpoint</th>
-                          <th className="text-right text-gray-400 py-2 px-3">Requests</th>
-                          <th className="text-right text-gray-400 py-2 px-3">Cost/Request</th>
-                          <th className="text-right text-gray-400 py-2 px-3">Total Cost</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[...analytics.endpointCosts]
-                          .sort((a, b) => {
-                            let aVal: number, bVal: number
-                            if (endpointSortField === 'requestCount') {
-                              aVal = a.requestCount; bVal = b.requestCount
-                            } else if (endpointSortField === 'avgCostPerRequest') {
-                              aVal = a.avgCostPerRequest; bVal = b.avgCostPerRequest
-                            } else {
-                              aVal = a.totalCost; bVal = b.totalCost
-                            }
-                            return endpointSortDir === 'desc' ? bVal - aVal : aVal - bVal
-                          })
-                          .map((ep, idx) => (
-                          <tr key={idx} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                            <td className="py-2 px-3">
-                              <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                ep.method === 'GET' ? 'bg-blue-900/50 text-blue-400' :
-                                ep.method === 'POST' ? 'bg-green-900/50 text-green-400' :
-                                ep.method === 'PUT' ? 'bg-yellow-900/50 text-yellow-400' :
-                                ep.method === 'DELETE' ? 'bg-red-900/50 text-red-400' :
-                                'bg-gray-700 text-gray-300'
-                              }`}>{ep.method}</span>
-                            </td>
-                            <td className="py-2 px-3 text-gray-300 font-mono text-xs">{ep.endpoint}</td>
-                            <td className="py-2 px-3 text-right text-gray-300">{ep.requestCount.toLocaleString()}</td>
-                            <td className="py-2 px-3 text-right text-blue-400">${ep.avgCostPerRequest.toFixed(2)} USD</td>
-                            <td className="py-2 px-3 text-right text-green-400 font-medium">${ep.totalCost.toFixed(2)} USD</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'flow' && (
-        <div className="space-y-4">
-          {/* Enforcement Banner for Sessions */}
-          {sessionsUsage && sessionsUsage.limit !== null && (
-            <>
-              {(() => {
-                const percentage = sessionsUsage.percentage
-                const warnThreshold = 80
-                const hardThreshold = 100
-                
-                if (percentage >= hardThreshold) {
-                  return (
-                    <div className="bg-red-900/20 border-l-4 border-red-600 p-4 rounded">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="text-red-400 font-semibold mb-2 flex items-center gap-2">
-                            <span>🚫</span>
-                            <span>Sessions Quota Exceeded</span>
-                          </h3>
-                          <p className="text-gray-300 text-sm mb-2">
-                            You have reached your sessions limit: <strong>{sessionsUsage.used}/{sessionsUsage.limit} sessions</strong> ({percentage.toFixed(1)}%).
-                          </p>
-                          <p className="text-gray-300 text-sm">
-                            New sessions will be blocked. Please upgrade your plan to continue tracking user sessions.
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => router.push('/subscription')}
-                          className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
-                        >
-                          Upgrade Plan
-                        </button>
-                      </div>
-                    </div>
-                  )
-                } else if (percentage >= warnThreshold) {
-                  return (
-                    <div className="bg-yellow-900/20 border-l-4 border-yellow-600 p-4 rounded">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="text-yellow-400 font-semibold mb-2 flex items-center gap-2">
-                            <span>⚠️</span>
-                            <span>Approaching Sessions Limit</span>
-                          </h3>
-                          <p className="text-gray-300 text-sm mb-2">
-                            You are approaching your sessions limit: <strong>{sessionsUsage.used}/{sessionsUsage.limit} sessions</strong> ({percentage.toFixed(1)}%).
-                          </p>
-                          <p className="text-gray-300 text-sm">
-                            You can track {Math.max(0, sessionsUsage.limit - sessionsUsage.used)} more session{sessionsUsage.limit - sessionsUsage.used !== 1 ? 's' : ''} before reaching your limit.
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => router.push('/subscription')}
-                          className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
-                        >
-                          Upgrade Plan
-                        </button>
-                      </div>
-                    </div>
-                  )
-                }
-                return null
-              })()}
-            </>
-          )}
-          {/* Session Selector Header */}
-          <div className="flex flex-wrap items-center gap-4 p-4 bg-gray-900 rounded-lg">
-            {/* View Mode Toggle */}
-            <div className="flex items-center bg-gray-800 rounded-lg p-1">
-              <button
-                onClick={() => setFlowViewMode('timeline')}
-                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                  flowViewMode === 'timeline'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Timeline
-              </button>
-              <button
-                onClick={() => setFlowViewMode('flow')}
-                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                  flowViewMode === 'flow'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Flow
-              </button>
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-gray-400 text-sm">Select Session:</label>
-              <select
-                value={selectedFlowSession}
-                onChange={(e) => {
-                  const sessionId = e.target.value
-                  setSelectedFlowSession(sessionId)
-                  setSelectedEdge(null) // Clear selection when changing session
-                  setExpandedTimelineEvent(null)
-                  if (sessionId && flowViewMode === 'timeline') {
-                    fetchTimeline(sessionId)
-                  }
-                }}
-                className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none min-w-[300px]"
-              >
-                <option value="">-- Select a session to view --</option>
-                {flowData?.sessions.map((session) => (
-                  <option key={session.id} value={session.id}>
-                    {session.sessionToken} - {session.device?.model || 'Unknown'} ({session.requestCount} req, ${session.totalCost.toFixed(2)})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <button
-              onClick={() => {
-                fetchFlow()
-                if (selectedFlowSession && flowViewMode === 'timeline') {
-                  fetchTimeline(selectedFlowSession)
-                }
-              }}
-              className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
-            >
-              Refresh
-            </button>
-          </div>
-
-          {flowLoading ? (
-            <p className="text-gray-400 text-center py-8">Loading flow data...</p>
-          ) : !flowData || flowData.sessions.length === 0 ? (
-            <p className="text-gray-400 text-center py-8">No session data available. Make sure your app is sending screenName with traces.</p>
-          ) : !selectedFlowSession ? (
-            /* Show session list when no session selected */
-            <div className="bg-gray-900 rounded-lg p-4">
-              <h3 className="text-white font-medium mb-4">Available Sessions</h3>
-              <div className="space-y-3">
-                {flowData.sessions.slice(0, 20).map((session) => (
-                  <div
-                    key={session.id}
-                    className="border border-gray-800 rounded-lg p-3 hover:border-blue-500 cursor-pointer transition-colors"
-                    onClick={() => {
-                      setSelectedFlowSession(session.id)
-                      if (flowViewMode === 'timeline') {
-                        fetchTimeline(session.id)
-                      }
-                    }}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${session.isActive ? 'bg-green-400' : 'bg-gray-500'}`} />
-                        <span className="text-white text-sm font-medium">
-                          {session.sessionToken}
-                        </span>
-                        {session.device && (
-                          <span className="text-gray-400 text-xs">
-                            {session.device.model || session.device.deviceId.slice(0, 8)}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-gray-400">
-                        <span>{session.requestCount} requests</span>
-                        <span className="text-green-400">${session.totalCost.toFixed(2)}</span>
-                      </div>
-                    </div>
-                    {/* Screen sequence preview */}
-                    <div className="flex flex-wrap items-center gap-1 mt-2">
-                      {session.screenSequence.slice(0, 6).map((screen, idx) => (
-                        <React.Fragment key={idx}>
-                          <span className="px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded">
-                            {screen.length > 12 ? screen.slice(0, 10) + '...' : screen}
-                          </span>
-                          {idx < Math.min(session.screenSequence.length, 6) - 1 && (
-                            <span className="text-gray-500">→</span>
-                          )}
-                        </React.Fragment>
-                      ))}
-                      {session.screenSequence.length > 6 && (
-                        <span className="text-gray-500 text-xs">+{session.screenSequence.length - 6} more</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            /* Show split view when session is selected */
-            <>
-              {/* Selected Session Info */}
-              {(() => {
-                const currentSession = flowData.sessions.find(s => s.id === selectedFlowSession)
-                if (!currentSession) return null
-                return (
-                  <div className="bg-gray-900 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full ${currentSession.isActive ? 'bg-green-400' : 'bg-gray-500'}`} />
-                        <span className="text-white font-medium">{currentSession.sessionToken}</span>
-                        {currentSession.device && (
-                          <span className="text-gray-400 text-sm">
-                            {currentSession.device.platform} - {currentSession.device.model || currentSession.device.deviceId.slice(0, 8)}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-6 text-sm">
-                        <span className="text-gray-400">{currentSession.requestCount} requests</span>
-                        <span className="text-gray-400">{currentSession.screenSequence.length} screens</span>
-                        <span className="text-green-400 font-medium">${currentSession.totalCost.toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })()}
-
-              {/* Timeline View */}
-              {flowViewMode === 'timeline' && (
-                <div className="bg-gray-900 rounded-lg p-4">
-                  {timelineLoading ? (
-                    <p className="text-gray-400 text-center py-8">Loading timeline...</p>
-                  ) : !timelineData ? (
-                    <div className="text-gray-400 text-center py-8">
-                      <p>No timeline data available.</p>
-                      <button
-                        onClick={() => fetchTimeline(selectedFlowSession)}
-                        className="mt-2 text-blue-400 hover:text-blue-300"
-                      >
-                        Click to load timeline
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      {/* Timeline Stats */}
-                      <div className="flex items-center gap-6 mb-6 pb-4 border-b border-gray-800">
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-400 text-sm">Requests:</span>
-                          <span className="text-white font-medium">{timelineData.stats.totalRequests}</span>
-                          <span className="text-green-400 text-xs">({timelineData.stats.successfulRequests} ok)</span>
-                          {timelineData.stats.failedRequests > 0 && (
-                            <span className="text-red-400 text-xs">({timelineData.stats.failedRequests} failed)</span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-400 text-sm">Logs:</span>
-                          <span className="text-white font-medium">{timelineData.stats.totalLogs}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-400 text-sm">Cost:</span>
-                          <span className="text-green-400 font-medium">${timelineData.stats.totalCost.toFixed(2)}</span>
-                        </div>
-                        {timelineData.session.appVersion && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-400 text-sm">App:</span>
-                            <span className="text-white text-sm">{timelineData.session.appVersion}</span>
-                          </div>
-                        )}
-                        {timelineData.session.locale && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-400 text-sm">Locale:</span>
-                            <span className="text-white text-sm">{timelineData.session.locale}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Timeline Events */}
-                      <div className="space-y-1">
-                        {timelineData.timeline.map((event, idx) => {
-                          const eventId = event.type === 'screen' ? `screen-${idx}` : event.type === 'request' ? event.id : event.id
-                          const isExpanded = expandedTimelineEvent === eventId
-                          const time = new Date(event.timestamp).toLocaleTimeString()
-
-                          if (event.type === 'screen') {
-                            return (
-                              <div key={eventId} className="flex items-center gap-3 py-3">
-                                <span className="text-gray-500 text-xs font-mono w-20 flex-shrink-0">{time}</span>
-                                <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 rounded-full bg-indigo-500" />
-                                  <div className="w-0.5 h-4 bg-gray-700" />
-                                </div>
-                                <div className="flex-1 bg-indigo-900/30 rounded-lg px-4 py-2 border border-indigo-700/50">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-indigo-400 text-sm font-medium">Screen</span>
-                                    <span className="text-white font-medium">{event.name}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            )
-                          }
-
-                          if (event.type === 'request') {
-                            const methodColors: Record<string, string> = {
-                              GET: 'bg-blue-900/50 text-blue-400',
-                              POST: 'bg-green-900/50 text-green-400',
-                              PUT: 'bg-yellow-900/50 text-yellow-400',
-                              PATCH: 'bg-orange-900/50 text-orange-400',
-                              DELETE: 'bg-red-900/50 text-red-400'
-                            }
-                            const statusColor = event.statusCode
-                              ? event.statusCode >= 200 && event.statusCode < 300
-                                ? 'text-green-400'
-                                : event.statusCode >= 400
-                                ? 'text-red-400'
-                                : 'text-yellow-400'
-                              : 'text-gray-400'
-
-                            return (
-                              <div key={eventId} className="flex items-start gap-3 py-1">
-                                <span className="text-gray-500 text-xs font-mono w-20 flex-shrink-0 pt-2">{time}</span>
-                                <div className="flex flex-col items-center pt-2">
-                                  <div className="w-2 h-2 rounded-full bg-gray-600" />
-                                  <div className="w-0.5 h-full bg-gray-800 min-h-[20px]" />
-                                </div>
-                                <div
-                                  className={`flex-1 border rounded-lg transition-colors cursor-pointer ${
-                                    isExpanded ? 'border-blue-500 bg-gray-800/50' : 'border-gray-800 hover:border-gray-700'
-                                  }`}
-                                  onClick={() => setExpandedTimelineEvent(isExpanded ? null : eventId)}
-                                >
-                                  <div className="px-3 py-2">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${methodColors[event.method] || 'bg-gray-700 text-gray-300'}`}>
-                                        {event.method}
-                                      </span>
-                                      <span className={`text-xs font-medium ${statusColor}`}>
-                                        {event.statusCode || 'pending'}
-                                      </span>
-                                      {event.duration && (
-                                        <span className="text-gray-500 text-xs">{event.duration}ms</span>
-                                      )}
-                                      {event.cost !== null && event.cost > 0 && (
-                                        <span className="text-green-400 text-xs">${event.cost.toFixed(2)}</span>
-                                      )}
-                                      <span className="text-gray-400 text-xs truncate max-w-md" title={event.url}>
-                                        {event.endpoint}
-                                      </span>
-                                      {event.error && (
-                                        <span className="text-red-400 text-xs">Error</span>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  {/* Expanded Details */}
-                                  {isExpanded && (
-                                    <div className="px-3 pb-3 space-y-3 border-t border-gray-700 pt-3">
-                                      <div>
-                                        <p className="text-gray-400 text-xs mb-1">URL</p>
-                                        <p className="text-gray-300 text-xs font-mono break-all bg-gray-900 p-2 rounded">{event.url}</p>
-                                      </div>
-                                      {event.error && (
-                                        <div>
-                                          <p className="text-red-400 text-xs mb-1">Error</p>
-                                          <p className="text-red-300 text-xs font-mono bg-red-900/20 p-2 rounded">{event.error}</p>
-                                        </div>
-                                      )}
-                                      {event.requestBody && (
-                                        <div>
-                                          <p className="text-gray-400 text-xs mb-1">Request Body</p>
-                                          <pre className="text-gray-300 text-xs font-mono bg-gray-900 p-2 rounded overflow-x-auto max-h-40">
-                                            {(() => {
-                                              try {
-                                                return JSON.stringify(JSON.parse(event.requestBody), null, 2)
-                                              } catch {
-                                                return event.requestBody
-                                              }
-                                            })()}
-                                          </pre>
-                                        </div>
-                                      )}
-                                      {event.responseBody && (
-                                        <div>
-                                          <p className="text-gray-400 text-xs mb-1">Response Body</p>
-                                          <pre className="text-gray-300 text-xs font-mono bg-gray-900 p-2 rounded overflow-x-auto max-h-40">
-                                            {(() => {
-                                              try {
-                                                return JSON.stringify(JSON.parse(event.responseBody), null, 2)
-                                              } catch {
-                                                return event.responseBody
-                                              }
-                                            })()}
-                                          </pre>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            )
-                          }
-
-                          if (event.type === 'log') {
-                            const levelColors: Record<string, string> = {
-                              verbose: 'bg-gray-700 text-gray-300',
-                              debug: 'bg-gray-700 text-gray-300',
-                              info: 'bg-blue-900/50 text-blue-400',
-                              warn: 'bg-yellow-900/50 text-yellow-400',
-                              error: 'bg-red-900/50 text-red-400',
-                              assert: 'bg-red-900/50 text-red-400'
-                            }
-
-                            return (
-                              <div key={eventId} className="flex items-start gap-3 py-1">
-                                <span className="text-gray-500 text-xs font-mono w-20 flex-shrink-0 pt-2">{time}</span>
-                                <div className="flex flex-col items-center pt-2">
-                                  <div className="w-2 h-2 rounded-full bg-gray-600" />
-                                  <div className="w-0.5 h-full bg-gray-800 min-h-[20px]" />
-                                </div>
-                                <div
-                                  className={`flex-1 border rounded-lg transition-colors cursor-pointer ${
-                                    isExpanded ? 'border-blue-500 bg-gray-800/50' : 'border-gray-800 hover:border-gray-700'
-                                  }`}
-                                  onClick={() => setExpandedTimelineEvent(isExpanded ? null : eventId)}
-                                >
-                                  <div className="px-3 py-2">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${levelColors[event.level] || 'bg-gray-700 text-gray-300'}`}>
-                                        {event.level}
-                                      </span>
-                                      {event.tag && (
-                                        <span className="px-2 py-0.5 bg-gray-700 text-gray-400 rounded text-xs">
-                                          {event.tag}
-                                        </span>
-                                      )}
-                                      <span className="text-gray-300 text-sm truncate max-w-lg">
-                                        {event.message.length > 80 ? event.message.slice(0, 80) + '...' : event.message}
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  {/* Expanded Details */}
-                                  {isExpanded && (
-                                    <div className="px-3 pb-3 space-y-3 border-t border-gray-700 pt-3">
-                                      <div>
-                                        <p className="text-gray-400 text-xs mb-1">Message</p>
-                                        <p className="text-gray-300 text-sm bg-gray-900 p-2 rounded whitespace-pre-wrap">{event.message}</p>
-                                      </div>
-                                      {event.fileName && (
-                                        <div>
-                                          <p className="text-gray-400 text-xs mb-1">Location</p>
-                                          <p className="text-gray-300 text-xs font-mono">
-                                            {event.fileName}
-                                            {event.lineNumber && `:${event.lineNumber}`}
-                                            {event.functionName && ` in ${event.functionName}()`}
-                                            {event.className && ` [${event.className}]`}
-                                          </p>
-                                        </div>
-                                      )}
-                                      {event.data && typeof event.data === 'object' && Object.keys(event.data).length > 0 ? (
-                                        <div>
-                                          <p className="text-gray-400 text-xs mb-1">Data</p>
-                                          <pre className="text-gray-300 text-xs font-mono bg-gray-900 p-2 rounded overflow-x-auto max-h-40">
-                                            {JSON.stringify(event.data, null, 2)}
-                                          </pre>
-                                        </div>
-                                      ) : null}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            )
-                          }
-
-                          return null
-                        })}
-                      </div>
-
-                      {timelineData.timeline.length === 0 && (
-                        <p className="text-gray-500 text-center py-8">No events recorded for this session.</p>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-
-              {/* Flow View: Split View: Flow Visual (Left) + Details (Right) */}
-              {flowViewMode === 'flow' && (
-              <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" style={{ minHeight: '600px' }}>
-                {/* Left: Flow Visualization */}
-                <div className="bg-gray-900 rounded-lg p-4 overflow-auto">
-                  <h3 className="text-white font-medium mb-4">Screen Flow</h3>
-
-                  {/* Session Sequence - Clickable */}
+                  {/* Enforcement Warning Banner for Device Registration */}
                   {(() => {
-                    const currentSession = flowData.sessions.find(s => s.id === selectedFlowSession)
-                    if (!currentSession) return null
+                    // Use deviceUsage if available, otherwise fallback to sharedUsage.devices
+                    const usage = deviceUsage || sharedUsage?.devices
+                    if (!usage) {
+                      return null
+                    }
+                    if (usage.limit === null || usage.limit === undefined || usage.limit <= 0) {
+                      return null
+                    }
 
-                    return (
-                      <div className="space-y-2">
-                        {currentSession.screenSequence.map((screen, idx) => {
-                          const nextScreen = currentSession.screenSequence[idx + 1]
-                          const edgeId = nextScreen ? `${screen}->${nextScreen}` : null
-                          const edge = edgeId ? flowData.edges.find(e => e.id === edgeId) : null
-                          const isEdgeSelected = selectedEdge === edgeId
+                    // Calculate percentage if not provided
+                    const percentage = usage.percentage !== undefined
+                      ? usage.percentage
+                      : usage.limit > 0
+                        ? (usage.used / usage.limit) * 100
+                        : 0
+                    const warnThreshold = 80 // Default warn threshold
+                    const hardThreshold = 100 // Default hard threshold
 
-                          return (
-                            <React.Fragment key={idx}>
-                              {/* Screen Node */}
-                              <div className="flex items-center gap-3">
-                                <span className="w-8 h-8 flex items-center justify-center bg-indigo-600 text-white text-sm rounded-full font-bold flex-shrink-0">
-                                  {idx + 1}
-                                </span>
-                                <div className="flex-1 bg-gray-800 rounded-lg p-3 border-2 border-gray-700">
-                                  <span className="text-white font-medium">{screen}</span>
-                                  {(() => {
-                                    const node = flowData.nodes.find(n => n.id === screen)
-                                    if (!node) return null
-                                    const successRate = node.requestCount > 0 ? ((node.successCount / node.requestCount) * 100).toFixed(0) : '0'
-                                    return (
-                                      <div className="flex items-center gap-4 mt-1 text-xs">
-                                        <span className="text-gray-400">{node.requestCount} req</span>
-                                        <span className={Number(successRate) >= 90 ? 'text-green-400' : Number(successRate) >= 50 ? 'text-yellow-400' : 'text-red-400'}>
-                                          {successRate}% ok
-                                        </span>
-                                        <span className="text-green-400">${node.totalCost.toFixed(2)}</span>
-                                      </div>
-                                    )
-                                  })()}
-                                </div>
-                              </div>
+                    // Show banner if quota exceeded (used >= limit) or percentage >= 100
+                    const isExceeded = usage.used >= usage.limit || percentage >= hardThreshold
+                    const isApproaching = !isExceeded && percentage >= warnThreshold
 
-                              {/* Arrow to next screen - Clickable */}
-                              {nextScreen && edge && (
-                                <div
-                                  className={`ml-4 flex items-center gap-2 py-2 px-3 rounded cursor-pointer transition-colors ${
-                                    isEdgeSelected ? 'bg-blue-900/50 border border-blue-500' : 'hover:bg-gray-800'
-                                  }`}
-                                  onClick={() => setSelectedEdge(isEdgeSelected ? null : edgeId)}
-                                >
-                                  <div className="flex flex-col items-center">
-                                    <div className={`w-0.5 h-4 ${isEdgeSelected ? 'bg-blue-500' : 'bg-gray-600'}`} />
-                                    <svg className={`w-4 h-4 ${isEdgeSelected ? 'text-blue-500' : 'text-gray-600'}`} fill="currentColor" viewBox="0 0 20 20">
-                                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                                    </svg>
-                                    <div className={`w-0.5 h-4 ${isEdgeSelected ? 'bg-blue-500' : 'bg-gray-600'}`} />
-                                  </div>
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 text-xs">
-                                      <span className={`px-2 py-0.5 rounded-full font-medium ${isEdgeSelected ? 'bg-blue-600 text-white' : 'bg-indigo-900/50 text-indigo-400'}`}>
-                                        #{edge.sequenceNumber}
-                                      </span>
-                                      <span className="text-gray-400">{edge.requestCount} requests</span>
-                                      <span className={edge.errorCount > 0 ? 'text-red-400' : 'text-green-400'}>
-                                        {edge.successCount}/{edge.requestCount} ok
-                                      </span>
-                                      <span className="text-green-400">${edge.totalCost.toFixed(2)}</span>
-                                    </div>
-                                    {edge.topEndpoints.length > 0 && (
-                                      <div className="mt-1 text-xs text-gray-500">
-                                        {edge.topEndpoints.slice(0, 2).map((ep, i) => (
-                                          <span key={i} className="mr-2">
-                                            <span className={`font-medium ${
-                                              ep.method === 'GET' ? 'text-blue-400' :
-                                              ep.method === 'POST' ? 'text-green-400' :
-                                              ep.method === 'PUT' ? 'text-yellow-400' :
-                                              'text-red-400'
-                                            }`}>{ep.method}</span> {ep.endpoint.slice(0, 20)}...
-                                          </span>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                  <span className={`text-xs ${isEdgeSelected ? 'text-blue-400' : 'text-gray-500'}`}>
-                                    Click for details →
-                                  </span>
-                                </div>
-                              )}
-                            </React.Fragment>
-                          )
-                        })}
-                      </div>
-                    )
+                    if (isExceeded) {
+                      // HARD threshold exceeded
+                      return (
+                        <div className="bg-red-900/20 border-l-4 border-red-600 p-4 rounded mb-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="text-red-400 font-semibold mb-2 flex items-center gap-2">
+                                <span>🚫</span>
+                                Device Registration Quota Exceeded
+                              </h3>
+                              <p className="text-gray-300 text-sm mb-2">
+                                You have reached your device registration limit: <strong>{usage.used}/{usage.limit} devices</strong> ({percentage.toFixed(1)}%).
+                              </p>
+                              <p className="text-gray-300 text-sm">
+                                New device registrations will be blocked. Please upgrade your plan to register more devices.
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => router.push('/subscription')}
+                              className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
+                            >
+                              Upgrade Plan
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    } else if (isApproaching) {
+                      // WARN threshold exceeded
+                      return (
+                        <div className="bg-yellow-900/20 border-l-4 border-yellow-600 p-4 rounded mb-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="text-yellow-400 font-semibold mb-2 flex items-center gap-2">
+                                <span>⚠️</span>
+                                Approaching Device Registration Limit
+                              </h3>
+                              <p className="text-gray-300 text-sm mb-2">
+                                You are approaching your device registration limit: <strong>{usage.used}/{usage.limit} devices</strong> ({percentage.toFixed(1)}%).
+                              </p>
+                              <p className="text-gray-300 text-sm">
+                                You can register {Math.max(0, usage.limit - usage.used)} more device{usage.limit - usage.used !== 1 ? 's' : ''} before reaching your limit.
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => router.push('/subscription')}
+                              className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
+                            >
+                              Upgrade Plan
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    }
+                    return null
                   })()}
-                </div>
 
-                {/* Right: Transition Details */}
-                <div className="bg-gray-900 rounded-lg p-4 overflow-auto">
-                  <h3 className="text-white font-medium mb-4">Transition Details</h3>
-
-                  {!selectedEdge ? (
-                    <div className="flex items-center justify-center h-full min-h-[400px] text-gray-500">
-                      <div className="text-center">
-                        <svg className="w-16 h-16 mx-auto mb-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                        </svg>
-                        <p>Click on an arrow to view</p>
-                        <p>request/response details</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {(() => {
-                        const edge = flowData.edges.find(e => e.id === selectedEdge)
-                        if (!edge) return null
-
-                        return (
-                          <>
-                            {/* Transition Header */}
-                            <div className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg">
-                              <span className="px-3 py-1 bg-indigo-600 text-white text-sm rounded-full font-bold">
-                                #{edge.sequenceNumber}
-                              </span>
-                              <div>
-                                <p className="text-white font-medium">{edge.source} → {edge.target}</p>
-                                <p className="text-gray-400 text-xs">
-                                  {edge.requestCount} requests | {edge.successCount} success | {edge.errorCount} errors | ${edge.totalCost.toFixed(2)}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Endpoints */}
-                            {edge.topEndpoints.map((ep, idx) => (
-                              <div key={idx} className="border border-gray-800 rounded-lg p-4">
-                                {/* Endpoint Header */}
-                                <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                                  <div className="flex items-center gap-2">
-                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                      ep.method === 'GET' ? 'bg-blue-900/50 text-blue-400' :
-                                      ep.method === 'POST' ? 'bg-green-900/50 text-green-400' :
-                                      ep.method === 'PUT' ? 'bg-yellow-900/50 text-yellow-400' :
-                                      ep.method === 'DELETE' ? 'bg-red-900/50 text-red-400' :
-                                      'bg-gray-700 text-gray-300'
-                                    }`}>
-                                      {ep.method}
-                                    </span>
-                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                      ep.statusCode >= 200 && ep.statusCode < 300 ? 'bg-green-900/50 text-green-400' :
-                                      ep.statusCode >= 400 ? 'bg-red-900/50 text-red-400' :
-                                      'bg-gray-700 text-gray-300'
-                                    }`}>
-                                      {ep.statusCode}
-                                    </span>
-                                    <span className="text-gray-400 text-xs">{ep.duration}ms</span>
-                                  </div>
-                                  <div className="flex items-center gap-3 text-xs">
-                                    <span className="text-gray-400">{ep.count}x</span>
-                                    <span className={ep.successRate >= 90 ? 'text-green-400' : ep.successRate >= 50 ? 'text-yellow-400' : 'text-red-400'}>
-                                      {ep.successRate.toFixed(0)}%
-                                    </span>
-                                    <span className="text-green-400">${ep.cost.toFixed(2)}</span>
-                                  </div>
-                                </div>
-
-                                {/* URL */}
-                                <div className="mb-3 p-2 bg-gray-950 rounded text-xs font-mono text-gray-400 break-all">
-                                  {ep.url}
-                                </div>
-
-                                {/* Request Body */}
-                                <div className="mb-3">
-                                  <h4 className="text-sm font-medium text-gray-300 mb-2">Request Body</h4>
-                                  {ep.requestBody ? (
-                                    <pre className="p-3 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-40">
-                                      {(() => {
-                                        try {
-                                          return JSON.stringify(JSON.parse(ep.requestBody), null, 2)
-                                        } catch {
-                                          return ep.requestBody
-                                        }
-                                      })()}
-                                    </pre>
-                                  ) : (
-                                    <p className="text-xs text-gray-500 italic p-3 bg-gray-950 rounded">No request body</p>
-                                  )}
-                                </div>
-
-                                {/* Response Body */}
-                                <div>
-                                  <h4 className="text-sm font-medium text-gray-300 mb-2">Response Body</h4>
-                                  {ep.responseBody ? (
-                                    <pre className="p-3 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-40">
-                                      {(() => {
-                                        try {
-                                          return JSON.stringify(JSON.parse(ep.responseBody), null, 2)
-                                        } catch {
-                                          return ep.responseBody
-                                        }
-                                      })()}
-                                    </pre>
-                                  ) : (
-                                    <p className="text-xs text-gray-500 italic p-3 bg-gray-950 rounded">No response body</p>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </>
-                        )
-                      })()}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Screen Summary Table */}
-              <div className="bg-gray-900 rounded-lg p-4">
-                <h3 className="text-white font-medium mb-4">Screen Summary</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-800">
-                        <th className="text-left text-gray-400 py-2 px-4">Screen</th>
-                        <th className="text-right text-gray-400 py-2 px-4">Requests</th>
-                        <th className="text-right text-gray-400 py-2 px-4">Success</th>
-                        <th className="text-right text-gray-400 py-2 px-4">Errors</th>
-                        <th className="text-right text-gray-400 py-2 px-4">Success Rate</th>
-                        <th className="text-right text-gray-400 py-2 px-4">Total Cost</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {flowData.nodes.map((node) => {
-                        const successRate = node.requestCount > 0 ? ((node.successCount / node.requestCount) * 100) : 0
-                        return (
-                          <tr key={node.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                            <td className="py-2 px-4 text-white">{node.name}</td>
-                            <td className="py-2 px-4 text-right text-gray-300">{node.requestCount}</td>
-                            <td className="py-2 px-4 text-right text-green-400">{node.successCount}</td>
-                            <td className="py-2 px-4 text-right text-red-400">{node.errorCount}</td>
-                            <td className="py-2 px-4 text-right">
-                              <span className={successRate >= 90 ? 'text-green-400' : successRate >= 50 ? 'text-yellow-400' : 'text-red-400'}>
-                                {successRate.toFixed(1)}%
-                              </span>
-                            </td>
-                            <td className="py-2 px-4 text-right text-green-400">${node.totalCost.toFixed(2)}</td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              </>
-              )}
-            </>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'monitor' && (
-        <div className="space-y-6">
-          {/* Sub-tabs */}
-          <div className="border-b border-gray-800">
-            <nav className="flex space-x-8">
-              <button
-                onClick={() => setMonitorSubTab('errors')}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  monitorSubTab === 'errors'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-white'
-                }`}
-              >
-                Monitored Errors
-              </button>
-              <button
-                onClick={() => setMonitorSubTab('settings')}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  monitorSubTab === 'settings'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-white'
-                }`}
-              >
-                Settings
-              </button>
-            </nav>
-          </div>
-
-          {monitorSubTab === 'errors' && (
-            <>
-          {/* Monitor Summary Cards */}
-          {monitorSummary && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-900 rounded-lg p-4">
-                <p className="text-gray-400 text-sm">Total Errors</p>
-                <p className="text-2xl font-bold text-white">{monitorSummary.totalErrors}</p>
-              </div>
-              <div className="bg-gray-900 rounded-lg p-4">
-                <p className="text-gray-400 text-sm">Unresolved</p>
-                <p className="text-2xl font-bold text-red-400">{monitorSummary.unresolvedCount}</p>
-              </div>
-              <div className="bg-gray-900 rounded-lg p-4">
-                <p className="text-gray-400 text-sm">Resolved</p>
-                <p className="text-2xl font-bold text-green-400">{monitorSummary.resolvedCount}</p>
-              </div>
-              <div className="bg-gray-900 rounded-lg p-4">
-                <p className="text-gray-400 text-sm">Total Occurrences</p>
-                <p className="text-2xl font-bold text-white">{monitorSummary.totalOccurrences}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Filter Buttons */}
-          <div className="flex gap-2">
-            {(['all', 'unresolved', 'resolved'] as const).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setMonitorFilter(filter)}
-                className={`px-4 py-2 rounded text-sm ${
-                  monitorFilter === filter
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                }`}
-              >
-                {filter.charAt(0).toUpperCase() + filter.slice(1)}
-              </button>
-            ))}
-          </div>
-
-          {/* Master-Detail View */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Error List (Master) */}
-            <div className="bg-gray-900 rounded-lg p-4">
-              <h3 className="text-white font-medium mb-4">Monitored Errors</h3>
-              {monitoredErrors.length === 0 ? (
-                <p className="text-gray-400 text-center py-8">No errors found</p>
-              ) : (
-                <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                  {monitoredErrors.map((error) => (
-                    <div
-                      key={error.id}
-                      onClick={() => setSelectedError(error)}
-                      className={`p-4 rounded-lg cursor-pointer transition-colors ${
-                        selectedError?.id === error.id
-                          ? 'bg-blue-900/50 border border-blue-500'
-                          : 'bg-gray-800 hover:bg-gray-700'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                          error.isResolved ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'
-                        }`}>
-                          {error.isResolved ? 'Resolved' : 'Active'}
-                        </span>
-                        <span className="text-gray-400 text-xs">{error.occurrenceCount} occurrences</span>
-                      </div>
-                      <h4 className="text-white font-medium">{error.alert.title}</h4>
-                      <p className="text-gray-400 text-sm mt-1">
-                        <span className={getStatusColor(error.statusCode || 0)}>{error.statusCode}</span>
-                        {' '}{error.method} {error.endpoint}
-                      </p>
-                      <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-                        <span>Error: {error.errorCode}</span>
-                        <span>{formatTime(error.lastOccurrence)}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Error Details (Detail) */}
-            <div className="bg-gray-900 rounded-lg p-4">
-              <h3 className="text-white font-medium mb-4">Error Details</h3>
-              {selectedError ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-lg text-white font-medium">{selectedError.alert.title}</h4>
-                    <button
-                      onClick={() => handleResolveError(selectedError.id, !selectedError.isResolved)}
-                      className={`px-3 py-1 rounded text-sm ${
-                        selectedError.isResolved
-                          ? 'bg-yellow-600 hover:bg-yellow-500 text-white'
-                          : 'bg-green-600 hover:bg-green-500 text-white'
-                      }`}
-                    >
-                      {selectedError.isResolved ? 'Reopen' : 'Mark Resolved'}
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-500">Error Type</span>
-                      <p className="text-white">{selectedError.errorType}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Error Code</span>
-                      <p className="text-white">{selectedError.errorCode}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Status Code</span>
-                      <p className={getStatusColor(selectedError.statusCode || 0)}>{selectedError.statusCode}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Method</span>
-                      <p className="text-white">{selectedError.method}</p>
-                    </div>
-                    <div className="col-span-2">
-                      <span className="text-gray-500">Endpoint</span>
-                      <p className="text-white font-mono text-sm break-all">{selectedError.endpoint}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-500">First Occurrence</span>
-                      <p className="text-white">{formatTime(selectedError.firstOccurrence)}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Last Occurrence</span>
-                      <p className="text-white">{formatTime(selectedError.lastOccurrence)}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Total Occurrences</span>
-                      <p className="text-white">{selectedError.occurrenceCount}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Affected Devices</span>
-                      <p className="text-white">{selectedError.affectedDevices.length}</p>
-                    </div>
-                  </div>
-
-                  {selectedError.requestBody && (
-                    <div>
-                      <span className="text-gray-500 text-sm">Request Body</span>
-                      <pre className="mt-1 p-3 bg-gray-800 rounded text-xs text-gray-300 overflow-auto max-h-40">
-                        {tryFormatJson(selectedError.requestBody)}
-                      </pre>
-                    </div>
-                  )}
-
-                  {selectedError.responseBody && (
-                    <div>
-                      <span className="text-gray-500 text-sm">Response Body</span>
-                      <pre className="mt-1 p-3 bg-gray-800 rounded text-xs text-gray-300 overflow-auto max-h-40">
-                        {tryFormatJson(selectedError.responseBody)}
-                      </pre>
-                    </div>
-                  )}
-
-                  {selectedError.notes && (
-                    <div>
-                      <span className="text-gray-500 text-sm">Notes</span>
-                      <p className="mt-1 text-gray-300">{selectedError.notes}</p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-gray-400 text-center py-8">Select an error to view details</p>
-              )}
-            </div>
-          </div>
-            </>
-          )}
-
-          {monitorSubTab === 'settings' && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-white font-medium">Alert Rules</h3>
-                <button
-                  onClick={() => setShowAddAlert(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm"
-                >
-                  + Add Alert Rule
-                </button>
-              </div>
-
-              {/* Add Alert Form */}
-              {showAddAlert && (
-                <div className="bg-gray-900 rounded-lg p-4 border border-blue-500">
-                  <h4 className="text-white font-medium mb-4">New Alert Rule</h4>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-gray-400 text-sm">Alert Title *</label>
-                        <input
-                          type="text"
-                          value={newAlert.title}
-                          onChange={(e) => setNewAlert({ ...newAlert, title: e.target.value })}
-                          placeholder="e.g., Server Error Alert"
-                          className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-gray-400 text-sm">Description</label>
-                        <input
-                          type="text"
-                          value={newAlert.description}
-                          onChange={(e) => setNewAlert({ ...newAlert, description: e.target.value })}
-                          placeholder="Optional description"
-                          className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-gray-400 text-sm">Endpoint (optional, leave empty for all)</label>
-                        <input
-                          type="text"
-                          value={newAlert.endpoint}
-                          onChange={(e) => setNewAlert({ ...newAlert, endpoint: e.target.value })}
-                          placeholder="/api/users/*"
-                          className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-gray-400 text-sm">Method (optional)</label>
-                        <select
-                          value={newAlert.method}
-                          onChange={(e) => setNewAlert({ ...newAlert, method: e.target.value })}
-                          className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                        >
-                          <option value="">All Methods</option>
-                          <option value="GET">GET</option>
-                          <option value="POST">POST</option>
-                          <option value="PUT">PUT</option>
-                          <option value="DELETE">DELETE</option>
-                          <option value="PATCH">PATCH</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Error Code Selection */}
-                    <div className="space-y-2">
-                      <label className="text-gray-400 text-sm">Monitor Standard Error Codes</label>
-                      <div className="flex items-center gap-4">
-                        <label className="flex items-center gap-2 text-white text-sm">
-                          <input
-                            type="checkbox"
-                            checked={newAlert.monitorStandardErrors}
-                            onChange={(e) => setNewAlert({ ...newAlert, monitorStandardErrors: e.target.checked })}
-                            className="rounded bg-gray-800 border-gray-700"
-                          />
-                          Enable Standard Error Monitoring
-                        </label>
-                      </div>
-                      {newAlert.monitorStandardErrors && (
-                        <div className="mt-2 space-y-2">
-                          <p className="text-gray-500 text-xs">Select error codes to monitor:</p>
-                          <div className="flex flex-wrap gap-2">
-                            <span className="text-gray-400 text-xs">Client (4xx):</span>
-                            {standardErrorCodes.client.map((code) => (
-                              <label key={code} className="flex items-center gap-1 text-sm">
-                                <input
-                                  type="checkbox"
-                                  checked={newAlert.standardErrorCodes.includes(code)}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      setNewAlert({ ...newAlert, standardErrorCodes: [...newAlert.standardErrorCodes, code] })
-                                    } else {
-                                      setNewAlert({ ...newAlert, standardErrorCodes: newAlert.standardErrorCodes.filter(c => c !== code) })
-                                    }
-                                  }}
-                                  className="rounded bg-gray-800 border-gray-700"
-                                />
-                                <span className="text-yellow-400">{code}</span>
-                              </label>
-                            ))}
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            <span className="text-gray-400 text-xs">Server (5xx):</span>
-                            {standardErrorCodes.server.map((code) => (
-                              <label key={code} className="flex items-center gap-1 text-sm">
-                                <input
-                                  type="checkbox"
-                                  checked={newAlert.standardErrorCodes.includes(code)}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      setNewAlert({ ...newAlert, standardErrorCodes: [...newAlert.standardErrorCodes, code] })
-                                    } else {
-                                      setNewAlert({ ...newAlert, standardErrorCodes: newAlert.standardErrorCodes.filter(c => c !== code) })
-                                    }
-                                  }}
-                                  className="rounded bg-gray-800 border-gray-700"
-                                />
-                                <span className="text-red-400">{code}</span>
-                              </label>
-                            ))}
-                          </div>
-                          <div className="flex gap-2 mt-2">
-                            <button
-                              onClick={() => setNewAlert({
-                                ...newAlert,
-                                standardErrorCodes: [...standardErrorCodes.client, ...standardErrorCodes.server]
-                              })}
-                              className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs hover:bg-gray-600"
-                            >Select All</button>
-                            <button
-                              onClick={() => setNewAlert({ ...newAlert, standardErrorCodes: [] })}
-                              className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs hover:bg-gray-600"
-                            >Clear All</button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Custom Error Codes */}
-                    <div className="space-y-2">
-                      <label className="text-gray-400 text-sm">Custom Status Codes</label>
-                      <div className="flex flex-wrap gap-2">
-                        {newAlert.customStatusCodes.map((code, idx) => (
-                          <span key={idx} className="px-2 py-1 bg-purple-900 text-purple-300 rounded text-sm flex items-center gap-1">
-                            {code}
-                            <button
-                              onClick={() => setNewAlert({
-                                ...newAlert,
-                                customStatusCodes: newAlert.customStatusCodes.filter((_, i) => i !== idx)
-                              })}
-                              className="text-purple-400 hover:text-red-400"
-                            >×</button>
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex gap-2">
-                        <input
-                          type="number"
-                          value={customCodeInput}
-                          onChange={(e) => setCustomCodeInput(e.target.value)}
-                          placeholder="e.g., 418"
-                          className="w-24 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                        />
-                        <button
-                          onClick={() => {
-                            const code = parseInt(customCodeInput)
-                            if (code && !newAlert.customStatusCodes.includes(code)) {
-                              setNewAlert({ ...newAlert, customStatusCodes: [...newAlert.customStatusCodes, code] })
-                              setCustomCodeInput('')
-                            }
-                          }}
-                          className="px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 text-sm"
-                        >Add</button>
-                      </div>
-                    </div>
-
-                    {/* Body Error Detection */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-gray-400 text-sm">Body Error Field (JSON path)</label>
-                        <input
-                          type="text"
-                          value={newAlert.bodyErrorField}
-                          onChange={(e) => setNewAlert({ ...newAlert, bodyErrorField: e.target.value })}
-                          placeholder="error.code or status"
-                          className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-gray-400 text-sm">Body Error Values</label>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {newAlert.bodyErrorValues.map((val, idx) => (
-                            <span key={idx} className="px-2 py-0.5 bg-orange-900 text-orange-300 rounded text-xs flex items-center gap-1">
-                              {val}
-                              <button
-                                onClick={() => setNewAlert({
-                                  ...newAlert,
-                                  bodyErrorValues: newAlert.bodyErrorValues.filter((_, i) => i !== idx)
-                                })}
-                                className="text-orange-400 hover:text-red-400"
-                              >×</button>
-                            </span>
-                          ))}
-                        </div>
-                        <div className="flex gap-2 mt-1">
-                          <input
-                            type="text"
-                            value={bodyErrorValueInput}
-                            onChange={(e) => setBodyErrorValueInput(e.target.value)}
-                            placeholder="ERROR_CODE"
-                            className="flex-1 px-2 py-1 bg-gray-800 text-white rounded border border-gray-700 text-xs"
-                          />
-                          <button
-                            onClick={() => {
-                              if (bodyErrorValueInput && !newAlert.bodyErrorValues.includes(bodyErrorValueInput)) {
-                                setNewAlert({ ...newAlert, bodyErrorValues: [...newAlert.bodyErrorValues, bodyErrorValueInput] })
-                                setBodyErrorValueInput('')
-                              }
-                            }}
-                            className="px-2 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 text-xs"
-                          >+</button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Header Error Detection */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-gray-400 text-sm">Header Error Field</label>
-                        <input
-                          type="text"
-                          value={newAlert.headerErrorField}
-                          onChange={(e) => setNewAlert({ ...newAlert, headerErrorField: e.target.value })}
-                          placeholder="X-Error-Code"
-                          className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-gray-400 text-sm">Header Error Values</label>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {newAlert.headerErrorValues.map((val, idx) => (
-                            <span key={idx} className="px-2 py-0.5 bg-pink-900 text-pink-300 rounded text-xs flex items-center gap-1">
-                              {val}
-                              <button
-                                onClick={() => setNewAlert({
-                                  ...newAlert,
-                                  headerErrorValues: newAlert.headerErrorValues.filter((_, i) => i !== idx)
-                                })}
-                                className="text-pink-400 hover:text-red-400"
-                              >×</button>
-                            </span>
-                          ))}
-                        </div>
-                        <div className="flex gap-2 mt-1">
-                          <input
-                            type="text"
-                            value={headerErrorValueInput}
-                            onChange={(e) => setHeaderErrorValueInput(e.target.value)}
-                            placeholder="ERROR"
-                            className="flex-1 px-2 py-1 bg-gray-800 text-white rounded border border-gray-700 text-xs"
-                          />
-                          <button
-                            onClick={() => {
-                              if (headerErrorValueInput && !newAlert.headerErrorValues.includes(headerErrorValueInput)) {
-                                setNewAlert({ ...newAlert, headerErrorValues: [...newAlert.headerErrorValues, headerErrorValueInput] })
-                                setHeaderErrorValueInput('')
-                              }
-                            }}
-                            className="px-2 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 text-xs"
-                          >+</button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Notification Channels */}
-                    <div className="space-y-2">
-                      <label className="text-gray-400 text-sm">Notification Channels</label>
-                      <div className="flex flex-wrap gap-4">
-                        <label className="flex items-center gap-2 text-white text-sm">
-                          <input
-                            type="checkbox"
-                            checked={newAlert.notifyEmail}
-                            onChange={(e) => setNewAlert({ ...newAlert, notifyEmail: e.target.checked })}
-                            className="rounded bg-gray-800 border-gray-700"
-                          />
-                          📧 Email
-                        </label>
-                        <label className="flex items-center gap-2 text-white text-sm">
-                          <input
-                            type="checkbox"
-                            checked={newAlert.notifyPush}
-                            onChange={(e) => setNewAlert({ ...newAlert, notifyPush: e.target.checked })}
-                            className="rounded bg-gray-800 border-gray-700"
-                          />
-                          🔔 Push
-                        </label>
-                        <label className="flex items-center gap-2 text-white text-sm">
-                          <input
-                            type="checkbox"
-                            checked={newAlert.notifySms}
-                            onChange={(e) => setNewAlert({ ...newAlert, notifySms: e.target.checked })}
-                            className="rounded bg-gray-800 border-gray-700"
-                          />
-                          📱 SMS
-                        </label>
-                        <label className="flex items-center gap-2 text-white text-sm">
-                          <input
-                            type="checkbox"
-                            checked={newAlert.notifyWebhook}
-                            onChange={(e) => setNewAlert({ ...newAlert, notifyWebhook: e.target.checked })}
-                            className="rounded bg-gray-800 border-gray-700"
-                          />
-                          🔗 Webhook
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 pt-4">
-                      <button
-                        onClick={handleCreateAlert}
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm"
-                      >
-                        Create Alert
-                      </button>
-                      <button
-                        onClick={() => setShowAddAlert(false)}
-                        className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 text-sm"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Alert List */}
-              {alerts.length === 0 ? (
-                <p className="text-gray-400 text-center py-8">No alert rules configured yet</p>
-              ) : (
-                <div className="space-y-3">
-                  {alerts.map((alert) => (
-                    <div key={alert.id} className="bg-gray-900 rounded-lg p-4">
-                      {editingAlert?.id === alert.id ? (
-                        /* Edit Mode */
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="text-gray-400 text-sm">Alert Title *</label>
-                              <input
-                                type="text"
-                                value={editingAlert.title}
-                                onChange={(e) => setEditingAlert({ ...editingAlert, title: e.target.value })}
-                                className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-gray-400 text-sm">Description</label>
-                              <input
-                                type="text"
-                                value={editingAlert.description || ''}
-                                onChange={(e) => setEditingAlert({ ...editingAlert, description: e.target.value })}
-                                className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                              />
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="text-gray-400 text-sm">Endpoint</label>
-                              <input
-                                type="text"
-                                value={editingAlert.endpoint || ''}
-                                onChange={(e) => setEditingAlert({ ...editingAlert, endpoint: e.target.value })}
-                                className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-gray-400 text-sm">Method</label>
-                              <select
-                                value={editingAlert.method || ''}
-                                onChange={(e) => setEditingAlert({ ...editingAlert, method: e.target.value })}
-                                className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                              >
-                                <option value="">All Methods</option>
-                                <option value="GET">GET</option>
-                                <option value="POST">POST</option>
-                                <option value="PUT">PUT</option>
-                                <option value="DELETE">DELETE</option>
-                                <option value="PATCH">PATCH</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => editingAlert && handleUpdateAlert(editingAlert)}
-                              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm"
-                            >
-                              Save
-                            </button>
-                            <button
-                              onClick={() => setEditingAlert(null)}
-                              className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 text-sm"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        /* View Mode */
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className="text-white font-medium">{alert.title}</h4>
-                              {alert.description && (
-                                <p className="text-gray-400 text-sm mt-1">{alert.description}</p>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <label className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={alert.isEnabled}
-                                  onChange={() => handleUpdateAlert(alert, false)}
-                                  className="sr-only peer"
-                                />
-                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                              </label>
-                              <button
-                                onClick={() => setEditingAlert(alert)}
-                                className="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 text-sm"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDeleteAlert(alert.id)}
-                                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-500 text-sm"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-500">Endpoint:</span>
-                              <p className="text-white">{alert.endpoint || 'All endpoints'}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Method:</span>
-                              <p className="text-white">{alert.method || 'All methods'}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Monitored Errors:</span>
-                              <p className="text-white">{alert._count.monitoredErrors}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Status:</span>
-                              <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
-                                alert.isEnabled ? 'bg-green-900 text-green-300' : 'bg-gray-700 text-gray-400'
-                              }`}>
-                                {alert.isEnabled ? 'Enabled' : 'Disabled'}
-                              </span>
-                            </div>
-                          </div>
-                          {alert.monitorStandardErrors && alert.standardErrorCodes.length > 0 && (
-                            <div>
-                              <span className="text-gray-500 text-sm">Standard Error Codes:</span>
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {alert.standardErrorCodes.map((code) => (
-                                  <span key={code} className={`px-2 py-0.5 rounded text-xs ${
-                                    code >= 500 ? 'bg-red-900 text-red-300' : 'bg-yellow-900 text-yellow-300'
-                                  }`}>
-                                    {code}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {alert.customStatusCodes.length > 0 && (
-                            <div>
-                              <span className="text-gray-500 text-sm">Custom Status Codes:</span>
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {alert.customStatusCodes.map((code) => (
-                                  <span key={code} className="px-2 py-0.5 bg-purple-900 text-purple-300 rounded text-xs">
-                                    {code}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          <div>
-                            <span className="text-gray-500 text-sm">Notifications:</span>
-                            <div className="flex flex-wrap gap-2 mt-1">
-                              {alert.notifyEmail && <span className="px-2 py-0.5 bg-blue-900 text-blue-300 rounded text-xs">📧 Email</span>}
-                              {alert.notifyPush && <span className="px-2 py-0.5 bg-green-900 text-green-300 rounded text-xs">🔔 Push</span>}
-                              {alert.notifySms && <span className="px-2 py-0.5 bg-yellow-900 text-yellow-300 rounded text-xs">📱 SMS</span>}
-                              {alert.notifyWebhook && <span className="px-2 py-0.5 bg-purple-900 text-purple-300 rounded text-xs">🔗 Webhook</span>}
-                              {!alert.notifyEmail && !alert.notifyPush && !alert.notifySms && !alert.notifyWebhook && (
-                                <span className="text-gray-500 text-xs">No notifications configured</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'settings' && (
-        <div className="space-y-6">
-          {/* Settings Horizontal Menu */}
-          <div className="border-b border-gray-800">
-            <nav className="flex space-x-8">
-              <button
-                onClick={() => setSettingsTab('notifications')}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  settingsTab === 'notifications'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-white'
-                }`}
-              >
-                Notifications
-              </button>
-              <button
-                onClick={() => setSettingsTab('features')}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  settingsTab === 'features'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-white'
-                }`}
-              >
-                Product Features
-              </button>
-              <button
-                onClick={() => setSettingsTab('sdk')}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  settingsTab === 'sdk'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-white'
-                }`}
-              >
-                SDK Settings
-              </button>
-              <button
-                onClick={() => setSettingsTab('cleanup')}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  settingsTab === 'cleanup'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-white'
-                }`}
-              >
-                Data Cleanup
-              </button>
-              <button
-                onClick={() => setSettingsTab('project')}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  settingsTab === 'project'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-white'
-                }`}
-              >
-                Project Settings
-              </button>
-            </nav>
-          </div>
-
-          {/* Notifications Settings */}
-          {settingsTab === 'notifications' && notificationSettings && (
-            <div className="space-y-6">
-              {/* Email Settings */}
-              <div className="bg-gray-900 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">📧</span>
-                    <div>
-                      <h3 className="text-white font-medium">Email Notifications</h3>
-                      <p className="text-gray-400 text-sm">Receive alerts via email</p>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={notificationSettings.emailEnabled}
-                      onChange={(e) => handleSaveNotificationSettings({ emailEnabled: e.target.checked })}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                  </label>
-                </div>
-                {notificationSettings.emailEnabled && (
-                  <div className="mt-4">
-                    <label className="text-gray-400 text-sm">Email Addresses</label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {notificationSettings.emailAddresses.map((email, idx) => (
-                        <span key={idx} className="px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-sm flex items-center gap-2">
-                          {email}
-                          <button
-                            onClick={() => handleSaveNotificationSettings({
-                              emailAddresses: notificationSettings.emailAddresses.filter((_, i) => i !== idx)
-                            })}
-                            className="text-gray-500 hover:text-red-400"
-                          >×</button>
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex gap-2 mt-2">
-                      <input
-                        type="email"
-                        value={newEmailAddress}
-                        onChange={(e) => setNewEmailAddress(e.target.value)}
-                        placeholder="Add email address"
-                        className="flex-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                      />
-                      <button
-                        onClick={() => {
-                          if (newEmailAddress && !notificationSettings.emailAddresses.includes(newEmailAddress)) {
-                            handleSaveNotificationSettings({
-                              emailAddresses: [...notificationSettings.emailAddresses, newEmailAddress]
-                            })
-                            setNewEmailAddress('')
-                          }
-                        }}
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm"
-                      >Add</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Push Settings */}
-              <div className="bg-gray-900 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">🔔</span>
-                    <div>
-                      <h3 className="text-white font-medium">Push Notifications</h3>
-                      <p className="text-gray-400 text-sm">Receive real-time push alerts</p>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={notificationSettings.pushEnabled}
-                      onChange={(e) => handleSaveNotificationSettings({ pushEnabled: e.target.checked })}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                  </label>
-                </div>
-              </div>
-
-              {/* SMS Settings */}
-              <div className="bg-gray-900 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">📱</span>
-                    <div>
-                      <h3 className="text-white font-medium">SMS Notifications</h3>
-                      <p className="text-gray-400 text-sm">Receive alerts via SMS</p>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={notificationSettings.smsEnabled}
-                      onChange={(e) => handleSaveNotificationSettings({ smsEnabled: e.target.checked })}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                  </label>
-                </div>
-                {notificationSettings.smsEnabled && (
-                  <div className="mt-4">
-                    <label className="text-gray-400 text-sm">Phone Numbers</label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {notificationSettings.smsNumbers.map((num, idx) => (
-                        <span key={idx} className="px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-sm flex items-center gap-2">
-                          {num}
-                          <button
-                            onClick={() => handleSaveNotificationSettings({
-                              smsNumbers: notificationSettings.smsNumbers.filter((_, i) => i !== idx)
-                            })}
-                            className="text-gray-500 hover:text-red-400"
-                          >×</button>
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex gap-2 mt-2">
-                      <input
-                        type="tel"
-                        value={newSmsNumber}
-                        onChange={(e) => setNewSmsNumber(e.target.value)}
-                        placeholder="+1234567890"
-                        className="flex-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                      />
-                      <button
-                        onClick={() => {
-                          if (newSmsNumber && !notificationSettings.smsNumbers.includes(newSmsNumber)) {
-                            handleSaveNotificationSettings({
-                              smsNumbers: [...notificationSettings.smsNumbers, newSmsNumber]
-                            })
-                            setNewSmsNumber('')
-                          }
-                        }}
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm"
-                      >Add</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Webhook Settings */}
-              <div className="bg-gray-900 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">🔗</span>
-                    <div>
-                      <h3 className="text-white font-medium">Webhook</h3>
-                      <p className="text-gray-400 text-sm">Send alerts to your webhook endpoint</p>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={notificationSettings.webhookEnabled}
-                      onChange={(e) => handleSaveNotificationSettings({ webhookEnabled: e.target.checked })}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                  </label>
-                </div>
-                {notificationSettings.webhookEnabled && (
-                  <div className="mt-4 space-y-4">
-                    <div>
-                      <label className="text-gray-400 text-sm">Webhook URL</label>
-                      <input
-                        type="url"
-                        value={notificationSettings.webhookUrl || ''}
-                        onChange={(e) => handleSaveNotificationSettings({ webhookUrl: e.target.value })}
-                        placeholder="https://your-webhook.com/endpoint"
-                        className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-gray-400 text-sm">Secret (for signature verification)</label>
-                      <input
-                        type="password"
-                        value={notificationSettings.webhookSecret || ''}
-                        onChange={(e) => handleSaveNotificationSettings({ webhookSecret: e.target.value })}
-                        placeholder="Optional webhook secret"
-                        className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Product Features */}
-          {settingsTab === 'features' && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-white font-medium">Alert Rules</h3>
-                <button
-                  onClick={() => setShowAddAlert(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm"
-                >
-                  + Add Alert Rule
-                </button>
-              </div>
-
-              {/* Add Alert Form */}
-              {showAddAlert && (
-                <div className="bg-gray-900 rounded-lg p-4 border border-blue-500">
-                  <h4 className="text-white font-medium mb-4">New Alert Rule</h4>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-gray-400 text-sm">Alert Title *</label>
-                        <input
-                          type="text"
-                          value={newAlert.title}
-                          onChange={(e) => setNewAlert({ ...newAlert, title: e.target.value })}
-                          placeholder="e.g., Server Error Alert"
-                          className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-gray-400 text-sm">Description</label>
-                        <input
-                          type="text"
-                          value={newAlert.description}
-                          onChange={(e) => setNewAlert({ ...newAlert, description: e.target.value })}
-                          placeholder="Optional description"
-                          className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-gray-400 text-sm">Endpoint (optional, leave empty for all)</label>
-                        <input
-                          type="text"
-                          value={newAlert.endpoint}
-                          onChange={(e) => setNewAlert({ ...newAlert, endpoint: e.target.value })}
-                          placeholder="/api/users/*"
-                          className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-gray-400 text-sm">Method (optional)</label>
-                        <select
-                          value={newAlert.method}
-                          onChange={(e) => setNewAlert({ ...newAlert, method: e.target.value })}
-                          className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                        >
-                          <option value="">All Methods</option>
-                          <option value="GET">GET</option>
-                          <option value="POST">POST</option>
-                          <option value="PUT">PUT</option>
-                          <option value="DELETE">DELETE</option>
-                          <option value="PATCH">PATCH</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Error Code Selection */}
-                    <div className="space-y-2">
-                      <label className="text-gray-400 text-sm">Monitor Standard Error Codes</label>
-                      <div className="flex items-center gap-4">
-                        <label className="flex items-center gap-2 text-white text-sm">
-                          <input
-                            type="checkbox"
-                            checked={newAlert.monitorStandardErrors}
-                            onChange={(e) => setNewAlert({ ...newAlert, monitorStandardErrors: e.target.checked })}
-                            className="rounded bg-gray-800 border-gray-700"
-                          />
-                          Enable Standard Error Monitoring
-                        </label>
-                      </div>
-                      {newAlert.monitorStandardErrors && (
-                        <div className="mt-2 space-y-2">
-                          <p className="text-gray-500 text-xs">Select error codes to monitor:</p>
-                          <div className="flex flex-wrap gap-2">
-                            <span className="text-gray-400 text-xs">Client (4xx):</span>
-                            {standardErrorCodes.client.map((code) => (
-                              <label key={code} className="flex items-center gap-1 text-sm">
-                                <input
-                                  type="checkbox"
-                                  checked={newAlert.standardErrorCodes.includes(code)}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      setNewAlert({ ...newAlert, standardErrorCodes: [...newAlert.standardErrorCodes, code] })
-                                    } else {
-                                      setNewAlert({ ...newAlert, standardErrorCodes: newAlert.standardErrorCodes.filter(c => c !== code) })
-                                    }
-                                  }}
-                                  className="rounded bg-gray-800 border-gray-700"
-                                />
-                                <span className="text-yellow-400">{code}</span>
-                              </label>
-                            ))}
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            <span className="text-gray-400 text-xs">Server (5xx):</span>
-                            {standardErrorCodes.server.map((code) => (
-                              <label key={code} className="flex items-center gap-1 text-sm">
-                                <input
-                                  type="checkbox"
-                                  checked={newAlert.standardErrorCodes.includes(code)}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      setNewAlert({ ...newAlert, standardErrorCodes: [...newAlert.standardErrorCodes, code] })
-                                    } else {
-                                      setNewAlert({ ...newAlert, standardErrorCodes: newAlert.standardErrorCodes.filter(c => c !== code) })
-                                    }
-                                  }}
-                                  className="rounded bg-gray-800 border-gray-700"
-                                />
-                                <span className="text-red-400">{code}</span>
-                              </label>
-                            ))}
-                          </div>
-                          <div className="flex gap-2 mt-2">
-                            <button
-                              onClick={() => setNewAlert({
-                                ...newAlert,
-                                standardErrorCodes: [...standardErrorCodes.client, ...standardErrorCodes.server]
-                              })}
-                              className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs hover:bg-gray-600"
-                            >Select All</button>
-                            <button
-                              onClick={() => setNewAlert({ ...newAlert, standardErrorCodes: [] })}
-                              className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs hover:bg-gray-600"
-                            >Clear All</button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Custom Error Codes */}
-                    <div className="space-y-2">
-                      <label className="text-gray-400 text-sm">Custom Status Codes</label>
-                      <div className="flex flex-wrap gap-2">
-                        {newAlert.customStatusCodes.map((code, idx) => (
-                          <span key={idx} className="px-2 py-1 bg-purple-900 text-purple-300 rounded text-sm flex items-center gap-1">
-                            {code}
-                            <button
-                              onClick={() => setNewAlert({
-                                ...newAlert,
-                                customStatusCodes: newAlert.customStatusCodes.filter((_, i) => i !== idx)
-                              })}
-                              className="text-purple-400 hover:text-red-400"
-                            >×</button>
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex gap-2">
-                        <input
-                          type="number"
-                          value={customCodeInput}
-                          onChange={(e) => setCustomCodeInput(e.target.value)}
-                          placeholder="e.g., 418"
-                          className="w-24 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                        />
-                        <button
-                          onClick={() => {
-                            const code = parseInt(customCodeInput)
-                            if (code && !newAlert.customStatusCodes.includes(code)) {
-                              setNewAlert({ ...newAlert, customStatusCodes: [...newAlert.customStatusCodes, code] })
-                              setCustomCodeInput('')
-                            }
-                          }}
-                          className="px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 text-sm"
-                        >Add</button>
-                      </div>
-                    </div>
-
-                    {/* Body Error Detection */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-gray-400 text-sm">Body Error Field (JSON path)</label>
-                        <input
-                          type="text"
-                          value={newAlert.bodyErrorField}
-                          onChange={(e) => setNewAlert({ ...newAlert, bodyErrorField: e.target.value })}
-                          placeholder="error.code or status"
-                          className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-gray-400 text-sm">Body Error Values</label>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {newAlert.bodyErrorValues.map((val, idx) => (
-                            <span key={idx} className="px-2 py-0.5 bg-orange-900 text-orange-300 rounded text-xs flex items-center gap-1">
-                              {val}
-                              <button
-                                onClick={() => setNewAlert({
-                                  ...newAlert,
-                                  bodyErrorValues: newAlert.bodyErrorValues.filter((_, i) => i !== idx)
-                                })}
-                                className="text-orange-400 hover:text-red-400"
-                              >×</button>
-                            </span>
-                          ))}
-                        </div>
-                        <div className="flex gap-2 mt-1">
-                          <input
-                            type="text"
-                            value={bodyErrorValueInput}
-                            onChange={(e) => setBodyErrorValueInput(e.target.value)}
-                            placeholder="ERROR_CODE"
-                            className="flex-1 px-2 py-1 bg-gray-800 text-white rounded border border-gray-700 text-xs"
-                          />
-                          <button
-                            onClick={() => {
-                              if (bodyErrorValueInput && !newAlert.bodyErrorValues.includes(bodyErrorValueInput)) {
-                                setNewAlert({ ...newAlert, bodyErrorValues: [...newAlert.bodyErrorValues, bodyErrorValueInput] })
-                                setBodyErrorValueInput('')
-                              }
-                            }}
-                            className="px-2 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 text-xs"
-                          >+</button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Header Error Detection */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-gray-400 text-sm">Header Error Field</label>
-                        <input
-                          type="text"
-                          value={newAlert.headerErrorField}
-                          onChange={(e) => setNewAlert({ ...newAlert, headerErrorField: e.target.value })}
-                          placeholder="X-Error-Code"
-                          className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-gray-400 text-sm">Header Error Values</label>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {newAlert.headerErrorValues.map((val, idx) => (
-                            <span key={idx} className="px-2 py-0.5 bg-pink-900 text-pink-300 rounded text-xs flex items-center gap-1">
-                              {val}
-                              <button
-                                onClick={() => setNewAlert({
-                                  ...newAlert,
-                                  headerErrorValues: newAlert.headerErrorValues.filter((_, i) => i !== idx)
-                                })}
-                                className="text-pink-400 hover:text-red-400"
-                              >×</button>
-                            </span>
-                          ))}
-                        </div>
-                        <div className="flex gap-2 mt-1">
-                          <input
-                            type="text"
-                            value={headerErrorValueInput}
-                            onChange={(e) => setHeaderErrorValueInput(e.target.value)}
-                            placeholder="ERROR"
-                            className="flex-1 px-2 py-1 bg-gray-800 text-white rounded border border-gray-700 text-xs"
-                          />
-                          <button
-                            onClick={() => {
-                              if (headerErrorValueInput && !newAlert.headerErrorValues.includes(headerErrorValueInput)) {
-                                setNewAlert({ ...newAlert, headerErrorValues: [...newAlert.headerErrorValues, headerErrorValueInput] })
-                                setHeaderErrorValueInput('')
-                              }
-                            }}
-                            className="px-2 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 text-xs"
-                          >+</button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Notification Channels */}
-                    <div className="space-y-2">
-                      <label className="text-gray-400 text-sm">Notification Channels</label>
-                      <div className="flex flex-wrap gap-4">
-                        <label className="flex items-center gap-2 text-white text-sm">
-                          <input
-                            type="checkbox"
-                            checked={newAlert.notifyEmail}
-                            onChange={(e) => setNewAlert({ ...newAlert, notifyEmail: e.target.checked })}
-                            className="rounded bg-gray-800 border-gray-700"
-                          />
-                          📧 Email
-                        </label>
-                        <label className="flex items-center gap-2 text-white text-sm">
-                          <input
-                            type="checkbox"
-                            checked={newAlert.notifyPush}
-                            onChange={(e) => setNewAlert({ ...newAlert, notifyPush: e.target.checked })}
-                            className="rounded bg-gray-800 border-gray-700"
-                          />
-                          🔔 Push
-                        </label>
-                        <label className="flex items-center gap-2 text-white text-sm">
-                          <input
-                            type="checkbox"
-                            checked={newAlert.notifySms}
-                            onChange={(e) => setNewAlert({ ...newAlert, notifySms: e.target.checked })}
-                            className="rounded bg-gray-800 border-gray-700"
-                          />
-                          📱 SMS
-                        </label>
-                        <label className="flex items-center gap-2 text-white text-sm">
-                          <input
-                            type="checkbox"
-                            checked={newAlert.notifyWebhook}
-                            onChange={(e) => setNewAlert({ ...newAlert, notifyWebhook: e.target.checked })}
-                            className="rounded bg-gray-800 border-gray-700"
-                          />
-                          🔗 Webhook
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 pt-4">
-                      <button
-                        onClick={handleCreateAlert}
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm"
-                      >
-                        Create Alert
-                      </button>
-                      <button
-                        onClick={() => setShowAddAlert(false)}
-                        className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 text-sm"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Alert List */}
-              {alerts.length === 0 ? (
-                <p className="text-gray-400 text-center py-8">No alert rules configured yet</p>
-              ) : (
-                <div className="space-y-3">
-                  {alerts.map((alert) => (
-                    <div key={alert.id} className="bg-gray-900 rounded-lg p-4">
-                      {editingAlert?.id === alert.id ? (
-                        /* Edit Mode */
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-gray-400 text-xs mb-1">Title</label>
-                              <input
-                                type="text"
-                                value={editingAlert.title}
-                                onChange={(e) => setEditingAlert({ ...editingAlert, title: e.target.value })}
-                                className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-gray-400 text-xs mb-1">Description</label>
-                              <input
-                                type="text"
-                                value={editingAlert.description || ''}
-                                onChange={(e) => setEditingAlert({ ...editingAlert, description: e.target.value || null })}
-                                className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-gray-400 text-xs mb-1">Endpoint (optional)</label>
-                              <input
-                                type="text"
-                                placeholder="/api/users/*"
-                                value={editingAlert.endpoint || ''}
-                                onChange={(e) => setEditingAlert({ ...editingAlert, endpoint: e.target.value || null })}
-                                className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-gray-400 text-xs mb-1">Method</label>
-                              <select
-                                value={editingAlert.method || ''}
-                                onChange={(e) => setEditingAlert({ ...editingAlert, method: e.target.value || null })}
-                                className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
-                              >
-                                <option value="">All Methods</option>
-                                <option value="GET">GET</option>
-                                <option value="POST">POST</option>
-                                <option value="PUT">PUT</option>
-                                <option value="DELETE">DELETE</option>
-                                <option value="PATCH">PATCH</option>
-                              </select>
-                            </div>
-                          </div>
-
-                          {/* Standard Error Codes */}
-                          <div>
-                            <label className="block text-gray-400 text-xs mb-2">Standard Error Codes</label>
-                            <div className="flex flex-wrap gap-2">
-                              {[400, 401, 403, 404, 405, 408, 409, 422, 429, 500, 501, 502, 503, 504].map((code) => (
-                                <button
-                                  key={code}
-                                  type="button"
-                                  onClick={() => {
-                                    const codes = editingAlert.standardErrorCodes.includes(code)
-                                      ? editingAlert.standardErrorCodes.filter(c => c !== code)
-                                      : [...editingAlert.standardErrorCodes, code]
-                                    setEditingAlert({ ...editingAlert, standardErrorCodes: codes })
-                                  }}
-                                  className={`px-2 py-1 text-xs rounded ${
-                                    editingAlert.standardErrorCodes.includes(code)
-                                      ? code >= 500 ? 'bg-red-600 text-white' : 'bg-orange-600 text-white'
-                                      : 'bg-gray-700 text-gray-400'
-                                  }`}
-                                >
-                                  {code}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Custom Status Codes */}
-                          <div>
-                            <label className="block text-gray-400 text-xs mb-1">Custom Status Codes (comma-separated)</label>
-                            <input
-                              type="text"
-                              placeholder="418, 451, 599"
-                              value={editingAlert.customStatusCodes.join(', ')}
-                              onChange={(e) => {
-                                const codes = e.target.value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
-                                setEditingAlert({ ...editingAlert, customStatusCodes: codes })
-                              }}
-                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
-                            />
-                          </div>
-
-                          {/* Body Error Detection */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-gray-400 text-xs mb-1">Body Error Field (JSON path)</label>
-                              <input
-                                type="text"
-                                placeholder="error.code"
-                                value={editingAlert.bodyErrorField || ''}
-                                onChange={(e) => setEditingAlert({ ...editingAlert, bodyErrorField: e.target.value || null })}
-                                className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-gray-400 text-xs mb-1">Body Error Values (comma-separated)</label>
-                              <input
-                                type="text"
-                                placeholder="INVALID_TOKEN, EXPIRED"
-                                value={editingAlert.bodyErrorValues.join(', ')}
-                                onChange={(e) => {
-                                  const values = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                                  setEditingAlert({ ...editingAlert, bodyErrorValues: values })
-                                }}
-                                className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Notification Channels */}
-                          <div>
-                            <label className="block text-gray-400 text-xs mb-2">Notify Via</label>
-                            <div className="flex gap-4">
-                              <label className="flex items-center gap-2 text-sm">
-                                <input
-                                  type="checkbox"
-                                  checked={editingAlert.notifyEmail}
-                                  onChange={(e) => setEditingAlert({ ...editingAlert, notifyEmail: e.target.checked })}
-                                  className="rounded bg-gray-700 border-gray-600"
-                                />
-                                <span className="text-gray-300">Email</span>
-                              </label>
-                              <label className="flex items-center gap-2 text-sm">
-                                <input
-                                  type="checkbox"
-                                  checked={editingAlert.notifyPush}
-                                  onChange={(e) => setEditingAlert({ ...editingAlert, notifyPush: e.target.checked })}
-                                  className="rounded bg-gray-700 border-gray-600"
-                                />
-                                <span className="text-gray-300">Push</span>
-                              </label>
-                              <label className="flex items-center gap-2 text-sm">
-                                <input
-                                  type="checkbox"
-                                  checked={editingAlert.notifySms}
-                                  onChange={(e) => setEditingAlert({ ...editingAlert, notifySms: e.target.checked })}
-                                  className="rounded bg-gray-700 border-gray-600"
-                                />
-                                <span className="text-gray-300">SMS</span>
-                              </label>
-                              <label className="flex items-center gap-2 text-sm">
-                                <input
-                                  type="checkbox"
-                                  checked={editingAlert.notifyWebhook}
-                                  onChange={(e) => setEditingAlert({ ...editingAlert, notifyWebhook: e.target.checked })}
-                                  className="rounded bg-gray-700 border-gray-600"
-                                />
-                                <span className="text-gray-300">Webhook</span>
-                              </label>
-                            </div>
-                          </div>
-
-                          <div className="flex gap-2 pt-2">
-                            <button
-                              onClick={() => handleUpdateAlert(editingAlert, true)}
-                              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm"
-                            >
-                              Save Changes
-                            </button>
-                            <button
-                              onClick={() => setEditingAlert(null)}
-                              className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 text-sm"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        /* View Mode */
+                  {/* Action Bar */}
+                  <div className="flex items-center justify-between bg-gray-900 rounded-lg p-4 border border-gray-800">
+                    <div className="flex items-center gap-4">
+                      {selectedDevices.size > 0 && (
                         <>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <label className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={alert.isEnabled}
-                                  onChange={(e) => handleUpdateAlert({ ...alert, isEnabled: e.target.checked })}
-                                  className="sr-only peer"
-                                />
-                                <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                              </label>
-                              <div>
-                                <h4 className="text-white font-medium">{alert.title}</h4>
-                                {alert.description && <p className="text-gray-400 text-sm">{alert.description}</p>}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-gray-400 text-xs">{alert._count.monitoredErrors} errors</span>
-                              <button
-                                onClick={() => setEditingAlert(alert)}
-                                className="text-gray-500 hover:text-blue-400 text-sm"
-                              >Edit</button>
-                              <button
-                                onClick={() => handleDeleteAlert(alert.id)}
-                                className="text-gray-500 hover:text-red-400 text-sm"
-                              >Delete</button>
-                            </div>
-                          </div>
-                          <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                            {alert.endpoint && (
-                              <span className="px-2 py-1 bg-gray-800 text-gray-400 rounded">
-                                {alert.method || '*'} {alert.endpoint}
-                              </span>
-                            )}
-                            {alert.standardErrorCodes.length > 0 && (
-                              <span className="px-2 py-1 bg-gray-800 text-gray-400 rounded">
-                                Status: {alert.standardErrorCodes.join(', ')}
-                              </span>
-                            )}
-                            {alert.customStatusCodes.length > 0 && (
-                              <span className="px-2 py-1 bg-purple-900 text-purple-300 rounded">
-                                Custom: {alert.customStatusCodes.join(', ')}
-                              </span>
-                            )}
-                            {alert.bodyErrorField && (
-                              <span className="px-2 py-1 bg-orange-900 text-orange-300 rounded">
-                                Body: {alert.bodyErrorField}
-                              </span>
-                            )}
-                            {alert.headerErrorField && (
-                              <span className="px-2 py-1 bg-pink-900 text-pink-300 rounded">
-                                Header: {alert.headerErrorField}
-                              </span>
-                            )}
-                            <span className="px-2 py-1 bg-gray-800 text-gray-400 rounded">
-                              {[
-                                alert.notifyEmail && 'Email',
-                                alert.notifyPush && 'Push',
-                                alert.notifySms && 'SMS',
-                                alert.notifyWebhook && 'Webhook'
-                              ].filter(Boolean).join(', ') || 'No notifications'}
-                            </span>
-                          </div>
+                          <span className="text-gray-300 text-sm">
+                            {selectedDevices.size} device{selectedDevices.size > 1 ? 's' : ''} selected
+                          </span>
+                          <button
+                            onClick={() => {
+                              if (selectedDevices.size >= 2 && selectedDevices.size <= 5) {
+                                setShowComparison(true)
+                              } else {
+                                alert('Please select 2-5 devices to compare')
+                              }
+                            }}
+                            disabled={selectedDevices.size < 2 || selectedDevices.size > 5}
+                            className="px-4 py-2 bg-gray-800 hover:bg-gray-750 text-white rounded-lg text-sm font-medium transition-colors border border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Compare Selected
+                          </button>
+                          <button
+                            onClick={() => setSelectedDevices(new Set())}
+                            className="px-4 py-2 bg-gray-800 hover:bg-gray-750 text-gray-300 rounded-lg text-sm font-medium transition-colors border border-gray-700"
+                          >
+                            Clear Selection
+                          </button>
                         </>
                       )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+                    <button
+                      onClick={() => {
+                        if (token) {
+                          const format = confirm('Export as CSV? (Click Cancel for JSON)') ? 'csv' : 'json'
+                          api.devices.export(projectId, format, token)
+                            .then((data) => {
+                              if (format === 'csv') {
+                                const blob = new Blob([data as string], { type: 'text/csv' })
+                                const url = window.URL.createObjectURL(blob)
+                                const a = document.createElement('a')
+                                a.href = url
+                                a.download = `devices-${projectId}-${new Date().toISOString().split('T')[0]}.csv`
+                                a.click()
+                              } else {
+                                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+                                const url = window.URL.createObjectURL(blob)
+                                const a = document.createElement('a')
+                                a.href = url
+                                a.download = `devices-${projectId}-${new Date().toISOString().split('T')[0]}.json`
+                                a.click()
+                              }
+                            })
+                            .catch((err) => {
+                              console.error('Export failed:', err)
+                              alert('Failed to export devices')
+                            })
+                        }
+                      }}
+                      className="px-4 py-2 bg-gray-800 hover:bg-gray-750 text-white rounded-lg text-sm font-medium transition-colors border border-gray-700"
+                    >
+                      Export Devices
+                    </button>
+                  </div>
 
-          {/* Product Features */}
-          {settingsTab === 'features' && (
-            <div className="space-y-6">
-              {/* Subscription Status Warning */}
-              {subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') && (
-                <div className="bg-red-900/20 border-l-4 border-red-600 p-4 rounded">
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">⚠️</span>
-                    <div className="flex-1">
-                      <h3 className="text-red-400 font-semibold mb-1">
-                        {!subscriptionStatus.enabled 
-                          ? 'Subscription Disabled' 
-                          : subscriptionStatus.status !== 'active'
-                          ? `Subscription ${subscriptionStatus.status.charAt(0).toUpperCase() + subscriptionStatus.status.slice(1)}`
-                          : 'Trial Expired'}
-                      </h3>
-                      <p className="text-gray-300 text-sm mb-3">
-                        {!subscriptionStatus.enabled
-                          ? 'Your subscription has been disabled by an administrator. SDK features are disabled and no new data will be collected. Please contact support.'
-                          : subscriptionStatus.status !== 'active'
-                          ? `Your subscription is ${subscriptionStatus.status}. SDK features are disabled and no new data will be collected.`
-                          : 'Your free trial has ended. Features are disabled and no new data will be collected. Upgrade your subscription to re-enable all features.'}
-                      </p>
-                      <Link
-                        href="/subscription"
-                        className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
-                      >
-                        View Subscription
-                      </Link>
+                  {/* Stats Cards - Clean Professional Design */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+                      <div className="text-gray-400 text-xs mb-1">Total Devices</div>
+                      <div className="text-2xl font-bold text-white">{deviceStats.total}</div>
+                    </div>
+                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+                      <div className="text-gray-400 text-xs mb-1">Android</div>
+                      <div className="text-2xl font-bold text-white">{deviceStats.android}</div>
+                    </div>
+                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+                      <div className="text-gray-400 text-xs mb-1">iOS</div>
+                      <div className="text-2xl font-bold text-white">{deviceStats.ios}</div>
+                    </div>
+                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+                      <div className="text-gray-400 text-xs mb-1">Debug Mode</div>
+                      <div className="text-2xl font-bold text-white">{deviceStats.debugModeCount}</div>
+                    </div>
+                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+                      <div className="text-gray-400 text-xs mb-1">Today</div>
+                      <div className="text-2xl font-bold text-white">{deviceStats.today}</div>
+                    </div>
+                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+                      <div className="text-gray-400 text-xs mb-1">This Week</div>
+                      <div className="text-2xl font-bold text-white">{deviceStats.thisWeek}</div>
+                    </div>
+                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+                      <div className="text-gray-400 text-xs mb-1">This Month</div>
+                      <div className="text-2xl font-bold text-white">{deviceStats.thisMonth}</div>
                     </div>
                   </div>
-                </div>
-              )}
-              
-              <div className="bg-gray-900 rounded-lg p-4">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="text-2xl">⚙️</span>
-                  <div>
-                    <h3 className="text-white font-medium">SDK Feature Flags</h3>
-                    <p className="text-gray-400 text-sm">Control which features are enabled in the SDK. Changes take effect on next app launch.</p>
-                    {subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') && (
-                      <p className="text-red-400 text-sm mt-1">
-                        ⚠️ Features are disabled {!subscriptionStatus.enabled ? 'due to subscription being disabled by admin' : subscriptionStatus.status !== 'active' ? `due to subscription being ${subscriptionStatus.status}` : 'due to expired trial subscription'}.
-                      </p>
-                    )}
-                  </div>
-                </div>
 
-                {featureFlagsLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <svg className="animate-spin h-6 w-6 text-gray-400" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    <span className="ml-2 text-gray-400">Loading feature flags...</span>
-                  </div>
-                ) : featureFlags ? (
-                  <div className="space-y-6">
-                    {/* Master Kill Switch */}
-                    <div className={`p-4 rounded-lg border-2 ${featureFlags.sdkEnabled ? 'bg-green-900/20 border-green-600' : 'bg-red-900/20 border-red-600'}`}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">{featureFlags.sdkEnabled ? '🟢' : '🔴'}</span>
-                          <div>
-                            <p className="text-white font-medium">SDK Enabled (Master Switch)</p>
-                            <p className={`text-sm ${featureFlags.sdkEnabled ? 'text-green-400' : 'text-red-400'}`}>
-                              {featureFlags.sdkEnabled
-                                ? 'SDK is active - all enabled features will work'
-                                : 'SDK is disabled - ALL functionality is turned off'}
-                            </p>
-                          </div>
-                        </div>
-                        <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
-                          <input
-                            type="checkbox"
-                            checked={featureFlags.sdkEnabled}
-                            onChange={(e) => updateFeatureFlag('sdkEnabled', e.target.checked)}
-                            disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
-                            className="sr-only peer"
-                          />
-                          <div className={`w-14 h-7 ${featureFlags.sdkEnabled ? 'bg-green-600' : 'bg-red-600'} peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all`}></div>
-                        </label>
+                  {/* Filters */}
+                  <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+                    <div className="flex flex-wrap items-center gap-4">
+                      {/* Search */}
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={deviceSearch}
+                          onChange={(e) => setDeviceSearch(e.target.value)}
+                          placeholder="Search device code, user..."
+                          className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none w-56"
+                        />
+                        {deviceSearch && (
+                          <button
+                            onClick={() => setDeviceSearch('')}
+                            className="px-2 py-1.5 bg-gray-800 text-gray-400 hover:text-white rounded-lg text-sm border border-gray-700"
+                            title="Clear search"
+                          >
+                            ✕
+                          </button>
+                        )}
                       </div>
-                      {!featureFlags.sdkEnabled && (
-                        <p className="mt-3 text-sm text-red-300 bg-red-900/30 p-2 rounded">
-                          Warning: When SDK is disabled, no data will be collected from mobile apps. API tracing, logging, screen tracking, and all other features will be completely inactive.
-                        </p>
+
+                      {/* Platform Filter */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 text-sm">Platform:</span>
+                        <select
+                          value={devicePlatformFilter}
+                          onChange={(e) => setDevicePlatformFilter(e.target.value)}
+                          className="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none"
+                        >
+                          <option value="">All</option>
+                          <option value="android">Android</option>
+                          <option value="ios">iOS</option>
+                        </select>
+                      </div>
+
+                      {/* Debug Mode Filter */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 text-sm">Debug:</span>
+                        <select
+                          value={deviceDebugModeFilter}
+                          onChange={(e) => setDeviceDebugModeFilter(e.target.value)}
+                          className="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none"
+                        >
+                          <option value="">All</option>
+                          <option value="enabled">Debug Only</option>
+                        </select>
+                      </div>
+
+                      {/* Device Category Filter */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 text-sm">Category:</span>
+                        <select
+                          value={deviceCategoryFilter}
+                          onChange={(e) => setDeviceCategoryFilter(e.target.value)}
+                          className="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none"
+                        >
+                          <option value="">All</option>
+                          <option value="mobile">Mobile</option>
+                          <option value="tablet">Tablet</option>
+                          <option value="desktop">Desktop</option>
+                          <option value="tv">TV</option>
+                        </select>
+                      </div>
+
+                      {/* Device Brand Filter */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 text-sm">Brand:</span>
+                        <input
+                          type="text"
+                          value={deviceBrandFilter}
+                          onChange={(e) => setDeviceBrandFilter(e.target.value)}
+                          placeholder="Filter by brand..."
+                          className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none w-32"
+                        />
+                        {deviceBrandFilter && (
+                          <button
+                            onClick={() => setDeviceBrandFilter('')}
+                            className="px-2 py-1.5 bg-gray-800 text-gray-400 hover:text-white rounded-lg text-sm border border-gray-700"
+                            title="Clear brand filter"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Language Filter */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 text-sm">Language:</span>
+                        <input
+                          type="text"
+                          value={deviceLanguageFilter}
+                          onChange={(e) => setDeviceLanguageFilter(e.target.value)}
+                          placeholder="e.g., en, fr..."
+                          className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none w-24"
+                        />
+                        {deviceLanguageFilter && (
+                          <button
+                            onClick={() => setDeviceLanguageFilter('')}
+                            className="px-2 py-1.5 bg-gray-800 text-gray-400 hover:text-white rounded-lg text-sm border border-gray-700"
+                            title="Clear language filter"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Date Range Filter */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 text-sm">Registered:</span>
+                        <input
+                          type="date"
+                          value={deviceStartDate}
+                          onChange={(e) => setDeviceStartDate(e.target.value)}
+                          className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none"
+                          placeholder="From"
+                        />
+                        <span className="text-gray-400">to</span>
+                        <input
+                          type="date"
+                          value={deviceEndDate}
+                          onChange={(e) => setDeviceEndDate(e.target.value)}
+                          className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none"
+                          placeholder="To"
+                        />
+                        {(deviceStartDate || deviceEndDate) && (
+                          <button
+                            onClick={() => {
+                              setDeviceStartDate('')
+                              setDeviceEndDate('')
+                            }}
+                            className="px-2 py-1.5 bg-gray-800 text-gray-400 hover:text-white rounded-lg text-sm border border-gray-700"
+                            title="Clear date filter"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Loading indicator */}
+                      {devicesLoading && (
+                        <div className="text-gray-500 text-sm flex items-center gap-2">
+                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          Loading...
+                        </div>
                       )}
                     </div>
+                  </div>
 
-                    {/* Core Features */}
-                    <div className={featureFlags.sdkEnabled && (!subscriptionStatus || (subscriptionStatus.enabled && subscriptionStatus.trialActive && subscriptionStatus.status === 'active')) ? '' : 'opacity-50 pointer-events-none'}>
-                      <h4 className="text-gray-400 text-sm font-medium mb-3">
-                        Core Features 
-                        {!featureFlags.sdkEnabled && <span className="text-red-400"> (SDK Disabled)</span>}
-                        {subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') && (
-                          <span className="text-red-400">
-                            {' '}({!subscriptionStatus.enabled ? 'Subscription Disabled' : subscriptionStatus.status !== 'active' ? `Subscription ${subscriptionStatus.status}` : 'Trial Expired'})
-                          </span>
-                        )}
-                      </h4>
-                      <div className={`space-y-3 ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'pointer-events-none opacity-50' : ''}`}>
-                        <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">📡</span>
-                            <div>
-                              <p className="text-white text-sm font-medium">API Tracking</p>
-                              <p className="text-gray-500 text-xs">Track HTTP requests and responses</p>
-                            </div>
-                          </div>
-                          <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
-                            <input
-                              type="checkbox"
-                              checked={featureFlags.apiTracking}
-                              onChange={(e) => updateFeatureFlag('apiTracking', e.target.checked)}
-                              disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                          </label>
-                        </div>
-
-                        <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">📱</span>
-                            <div>
-                              <p className="text-white text-sm font-medium">Screen Tracking</p>
-                              <p className="text-gray-500 text-xs">Track screen views and navigation flow</p>
-                            </div>
-                          </div>
-                          <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
-                            <input
-                              type="checkbox"
-                              checked={featureFlags.screenTracking}
-                              onChange={(e) => updateFeatureFlag('screenTracking', e.target.checked)}
-                              disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                          </label>
-                        </div>
-
-                        <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">💥</span>
-                            <div>
-                              <p className="text-white text-sm font-medium">Crash Reporting</p>
-                              <p className="text-gray-500 text-xs">Capture and report app crashes</p>
-                            </div>
-                          </div>
-                          <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
-                            <input
-                              type="checkbox"
-                              checked={featureFlags.crashReporting}
-                              onChange={(e) => updateFeatureFlag('crashReporting', e.target.checked)}
-                              disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                          </label>
-                        </div>
-
-                        <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">📝</span>
-                            <div>
-                              <p className="text-white text-sm font-medium">Logging</p>
-                              <p className="text-gray-500 text-xs">Send app logs to dashboard</p>
-                            </div>
-                          </div>
-                          <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
-                            <input
-                              type="checkbox"
-                              checked={featureFlags.logging}
-                              onChange={(e) => updateFeatureFlag('logging', e.target.checked)}
-                              disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                          </label>
-                        </div>
-                      </div>
+                  {/* Device List */}
+                  {devicesLoading && devices.length === 0 ? (
+                    <SkeletonDeviceList count={6} />
+                  ) : devices.length === 0 ? (
+                    <p className="text-gray-400 text-center py-8">
+                      {devicePlatformFilter || deviceStartDate || deviceEndDate || debouncedDeviceSearch
+                        ? 'No devices match the current filters'
+                        : 'No devices registered yet'}
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {/* Pagination at top */}
+                      {devicesPagination.totalPages > 1 && (
+                        <Pagination
+                          pagination={devicesPagination}
+                          onPageChange={handleDevicePageChange}
+                          onLimitChange={handleDeviceLimitChange}
+                          className="bg-gray-900 rounded-lg p-4"
+                        />
+                      )}
+                      {devices.map((device) => (
+                        <DeviceCard
+                          key={device.id}
+                          device={device}
+                          togglingDebugMode={togglingDebugMode}
+                          onToggleDebugMode={toggleDeviceDebugMode}
+                          deletingDevice={deletingDevice}
+                          onDeleteDevice={deleteDevice}
+                          trackingMode={sdkSettings?.trackingMode || 'all'}
+                          selected={selectedDevices.has(device.id)}
+                          onSelect={(selected) => {
+                            const newSet = new Set(selectedDevices)
+                            if (selected) {
+                              newSet.add(device.id)
+                            } else {
+                              newSet.delete(device.id)
+                            }
+                            setSelectedDevices(newSet)
+                          }}
+                          onViewDetails={() => setSelectedDeviceForDetails(device.id)}
+                        />
+                      ))}
+                      {/* Pagination at bottom */}
+                      {devicesPagination.totalPages > 1 && (
+                        <Pagination
+                          pagination={devicesPagination}
+                          onPageChange={handleDevicePageChange}
+                          onLimitChange={handleDeviceLimitChange}
+                          showLimitSelector={false}
+                          className="bg-gray-900 rounded-lg p-4"
+                        />
+                      )}
                     </div>
+                  )}
+                </>
+              )}
 
-                    {/* Additional Features */}
-                    <div className={featureFlags.sdkEnabled && (!subscriptionStatus || (subscriptionStatus.enabled && subscriptionStatus.trialActive && subscriptionStatus.status === 'active')) ? '' : 'opacity-50 pointer-events-none'}>
-                      <h4 className="text-gray-400 text-sm font-medium mb-3">
-                        Additional Features 
-                        {!featureFlags.sdkEnabled && <span className="text-red-400">(SDK Disabled)</span>}
-                        {subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') && (
-                          <span className="text-red-400">
-                            {' '}({!subscriptionStatus.enabled ? 'Subscription Disabled' : subscriptionStatus.status !== 'active' ? `Subscription ${subscriptionStatus.status}` : 'Trial Expired'})
-                          </span>
-                        )}
-                      </h4>
-                      <div className={`space-y-3 ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'pointer-events-none opacity-50' : ''}`}>
-                        <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">📲</span>
-                            <div>
-                              <p className="text-white text-sm font-medium">Device Tracking</p>
-                              <p className="text-gray-500 text-xs">Register and track devices</p>
-                            </div>
-                          </div>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={featureFlags.deviceTracking}
-                              onChange={(e) => updateFeatureFlag('deviceTracking', e.target.checked)}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                          </label>
-                        </div>
+              {/* Device Comparison Modal */}
+              {showComparison && token && selectedDevices.size >= 2 && (
+                <DeviceComparison
+                  deviceIds={Array.from(selectedDevices)}
+                  token={token}
+                  onClose={() => {
+                    setShowComparison(false)
+                    setSelectedDevices(new Set())
+                  }}
+                />
+              )}
 
-                        <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">🔗</span>
-                            <div>
-                              <p className="text-white text-sm font-medium">Session Tracking</p>
-                              <p className="text-gray-500 text-xs">Track user sessions</p>
-                            </div>
-                          </div>
-                          <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
-                            <input
-                              type="checkbox"
-                              checked={featureFlags.sessionTracking}
-                              onChange={(e) => updateFeatureFlag('sessionTracking', e.target.checked)}
-                              disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                          </label>
-                        </div>
-
-                        <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">⚡</span>
-                            <div>
-                              <p className="text-white text-sm font-medium">Business Config</p>
-                              <p className="text-gray-500 text-xs">Enable remote business configuration</p>
-                            </div>
-                          </div>
-                          <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
-                            <input
-                              type="checkbox"
-                              checked={featureFlags.businessConfig}
-                              onChange={(e) => updateFeatureFlag('businessConfig', e.target.checked)}
-                              disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                          </label>
-                        </div>
-
-                        <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">🌍</span>
-                            <div>
-                              <p className="text-white text-sm font-medium">Localization</p>
-                              <p className="text-gray-500 text-xs">Enable remote localization strings</p>
-                            </div>
-                          </div>
-                          <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
-                            <input
-                              type="checkbox"
-                              checked={featureFlags.localization}
-                              onChange={(e) => updateFeatureFlag('localization', e.target.checked)}
-                              disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                          </label>
-                        </div>
-                      </div>
+              {/* Device Details Modal */}
+              {selectedDeviceForDetails && token && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                  <div className="bg-gray-900 rounded-lg border border-gray-800 max-w-4xl w-full max-h-[90vh] overflow-auto">
+                    <div className="sticky top-0 bg-gray-900 border-b border-gray-800 p-6 flex items-center justify-between">
+                      <h2 className="text-xl font-bold text-white">Device Details</h2>
+                      <button
+                        onClick={() => setSelectedDeviceForDetails(null)}
+                        className="px-4 py-2 bg-gray-800 hover:bg-gray-750 text-white rounded-lg text-sm font-medium transition-colors border border-gray-700"
+                      >
+                        Close
+                      </button>
                     </div>
-
-                    {/* Performance Options */}
-                    <div className={featureFlags.sdkEnabled && (!subscriptionStatus || (subscriptionStatus.enabled && subscriptionStatus.trialActive && subscriptionStatus.status === 'active')) ? '' : 'opacity-50 pointer-events-none'}>
-                      <h4 className="text-gray-400 text-sm font-medium mb-3">
-                        Performance Options 
-                        {!featureFlags.sdkEnabled && <span className="text-red-400">(SDK Disabled)</span>}
-                        {subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') && (
-                          <span className="text-red-400">
-                            {' '}({!subscriptionStatus.enabled ? 'Subscription Disabled' : subscriptionStatus.status !== 'active' ? `Subscription ${subscriptionStatus.status}` : 'Trial Expired'})
-                          </span>
-                        )}
-                      </h4>
-                      <div className={`space-y-3 ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'pointer-events-none opacity-50' : ''}`}>
-                        <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">📴</span>
-                            <div>
-                              <p className="text-white text-sm font-medium">Offline Support</p>
-                              <p className="text-gray-500 text-xs">Queue events when offline and sync later</p>
-                            </div>
-                          </div>
-                          <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
-                            <input
-                              type="checkbox"
-                              checked={featureFlags.offlineSupport}
-                              onChange={(e) => updateFeatureFlag('offlineSupport', e.target.checked)}
-                              disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                          </label>
-                        </div>
-
-                        <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">📦</span>
-                            <div>
-                              <p className="text-white text-sm font-medium">Batch Events</p>
-                              <p className="text-gray-500 text-xs">Batch events before sending to reduce network calls</p>
-                            </div>
-                          </div>
-                          <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
-                            <input
-                              type="checkbox"
-                              checked={featureFlags.batchEvents}
-                              onChange={(e) => updateFeatureFlag('batchEvents', e.target.checked)}
-                              disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                          </label>
-                        </div>
-                      </div>
+                    <div className="p-6">
+                      <DeviceNotes deviceId={selectedDeviceForDetails} token={token} />
                     </div>
                   </div>
-                ) : (
-                  <p className="text-gray-400 text-center py-8">Failed to load feature flags</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* SDK Settings */}
-          {settingsTab === 'sdk' && (
-            <div className="space-y-6">
-              {sdkSettingsLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <svg className="animate-spin h-6 w-6 text-gray-400" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  <span className="ml-2 text-gray-400">Loading SDK settings...</span>
                 </div>
-              ) : sdkSettings ? (
+              )}
+
+              {deviceSubTab === 'settings' && token && sdkSettings && (
                 <div className="space-y-6">
-                  {/* Tracking Mode - Controls which devices send data */}
+                  {/* Tracking Mode */}
                   <div className="bg-gray-900 rounded-lg p-4">
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-2xl">📡</span>
@@ -6668,11 +2299,10 @@ export default function ProjectDetailPage() {
                     </div>
                     <div className="space-y-3">
                       <div
-                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                          sdkSettings.trackingMode === 'all'
+                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${sdkSettings.trackingMode === 'all'
                             ? 'bg-blue-600/20 border-2 border-blue-500'
                             : 'bg-gray-800 hover:bg-gray-750 border-2 border-transparent'
-                        }`}
+                          }`}
                         onClick={() => updateSdkSetting({ trackingMode: 'all' })}
                       >
                         <div className="flex items-center gap-3">
@@ -6688,11 +2318,10 @@ export default function ProjectDetailPage() {
                       </div>
 
                       <div
-                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                          sdkSettings.trackingMode === 'debug_only'
+                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${sdkSettings.trackingMode === 'debug_only'
                             ? 'bg-orange-600/20 border-2 border-orange-500'
                             : 'bg-gray-800 hover:bg-gray-750 border-2 border-transparent'
-                        }`}
+                          }`}
                         onClick={() => updateSdkSetting({ trackingMode: 'debug_only' })}
                       >
                         <div className="flex items-center gap-3">
@@ -6708,11 +2337,10 @@ export default function ProjectDetailPage() {
                       </div>
 
                       <div
-                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                          sdkSettings.trackingMode === 'none'
+                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${sdkSettings.trackingMode === 'none'
                             ? 'bg-red-600/20 border-2 border-red-500'
                             : 'bg-gray-800 hover:bg-gray-750 border-2 border-transparent'
-                        }`}
+                          }`}
                         onClick={() => updateSdkSetting({ trackingMode: 'none' })}
                       >
                         <div className="flex items-center gap-3">
@@ -6730,12 +2358,1017 @@ export default function ProjectDetailPage() {
                     {sdkSettings.trackingMode === 'debug_only' && (
                       <div className="mt-4 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg">
                         <p className="text-orange-400 text-sm">
-                          💡 <strong>Tip:</strong> Enable debug mode on specific devices from the Devices tab to start tracking them.
+                          💡 <strong>Tip:</strong> Enable debug mode on specific devices from the Device List tab to start tracking them.
                         </p>
                       </div>
                     )}
                   </div>
+                </div>
+              )}
+            </div>
+          )}
 
+          {activeTab === 'logs' && (
+            <div className="space-y-4">
+              {/* Sub-tabs */}
+              <div className="border-b border-gray-800">
+                <nav className="flex space-x-8">
+                  <button
+                    onClick={() => setLogsSubTab('list')}
+                    className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${logsSubTab === 'list'
+                        ? 'border-blue-500 text-blue-400'
+                        : 'border-transparent text-gray-400 hover:text-white'
+                      }`}
+                  >
+                    Logs
+                  </button>
+                  <button
+                    onClick={() => setLogsSubTab('settings')}
+                    className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${logsSubTab === 'settings'
+                        ? 'border-blue-500 text-blue-400'
+                        : 'border-transparent text-gray-400 hover:text-white'
+                      }`}
+                  >
+                    Settings
+                  </button>
+                </nav>
+              </div>
+
+              {logsSubTab === 'list' && (
+                <>
+                  {/* Enforcement Banner for Logs */}
+                  {(() => {
+                    // Use logsUsage if available, otherwise fallback to sharedUsage.logs
+                    const usage = logsUsage || sharedUsage?.logs
+                    if (!usage || usage.limit === null || usage.limit === undefined || usage.limit <= 0) {
+                      return null
+                    }
+
+                    const percentage = usage.percentage !== undefined
+                      ? usage.percentage
+                      : usage.limit > 0
+                        ? (usage.used / usage.limit) * 100
+                        : 0
+                    const warnThreshold = 80
+                    const hardThreshold = 100
+
+                    // Show banner if quota exceeded (used >= limit) or percentage >= 100
+                    const isExceeded = usage.used >= usage.limit || percentage >= hardThreshold
+                    const isApproaching = !isExceeded && percentage >= warnThreshold
+
+                    if (isExceeded) {
+                      return (
+                        <div className="bg-red-900/20 border-l-4 border-red-600 p-4 rounded mb-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="text-red-400 font-semibold mb-2 flex items-center gap-2">
+                                <span>🚫</span>
+                                <span>Logs Quota Exceeded</span>
+                              </h3>
+                              <p className="text-gray-300 text-sm mb-2">
+                                You have reached your logs limit: <strong>{usage.used}/{usage.limit} logs</strong> ({percentage.toFixed(1)}%).
+                              </p>
+                              <p className="text-gray-300 text-sm">
+                                New logs will be blocked. Please upgrade your plan to continue logging.
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => router.push('/subscription')}
+                              className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
+                            >
+                              Upgrade Plan
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    } else if (isApproaching) {
+                      return (
+                        <div className="bg-yellow-900/20 border-l-4 border-yellow-600 p-4 rounded mb-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="text-yellow-400 font-semibold mb-2 flex items-center gap-2">
+                                <span>⚠️</span>
+                                <span>Approaching Logs Limit</span>
+                              </h3>
+                              <p className="text-gray-300 text-sm mb-2">
+                                You are approaching your logs limit: <strong>{usage.used}/{usage.limit} logs</strong> ({percentage.toFixed(1)}%).
+                              </p>
+                              <p className="text-gray-300 text-sm">
+                                You can log {Math.max(0, usage.limit - usage.used)} more log{usage.limit - usage.used !== 1 ? 's' : ''} before reaching your limit.
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => router.push('/subscription')}
+                              className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
+                            >
+                              Upgrade Plan
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    }
+                    return null
+                  })()}
+                  {/* Log Level Summary */}
+                  <div className="flex flex-wrap gap-2 p-4 bg-gray-900 rounded-lg">
+                    <button
+                      onClick={() => setLogLevelFilter('')}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === '' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                        }`}
+                    >
+                      All ({logsTotal})
+                    </button>
+                    {logLevels.verbose > 0 && (
+                      <button
+                        onClick={() => setLogLevelFilter('verbose')}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === 'verbose' ? 'bg-gray-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                          }`}
+                      >
+                        Verbose ({logLevels.verbose})
+                      </button>
+                    )}
+                    {logLevels.debug > 0 && (
+                      <button
+                        onClick={() => setLogLevelFilter('debug')}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === 'debug' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-purple-400 hover:bg-gray-700'
+                          }`}
+                      >
+                        Debug ({logLevels.debug})
+                      </button>
+                    )}
+                    {logLevels.info > 0 && (
+                      <button
+                        onClick={() => setLogLevelFilter('info')}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === 'info' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-blue-400 hover:bg-gray-700'
+                          }`}
+                      >
+                        Info ({logLevels.info})
+                      </button>
+                    )}
+                    {logLevels.warn > 0 && (
+                      <button
+                        onClick={() => setLogLevelFilter('warn')}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === 'warn' ? 'bg-yellow-600 text-white' : 'bg-gray-800 text-yellow-400 hover:bg-gray-700'
+                          }`}
+                      >
+                        Warn ({logLevels.warn})
+                      </button>
+                    )}
+                    {logLevels.error > 0 && (
+                      <button
+                        onClick={() => setLogLevelFilter('error')}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === 'error' ? 'bg-red-600 text-white' : 'bg-gray-800 text-red-400 hover:bg-gray-700'
+                          }`}
+                      >
+                        Error ({logLevels.error})
+                      </button>
+                    )}
+                    {logLevels.assert > 0 && (
+                      <button
+                        onClick={() => setLogLevelFilter('assert')}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === 'assert' ? 'bg-red-800 text-white' : 'bg-gray-800 text-red-500 hover:bg-gray-700'
+                          }`}
+                      >
+                        Assert ({logLevels.assert})
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Search and Filters */}
+                  <div className="flex flex-wrap items-center gap-3 p-4 bg-gray-900 rounded-lg">
+                    {/* Search Input */}
+                    <div className="flex-1 min-w-[200px]">
+                      <input
+                        type="text"
+                        placeholder="Search logs (message, tag, class, function)..."
+                        value={logSearch}
+                        onChange={(e) => setLogSearch(e.target.value)}
+                        className="w-full bg-gray-800 text-gray-300 text-sm rounded-lg px-4 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Tag Filter */}
+                    {logTags.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <label className="text-gray-400 text-sm">Tag:</label>
+                        <select
+                          value={logTagFilter}
+                          onChange={(e) => setLogTagFilter(e.target.value)}
+                          className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                        >
+                          <option value="">All Tags</option>
+                          {logTags.map((tag) => (
+                            <option key={tag} value={tag}>{tag}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Screen Filter */}
+                    {logScreenNames.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <label className="text-gray-400 text-sm">Screen:</label>
+                        <select
+                          value={logScreenFilter}
+                          onChange={(e) => setLogScreenFilter(e.target.value)}
+                          className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                        >
+                          <option value="">All Screens</option>
+                          {logScreenNames.map((screen) => (
+                            <option key={screen} value={screen}>{screen}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Spacer */}
+                    <div className="flex-1" />
+
+                    {/* Clear Logs Button */}
+                    <button
+                      onClick={() => clearLogs(logLevelFilter || undefined)}
+                      disabled={clearingLogs || logs.length === 0}
+                      className="px-4 py-1.5 bg-red-900/50 hover:bg-red-800/50 text-red-400 text-sm rounded border border-red-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {clearingLogs ? 'Clearing...' : logLevelFilter ? `Clear ${logLevelFilter} logs` : 'Clear All Logs'}
+                    </button>
+                  </div>
+
+                  {/* Logs List */}
+                  {logsLoading && logs.length === 0 ? (
+                    <SkeletonLogList count={10} />
+                  ) : logs.length === 0 ? (
+                    <p className="text-gray-400 text-center py-8">
+                      {debouncedLogSearch || logLevelFilter || logTagFilter || logScreenFilter
+                        ? 'No logs match your filters'
+                        : 'No logs yet. Integrate the SDK to start capturing console logs.'}
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {/* Pagination at top */}
+                      {logsPagination.totalPages > 1 && (
+                        <Pagination
+                          pagination={logsPagination}
+                          onPageChange={handleLogsPageChange}
+                          onLimitChange={handleLogsLimitChange}
+                          className="bg-gray-900 rounded-lg p-4"
+                        />
+                      )}
+                      {logs.map((log) => (
+                        <LogItem
+                          key={log.id}
+                          log={log}
+                          isExpanded={expandedLog === log.id}
+                          onToggleExpand={() => setExpandedLog(expandedLog === log.id ? null : log.id)}
+                        />
+                      ))}
+                      {/* Pagination at bottom */}
+                      {logsPagination.totalPages > 1 && (
+                        <Pagination
+                          pagination={logsPagination}
+                          onPageChange={handleLogsPageChange}
+                          onLimitChange={handleLogsLimitChange}
+                          showLimitSelector={false}
+                          className="bg-gray-900 rounded-lg p-4"
+                        />
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {logsSubTab === 'settings' && token && sdkSettings && (
+                <div className="space-y-6">
+                  {/* Capture Print Statements */}
+                  <div className="bg-gray-900 rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="text-2xl">🖨️</span>
+                      <div>
+                        <h3 className="text-white font-medium">Capture Print Statements</h3>
+                        <p className="text-gray-400 text-sm">Auto-capture print() statements as logs</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">📝</span>
+                        <div>
+                          <p className="text-white text-sm font-medium">Enable Print Statement Capture</p>
+                          <p className="text-gray-500 text-xs">Automatically capture print() statements and send them as log entries</p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={sdkSettings.capturePrintStatements}
+                          onChange={(e) => updateSdkSetting({ capturePrintStatements: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Log Control */}
+                  <div className="bg-gray-900 rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="text-2xl">🎛️</span>
+                      <div>
+                        <h3 className="text-white font-medium">Log Control</h3>
+                        <p className="text-gray-400 text-sm">Control log levels and filtering</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="p-3 bg-gray-800 rounded-lg">
+                        <p className="text-white text-sm font-medium mb-2">Minimum Log Level</p>
+                        <p className="text-gray-500 text-xs mb-3">Only logs at or above this level will be captured</p>
+                        <div className="flex gap-2">
+                          {['verbose', 'debug', 'info', 'warn', 'error'].map((level) => (
+                            <button
+                              key={level}
+                              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${sdkSettings.minLogLevel === level
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                }`}
+                              onClick={() => updateSdkSetting({ minLogLevel: level })}
+                            >
+                              {level.charAt(0).toUpperCase() + level.slice(1)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">📊</span>
+                          <div>
+                            <p className="text-white text-sm font-medium">Enable Log Sampling</p>
+                            <p className="text-gray-500 text-xs">Sample logs to reduce volume (e.g., capture 1 in 10 logs)</p>
+                          </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={sdkSettings.logSamplingEnabled || false}
+                            onChange={(e) => updateSdkSetting({ logSamplingEnabled: e.target.checked })}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                      </div>
+                      {sdkSettings.logSamplingEnabled && (
+                        <div className="p-3 bg-gray-800 rounded-lg">
+                          <label className="text-white text-sm font-medium mb-2 block">Sampling Rate</label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="100"
+                            value={sdkSettings.logSamplingRate || 10}
+                            onChange={(e) => updateSdkSetting({ logSamplingRate: parseInt(e.target.value) || 10 })}
+                            className="w-full px-3 py-1.5 bg-gray-700 text-gray-300 rounded text-sm border border-gray-600 focus:border-blue-500 focus:outline-none"
+                            placeholder="10"
+                          />
+                          <p className="text-gray-500 text-xs mt-1">Capture 1 in {sdkSettings.logSamplingRate || 10} logs</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'crashes' && (
+            <div className="space-y-4">
+              {/* Enforcement Banner for Crashes */}
+              {(() => {
+                // Use crashesUsage if available, otherwise fallback to sharedUsage.crashes
+                const usage = crashesUsage || sharedUsage?.crashes
+                if (!usage || usage.limit === null || usage.limit === undefined || usage.limit <= 0) {
+                  return null
+                }
+
+                const percentage = usage.percentage !== undefined
+                  ? usage.percentage
+                  : usage.limit > 0
+                    ? (usage.used / usage.limit) * 100
+                    : 0
+                const warnThreshold = 80
+                const hardThreshold = 100
+
+                // Show banner if quota exceeded (used >= limit) or percentage >= 100
+                const isExceeded = usage.used >= usage.limit || percentage >= hardThreshold
+                const isApproaching = !isExceeded && percentage >= warnThreshold
+
+                if (isExceeded) {
+                  return (
+                    <div className="bg-red-900/20 border-l-4 border-red-600 p-4 rounded mb-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-red-400 font-semibold mb-2 flex items-center gap-2">
+                            <span>🚫</span>
+                            <span>Crashes Quota Exceeded</span>
+                          </h3>
+                          <p className="text-gray-300 text-sm mb-2">
+                            You have reached your crashes limit: <strong>{usage.used}/{usage.limit} crashes</strong> ({percentage.toFixed(1)}%).
+                          </p>
+                          <p className="text-gray-300 text-sm">
+                            New crash reports will be blocked. Please upgrade your plan to continue crash reporting.
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => router.push('/subscription')}
+                          className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
+                        >
+                          Upgrade Plan
+                        </button>
+                      </div>
+                    </div>
+                  )
+                } else if (isApproaching) {
+                  return (
+                    <div className="bg-yellow-900/20 border-l-4 border-yellow-600 p-4 rounded mb-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-yellow-400 font-semibold mb-2 flex items-center gap-2">
+                            <span>⚠️</span>
+                            <span>Approaching Crashes Limit</span>
+                          </h3>
+                          <p className="text-gray-300 text-sm mb-2">
+                            You are approaching your crashes limit: <strong>{usage.used}/{usage.limit} crashes</strong> ({percentage.toFixed(1)}%).
+                          </p>
+                          <p className="text-gray-300 text-sm">
+                            You can report {Math.max(0, usage.limit - usage.used)} more crash{usage.limit - usage.used !== 1 ? 'es' : ''} before reaching your limit.
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => router.push('/subscription')}
+                          className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
+                        >
+                          Upgrade Plan
+                        </button>
+                      </div>
+                    </div>
+                  )
+                }
+                return null
+              })()}
+              {/* Filters and Search Bar */}
+              <div className="flex flex-wrap items-center gap-3 p-4 bg-gray-900 rounded-lg">
+                {/* Search */}
+                <div className="flex-1 min-w-[200px]">
+                  <input
+                    type="text"
+                    value={crashSearch}
+                    onChange={(e) => setCrashSearch(e.target.value)}
+                    placeholder="Search crashes by message or stack trace..."
+                    className="w-full px-3 py-1.5 bg-gray-800 text-gray-300 rounded text-sm border border-gray-700 focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                {/* Platform Filter */}
+                <div className="flex items-center gap-2">
+                  <label className="text-gray-400 text-sm">Platform:</label>
+                  <select
+                    value={crashPlatformFilter}
+                    onChange={(e) => setCrashPlatformFilter(e.target.value)}
+                    className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value="">All Platforms</option>
+                    {crashPlatforms.map((platform) => (
+                      <option key={platform} value={platform}>{platform}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Device Filter */}
+                <div className="flex items-center gap-2">
+                  <label className="text-gray-400 text-sm">Device:</label>
+                  <select
+                    value={crashDeviceFilter}
+                    onChange={(e) => setCrashDeviceFilter(e.target.value)}
+                    className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none min-w-[200px]"
+                  >
+                    <option value="">All Devices</option>
+                    {crashDevices.map((device) => (
+                      <option key={device.id} value={device.deviceId}>
+                        {device.deviceId} ({device.platform} {device.model ? `- ${device.model}` : ''})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Date Range */}
+                <div className="flex items-center gap-2">
+                  <label className="text-gray-400 text-sm">From:</label>
+                  <input
+                    type="date"
+                    value={crashStartDate}
+                    onChange={(e) => setCrashStartDate(e.target.value)}
+                    className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-gray-400 text-sm">To:</label>
+                  <input
+                    type="date"
+                    value={crashEndDate}
+                    onChange={(e) => setCrashEndDate(e.target.value)}
+                    className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                {/* Clear Filters */}
+                {(crashPlatformFilter || crashDeviceFilter || crashStartDate || crashEndDate || crashSearch) && (
+                  <button
+                    onClick={() => {
+                      setCrashPlatformFilter('')
+                      setCrashDeviceFilter('')
+                      setCrashStartDate('')
+                      setCrashEndDate('')
+                      setCrashSearch('')
+                    }}
+                    className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded text-sm transition-colors"
+                  >
+                    Clear Filters
+                  </button>
+                )}
+              </div>
+
+              {/* Crashes List */}
+              {crashesLoading ? (
+                <SkeletonCrashList />
+              ) : crashes.length === 0 ? (
+                <p className="text-gray-400 text-center py-8">No crashes found</p>
+              ) : (
+                <>
+                  <div className="space-y-3">
+                    {crashes.map((crash) => (
+                      <div key={crash.id} className="p-4 bg-gray-900 rounded-lg border border-red-900/50 hover:border-red-800/70 transition-colors">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <span className="text-red-400 font-medium">{crash.message}</span>
+                            {crash.device && (
+                              <div className="text-gray-500 text-sm mt-1">
+                                <span className="inline-block px-2 py-0.5 bg-gray-800 rounded text-xs mr-2">
+                                  {crash.device.platform}
+                                </span>
+                                {crash.device.model || crash.device.deviceId}
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-gray-500 text-sm whitespace-nowrap ml-4">{formatTime(crash.timestamp)}</span>
+                        </div>
+                        {crash.stackTrace && (
+                          <div className="mt-3">
+                            <button
+                              onClick={() => setExpandedCrash(expandedCrash === crash.id ? null : crash.id)}
+                              className="text-blue-400 hover:text-blue-300 text-sm mb-2"
+                            >
+                              {expandedCrash === crash.id ? '▼ Hide' : '▶ Show'} Stack Trace
+                            </button>
+                            {expandedCrash === crash.id && (
+                              <pre className="mt-2 p-3 bg-gray-950 rounded text-sm text-gray-300 overflow-x-auto max-h-96">
+                                {crash.stackTrace}
+                              </pre>
+                            )}
+                          </div>
+                        )}
+                        {crash.metadata && Object.keys(crash.metadata).length > 0 && (
+                          <div className="mt-3">
+                            <button
+                              onClick={() => setExpandedCrash(expandedCrash === crash.id ? null : crash.id)}
+                              className="text-blue-400 hover:text-blue-300 text-sm mb-2"
+                            >
+                              {expandedCrash === crash.id ? '▼ Hide' : '▶ Show'} Metadata
+                            </button>
+                            {expandedCrash === crash.id && (
+                              <pre className="mt-2 p-3 bg-gray-950 rounded text-sm text-gray-300 overflow-x-auto">
+                                {JSON.stringify(crash.metadata, null, 2)}
+                              </pre>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {crashesPagination.totalPages > 1 && (
+                    <div className="flex items-center justify-between pt-4">
+                      <div className="text-gray-400 text-sm">
+                        Showing {((crashesPagination.page - 1) * crashesPagination.limit) + 1} to {Math.min(crashesPagination.page * crashesPagination.limit, crashesPagination.total)} of {crashesPagination.total} crashes
+                      </div>
+                      <Pagination
+                        pagination={crashesPagination}
+                        onPageChange={handleCrashesPageChange}
+                        onLimitChange={handleCrashesLimitChange}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'traces' && (
+            <div className="space-y-4">
+              {/* Sub-tabs */}
+              <div className="border-b border-gray-800">
+                <nav className="flex space-x-8">
+                  <button
+                    onClick={() => setTracesSubTab('list')}
+                    className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${tracesSubTab === 'list'
+                        ? 'border-blue-500 text-blue-400'
+                        : 'border-transparent text-gray-400 hover:text-white'
+                      }`}
+                  >
+                    API Traces
+                  </button>
+                  <button
+                    onClick={() => setTracesSubTab('security')}
+                    className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${tracesSubTab === 'security'
+                        ? 'border-blue-500 text-blue-400'
+                        : 'border-transparent text-gray-400 hover:text-white'
+                      }`}
+                  >
+                    Security Settings
+                  </button>
+                </nav>
+              </div>
+
+              {tracesSubTab === 'list' && (
+                <>
+                  {/* Enforcement Banner for API Traces */}
+                  {(() => {
+                    // Use apiTracesUsage if available, otherwise fallback to sharedUsage
+                    const tracesUsage = apiTracesUsage || (sharedUsage?.apiRequests && sharedUsage?.apiEndpoints ? {
+                      apiRequests: sharedUsage.apiRequests,
+                      apiEndpoints: sharedUsage.apiEndpoints
+                    } : null)
+
+                    if (!tracesUsage || (tracesUsage.apiRequests.limit === null && tracesUsage.apiEndpoints.limit === null)) {
+                      return null
+                    }
+
+                    const apiRequestsUsage = tracesUsage.apiRequests
+                    const apiEndpointsUsage = tracesUsage.apiEndpoints
+                    const requestsPercentage = apiRequestsUsage.percentage !== undefined
+                      ? apiRequestsUsage.percentage
+                      : apiRequestsUsage.limit && apiRequestsUsage.limit > 0
+                        ? (apiRequestsUsage.used / apiRequestsUsage.limit) * 100
+                        : 0
+                    const endpointsPercentage = apiEndpointsUsage.percentage !== undefined
+                      ? apiEndpointsUsage.percentage
+                      : apiEndpointsUsage.limit && apiEndpointsUsage.limit > 0
+                        ? (apiEndpointsUsage.used / apiEndpointsUsage.limit) * 100
+                        : 0
+                    const warnThreshold = 80
+                    const hardThreshold = 100
+
+                    // Check if either meter is at hard threshold
+                    const requestsExceeded = apiRequestsUsage.limit !== null && (apiRequestsUsage.used >= apiRequestsUsage.limit || requestsPercentage >= hardThreshold)
+                    const endpointsExceeded = apiEndpointsUsage.limit !== null && (apiEndpointsUsage.used >= apiEndpointsUsage.limit || endpointsPercentage >= hardThreshold)
+
+                    if (requestsExceeded || endpointsExceeded) {
+                      const exceededMeter = requestsExceeded ? 'API Requests' : 'API Endpoints'
+                      const exceededUsage = requestsExceeded ? apiRequestsUsage : apiEndpointsUsage
+                      return (
+                        <div className="bg-red-900/20 border-l-4 border-red-600 p-4 rounded mb-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="text-red-400 font-semibold mb-2 flex items-center gap-2">
+                                <span>🚫</span>
+                                <span>API Traces Quota Exceeded</span>
+                              </h3>
+                              <p className="text-gray-300 text-sm mb-2">
+                                You have reached your {exceededMeter.toLowerCase()} limit: <strong>{exceededUsage.used}/{exceededUsage.limit}</strong> ({exceededUsage.percentage.toFixed(1)}%).
+                              </p>
+                              <p className="text-gray-300 text-sm">
+                                New API traces will be blocked. Please upgrade your plan to continue tracking API requests.
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => router.push('/subscription')}
+                              className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
+                            >
+                              Upgrade Plan
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    // Check if either meter is at warn threshold (but not exceeded)
+                    const requestsApproaching = apiRequestsUsage.limit !== null && !requestsExceeded && requestsPercentage >= warnThreshold
+                    const endpointsApproaching = apiEndpointsUsage.limit !== null && !endpointsExceeded && endpointsPercentage >= warnThreshold
+
+                    if (requestsApproaching || endpointsApproaching) {
+                      const warningMeter = requestsApproaching ? 'API Requests' : 'API Endpoints'
+                      const warningUsage = requestsApproaching ? apiRequestsUsage : apiEndpointsUsage
+                      return (
+                        <div className="bg-yellow-900/20 border-l-4 border-yellow-600 p-4 rounded mb-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="text-yellow-400 font-semibold mb-2 flex items-center gap-2">
+                                <span>⚠️</span>
+                                <span>Approaching API Traces Limit</span>
+                              </h3>
+                              <p className="text-gray-300 text-sm mb-2">
+                                You are approaching your {warningMeter.toLowerCase()} limit: <strong>{warningUsage.used}/{warningUsage.limit}</strong> ({warningUsage.limit ? ((warningUsage.used / warningUsage.limit) * 100).toFixed(1) : '0'}%).
+                              </p>
+                              <p className="text-gray-300 text-sm">
+                                You can track {Math.max(0, (warningUsage.limit || 0) - warningUsage.used)} more {warningMeter.toLowerCase()} before reaching your limit.
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => router.push('/subscription')}
+                              className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
+                            >
+                              Upgrade Plan
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    return null
+                  })()}
+                  {/* Filters and Actions Bar */}
+                  <div className="flex flex-wrap items-center gap-3 p-4 bg-gray-900 rounded-lg">
+                    {/* Screen Name Filter */}
+                    <div className="flex items-center gap-2">
+                      <label className="text-gray-400 text-sm">Screen:</label>
+                      <select
+                        value={selectedScreen}
+                        onChange={(e) => setSelectedScreen(e.target.value)}
+                        className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                      >
+                        <option value="">All Screens</option>
+                        {screenNames.map((name) => (
+                          <option key={name} value={name}>{name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Device Filter */}
+                    <div className="flex items-center gap-2">
+                      <label className="text-gray-400 text-sm">Device:</label>
+                      <select
+                        value={selectedDevice}
+                        onChange={(e) => setSelectedDevice(e.target.value)}
+                        className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                      >
+                        <option value="">All Devices</option>
+                        {traceDevices.map((device) => (
+                          <option key={device.id} value={device.id}>
+                            {device.model || device.deviceId.slice(0, 8)} ({device.platform})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Group By Dropdown */}
+                    <div className="flex items-center gap-2">
+                      <label className="text-gray-400 text-sm">Group by:</label>
+                      <select
+                        value={groupBy}
+                        onChange={(e) => setGroupBy(e.target.value as 'none' | 'device' | 'screen' | 'endpoint')}
+                        className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                      >
+                        <option value="none">None</option>
+                        <option value="screen">Screen Name</option>
+                        <option value="endpoint">API Endpoint</option>
+                        <option value="device">Device</option>
+                      </select>
+                    </div>
+
+                    {/* Spacer */}
+                    <div className="flex-1" />
+
+                    {/* Loading indicator */}
+                    {tracesLoading && (
+                      <div className="text-gray-500 text-sm flex items-center gap-2">
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Loading...
+                      </div>
+                    )}
+
+                    {/* Clear Traces Button */}
+                    <button
+                      onClick={clearTraces}
+                      disabled={clearing || traces.length === 0}
+                      className="px-4 py-1.5 bg-red-900/50 hover:bg-red-800/50 text-red-400 text-sm rounded border border-red-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {clearing ? 'Clearing...' : 'Clear Traces'}
+                    </button>
+                  </div>
+
+                  {/* Traces List */}
+                  {tracesLoading && traces.length === 0 ? (
+                    <SkeletonTraceList count={10} />
+                  ) : traces.length === 0 ? (
+                    <p className="text-gray-400 text-center py-8">
+                      {selectedScreen || selectedDevice ? 'No API traces match your filters' : 'No API traces yet'}
+                    </p>
+                  ) : groupBy !== 'none' && groupedTraces ? (
+                    /* Grouped View */
+                    <div className="space-y-3">
+                      {groupedTraces.map((group) => (
+                        <div key={group.key} className="bg-gray-900 rounded-lg overflow-hidden">
+                          {/* Group Header */}
+                          <button
+                            onClick={() => setExpandedGroup(expandedGroup === group.key ? null : group.key)}
+                            className="w-full p-4 text-left hover:bg-gray-800/50 transition-colors flex items-center justify-between"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-gray-500">{expandedGroup === group.key ? '▼' : '▶'}</span>
+                              <span className="text-white font-medium">{group.label}</span>
+                              <span className="px-2 py-0.5 bg-blue-900/50 text-blue-400 text-xs rounded-full">
+                                {group.count} {group.count === 1 ? 'request' : 'requests'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="text-green-400">
+                                {group.traces.filter(t => t.statusCode >= 200 && t.statusCode < 300).length} ok
+                              </span>
+                              <span className="text-red-400">
+                                {group.traces.filter(t => t.statusCode >= 400 || t.statusCode === 0).length} errors
+                              </span>
+                            </div>
+                          </button>
+
+                          {/* Expanded Group Traces */}
+                          {expandedGroup === group.key && (
+                            <div className="border-t border-gray-800">
+                              {group.traces.map((trace) => (
+                                <div key={trace.id} className="border-b border-gray-800/50 last:border-b-0">
+                                  <button
+                                    onClick={() => setExpandedTrace(expandedTrace === trace.id ? null : trace.id)}
+                                    className="w-full p-3 pl-10 text-left hover:bg-gray-800/30 transition-colors"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center space-x-3 min-w-0">
+                                        <span className="px-2 py-0.5 bg-gray-700 rounded text-xs font-medium text-gray-300 flex-shrink-0">
+                                          {trace.method}
+                                        </span>
+                                        <span className={`font-medium flex-shrink-0 ${getStatusColor(trace.statusCode)}`}>
+                                          {trace.statusCode || 'ERR'}
+                                        </span>
+                                        <span className="text-gray-400 font-mono text-xs truncate">
+                                          {trace.url}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center space-x-3 text-xs flex-shrink-0 ml-4">
+                                        {trace.duration && (
+                                          <span className="text-gray-400">{trace.duration}ms</span>
+                                        )}
+                                        <span className="text-gray-500">{formatTime(trace.timestamp)}</span>
+                                        <span className="text-gray-500">{expandedTrace === trace.id ? '▼' : '▶'}</span>
+                                      </div>
+                                    </div>
+                                    {/* Metadata Row for Grouped View */}
+                                    <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-500">
+                                      {trace.screenName && (
+                                        <span className="px-2 py-0.5 bg-blue-900/30 text-blue-400 rounded">
+                                          {trace.screenName}
+                                        </span>
+                                      )}
+                                      {trace.device && (
+                                        <span className="px-2 py-0.5 bg-gray-700/50 text-gray-400 rounded">
+                                          {trace.device.platform} - {trace.device.model || trace.device.deviceId.slice(0, 8)}
+                                        </span>
+                                      )}
+                                      {trace.networkType && (
+                                        <span>{getNetworkIcon(trace.networkType)} {trace.networkType}</span>
+                                      )}
+                                      {trace.country && <span>{trace.country}</span>}
+                                      {trace.carrier && <span>{trace.carrier}</span>}
+                                      {trace.ipAddress && <span>IP: {trace.ipAddress}</span>}
+                                      {trace.userAgent && (
+                                        <span className="truncate max-w-[200px]" title={trace.userAgent}>
+                                          {trace.userAgent.slice(0, 40)}...
+                                        </span>
+                                      )}
+                                    </div>
+                                  </button>
+
+                                  {/* Expanded Trace Details */}
+                                  {expandedTrace === trace.id && (
+                                    <div className="border-t border-gray-800 p-4 pl-10 space-y-4 bg-gray-950/50">
+                                      {/* Request */}
+                                      <div>
+                                        <h4 className="text-sm font-medium text-gray-300 mb-2">Request</h4>
+                                        {trace.requestHeaders && Object.keys(trace.requestHeaders).length > 0 && (
+                                          <div className="mb-2">
+                                            <span className="text-xs text-gray-500">Headers:</span>
+                                            <pre className="mt-1 p-2 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-32">
+                                              {JSON.stringify(trace.requestHeaders, null, 2)}
+                                            </pre>
+                                          </div>
+                                        )}
+                                        {trace.requestBody && (
+                                          <div>
+                                            <span className="text-xs text-gray-500">Body:</span>
+                                            <pre className="mt-1 p-2 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-48">
+                                              {formatBody(trace.requestBody)}
+                                            </pre>
+                                          </div>
+                                        )}
+                                      </div>
+                                      {/* Response */}
+                                      <div>
+                                        <h4 className="text-sm font-medium text-gray-300 mb-2">Response</h4>
+                                        {trace.responseBody && (
+                                          <div>
+                                            <span className="text-xs text-gray-500">Body:</span>
+                                            <pre className="mt-1 p-2 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-64">
+                                              {formatBody(trace.responseBody)}
+                                            </pre>
+                                          </div>
+                                        )}
+                                      </div>
+                                      {/* Monitoring Toggle */}
+                                      <div className="border-t border-gray-800 pt-4 flex items-center justify-between">
+                                        <div>
+                                          <h4 className="text-sm font-medium text-gray-300">Monitor Endpoint</h4>
+                                          <p className="text-xs text-gray-500 mt-1">
+                                            {isEndpointMonitored(trace.url, trace.method)
+                                              ? 'This endpoint is being monitored for errors'
+                                              : 'Enable to track errors automatically'}
+                                          </p>
+                                        </div>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                          <input
+                                            type="checkbox"
+                                            checked={isEndpointMonitored(trace.url, trace.method)}
+                                            onChange={(e) => {
+                                              if (e.target.checked) {
+                                                handleQuickEnableMonitoring(trace.url, trace.method, trace.statusCode)
+                                              } else {
+                                                handleDisableMonitoring(trace.url, trace.method)
+                                              }
+                                            }}
+                                            className="sr-only peer"
+                                          />
+                                          <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        </label>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    /* Flat View */
+                    <div className="space-y-2">
+                      {/* Pagination at top */}
+                      {tracesPagination.totalPages > 1 && (
+                        <Pagination
+                          pagination={tracesPagination}
+                          onPageChange={handleTracesPageChange}
+                          onLimitChange={handleTracesLimitChange}
+                          className="bg-gray-900 rounded-lg p-4"
+                        />
+                      )}
+                      {traces.map((trace) => (
+                        <TraceItem
+                          key={trace.id}
+                          trace={trace}
+                          isExpanded={expandedTrace === trace.id}
+                          onToggleExpand={() => setExpandedTrace(expandedTrace === trace.id ? null : trace.id)}
+                          isMonitored={isEndpointMonitored(trace.url, trace.method)}
+                          onToggleMonitor={(enabled) => {
+                            if (enabled) {
+                              handleQuickEnableMonitoring(trace.url, trace.method, trace.statusCode)
+                            } else {
+                              handleDisableMonitoring(trace.url, trace.method)
+                            }
+                          }}
+                        />
+                      ))}
+                      {/* Pagination at bottom */}
+                      {tracesPagination.totalPages > 1 && (
+                        <Pagination
+                          pagination={tracesPagination}
+                          onPageChange={handleTracesPageChange}
+                          onLimitChange={handleTracesLimitChange}
+                          showLimitSelector={false}
+                          className="bg-gray-900 rounded-lg p-4"
+                        />
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {tracesSubTab === 'security' && token && sdkSettings && (
+                <div className="space-y-6">
                   {/* Security Settings */}
                   <div className="bg-gray-900 rounded-lg p-4">
                     <div className="flex items-center gap-3 mb-4">
@@ -6786,25 +3419,6 @@ export default function ProjectDetailPage() {
 
                       <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
                         <div className="flex items-center gap-3">
-                          <span className="text-lg">🖨️</span>
-                          <div>
-                            <p className="text-white text-sm font-medium">Capture Print Statements</p>
-                            <p className="text-gray-500 text-xs">Auto-capture print() statements as logs</p>
-                          </div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={sdkSettings.capturePrintStatements}
-                            onChange={(e) => updateSdkSetting({ capturePrintStatements: e.target.checked })}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                      </div>
-
-                      <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                        <div className="flex items-center gap-3">
                           <span className="text-lg">🔐</span>
                           <div>
                             <p className="text-white text-sm font-medium">Sanitize Sensitive Data</p>
@@ -6828,335 +3442,3911 @@ export default function ProjectDetailPage() {
                           <p className="text-white text-sm font-medium mb-2">Sensitive Field Patterns</p>
                           <p className="text-gray-500 text-xs mb-3">Fields matching these patterns will be redacted</p>
                           <div className="flex flex-wrap gap-2 mb-3">
-                            {sdkSettings.sensitiveFieldPatterns.map((pattern, idx) => (
+                            {sdkSettings.sensitiveFieldPatterns?.map((pattern, idx) => (
                               <span key={idx} className="px-3 py-1 bg-gray-700 text-gray-300 rounded-full text-sm flex items-center gap-2">
                                 {pattern}
                                 <button
                                   onClick={() => updateSdkSetting({
-                                    sensitiveFieldPatterns: sdkSettings.sensitiveFieldPatterns.filter((_, i) => i !== idx)
+                                    sensitiveFieldPatterns: sdkSettings.sensitiveFieldPatterns?.filter((_, i) => i !== idx) || []
                                   })}
                                   className="text-gray-500 hover:text-red-400"
-                                >x</button>
+                                >×</button>
                               </span>
                             ))}
                           </div>
                           <div className="flex gap-2">
                             <input
                               type="text"
-                              value={newSensitivePattern}
-                              onChange={(e) => setNewSensitivePattern(e.target.value)}
-                              placeholder="Add pattern (e.g., credit_card)"
-                              className="flex-1 px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 text-sm"
-                            />
-                            <button
-                              onClick={() => {
-                                if (newSensitivePattern && !sdkSettings.sensitiveFieldPatterns.includes(newSensitivePattern)) {
-                                  updateSdkSetting({
-                                    sensitiveFieldPatterns: [...sdkSettings.sensitiveFieldPatterns, newSensitivePattern]
-                                  })
-                                  setNewSensitivePattern('')
+                              placeholder="Add pattern (e.g., password, token)"
+                              className="flex-1 px-3 py-1.5 bg-gray-700 text-gray-300 rounded text-sm border border-gray-600 focus:border-blue-500 focus:outline-none"
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  const input = e.currentTarget
+                                  const pattern = input.value.trim()
+                                  if (pattern && !sdkSettings.sensitiveFieldPatterns?.includes(pattern)) {
+                                    updateSdkSetting({
+                                      sensitiveFieldPatterns: [...(sdkSettings.sensitiveFieldPatterns || []), pattern]
+                                    })
+                                    input.value = ''
+                                  }
                                 }
                               }}
-                              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm"
-                            >Add</button>
+                            />
                           </div>
                         </div>
                       )}
                     </div>
                   </div>
-
-                  {/* Performance Settings */}
-                  <div className="bg-gray-900 rounded-lg p-4">
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="text-2xl">⚡</span>
-                      <div>
-                        <h3 className="text-white font-medium">Performance Settings</h3>
-                        <p className="text-gray-400 text-sm">Configure batching and queue behavior</p>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg">📦</span>
-                          <div>
-                            <p className="text-white text-sm font-medium">Enable Batching</p>
-                            <p className="text-gray-500 text-xs">Batch events before sending to reduce network calls</p>
-                          </div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={sdkSettings.enableBatching}
-                            onChange={(e) => updateSdkSetting({ enableBatching: e.target.checked })}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                      </div>
-
-                      <div className="p-3 bg-gray-800 rounded-lg">
-                        <div className="flex items-center gap-3 mb-3">
-                          <span className="text-lg">📝</span>
-                          <div>
-                            <p className="text-white text-sm font-medium">Max Log Queue Size</p>
-                            <p className="text-gray-500 text-xs">Maximum logs to queue before flushing</p>
-                          </div>
-                        </div>
-                        <input
-                          type="number"
-                          value={sdkSettings.maxLogQueueSize}
-                          onChange={(e) => updateSdkSetting({ maxLogQueueSize: parseInt(e.target.value) || 100 })}
-                          min="10"
-                          max="1000"
-                          className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 text-sm"
-                        />
-                      </div>
-
-                      <div className="p-3 bg-gray-800 rounded-lg">
-                        <div className="flex items-center gap-3 mb-3">
-                          <span className="text-lg">📡</span>
-                          <div>
-                            <p className="text-white text-sm font-medium">Max Trace Queue Size</p>
-                            <p className="text-gray-500 text-xs">Maximum API traces to queue before flushing</p>
-                          </div>
-                        </div>
-                        <input
-                          type="number"
-                          value={sdkSettings.maxTraceQueueSize}
-                          onChange={(e) => updateSdkSetting({ maxTraceQueueSize: parseInt(e.target.value) || 50 })}
-                          min="5"
-                          max="500"
-                          className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 text-sm"
-                        />
-                      </div>
-
-                      <div className="p-3 bg-gray-800 rounded-lg">
-                        <div className="flex items-center gap-3 mb-3">
-                          <span className="text-lg">⏱️</span>
-                          <div>
-                            <p className="text-white text-sm font-medium">Flush Interval (seconds)</p>
-                            <p className="text-gray-500 text-xs">How often to send queued events</p>
-                          </div>
-                        </div>
-                        <input
-                          type="number"
-                          value={sdkSettings.flushIntervalSeconds}
-                          onChange={(e) => updateSdkSetting({ flushIntervalSeconds: parseInt(e.target.value) || 30 })}
-                          min="5"
-                          max="300"
-                          className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 text-sm"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Log Control Settings */}
-                  <div className="bg-gray-900 rounded-lg p-4">
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="text-2xl">📋</span>
-                      <div>
-                        <h3 className="text-white font-medium">Log Control</h3>
-                        <p className="text-gray-400 text-sm">Configure logging behavior and levels</p>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="p-3 bg-gray-800 rounded-lg">
-                        <div className="flex items-center gap-3 mb-3">
-                          <span className="text-lg">📊</span>
-                          <div>
-                            <p className="text-white text-sm font-medium">Minimum Log Level</p>
-                            <p className="text-gray-500 text-xs">Only capture logs at or above this level</p>
-                          </div>
-                        </div>
-                        <select
-                          value={sdkSettings.minLogLevel}
-                          onChange={(e) => updateSdkSetting({ minLogLevel: e.target.value })}
-                          className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 text-sm"
-                        >
-                          <option value="verbose">Verbose (all logs)</option>
-                          <option value="debug">Debug</option>
-                          <option value="info">Info</option>
-                          <option value="warn">Warning</option>
-                          <option value="error">Error only</option>
-                        </select>
-                      </div>
-
-                      <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg">🔍</span>
-                          <div>
-                            <p className="text-white text-sm font-medium">Verbose Errors</p>
-                            <p className="text-gray-500 text-xs">Include stack traces and extra context in error logs</p>
-                          </div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={sdkSettings.verboseErrors}
-                            onChange={(e) => updateSdkSetting({ verboseErrors: e.target.checked })}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              ) : (
-                <p className="text-gray-400 text-center py-8">Failed to load SDK settings</p>
               )}
             </div>
           )}
 
-          {/* Project Settings Tab */}
-          {settingsTab === 'project' && (
+          {activeTab === 'config' && (
             <div className="space-y-6">
-              {/* Project Name */}
-              <div className="bg-gray-900 rounded-lg p-6">
-                <h3 className="text-white font-medium mb-4">Project Name</h3>
-                {isEditingName ? (
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="text"
-                      value={editingProjectName}
-                      onChange={(e) => setEditingProjectName(e.target.value)}
-                      className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Project name"
-                      disabled={updatingName}
-                    />
+              {/* Add New Config */}
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-white">API Cost Configuration</h2>
+                <button
+                  onClick={() => setShowAddConfig(true)}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
+                >
+                  + Add Endpoint
+                </button>
+              </div>
+
+              {/* Add Config Form */}
+              {showAddConfig && (
+                <div className="bg-gray-900 rounded-lg p-4 space-y-4">
+                  <h3 className="text-white font-medium">Add New Endpoint Config</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-gray-400 text-sm mb-1">Endpoint Path</label>
+                      <input
+                        type="text"
+                        placeholder="/api/users/*"
+                        value={newConfig.endpoint}
+                        onChange={(e) => setNewConfig({ ...newConfig, endpoint: e.target.value })}
+                        className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-400 text-sm mb-1">Method (optional)</label>
+                      <select
+                        value={newConfig.method}
+                        onChange={(e) => setNewConfig({ ...newConfig, method: e.target.value })}
+                        className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                      >
+                        <option value="">All Methods</option>
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                        <option value="PATCH">PATCH</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-gray-400 text-sm mb-1">Name (optional)</label>
+                      <input
+                        type="text"
+                        placeholder="User API"
+                        value={newConfig.name}
+                        onChange={(e) => setNewConfig({ ...newConfig, name: e.target.value })}
+                        className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-400 text-sm mb-1">Cost Per Request</label>
+                      <input
+                        type="number"
+                        step="0.001"
+                        placeholder="0.00"
+                        value={newConfig.costPerRequest}
+                        onChange={(e) => setNewConfig({ ...newConfig, costPerRequest: parseFloat(e.target.value) || 0 })}
+                        className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
                     <button
-                      onClick={async () => {
-                        if (!editingProjectName.trim() || editingProjectName.trim() === projectName) {
-                          setIsEditingName(false)
-                          setEditingProjectName(projectName)
-                          return
-                        }
-                        setUpdatingName(true)
-                        try {
-                          await api.projects.update(projectId, editingProjectName.trim(), token!)
-                          setProjectName(editingProjectName.trim())
-                          setIsEditingName(false)
-                        } catch (error: any) {
-                          alert(error?.message || 'Failed to update project name')
-                          setEditingProjectName(projectName)
-                        } finally {
-                          setUpdatingName(false)
-                        }
-                      }}
-                      disabled={updatingName || !editingProjectName.trim()}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white rounded transition-colors"
+                      onClick={handleCreateConfig}
+                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors"
                     >
-                      {updatingName ? 'Saving...' : 'Save'}
+                      Save
                     </button>
                     <button
                       onClick={() => {
-                        setIsEditingName(false)
-                        setEditingProjectName(projectName)
+                        setShowAddConfig(false)
+                        setNewConfig({ endpoint: '', method: '', name: '', costPerRequest: 0 })
                       }}
-                      disabled={updatingName}
-                      className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded transition-colors"
+                      className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded transition-colors"
                     >
                       Cancel
                     </button>
                   </div>
-                ) : (
-                  <div className="flex items-center gap-3">
-                    <span className="text-gray-300">{projectName}</span>
-                    <button
-                      onClick={() => setIsEditingName(true)}
-                      className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded transition-colors text-sm"
-                    >
-                      Edit
-                    </button>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
 
-              {/* API Key */}
-              <div className="bg-gray-900 rounded-lg p-6">
-                <h3 className="text-white font-medium mb-4">API Key</h3>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="text"
-                    value={apiKey}
-                    readOnly
-                    className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-300 font-mono text-sm"
-                  />
+              {/* Suggested Endpoints from Traces */}
+              {suggestedEndpoints.length > 0 && (
+                <div className="bg-gray-900/50 rounded-lg p-4">
+                  <h3 className="text-gray-300 font-medium mb-3">Suggested Endpoints (from traces)</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {suggestedEndpoints.slice(0, 10).map((ep, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => addSuggestedEndpoint(ep)}
+                        className="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs rounded border border-gray-700 transition-colors"
+                      >
+                        <span className="text-blue-400">{ep.method}</span> {ep.endpoint}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Existing Configs */}
+              {configs.length === 0 ? (
+                <p className="text-gray-400 text-center py-8">No API configurations yet. Add endpoints to track costs.</p>
+              ) : (
+                <div className="space-y-2">
+                  {configs.map((config) => (
+                    <div key={config.id} className="bg-gray-900 rounded-lg p-4">
+                      {editingConfig?.id === config.id ? (
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                          <div>
+                            <label className="block text-gray-400 text-xs mb-1">Endpoint</label>
+                            <input
+                              type="text"
+                              value={editingConfig.endpoint}
+                              onChange={(e) => setEditingConfig({ ...editingConfig, endpoint: e.target.value })}
+                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-gray-400 text-xs mb-1">Method</label>
+                            <select
+                              value={editingConfig.method || ''}
+                              onChange={(e) => setEditingConfig({ ...editingConfig, method: e.target.value || null })}
+                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                            >
+                              <option value="">All</option>
+                              <option value="GET">GET</option>
+                              <option value="POST">POST</option>
+                              <option value="PUT">PUT</option>
+                              <option value="DELETE">DELETE</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-gray-400 text-xs mb-1">Name</label>
+                            <input
+                              type="text"
+                              value={editingConfig.name || ''}
+                              onChange={(e) => setEditingConfig({ ...editingConfig, name: e.target.value || null })}
+                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-gray-400 text-xs mb-1">Cost</label>
+                            <input
+                              type="number"
+                              step="0.001"
+                              value={editingConfig.costPerRequest}
+                              onChange={(e) => setEditingConfig({ ...editingConfig, costPerRequest: parseFloat(e.target.value) || 0 })}
+                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleUpdateConfig(editingConfig)}
+                              className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => setEditingConfig(null)}
+                              className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              {config.method && (
+                                <span className="px-2 py-0.5 bg-blue-900/50 text-blue-400 text-xs rounded">
+                                  {config.method}
+                                </span>
+                              )}
+                              <span className="text-white font-mono text-sm">{config.endpoint}</span>
+                            </div>
+                            {config.name && (
+                              <span className="text-gray-400 text-sm">({config.name})</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="text-green-400 font-medium">${config.costPerRequest.toFixed(2)} USD</span>
+                            <span className={`px-2 py-0.5 rounded text-xs ${config.isEnabled ? 'bg-green-900/50 text-green-400' : 'bg-gray-700 text-gray-400'}`}>
+                              {config.isEnabled ? 'Active' : 'Disabled'}
+                            </span>
+                            {/* Monitoring Toggle */}
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500">Monitor</span>
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={isEndpointMonitored(config.endpoint, config.method || undefined)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      handleQuickEnableMonitoring(config.endpoint, config.method || '', undefined)
+                                    } else {
+                                      handleDisableMonitoring(config.endpoint, config.method || undefined)
+                                    }
+                                  }}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                              </label>
+                            </div>
+                            <button
+                              onClick={() => setEditingConfig(config)}
+                              className="text-gray-400 hover:text-white text-sm"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteConfig(config.id)}
+                              className="text-red-400 hover:text-red-300 text-sm"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'analytics' && (
+            <div className="space-y-6">
+              {analyticsLoading ? (
+                <p className="text-gray-400 text-center py-8">Loading analytics...</p>
+              ) : !analytics ? (
+                <p className="text-gray-400 text-center py-8">No analytics data available</p>
+              ) : (
+                <>
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="bg-gray-900 rounded-lg p-4">
+                      <p className="text-gray-400 text-sm">Total Cost</p>
+                      <p className="text-2xl font-bold text-green-400">${analytics.summary.totalCost.toFixed(2)} <span className="text-sm font-normal">USD</span></p>
+                    </div>
+                    <div className="bg-gray-900 rounded-lg p-4">
+                      <p className="text-gray-400 text-sm">Total Requests</p>
+                      <p className="text-2xl font-bold text-white">{analytics.summary.totalRequests.toLocaleString()}</p>
+                    </div>
+                    <div className="bg-gray-900 rounded-lg p-4">
+                      <p className="text-gray-400 text-sm">Avg Cost/Request</p>
+                      <p className="text-2xl font-bold text-blue-400">${analytics.summary.avgCostPerRequest.toFixed(2)} <span className="text-sm font-normal">USD</span></p>
+                    </div>
+                    <div className="bg-gray-900 rounded-lg p-4">
+                      <p className="text-gray-400 text-sm">Unique Endpoints Cost</p>
+                      <p className="text-2xl font-bold text-purple-400">${analytics.summary.uniqueEndpointsCost.toFixed(2)} <span className="text-sm font-normal">USD</span></p>
+                    </div>
+                  </div>
+
+                  {/* Cost by Device */}
+                  <div className="bg-gray-900 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-white font-medium">Cost by Device</h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500 text-xs">Sort by:</span>
+                        <button
+                          onClick={() => {
+                            if (deviceSortField === 'requestCount') setDeviceSortDir(d => d === 'asc' ? 'desc' : 'asc')
+                            else { setDeviceSortField('requestCount'); setDeviceSortDir('desc') }
+                          }}
+                          className={`px-2 py-1 text-xs rounded ${deviceSortField === 'requestCount' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                        >
+                          Requests {deviceSortField === 'requestCount' && (deviceSortDir === 'desc' ? '↓' : '↑')}
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (deviceSortField === 'totalCost') setDeviceSortDir(d => d === 'asc' ? 'desc' : 'asc')
+                            else { setDeviceSortField('totalCost'); setDeviceSortDir('desc') }
+                          }}
+                          className={`px-2 py-1 text-xs rounded ${deviceSortField === 'totalCost' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                        >
+                          Cost {deviceSortField === 'totalCost' && (deviceSortDir === 'desc' ? '↓' : '↑')}
+                        </button>
+                      </div>
+                    </div>
+                    {analytics.deviceCosts.length === 0 ? (
+                      <p className="text-gray-400 text-sm">No device costs recorded.</p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-gray-800">
+                              <th className="text-left text-gray-400 py-2 px-3">Device</th>
+                              <th className="text-right text-gray-400 py-2 px-3">Requests</th>
+                              <th className="text-right text-gray-400 py-2 px-3">Cost/Request</th>
+                              <th className="text-right text-gray-400 py-2 px-3">Total Cost</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {[...analytics.deviceCosts]
+                              .sort((a, b) => {
+                                const aVal = deviceSortField === 'requestCount' ? a.requestCount : a.totalCost
+                                const bVal = deviceSortField === 'requestCount' ? b.requestCount : b.totalCost
+                                return deviceSortDir === 'desc' ? bVal - aVal : aVal - bVal
+                              })
+                              .map((dc, idx) => (
+                                <tr key={idx} className="border-b border-gray-800/50 hover:bg-gray-800/30">
+                                  <td className="py-2 px-3">
+                                    <div className="flex items-center gap-2">
+                                      <span>{dc.device?.platform === 'android' ? '🤖' : '🍎'}</span>
+                                      <div>
+                                        <p className="text-white">{dc.device?.model || 'Unknown'}</p>
+                                        <p className="text-gray-500 text-xs font-mono">{dc.device?.deviceId.slice(0, 12)}...</p>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="py-2 px-3 text-right text-gray-300">{dc.requestCount.toLocaleString()}</td>
+                                  <td className="py-2 px-3 text-right text-blue-400">${dc.requestCount > 0 ? (dc.totalCost / dc.requestCount).toFixed(2) : '0.00'} USD</td>
+                                  <td className="py-2 px-3 text-right text-green-400 font-medium">${dc.totalCost.toFixed(2)} USD</td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Cost by Session */}
+                  <div className="bg-gray-900 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-white font-medium">Cost by Session</h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500 text-xs">Sort by:</span>
+                        <button
+                          onClick={() => {
+                            if (sessionSortField === 'startedAt') setSessionSortDir(d => d === 'asc' ? 'desc' : 'asc')
+                            else { setSessionSortField('startedAt'); setSessionSortDir('desc') }
+                          }}
+                          className={`px-2 py-1 text-xs rounded ${sessionSortField === 'startedAt' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                        >
+                          Date {sessionSortField === 'startedAt' && (sessionSortDir === 'desc' ? '↓' : '↑')}
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (sessionSortField === 'requestCount') setSessionSortDir(d => d === 'asc' ? 'desc' : 'asc')
+                            else { setSessionSortField('requestCount'); setSessionSortDir('desc') }
+                          }}
+                          className={`px-2 py-1 text-xs rounded ${sessionSortField === 'requestCount' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                        >
+                          Requests {sessionSortField === 'requestCount' && (sessionSortDir === 'desc' ? '↓' : '↑')}
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (sessionSortField === 'totalCost') setSessionSortDir(d => d === 'asc' ? 'desc' : 'asc')
+                            else { setSessionSortField('totalCost'); setSessionSortDir('desc') }
+                          }}
+                          className={`px-2 py-1 text-xs rounded ${sessionSortField === 'totalCost' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                        >
+                          Cost {sessionSortField === 'totalCost' && (sessionSortDir === 'desc' ? '↓' : '↑')}
+                        </button>
+                      </div>
+                    </div>
+                    {analytics.sessionCosts.length === 0 ? (
+                      <p className="text-gray-400 text-sm">No session costs recorded.</p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-gray-800">
+                              <th className="text-left text-gray-400 py-2 px-3">Session</th>
+                              <th className="text-left text-gray-400 py-2 px-3">Device</th>
+                              <th className="text-left text-gray-400 py-2 px-3">Time</th>
+                              <th className="text-right text-gray-400 py-2 px-3">Requests</th>
+                              <th className="text-right text-gray-400 py-2 px-3">Cost/Request</th>
+                              <th className="text-right text-gray-400 py-2 px-3">Total Cost</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {[...analytics.sessionCosts]
+                              .sort((a, b) => {
+                                if (sessionSortField === 'startedAt') {
+                                  const aVal = new Date(a.startedAt).getTime()
+                                  const bVal = new Date(b.startedAt).getTime()
+                                  return sessionSortDir === 'desc' ? bVal - aVal : aVal - bVal
+                                }
+                                const aVal = sessionSortField === 'requestCount' ? a.requestCount : a.totalCost
+                                const bVal = sessionSortField === 'requestCount' ? b.requestCount : b.totalCost
+                                return sessionSortDir === 'desc' ? bVal - aVal : aVal - bVal
+                              })
+                              .map((session) => (
+                                <tr key={session.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
+                                  <td className="py-2 px-3">
+                                    <div className="flex items-center gap-2">
+                                      <div className={`w-2 h-2 rounded-full ${session.isActive ? 'bg-green-400' : 'bg-gray-500'}`} />
+                                      <span className="text-white font-mono text-xs">{session.sessionToken}</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-2 px-3 text-gray-300">
+                                    {session.device ? `${session.device.model || session.device.deviceId.slice(0, 8)}` : '-'}
+                                  </td>
+                                  <td className="py-2 px-3 text-gray-400 text-xs">
+                                    {formatTime(session.startedAt)}
+                                  </td>
+                                  <td className="py-2 px-3 text-right text-gray-300">{session.requestCount.toLocaleString()}</td>
+                                  <td className="py-2 px-3 text-right text-blue-400">${session.requestCount > 0 ? (session.totalCost / session.requestCount).toFixed(2) : '0.00'} USD</td>
+                                  <td className="py-2 px-3 text-right text-green-400 font-medium">${session.totalCost.toFixed(2)} USD</td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Cost by Endpoint */}
+                  <div className="bg-gray-900 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-white font-medium">Cost by Endpoint</h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500 text-xs">Sort by:</span>
+                        <button
+                          onClick={() => {
+                            if (endpointSortField === 'requestCount') setEndpointSortDir(d => d === 'asc' ? 'desc' : 'asc')
+                            else { setEndpointSortField('requestCount'); setEndpointSortDir('desc') }
+                          }}
+                          className={`px-2 py-1 text-xs rounded ${endpointSortField === 'requestCount' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                        >
+                          Requests {endpointSortField === 'requestCount' && (endpointSortDir === 'desc' ? '↓' : '↑')}
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (endpointSortField === 'avgCostPerRequest') setEndpointSortDir(d => d === 'asc' ? 'desc' : 'asc')
+                            else { setEndpointSortField('avgCostPerRequest'); setEndpointSortDir('desc') }
+                          }}
+                          className={`px-2 py-1 text-xs rounded ${endpointSortField === 'avgCostPerRequest' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                        >
+                          Avg Cost {endpointSortField === 'avgCostPerRequest' && (endpointSortDir === 'desc' ? '↓' : '↑')}
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (endpointSortField === 'totalCost') setEndpointSortDir(d => d === 'asc' ? 'desc' : 'asc')
+                            else { setEndpointSortField('totalCost'); setEndpointSortDir('desc') }
+                          }}
+                          className={`px-2 py-1 text-xs rounded ${endpointSortField === 'totalCost' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                        >
+                          Total Cost {endpointSortField === 'totalCost' && (endpointSortDir === 'desc' ? '↓' : '↑')}
+                        </button>
+                      </div>
+                    </div>
+                    {analytics.endpointCosts.length === 0 ? (
+                      <p className="text-gray-400 text-sm">No endpoint costs. Configure API costs first.</p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-gray-800">
+                              <th className="text-left text-gray-400 py-2 px-3">Method</th>
+                              <th className="text-left text-gray-400 py-2 px-3">Endpoint</th>
+                              <th className="text-right text-gray-400 py-2 px-3">Requests</th>
+                              <th className="text-right text-gray-400 py-2 px-3">Cost/Request</th>
+                              <th className="text-right text-gray-400 py-2 px-3">Total Cost</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {[...analytics.endpointCosts]
+                              .sort((a, b) => {
+                                let aVal: number, bVal: number
+                                if (endpointSortField === 'requestCount') {
+                                  aVal = a.requestCount; bVal = b.requestCount
+                                } else if (endpointSortField === 'avgCostPerRequest') {
+                                  aVal = a.avgCostPerRequest; bVal = b.avgCostPerRequest
+                                } else {
+                                  aVal = a.totalCost; bVal = b.totalCost
+                                }
+                                return endpointSortDir === 'desc' ? bVal - aVal : aVal - bVal
+                              })
+                              .map((ep, idx) => (
+                                <tr key={idx} className="border-b border-gray-800/50 hover:bg-gray-800/30">
+                                  <td className="py-2 px-3">
+                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${ep.method === 'GET' ? 'bg-blue-900/50 text-blue-400' :
+                                        ep.method === 'POST' ? 'bg-green-900/50 text-green-400' :
+                                          ep.method === 'PUT' ? 'bg-yellow-900/50 text-yellow-400' :
+                                            ep.method === 'DELETE' ? 'bg-red-900/50 text-red-400' :
+                                              'bg-gray-700 text-gray-300'
+                                      }`}>{ep.method}</span>
+                                  </td>
+                                  <td className="py-2 px-3 text-gray-300 font-mono text-xs">{ep.endpoint}</td>
+                                  <td className="py-2 px-3 text-right text-gray-300">{ep.requestCount.toLocaleString()}</td>
+                                  <td className="py-2 px-3 text-right text-blue-400">${ep.avgCostPerRequest.toFixed(2)} USD</td>
+                                  <td className="py-2 px-3 text-right text-green-400 font-medium">${ep.totalCost.toFixed(2)} USD</td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'flow' && (
+            <div className="space-y-4">
+              {/* Enforcement Banner for Sessions */}
+              {sessionsUsage && sessionsUsage.limit !== null && (
+                <>
+                  {(() => {
+                    const percentage = sessionsUsage.percentage
+                    const warnThreshold = 80
+                    const hardThreshold = 100
+
+                    if (percentage >= hardThreshold) {
+                      return (
+                        <div className="bg-red-900/20 border-l-4 border-red-600 p-4 rounded">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="text-red-400 font-semibold mb-2 flex items-center gap-2">
+                                <span>🚫</span>
+                                <span>Sessions Quota Exceeded</span>
+                              </h3>
+                              <p className="text-gray-300 text-sm mb-2">
+                                You have reached your sessions limit: <strong>{sessionsUsage.used}/{sessionsUsage.limit} sessions</strong> ({percentage.toFixed(1)}%).
+                              </p>
+                              <p className="text-gray-300 text-sm">
+                                New sessions will be blocked. Please upgrade your plan to continue tracking user sessions.
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => router.push('/subscription')}
+                              className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
+                            >
+                              Upgrade Plan
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    } else if (percentage >= warnThreshold) {
+                      return (
+                        <div className="bg-yellow-900/20 border-l-4 border-yellow-600 p-4 rounded">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="text-yellow-400 font-semibold mb-2 flex items-center gap-2">
+                                <span>⚠️</span>
+                                <span>Approaching Sessions Limit</span>
+                              </h3>
+                              <p className="text-gray-300 text-sm mb-2">
+                                You are approaching your sessions limit: <strong>{sessionsUsage.used}/{sessionsUsage.limit} sessions</strong> ({percentage.toFixed(1)}%).
+                              </p>
+                              <p className="text-gray-300 text-sm">
+                                You can track {Math.max(0, sessionsUsage.limit - sessionsUsage.used)} more session{sessionsUsage.limit - sessionsUsage.used !== 1 ? 's' : ''} before reaching your limit.
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => router.push('/subscription')}
+                              className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm whitespace-nowrap"
+                            >
+                              Upgrade Plan
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    }
+                    return null
+                  })()}
+                </>
+              )}
+              {/* Session Selector Header */}
+              <div className="flex flex-wrap items-center gap-4 p-4 bg-gray-900 rounded-lg">
+                {/* View Mode Toggle */}
+                <div className="flex items-center bg-gray-800 rounded-lg p-1">
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(apiKey)
-                      setCopied(true)
-                      setTimeout(() => setCopied(false), 2000)
-                    }}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors text-sm"
+                    onClick={() => setFlowViewMode('timeline')}
+                    className={`px-3 py-1.5 text-sm rounded-md transition-colors ${flowViewMode === 'timeline'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-400 hover:text-white'
+                      }`}
                   >
-                    {copied ? 'Copied!' : 'Copy'}
+                    Timeline
+                  </button>
+                  <button
+                    onClick={() => setFlowViewMode('flow')}
+                    className={`px-3 py-1.5 text-sm rounded-md transition-colors ${flowViewMode === 'flow'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-400 hover:text-white'
+                      }`}
+                  >
+                    Flow
                   </button>
                 </div>
-                <p className="text-gray-400 text-sm mt-2">
-                  Use this API key to initialize the DevBridge SDK in your mobile app.
-                </p>
-              </div>
-
-              {/* Danger Zone */}
-              <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="text-2xl">⚠️</span>
-                  <div>
-                    <h3 className="text-red-400 font-bold text-lg">Danger Zone</h3>
-                    <p className="text-gray-300 text-sm">Deleting a project will permanently remove all associated data including devices, logs, traces, crashes, and configurations.</p>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-gray-400 text-sm">Select Session:</label>
+                  <select
+                    value={selectedFlowSession}
+                    onChange={(e) => {
+                      const sessionId = e.target.value
+                      setSelectedFlowSession(sessionId)
+                      setSelectedEdge(null) // Clear selection when changing session
+                      setExpandedTimelineEvent(null)
+                      if (sessionId && flowViewMode === 'timeline') {
+                        fetchTimeline(sessionId)
+                      }
+                    }}
+                    className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none min-w-[300px]"
+                  >
+                    <option value="">-- Select a session to view --</option>
+                    {flowData?.sessions.map((session) => (
+                      <option key={session.id} value={session.id}>
+                        {session.sessionToken} - {session.device?.model || 'Unknown'} ({session.requestCount} req, ${session.totalCost.toFixed(2)})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+                  onClick={() => {
+                    fetchFlow()
+                    if (selectedFlowSession && flowViewMode === 'timeline') {
+                      fetchTimeline(selectedFlowSession)
+                    }
+                  }}
+                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
                 >
-                  Delete Project
+                  Refresh
                 </button>
               </div>
 
-              {/* Delete Confirmation Modal */}
-              {showDeleteConfirm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                  <div className="bg-gray-900 rounded-lg p-6 w-full max-w-md border border-red-500/50">
-                    <h3 className="text-red-400 font-bold text-lg mb-2">Delete Project</h3>
-                    <p className="text-gray-300 mb-4">
-                      Are you sure you want to delete <strong className="text-white">{projectName}</strong>? This action cannot be undone and will permanently delete:
-                    </p>
-                    <ul className="list-disc list-inside text-gray-400 text-sm mb-6 space-y-1">
-                      <li>All devices and device data</li>
-                      <li>All logs, traces, and crashes</li>
-                      <li>All business configurations</li>
-                      <li>All localization data</li>
-                      <li>All API mocks and environments</li>
-                      <li>All alerts and monitoring configurations</li>
-                    </ul>
-                    <div className="flex justify-end gap-3">
-                      <button
-                        onClick={() => setShowDeleteConfirm(false)}
-                        disabled={deletingProject}
-                        className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={async () => {
-                          setDeletingProject(true)
-                          try {
-                            await api.projects.delete(projectId, token!)
-                            // Redirect to projects list
-                            router.push('/projects')
-                          } catch (error: any) {
-                            alert(error?.message || 'Failed to delete project')
-                            setDeletingProject(false)
-                            setShowDeleteConfirm(false)
+              {flowLoading ? (
+                <p className="text-gray-400 text-center py-8">Loading flow data...</p>
+              ) : !flowData || flowData.sessions.length === 0 ? (
+                <p className="text-gray-400 text-center py-8">No session data available. Make sure your app is sending screenName with traces.</p>
+              ) : !selectedFlowSession ? (
+                /* Show session list when no session selected */
+                <div className="bg-gray-900 rounded-lg p-4">
+                  <h3 className="text-white font-medium mb-4">Available Sessions</h3>
+                  <div className="space-y-3">
+                    {flowData.sessions.slice(0, 20).map((session) => (
+                      <div
+                        key={session.id}
+                        className="border border-gray-800 rounded-lg p-3 hover:border-blue-500 cursor-pointer transition-colors"
+                        onClick={() => {
+                          setSelectedFlowSession(session.id)
+                          if (flowViewMode === 'timeline') {
+                            fetchTimeline(session.id)
                           }
                         }}
-                        disabled={deletingProject}
-                        className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-800 text-white rounded transition-colors"
                       >
-                        {deletingProject ? 'Deleting...' : 'Delete Project'}
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${session.isActive ? 'bg-green-400' : 'bg-gray-500'}`} />
+                            <span className="text-white text-sm font-medium">
+                              {session.sessionToken}
+                            </span>
+                            {session.device && (
+                              <span className="text-gray-400 text-xs">
+                                {session.device.model || session.device.deviceId.slice(0, 8)}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4 text-xs text-gray-400">
+                            <span>{session.requestCount} requests</span>
+                            <span className="text-green-400">${session.totalCost.toFixed(2)}</span>
+                          </div>
+                        </div>
+                        {/* Screen sequence preview */}
+                        <div className="flex flex-wrap items-center gap-1 mt-2">
+                          {session.screenSequence.slice(0, 6).map((screen, idx) => (
+                            <React.Fragment key={idx}>
+                              <span className="px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded">
+                                {screen.length > 12 ? screen.slice(0, 10) + '...' : screen}
+                              </span>
+                              {idx < Math.min(session.screenSequence.length, 6) - 1 && (
+                                <span className="text-gray-500">→</span>
+                              )}
+                            </React.Fragment>
+                          ))}
+                          {session.screenSequence.length > 6 && (
+                            <span className="text-gray-500 text-xs">+{session.screenSequence.length - 6} more</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                /* Show split view when session is selected */
+                <>
+                  {/* Selected Session Info */}
+                  {(() => {
+                    const currentSession = flowData.sessions.find(s => s.id === selectedFlowSession)
+                    if (!currentSession) return null
+                    return (
+                      <div className="bg-gray-900 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-3 h-3 rounded-full ${currentSession.isActive ? 'bg-green-400' : 'bg-gray-500'}`} />
+                            <span className="text-white font-medium">{currentSession.sessionToken}</span>
+                            {currentSession.device && (
+                              <span className="text-gray-400 text-sm">
+                                {currentSession.device.platform} - {currentSession.device.model || currentSession.device.deviceId.slice(0, 8)}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-6 text-sm">
+                            <span className="text-gray-400">{currentSession.requestCount} requests</span>
+                            <span className="text-gray-400">{currentSession.screenSequence.length} screens</span>
+                            <span className="text-green-400 font-medium">${currentSession.totalCost.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })()}
+
+                  {/* Timeline View */}
+                  {flowViewMode === 'timeline' && (
+                    <div className="bg-gray-900 rounded-lg p-4">
+                      {timelineLoading ? (
+                        <p className="text-gray-400 text-center py-8">Loading timeline...</p>
+                      ) : !timelineData ? (
+                        <div className="text-gray-400 text-center py-8">
+                          <p>No timeline data available.</p>
+                          <button
+                            onClick={() => fetchTimeline(selectedFlowSession)}
+                            className="mt-2 text-blue-400 hover:text-blue-300"
+                          >
+                            Click to load timeline
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Timeline Stats */}
+                          <div className="flex items-center gap-6 mb-6 pb-4 border-b border-gray-800">
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400 text-sm">Requests:</span>
+                              <span className="text-white font-medium">{timelineData.stats.totalRequests}</span>
+                              <span className="text-green-400 text-xs">({timelineData.stats.successfulRequests} ok)</span>
+                              {timelineData.stats.failedRequests > 0 && (
+                                <span className="text-red-400 text-xs">({timelineData.stats.failedRequests} failed)</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400 text-sm">Logs:</span>
+                              <span className="text-white font-medium">{timelineData.stats.totalLogs}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400 text-sm">Cost:</span>
+                              <span className="text-green-400 font-medium">${timelineData.stats.totalCost.toFixed(2)}</span>
+                            </div>
+                            {timelineData.session.appVersion && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-400 text-sm">App:</span>
+                                <span className="text-white text-sm">{timelineData.session.appVersion}</span>
+                              </div>
+                            )}
+                            {timelineData.session.locale && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-400 text-sm">Locale:</span>
+                                <span className="text-white text-sm">{timelineData.session.locale}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Timeline Events */}
+                          <div className="space-y-1">
+                            {timelineData.timeline.map((event, idx) => {
+                              const eventId = event.type === 'screen' ? `screen-${idx}` : event.type === 'request' ? event.id : event.id
+                              const isExpanded = expandedTimelineEvent === eventId
+                              const time = new Date(event.timestamp).toLocaleTimeString()
+
+                              if (event.type === 'screen') {
+                                return (
+                                  <div key={eventId} className="flex items-center gap-3 py-3">
+                                    <span className="text-gray-500 text-xs font-mono w-20 flex-shrink-0">{time}</span>
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-3 h-3 rounded-full bg-indigo-500" />
+                                      <div className="w-0.5 h-4 bg-gray-700" />
+                                    </div>
+                                    <div className="flex-1 bg-indigo-900/30 rounded-lg px-4 py-2 border border-indigo-700/50">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-indigo-400 text-sm font-medium">Screen</span>
+                                        <span className="text-white font-medium">{event.name}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              }
+
+                              if (event.type === 'request') {
+                                const methodColors: Record<string, string> = {
+                                  GET: 'bg-blue-900/50 text-blue-400',
+                                  POST: 'bg-green-900/50 text-green-400',
+                                  PUT: 'bg-yellow-900/50 text-yellow-400',
+                                  PATCH: 'bg-orange-900/50 text-orange-400',
+                                  DELETE: 'bg-red-900/50 text-red-400'
+                                }
+                                const statusColor = event.statusCode
+                                  ? event.statusCode >= 200 && event.statusCode < 300
+                                    ? 'text-green-400'
+                                    : event.statusCode >= 400
+                                      ? 'text-red-400'
+                                      : 'text-yellow-400'
+                                  : 'text-gray-400'
+
+                                return (
+                                  <div key={eventId} className="flex items-start gap-3 py-1">
+                                    <span className="text-gray-500 text-xs font-mono w-20 flex-shrink-0 pt-2">{time}</span>
+                                    <div className="flex flex-col items-center pt-2">
+                                      <div className="w-2 h-2 rounded-full bg-gray-600" />
+                                      <div className="w-0.5 h-full bg-gray-800 min-h-[20px]" />
+                                    </div>
+                                    <div
+                                      className={`flex-1 border rounded-lg transition-colors cursor-pointer ${isExpanded ? 'border-blue-500 bg-gray-800/50' : 'border-gray-800 hover:border-gray-700'
+                                        }`}
+                                      onClick={() => setExpandedTimelineEvent(isExpanded ? null : eventId)}
+                                    >
+                                      <div className="px-3 py-2">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${methodColors[event.method] || 'bg-gray-700 text-gray-300'}`}>
+                                            {event.method}
+                                          </span>
+                                          <span className={`text-xs font-medium ${statusColor}`}>
+                                            {event.statusCode || 'pending'}
+                                          </span>
+                                          {event.duration && (
+                                            <span className="text-gray-500 text-xs">{event.duration}ms</span>
+                                          )}
+                                          {event.cost !== null && event.cost > 0 && (
+                                            <span className="text-green-400 text-xs">${event.cost.toFixed(2)}</span>
+                                          )}
+                                          <span className="text-gray-400 text-xs truncate max-w-md" title={event.url}>
+                                            {event.endpoint}
+                                          </span>
+                                          {event.error && (
+                                            <span className="text-red-400 text-xs">Error</span>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      {/* Expanded Details */}
+                                      {isExpanded && (
+                                        <div className="px-3 pb-3 space-y-3 border-t border-gray-700 pt-3">
+                                          <div>
+                                            <p className="text-gray-400 text-xs mb-1">URL</p>
+                                            <p className="text-gray-300 text-xs font-mono break-all bg-gray-900 p-2 rounded">{event.url}</p>
+                                          </div>
+                                          {event.error && (
+                                            <div>
+                                              <p className="text-red-400 text-xs mb-1">Error</p>
+                                              <p className="text-red-300 text-xs font-mono bg-red-900/20 p-2 rounded">{event.error}</p>
+                                            </div>
+                                          )}
+                                          {event.requestBody && (
+                                            <div>
+                                              <p className="text-gray-400 text-xs mb-1">Request Body</p>
+                                              <pre className="text-gray-300 text-xs font-mono bg-gray-900 p-2 rounded overflow-x-auto max-h-40">
+                                                {(() => {
+                                                  try {
+                                                    return JSON.stringify(JSON.parse(event.requestBody), null, 2)
+                                                  } catch {
+                                                    return event.requestBody
+                                                  }
+                                                })()}
+                                              </pre>
+                                            </div>
+                                          )}
+                                          {event.responseBody && (
+                                            <div>
+                                              <p className="text-gray-400 text-xs mb-1">Response Body</p>
+                                              <pre className="text-gray-300 text-xs font-mono bg-gray-900 p-2 rounded overflow-x-auto max-h-40">
+                                                {(() => {
+                                                  try {
+                                                    return JSON.stringify(JSON.parse(event.responseBody), null, 2)
+                                                  } catch {
+                                                    return event.responseBody
+                                                  }
+                                                })()}
+                                              </pre>
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )
+                              }
+
+                              if (event.type === 'log') {
+                                const levelColors: Record<string, string> = {
+                                  verbose: 'bg-gray-700 text-gray-300',
+                                  debug: 'bg-gray-700 text-gray-300',
+                                  info: 'bg-blue-900/50 text-blue-400',
+                                  warn: 'bg-yellow-900/50 text-yellow-400',
+                                  error: 'bg-red-900/50 text-red-400',
+                                  assert: 'bg-red-900/50 text-red-400'
+                                }
+
+                                return (
+                                  <div key={eventId} className="flex items-start gap-3 py-1">
+                                    <span className="text-gray-500 text-xs font-mono w-20 flex-shrink-0 pt-2">{time}</span>
+                                    <div className="flex flex-col items-center pt-2">
+                                      <div className="w-2 h-2 rounded-full bg-gray-600" />
+                                      <div className="w-0.5 h-full bg-gray-800 min-h-[20px]" />
+                                    </div>
+                                    <div
+                                      className={`flex-1 border rounded-lg transition-colors cursor-pointer ${isExpanded ? 'border-blue-500 bg-gray-800/50' : 'border-gray-800 hover:border-gray-700'
+                                        }`}
+                                      onClick={() => setExpandedTimelineEvent(isExpanded ? null : eventId)}
+                                    >
+                                      <div className="px-3 py-2">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${levelColors[event.level] || 'bg-gray-700 text-gray-300'}`}>
+                                            {event.level}
+                                          </span>
+                                          {event.tag && (
+                                            <span className="px-2 py-0.5 bg-gray-700 text-gray-400 rounded text-xs">
+                                              {event.tag}
+                                            </span>
+                                          )}
+                                          <span className="text-gray-300 text-sm truncate max-w-lg">
+                                            {event.message.length > 80 ? event.message.slice(0, 80) + '...' : event.message}
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      {/* Expanded Details */}
+                                      {isExpanded && (
+                                        <div className="px-3 pb-3 space-y-3 border-t border-gray-700 pt-3">
+                                          <div>
+                                            <p className="text-gray-400 text-xs mb-1">Message</p>
+                                            <p className="text-gray-300 text-sm bg-gray-900 p-2 rounded whitespace-pre-wrap">{event.message}</p>
+                                          </div>
+                                          {event.fileName && (
+                                            <div>
+                                              <p className="text-gray-400 text-xs mb-1">Location</p>
+                                              <p className="text-gray-300 text-xs font-mono">
+                                                {event.fileName}
+                                                {event.lineNumber && `:${event.lineNumber}`}
+                                                {event.functionName && ` in ${event.functionName}()`}
+                                                {event.className && ` [${event.className}]`}
+                                              </p>
+                                            </div>
+                                          )}
+                                          {event.data && typeof event.data === 'object' && Object.keys(event.data).length > 0 ? (
+                                            <div>
+                                              <p className="text-gray-400 text-xs mb-1">Data</p>
+                                              <pre className="text-gray-300 text-xs font-mono bg-gray-900 p-2 rounded overflow-x-auto max-h-40">
+                                                {JSON.stringify(event.data, null, 2)}
+                                              </pre>
+                                            </div>
+                                          ) : null}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )
+                              }
+
+                              return null
+                            })}
+                          </div>
+
+                          {timelineData.timeline.length === 0 && (
+                            <p className="text-gray-500 text-center py-8">No events recorded for this session.</p>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Flow View: Split View: Flow Visual (Left) + Details (Right) */}
+                  {flowViewMode === 'flow' && (
+                    <>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" style={{ minHeight: '600px' }}>
+                        {/* Left: Flow Visualization */}
+                        <div className="bg-gray-900 rounded-lg p-4 overflow-auto">
+                          <h3 className="text-white font-medium mb-4">Screen Flow</h3>
+
+                          {/* Session Sequence - Clickable */}
+                          {(() => {
+                            const currentSession = flowData.sessions.find(s => s.id === selectedFlowSession)
+                            if (!currentSession) return null
+
+                            return (
+                              <div className="space-y-2">
+                                {currentSession.screenSequence.map((screen, idx) => {
+                                  const nextScreen = currentSession.screenSequence[idx + 1]
+                                  const edgeId = nextScreen ? `${screen}->${nextScreen}` : null
+                                  const edge = edgeId ? flowData.edges.find(e => e.id === edgeId) : null
+                                  const isEdgeSelected = selectedEdge === edgeId
+
+                                  return (
+                                    <React.Fragment key={idx}>
+                                      {/* Screen Node */}
+                                      <div className="flex items-center gap-3">
+                                        <span className="w-8 h-8 flex items-center justify-center bg-indigo-600 text-white text-sm rounded-full font-bold flex-shrink-0">
+                                          {idx + 1}
+                                        </span>
+                                        <div className="flex-1 bg-gray-800 rounded-lg p-3 border-2 border-gray-700">
+                                          <span className="text-white font-medium">{screen}</span>
+                                          {(() => {
+                                            const node = flowData.nodes.find(n => n.id === screen)
+                                            if (!node) return null
+                                            const successRate = node.requestCount > 0 ? ((node.successCount / node.requestCount) * 100).toFixed(0) : '0'
+                                            return (
+                                              <div className="flex items-center gap-4 mt-1 text-xs">
+                                                <span className="text-gray-400">{node.requestCount} req</span>
+                                                <span className={Number(successRate) >= 90 ? 'text-green-400' : Number(successRate) >= 50 ? 'text-yellow-400' : 'text-red-400'}>
+                                                  {successRate}% ok
+                                                </span>
+                                                <span className="text-green-400">${node.totalCost.toFixed(2)}</span>
+                                              </div>
+                                            )
+                                          })()}
+                                        </div>
+                                      </div>
+
+                                      {/* Arrow to next screen - Clickable */}
+                                      {nextScreen && edge && (
+                                        <div
+                                          className={`ml-4 flex items-center gap-2 py-2 px-3 rounded cursor-pointer transition-colors ${isEdgeSelected ? 'bg-blue-900/50 border border-blue-500' : 'hover:bg-gray-800'
+                                            }`}
+                                          onClick={() => setSelectedEdge(isEdgeSelected ? null : edgeId)}
+                                        >
+                                          <div className="flex flex-col items-center">
+                                            <div className={`w-0.5 h-4 ${isEdgeSelected ? 'bg-blue-500' : 'bg-gray-600'}`} />
+                                            <svg className={`w-4 h-4 ${isEdgeSelected ? 'text-blue-500' : 'text-gray-600'}`} fill="currentColor" viewBox="0 0 20 20">
+                                              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                                            </svg>
+                                            <div className={`w-0.5 h-4 ${isEdgeSelected ? 'bg-blue-500' : 'bg-gray-600'}`} />
+                                          </div>
+                                          <div className="flex-1">
+                                            <div className="flex items-center gap-2 text-xs">
+                                              <span className={`px-2 py-0.5 rounded-full font-medium ${isEdgeSelected ? 'bg-blue-600 text-white' : 'bg-indigo-900/50 text-indigo-400'}`}>
+                                                #{edge.sequenceNumber}
+                                              </span>
+                                              <span className="text-gray-400">{edge.requestCount} requests</span>
+                                              <span className={edge.errorCount > 0 ? 'text-red-400' : 'text-green-400'}>
+                                                {edge.successCount}/{edge.requestCount} ok
+                                              </span>
+                                              <span className="text-green-400">${edge.totalCost.toFixed(2)}</span>
+                                            </div>
+                                            {edge.topEndpoints.length > 0 && (
+                                              <div className="mt-1 text-xs text-gray-500">
+                                                {edge.topEndpoints.slice(0, 2).map((ep, i) => (
+                                                  <span key={i} className="mr-2">
+                                                    <span className={`font-medium ${ep.method === 'GET' ? 'text-blue-400' :
+                                                        ep.method === 'POST' ? 'text-green-400' :
+                                                          ep.method === 'PUT' ? 'text-yellow-400' :
+                                                            'text-red-400'
+                                                      }`}>{ep.method}</span> {ep.endpoint.slice(0, 20)}...
+                                                  </span>
+                                                ))}
+                                              </div>
+                                            )}
+                                          </div>
+                                          <span className={`text-xs ${isEdgeSelected ? 'text-blue-400' : 'text-gray-500'}`}>
+                                            Click for details →
+                                          </span>
+                                        </div>
+                                      )}
+                                    </React.Fragment>
+                                  )
+                                })}
+                              </div>
+                            )
+                          })()}
+                        </div>
+
+                        {/* Right: Transition Details */}
+                        <div className="bg-gray-900 rounded-lg p-4 overflow-auto">
+                          <h3 className="text-white font-medium mb-4">Transition Details</h3>
+
+                          {!selectedEdge ? (
+                            <div className="flex items-center justify-center h-full min-h-[400px] text-gray-500">
+                              <div className="text-center">
+                                <svg className="w-16 h-16 mx-auto mb-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                                <p>Click on an arrow to view</p>
+                                <p>request/response details</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              {(() => {
+                                const edge = flowData.edges.find(e => e.id === selectedEdge)
+                                if (!edge) return null
+
+                                return (
+                                  <>
+                                    {/* Transition Header */}
+                                    <div className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg">
+                                      <span className="px-3 py-1 bg-indigo-600 text-white text-sm rounded-full font-bold">
+                                        #{edge.sequenceNumber}
+                                      </span>
+                                      <div>
+                                        <p className="text-white font-medium">{edge.source} → {edge.target}</p>
+                                        <p className="text-gray-400 text-xs">
+                                          {edge.requestCount} requests | {edge.successCount} success | {edge.errorCount} errors | ${edge.totalCost.toFixed(2)}
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    {/* Endpoints */}
+                                    {edge.topEndpoints.map((ep, idx) => (
+                                      <div key={idx} className="border border-gray-800 rounded-lg p-4">
+                                        {/* Endpoint Header */}
+                                        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                                          <div className="flex items-center gap-2">
+                                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${ep.method === 'GET' ? 'bg-blue-900/50 text-blue-400' :
+                                                ep.method === 'POST' ? 'bg-green-900/50 text-green-400' :
+                                                  ep.method === 'PUT' ? 'bg-yellow-900/50 text-yellow-400' :
+                                                    ep.method === 'DELETE' ? 'bg-red-900/50 text-red-400' :
+                                                      'bg-gray-700 text-gray-300'
+                                              }`}>
+                                              {ep.method}
+                                            </span>
+                                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${ep.statusCode >= 200 && ep.statusCode < 300 ? 'bg-green-900/50 text-green-400' :
+                                                ep.statusCode >= 400 ? 'bg-red-900/50 text-red-400' :
+                                                  'bg-gray-700 text-gray-300'
+                                              }`}>
+                                              {ep.statusCode}
+                                            </span>
+                                            <span className="text-gray-400 text-xs">{ep.duration}ms</span>
+                                          </div>
+                                          <div className="flex items-center gap-3 text-xs">
+                                            <span className="text-gray-400">{ep.count}x</span>
+                                            <span className={ep.successRate >= 90 ? 'text-green-400' : ep.successRate >= 50 ? 'text-yellow-400' : 'text-red-400'}>
+                                              {ep.successRate.toFixed(0)}%
+                                            </span>
+                                            <span className="text-green-400">${ep.cost.toFixed(2)}</span>
+                                          </div>
+                                        </div>
+
+                                        {/* URL */}
+                                        <div className="mb-3 p-2 bg-gray-950 rounded text-xs font-mono text-gray-400 break-all">
+                                          {ep.url}
+                                        </div>
+
+                                        {/* Request Body */}
+                                        <div className="mb-3">
+                                          <h4 className="text-sm font-medium text-gray-300 mb-2">Request Body</h4>
+                                          {ep.requestBody ? (
+                                            <pre className="p-3 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-40">
+                                              {(() => {
+                                                try {
+                                                  return JSON.stringify(JSON.parse(ep.requestBody), null, 2)
+                                                } catch {
+                                                  return ep.requestBody
+                                                }
+                                              })()}
+                                            </pre>
+                                          ) : (
+                                            <p className="text-xs text-gray-500 italic p-3 bg-gray-950 rounded">No request body</p>
+                                          )}
+                                        </div>
+
+                                        {/* Response Body */}
+                                        <div>
+                                          <h4 className="text-sm font-medium text-gray-300 mb-2">Response Body</h4>
+                                          {ep.responseBody ? (
+                                            <pre className="p-3 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-40">
+                                              {(() => {
+                                                try {
+                                                  return JSON.stringify(JSON.parse(ep.responseBody), null, 2)
+                                                } catch {
+                                                  return ep.responseBody
+                                                }
+                                              })()}
+                                            </pre>
+                                          ) : (
+                                            <p className="text-xs text-gray-500 italic p-3 bg-gray-950 rounded">No response body</p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </>
+                                )
+                              })()}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Screen Summary Table */}
+                      <div className="bg-gray-900 rounded-lg p-4">
+                        <h3 className="text-white font-medium mb-4">Screen Summary</h3>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-gray-800">
+                                <th className="text-left text-gray-400 py-2 px-4">Screen</th>
+                                <th className="text-right text-gray-400 py-2 px-4">Requests</th>
+                                <th className="text-right text-gray-400 py-2 px-4">Success</th>
+                                <th className="text-right text-gray-400 py-2 px-4">Errors</th>
+                                <th className="text-right text-gray-400 py-2 px-4">Success Rate</th>
+                                <th className="text-right text-gray-400 py-2 px-4">Total Cost</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {flowData.nodes.map((node) => {
+                                const successRate = node.requestCount > 0 ? ((node.successCount / node.requestCount) * 100) : 0
+                                return (
+                                  <tr key={node.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
+                                    <td className="py-2 px-4 text-white">{node.name}</td>
+                                    <td className="py-2 px-4 text-right text-gray-300">{node.requestCount}</td>
+                                    <td className="py-2 px-4 text-right text-green-400">{node.successCount}</td>
+                                    <td className="py-2 px-4 text-right text-red-400">{node.errorCount}</td>
+                                    <td className="py-2 px-4 text-right">
+                                      <span className={successRate >= 90 ? 'text-green-400' : successRate >= 50 ? 'text-yellow-400' : 'text-red-400'}>
+                                        {successRate.toFixed(1)}%
+                                      </span>
+                                    </td>
+                                    <td className="py-2 px-4 text-right text-green-400">${node.totalCost.toFixed(2)}</td>
+                                  </tr>
+                                )
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'monitor' && (
+            <div className="space-y-6">
+              {/* Sub-tabs */}
+              <div className="border-b border-gray-800">
+                <nav className="flex space-x-8">
+                  <button
+                    onClick={() => setMonitorSubTab('errors')}
+                    className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${monitorSubTab === 'errors'
+                        ? 'border-blue-500 text-blue-400'
+                        : 'border-transparent text-gray-400 hover:text-white'
+                      }`}
+                  >
+                    Monitored Errors
+                  </button>
+                  <button
+                    onClick={() => setMonitorSubTab('settings')}
+                    className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${monitorSubTab === 'settings'
+                        ? 'border-blue-500 text-blue-400'
+                        : 'border-transparent text-gray-400 hover:text-white'
+                      }`}
+                  >
+                    Settings
+                  </button>
+                </nav>
+              </div>
+
+              {monitorSubTab === 'errors' && (
+                <>
+                  {/* Monitor Summary Cards */}
+                  {monitorSummary && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="bg-gray-900 rounded-lg p-4">
+                        <p className="text-gray-400 text-sm">Total Errors</p>
+                        <p className="text-2xl font-bold text-white">{monitorSummary.totalErrors}</p>
+                      </div>
+                      <div className="bg-gray-900 rounded-lg p-4">
+                        <p className="text-gray-400 text-sm">Unresolved</p>
+                        <p className="text-2xl font-bold text-red-400">{monitorSummary.unresolvedCount}</p>
+                      </div>
+                      <div className="bg-gray-900 rounded-lg p-4">
+                        <p className="text-gray-400 text-sm">Resolved</p>
+                        <p className="text-2xl font-bold text-green-400">{monitorSummary.resolvedCount}</p>
+                      </div>
+                      <div className="bg-gray-900 rounded-lg p-4">
+                        <p className="text-gray-400 text-sm">Total Occurrences</p>
+                        <p className="text-2xl font-bold text-white">{monitorSummary.totalOccurrences}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Filter Buttons */}
+                  <div className="flex gap-2">
+                    {(['all', 'unresolved', 'resolved'] as const).map((filter) => (
+                      <button
+                        key={filter}
+                        onClick={() => setMonitorFilter(filter)}
+                        className={`px-4 py-2 rounded text-sm ${monitorFilter === filter
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                          }`}
+                      >
+                        {filter.charAt(0).toUpperCase() + filter.slice(1)}
                       </button>
+                    ))}
+                  </div>
+
+                  {/* Master-Detail View */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Error List (Master) */}
+                    <div className="bg-gray-900 rounded-lg p-4">
+                      <h3 className="text-white font-medium mb-4">Monitored Errors</h3>
+                      {monitoredErrors.length === 0 ? (
+                        <p className="text-gray-400 text-center py-8">No errors found</p>
+                      ) : (
+                        <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                          {monitoredErrors.map((error) => (
+                            <div
+                              key={error.id}
+                              onClick={() => setSelectedError(error)}
+                              className={`p-4 rounded-lg cursor-pointer transition-colors ${selectedError?.id === error.id
+                                  ? 'bg-blue-900/50 border border-blue-500'
+                                  : 'bg-gray-800 hover:bg-gray-700'
+                                }`}
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${error.isResolved ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'
+                                  }`}>
+                                  {error.isResolved ? 'Resolved' : 'Active'}
+                                </span>
+                                <span className="text-gray-400 text-xs">{error.occurrenceCount} occurrences</span>
+                              </div>
+                              <h4 className="text-white font-medium">{error.alert.title}</h4>
+                              <p className="text-gray-400 text-sm mt-1">
+                                <span className={getStatusColor(error.statusCode || 0)}>{error.statusCode}</span>
+                                {' '}{error.method} {error.endpoint}
+                              </p>
+                              <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+                                <span>Error: {error.errorCode}</span>
+                                <span>{formatTime(error.lastOccurrence)}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Error Details (Detail) */}
+                    <div className="bg-gray-900 rounded-lg p-4">
+                      <h3 className="text-white font-medium mb-4">Error Details</h3>
+                      {selectedError ? (
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-lg text-white font-medium">{selectedError.alert.title}</h4>
+                            <button
+                              onClick={() => handleResolveError(selectedError.id, !selectedError.isResolved)}
+                              className={`px-3 py-1 rounded text-sm ${selectedError.isResolved
+                                  ? 'bg-yellow-600 hover:bg-yellow-500 text-white'
+                                  : 'bg-green-600 hover:bg-green-500 text-white'
+                                }`}
+                            >
+                              {selectedError.isResolved ? 'Reopen' : 'Mark Resolved'}
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-500">Error Type</span>
+                              <p className="text-white">{selectedError.errorType}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Error Code</span>
+                              <p className="text-white">{selectedError.errorCode}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Status Code</span>
+                              <p className={getStatusColor(selectedError.statusCode || 0)}>{selectedError.statusCode}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Method</span>
+                              <p className="text-white">{selectedError.method}</p>
+                            </div>
+                            <div className="col-span-2">
+                              <span className="text-gray-500">Endpoint</span>
+                              <p className="text-white font-mono text-sm break-all">{selectedError.endpoint}</p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-500">First Occurrence</span>
+                              <p className="text-white">{formatTime(selectedError.firstOccurrence)}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Last Occurrence</span>
+                              <p className="text-white">{formatTime(selectedError.lastOccurrence)}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Total Occurrences</span>
+                              <p className="text-white">{selectedError.occurrenceCount}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Affected Devices</span>
+                              <p className="text-white">{selectedError.affectedDevices.length}</p>
+                            </div>
+                          </div>
+
+                          {selectedError.requestBody && (
+                            <div>
+                              <span className="text-gray-500 text-sm">Request Body</span>
+                              <pre className="mt-1 p-3 bg-gray-800 rounded text-xs text-gray-300 overflow-auto max-h-40">
+                                {tryFormatJson(selectedError.requestBody)}
+                              </pre>
+                            </div>
+                          )}
+
+                          {selectedError.responseBody && (
+                            <div>
+                              <span className="text-gray-500 text-sm">Response Body</span>
+                              <pre className="mt-1 p-3 bg-gray-800 rounded text-xs text-gray-300 overflow-auto max-h-40">
+                                {tryFormatJson(selectedError.responseBody)}
+                              </pre>
+                            </div>
+                          )}
+
+                          {selectedError.notes && (
+                            <div>
+                              <span className="text-gray-500 text-sm">Notes</span>
+                              <p className="mt-1 text-gray-300">{selectedError.notes}</p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-gray-400 text-center py-8">Select an error to view details</p>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {monitorSubTab === 'settings' && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-white font-medium">Alert Rules</h3>
+                    <button
+                      onClick={() => setShowAddAlert(true)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm"
+                    >
+                      + Add Alert Rule
+                    </button>
+                  </div>
+
+                  {/* Add Alert Form */}
+                  {showAddAlert && (
+                    <div className="bg-gray-900 rounded-lg p-4 border border-blue-500">
+                      <h4 className="text-white font-medium mb-4">New Alert Rule</h4>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-gray-400 text-sm">Alert Title *</label>
+                            <input
+                              type="text"
+                              value={newAlert.title}
+                              onChange={(e) => setNewAlert({ ...newAlert, title: e.target.value })}
+                              placeholder="e.g., Server Error Alert"
+                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-gray-400 text-sm">Description</label>
+                            <input
+                              type="text"
+                              value={newAlert.description}
+                              onChange={(e) => setNewAlert({ ...newAlert, description: e.target.value })}
+                              placeholder="Optional description"
+                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-gray-400 text-sm">Endpoint (optional, leave empty for all)</label>
+                            <input
+                              type="text"
+                              value={newAlert.endpoint}
+                              onChange={(e) => setNewAlert({ ...newAlert, endpoint: e.target.value })}
+                              placeholder="/api/users/*"
+                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-gray-400 text-sm">Method (optional)</label>
+                            <select
+                              value={newAlert.method}
+                              onChange={(e) => setNewAlert({ ...newAlert, method: e.target.value })}
+                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                            >
+                              <option value="">All Methods</option>
+                              <option value="GET">GET</option>
+                              <option value="POST">POST</option>
+                              <option value="PUT">PUT</option>
+                              <option value="DELETE">DELETE</option>
+                              <option value="PATCH">PATCH</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Error Code Selection */}
+                        <div className="space-y-2">
+                          <label className="text-gray-400 text-sm">Monitor Standard Error Codes</label>
+                          <div className="flex items-center gap-4">
+                            <label className="flex items-center gap-2 text-white text-sm">
+                              <input
+                                type="checkbox"
+                                checked={newAlert.monitorStandardErrors}
+                                onChange={(e) => setNewAlert({ ...newAlert, monitorStandardErrors: e.target.checked })}
+                                className="rounded bg-gray-800 border-gray-700"
+                              />
+                              Enable Standard Error Monitoring
+                            </label>
+                          </div>
+                          {newAlert.monitorStandardErrors && (
+                            <div className="mt-2 space-y-2">
+                              <p className="text-gray-500 text-xs">Select error codes to monitor:</p>
+                              <div className="flex flex-wrap gap-2">
+                                <span className="text-gray-400 text-xs">Client (4xx):</span>
+                                {standardErrorCodes.client.map((code) => (
+                                  <label key={code} className="flex items-center gap-1 text-sm">
+                                    <input
+                                      type="checkbox"
+                                      checked={newAlert.standardErrorCodes.includes(code)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setNewAlert({ ...newAlert, standardErrorCodes: [...newAlert.standardErrorCodes, code] })
+                                        } else {
+                                          setNewAlert({ ...newAlert, standardErrorCodes: newAlert.standardErrorCodes.filter(c => c !== code) })
+                                        }
+                                      }}
+                                      className="rounded bg-gray-800 border-gray-700"
+                                    />
+                                    <span className="text-yellow-400">{code}</span>
+                                  </label>
+                                ))}
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                <span className="text-gray-400 text-xs">Server (5xx):</span>
+                                {standardErrorCodes.server.map((code) => (
+                                  <label key={code} className="flex items-center gap-1 text-sm">
+                                    <input
+                                      type="checkbox"
+                                      checked={newAlert.standardErrorCodes.includes(code)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setNewAlert({ ...newAlert, standardErrorCodes: [...newAlert.standardErrorCodes, code] })
+                                        } else {
+                                          setNewAlert({ ...newAlert, standardErrorCodes: newAlert.standardErrorCodes.filter(c => c !== code) })
+                                        }
+                                      }}
+                                      className="rounded bg-gray-800 border-gray-700"
+                                    />
+                                    <span className="text-red-400">{code}</span>
+                                  </label>
+                                ))}
+                              </div>
+                              <div className="flex gap-2 mt-2">
+                                <button
+                                  onClick={() => setNewAlert({
+                                    ...newAlert,
+                                    standardErrorCodes: [...standardErrorCodes.client, ...standardErrorCodes.server]
+                                  })}
+                                  className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs hover:bg-gray-600"
+                                >Select All</button>
+                                <button
+                                  onClick={() => setNewAlert({ ...newAlert, standardErrorCodes: [] })}
+                                  className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs hover:bg-gray-600"
+                                >Clear All</button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Custom Error Codes */}
+                        <div className="space-y-2">
+                          <label className="text-gray-400 text-sm">Custom Status Codes</label>
+                          <div className="flex flex-wrap gap-2">
+                            {newAlert.customStatusCodes.map((code, idx) => (
+                              <span key={idx} className="px-2 py-1 bg-purple-900 text-purple-300 rounded text-sm flex items-center gap-1">
+                                {code}
+                                <button
+                                  onClick={() => setNewAlert({
+                                    ...newAlert,
+                                    customStatusCodes: newAlert.customStatusCodes.filter((_, i) => i !== idx)
+                                  })}
+                                  className="text-purple-400 hover:text-red-400"
+                                >×</button>
+                              </span>
+                            ))}
+                          </div>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              value={customCodeInput}
+                              onChange={(e) => setCustomCodeInput(e.target.value)}
+                              placeholder="e.g., 418"
+                              className="w-24 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                            />
+                            <button
+                              onClick={() => {
+                                const code = parseInt(customCodeInput)
+                                if (code && !newAlert.customStatusCodes.includes(code)) {
+                                  setNewAlert({ ...newAlert, customStatusCodes: [...newAlert.customStatusCodes, code] })
+                                  setCustomCodeInput('')
+                                }
+                              }}
+                              className="px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 text-sm"
+                            >Add</button>
+                          </div>
+                        </div>
+
+                        {/* Body Error Detection */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-gray-400 text-sm">Body Error Field (JSON path)</label>
+                            <input
+                              type="text"
+                              value={newAlert.bodyErrorField}
+                              onChange={(e) => setNewAlert({ ...newAlert, bodyErrorField: e.target.value })}
+                              placeholder="error.code or status"
+                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-gray-400 text-sm">Body Error Values</label>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {newAlert.bodyErrorValues.map((val, idx) => (
+                                <span key={idx} className="px-2 py-0.5 bg-orange-900 text-orange-300 rounded text-xs flex items-center gap-1">
+                                  {val}
+                                  <button
+                                    onClick={() => setNewAlert({
+                                      ...newAlert,
+                                      bodyErrorValues: newAlert.bodyErrorValues.filter((_, i) => i !== idx)
+                                    })}
+                                    className="text-orange-400 hover:text-red-400"
+                                  >×</button>
+                                </span>
+                              ))}
+                            </div>
+                            <div className="flex gap-2 mt-1">
+                              <input
+                                type="text"
+                                value={bodyErrorValueInput}
+                                onChange={(e) => setBodyErrorValueInput(e.target.value)}
+                                placeholder="ERROR_CODE"
+                                className="flex-1 px-2 py-1 bg-gray-800 text-white rounded border border-gray-700 text-xs"
+                              />
+                              <button
+                                onClick={() => {
+                                  if (bodyErrorValueInput && !newAlert.bodyErrorValues.includes(bodyErrorValueInput)) {
+                                    setNewAlert({ ...newAlert, bodyErrorValues: [...newAlert.bodyErrorValues, bodyErrorValueInput] })
+                                    setBodyErrorValueInput('')
+                                  }
+                                }}
+                                className="px-2 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 text-xs"
+                              >+</button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Header Error Detection */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-gray-400 text-sm">Header Error Field</label>
+                            <input
+                              type="text"
+                              value={newAlert.headerErrorField}
+                              onChange={(e) => setNewAlert({ ...newAlert, headerErrorField: e.target.value })}
+                              placeholder="X-Error-Code"
+                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-gray-400 text-sm">Header Error Values</label>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {newAlert.headerErrorValues.map((val, idx) => (
+                                <span key={idx} className="px-2 py-0.5 bg-pink-900 text-pink-300 rounded text-xs flex items-center gap-1">
+                                  {val}
+                                  <button
+                                    onClick={() => setNewAlert({
+                                      ...newAlert,
+                                      headerErrorValues: newAlert.headerErrorValues.filter((_, i) => i !== idx)
+                                    })}
+                                    className="text-pink-400 hover:text-red-400"
+                                  >×</button>
+                                </span>
+                              ))}
+                            </div>
+                            <div className="flex gap-2 mt-1">
+                              <input
+                                type="text"
+                                value={headerErrorValueInput}
+                                onChange={(e) => setHeaderErrorValueInput(e.target.value)}
+                                placeholder="ERROR"
+                                className="flex-1 px-2 py-1 bg-gray-800 text-white rounded border border-gray-700 text-xs"
+                              />
+                              <button
+                                onClick={() => {
+                                  if (headerErrorValueInput && !newAlert.headerErrorValues.includes(headerErrorValueInput)) {
+                                    setNewAlert({ ...newAlert, headerErrorValues: [...newAlert.headerErrorValues, headerErrorValueInput] })
+                                    setHeaderErrorValueInput('')
+                                  }
+                                }}
+                                className="px-2 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 text-xs"
+                              >+</button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Notification Channels */}
+                        <div className="space-y-2">
+                          <label className="text-gray-400 text-sm">Notification Channels</label>
+                          <div className="flex flex-wrap gap-4">
+                            <label className="flex items-center gap-2 text-white text-sm">
+                              <input
+                                type="checkbox"
+                                checked={newAlert.notifyEmail}
+                                onChange={(e) => setNewAlert({ ...newAlert, notifyEmail: e.target.checked })}
+                                className="rounded bg-gray-800 border-gray-700"
+                              />
+                              📧 Email
+                            </label>
+                            <label className="flex items-center gap-2 text-white text-sm">
+                              <input
+                                type="checkbox"
+                                checked={newAlert.notifyPush}
+                                onChange={(e) => setNewAlert({ ...newAlert, notifyPush: e.target.checked })}
+                                className="rounded bg-gray-800 border-gray-700"
+                              />
+                              🔔 Push
+                            </label>
+                            <label className="flex items-center gap-2 text-white text-sm">
+                              <input
+                                type="checkbox"
+                                checked={newAlert.notifySms}
+                                onChange={(e) => setNewAlert({ ...newAlert, notifySms: e.target.checked })}
+                                className="rounded bg-gray-800 border-gray-700"
+                              />
+                              📱 SMS
+                            </label>
+                            <label className="flex items-center gap-2 text-white text-sm">
+                              <input
+                                type="checkbox"
+                                checked={newAlert.notifyWebhook}
+                                onChange={(e) => setNewAlert({ ...newAlert, notifyWebhook: e.target.checked })}
+                                className="rounded bg-gray-800 border-gray-700"
+                              />
+                              🔗 Webhook
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 pt-4">
+                          <button
+                            onClick={handleCreateAlert}
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm"
+                          >
+                            Create Alert
+                          </button>
+                          <button
+                            onClick={() => setShowAddAlert(false)}
+                            className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 text-sm"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Alert List */}
+                  {alerts.length === 0 ? (
+                    <p className="text-gray-400 text-center py-8">No alert rules configured yet</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {alerts.map((alert) => (
+                        <div key={alert.id} className="bg-gray-900 rounded-lg p-4">
+                          {editingAlert?.id === alert.id ? (
+                            /* Edit Mode */
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-gray-400 text-sm">Alert Title *</label>
+                                  <input
+                                    type="text"
+                                    value={editingAlert.title}
+                                    onChange={(e) => setEditingAlert({ ...editingAlert, title: e.target.value })}
+                                    className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-gray-400 text-sm">Description</label>
+                                  <input
+                                    type="text"
+                                    value={editingAlert.description || ''}
+                                    onChange={(e) => setEditingAlert({ ...editingAlert, description: e.target.value })}
+                                    className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                                  />
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-gray-400 text-sm">Endpoint</label>
+                                  <input
+                                    type="text"
+                                    value={editingAlert.endpoint || ''}
+                                    onChange={(e) => setEditingAlert({ ...editingAlert, endpoint: e.target.value })}
+                                    className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-gray-400 text-sm">Method</label>
+                                  <select
+                                    value={editingAlert.method || ''}
+                                    onChange={(e) => setEditingAlert({ ...editingAlert, method: e.target.value })}
+                                    className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                                  >
+                                    <option value="">All Methods</option>
+                                    <option value="GET">GET</option>
+                                    <option value="POST">POST</option>
+                                    <option value="PUT">PUT</option>
+                                    <option value="DELETE">DELETE</option>
+                                    <option value="PATCH">PATCH</option>
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => editingAlert && handleUpdateAlert(editingAlert)}
+                                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => setEditingAlert(null)}
+                                  className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 text-sm"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            /* View Mode */
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <h4 className="text-white font-medium">{alert.title}</h4>
+                                  {alert.description && (
+                                    <p className="text-gray-400 text-sm mt-1">{alert.description}</p>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={alert.isEnabled}
+                                      onChange={() => handleUpdateAlert(alert, false)}
+                                      className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                  </label>
+                                  <button
+                                    onClick={() => setEditingAlert(alert)}
+                                    className="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 text-sm"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteAlert(alert.id)}
+                                    className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-500 text-sm"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span className="text-gray-500">Endpoint:</span>
+                                  <p className="text-white">{alert.endpoint || 'All endpoints'}</p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Method:</span>
+                                  <p className="text-white">{alert.method || 'All methods'}</p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Monitored Errors:</span>
+                                  <p className="text-white">{alert._count.monitoredErrors}</p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Status:</span>
+                                  <span className={`ml-2 px-2 py-0.5 rounded text-xs ${alert.isEnabled ? 'bg-green-900 text-green-300' : 'bg-gray-700 text-gray-400'
+                                    }`}>
+                                    {alert.isEnabled ? 'Enabled' : 'Disabled'}
+                                  </span>
+                                </div>
+                              </div>
+                              {alert.monitorStandardErrors && alert.standardErrorCodes.length > 0 && (
+                                <div>
+                                  <span className="text-gray-500 text-sm">Standard Error Codes:</span>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {alert.standardErrorCodes.map((code) => (
+                                      <span key={code} className={`px-2 py-0.5 rounded text-xs ${code >= 500 ? 'bg-red-900 text-red-300' : 'bg-yellow-900 text-yellow-300'
+                                        }`}>
+                                        {code}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {alert.customStatusCodes.length > 0 && (
+                                <div>
+                                  <span className="text-gray-500 text-sm">Custom Status Codes:</span>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {alert.customStatusCodes.map((code) => (
+                                      <span key={code} className="px-2 py-0.5 bg-purple-900 text-purple-300 rounded text-xs">
+                                        {code}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              <div>
+                                <span className="text-gray-500 text-sm">Notifications:</span>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                  {alert.notifyEmail && <span className="px-2 py-0.5 bg-blue-900 text-blue-300 rounded text-xs">📧 Email</span>}
+                                  {alert.notifyPush && <span className="px-2 py-0.5 bg-green-900 text-green-300 rounded text-xs">🔔 Push</span>}
+                                  {alert.notifySms && <span className="px-2 py-0.5 bg-yellow-900 text-yellow-300 rounded text-xs">📱 SMS</span>}
+                                  {alert.notifyWebhook && <span className="px-2 py-0.5 bg-purple-900 text-purple-300 rounded text-xs">🔗 Webhook</span>}
+                                  {!alert.notifyEmail && !alert.notifyPush && !alert.notifySms && !alert.notifyWebhook && (
+                                    <span className="text-gray-500 text-xs">No notifications configured</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
+              {/* Settings Horizontal Menu */}
+              <div className="border-b border-gray-800">
+                <nav className="flex space-x-8">
+                  <button
+                    onClick={() => setSettingsTab('notifications')}
+                    className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${settingsTab === 'notifications'
+                        ? 'border-blue-500 text-blue-400'
+                        : 'border-transparent text-gray-400 hover:text-white'
+                      }`}
+                  >
+                    Notifications
+                  </button>
+                  <button
+                    onClick={() => setSettingsTab('features')}
+                    className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${settingsTab === 'features'
+                        ? 'border-blue-500 text-blue-400'
+                        : 'border-transparent text-gray-400 hover:text-white'
+                      }`}
+                  >
+                    Product Features
+                  </button>
+                  <button
+                    onClick={() => setSettingsTab('sdk')}
+                    className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${settingsTab === 'sdk'
+                        ? 'border-blue-500 text-blue-400'
+                        : 'border-transparent text-gray-400 hover:text-white'
+                      }`}
+                  >
+                    SDK Settings
+                  </button>
+                  <button
+                    onClick={() => setSettingsTab('cleanup')}
+                    className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${settingsTab === 'cleanup'
+                        ? 'border-blue-500 text-blue-400'
+                        : 'border-transparent text-gray-400 hover:text-white'
+                      }`}
+                  >
+                    Data Cleanup
+                  </button>
+                  <button
+                    onClick={() => setSettingsTab('project')}
+                    className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${settingsTab === 'project'
+                        ? 'border-blue-500 text-blue-400'
+                        : 'border-transparent text-gray-400 hover:text-white'
+                      }`}
+                  >
+                    Project Settings
+                  </button>
+                </nav>
+              </div>
+
+              {/* Notifications Settings */}
+              {settingsTab === 'notifications' && notificationSettings && (
+                <div className="space-y-6">
+                  {/* Email Settings */}
+                  <div className="bg-gray-900 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">📧</span>
+                        <div>
+                          <h3 className="text-white font-medium">Email Notifications</h3>
+                          <p className="text-gray-400 text-sm">Receive alerts via email</p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={notificationSettings.emailEnabled}
+                          onChange={(e) => handleSaveNotificationSettings({ emailEnabled: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                    {notificationSettings.emailEnabled && (
+                      <div className="mt-4">
+                        <label className="text-gray-400 text-sm">Email Addresses</label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {notificationSettings.emailAddresses.map((email, idx) => (
+                            <span key={idx} className="px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-sm flex items-center gap-2">
+                              {email}
+                              <button
+                                onClick={() => handleSaveNotificationSettings({
+                                  emailAddresses: notificationSettings.emailAddresses.filter((_, i) => i !== idx)
+                                })}
+                                className="text-gray-500 hover:text-red-400"
+                              >×</button>
+                            </span>
+                          ))}
+                        </div>
+                        <div className="flex gap-2 mt-2">
+                          <input
+                            type="email"
+                            value={newEmailAddress}
+                            onChange={(e) => setNewEmailAddress(e.target.value)}
+                            placeholder="Add email address"
+                            className="flex-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                          />
+                          <button
+                            onClick={() => {
+                              if (newEmailAddress && !notificationSettings.emailAddresses.includes(newEmailAddress)) {
+                                handleSaveNotificationSettings({
+                                  emailAddresses: [...notificationSettings.emailAddresses, newEmailAddress]
+                                })
+                                setNewEmailAddress('')
+                              }
+                            }}
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm"
+                          >Add</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Push Settings */}
+                  <div className="bg-gray-900 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">🔔</span>
+                        <div>
+                          <h3 className="text-white font-medium">Push Notifications</h3>
+                          <p className="text-gray-400 text-sm">Receive real-time push alerts</p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={notificationSettings.pushEnabled}
+                          onChange={(e) => handleSaveNotificationSettings({ pushEnabled: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* SMS Settings */}
+                  <div className="bg-gray-900 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">📱</span>
+                        <div>
+                          <h3 className="text-white font-medium">SMS Notifications</h3>
+                          <p className="text-gray-400 text-sm">Receive alerts via SMS</p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={notificationSettings.smsEnabled}
+                          onChange={(e) => handleSaveNotificationSettings({ smsEnabled: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                    {notificationSettings.smsEnabled && (
+                      <div className="mt-4">
+                        <label className="text-gray-400 text-sm">Phone Numbers</label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {notificationSettings.smsNumbers.map((num, idx) => (
+                            <span key={idx} className="px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-sm flex items-center gap-2">
+                              {num}
+                              <button
+                                onClick={() => handleSaveNotificationSettings({
+                                  smsNumbers: notificationSettings.smsNumbers.filter((_, i) => i !== idx)
+                                })}
+                                className="text-gray-500 hover:text-red-400"
+                              >×</button>
+                            </span>
+                          ))}
+                        </div>
+                        <div className="flex gap-2 mt-2">
+                          <input
+                            type="tel"
+                            value={newSmsNumber}
+                            onChange={(e) => setNewSmsNumber(e.target.value)}
+                            placeholder="+1234567890"
+                            className="flex-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                          />
+                          <button
+                            onClick={() => {
+                              if (newSmsNumber && !notificationSettings.smsNumbers.includes(newSmsNumber)) {
+                                handleSaveNotificationSettings({
+                                  smsNumbers: [...notificationSettings.smsNumbers, newSmsNumber]
+                                })
+                                setNewSmsNumber('')
+                              }
+                            }}
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm"
+                          >Add</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Webhook Settings */}
+                  <div className="bg-gray-900 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">🔗</span>
+                        <div>
+                          <h3 className="text-white font-medium">Webhook</h3>
+                          <p className="text-gray-400 text-sm">Send alerts to your webhook endpoint</p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={notificationSettings.webhookEnabled}
+                          onChange={(e) => handleSaveNotificationSettings({ webhookEnabled: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                    {notificationSettings.webhookEnabled && (
+                      <div className="mt-4 space-y-4">
+                        <div>
+                          <label className="text-gray-400 text-sm">Webhook URL</label>
+                          <input
+                            type="url"
+                            value={notificationSettings.webhookUrl || ''}
+                            onChange={(e) => handleSaveNotificationSettings({ webhookUrl: e.target.value })}
+                            placeholder="https://your-webhook.com/endpoint"
+                            className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-gray-400 text-sm">Secret (for signature verification)</label>
+                          <input
+                            type="password"
+                            value={notificationSettings.webhookSecret || ''}
+                            onChange={(e) => handleSaveNotificationSettings({ webhookSecret: e.target.value })}
+                            placeholder="Optional webhook secret"
+                            className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Product Features */}
+              {settingsTab === 'features' && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-white font-medium">Alert Rules</h3>
+                    <button
+                      onClick={() => setShowAddAlert(true)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm"
+                    >
+                      + Add Alert Rule
+                    </button>
+                  </div>
+
+                  {/* Add Alert Form */}
+                  {showAddAlert && (
+                    <div className="bg-gray-900 rounded-lg p-4 border border-blue-500">
+                      <h4 className="text-white font-medium mb-4">New Alert Rule</h4>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-gray-400 text-sm">Alert Title *</label>
+                            <input
+                              type="text"
+                              value={newAlert.title}
+                              onChange={(e) => setNewAlert({ ...newAlert, title: e.target.value })}
+                              placeholder="e.g., Server Error Alert"
+                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-gray-400 text-sm">Description</label>
+                            <input
+                              type="text"
+                              value={newAlert.description}
+                              onChange={(e) => setNewAlert({ ...newAlert, description: e.target.value })}
+                              placeholder="Optional description"
+                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-gray-400 text-sm">Endpoint (optional, leave empty for all)</label>
+                            <input
+                              type="text"
+                              value={newAlert.endpoint}
+                              onChange={(e) => setNewAlert({ ...newAlert, endpoint: e.target.value })}
+                              placeholder="/api/users/*"
+                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-gray-400 text-sm">Method (optional)</label>
+                            <select
+                              value={newAlert.method}
+                              onChange={(e) => setNewAlert({ ...newAlert, method: e.target.value })}
+                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                            >
+                              <option value="">All Methods</option>
+                              <option value="GET">GET</option>
+                              <option value="POST">POST</option>
+                              <option value="PUT">PUT</option>
+                              <option value="DELETE">DELETE</option>
+                              <option value="PATCH">PATCH</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Error Code Selection */}
+                        <div className="space-y-2">
+                          <label className="text-gray-400 text-sm">Monitor Standard Error Codes</label>
+                          <div className="flex items-center gap-4">
+                            <label className="flex items-center gap-2 text-white text-sm">
+                              <input
+                                type="checkbox"
+                                checked={newAlert.monitorStandardErrors}
+                                onChange={(e) => setNewAlert({ ...newAlert, monitorStandardErrors: e.target.checked })}
+                                className="rounded bg-gray-800 border-gray-700"
+                              />
+                              Enable Standard Error Monitoring
+                            </label>
+                          </div>
+                          {newAlert.monitorStandardErrors && (
+                            <div className="mt-2 space-y-2">
+                              <p className="text-gray-500 text-xs">Select error codes to monitor:</p>
+                              <div className="flex flex-wrap gap-2">
+                                <span className="text-gray-400 text-xs">Client (4xx):</span>
+                                {standardErrorCodes.client.map((code) => (
+                                  <label key={code} className="flex items-center gap-1 text-sm">
+                                    <input
+                                      type="checkbox"
+                                      checked={newAlert.standardErrorCodes.includes(code)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setNewAlert({ ...newAlert, standardErrorCodes: [...newAlert.standardErrorCodes, code] })
+                                        } else {
+                                          setNewAlert({ ...newAlert, standardErrorCodes: newAlert.standardErrorCodes.filter(c => c !== code) })
+                                        }
+                                      }}
+                                      className="rounded bg-gray-800 border-gray-700"
+                                    />
+                                    <span className="text-yellow-400">{code}</span>
+                                  </label>
+                                ))}
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                <span className="text-gray-400 text-xs">Server (5xx):</span>
+                                {standardErrorCodes.server.map((code) => (
+                                  <label key={code} className="flex items-center gap-1 text-sm">
+                                    <input
+                                      type="checkbox"
+                                      checked={newAlert.standardErrorCodes.includes(code)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setNewAlert({ ...newAlert, standardErrorCodes: [...newAlert.standardErrorCodes, code] })
+                                        } else {
+                                          setNewAlert({ ...newAlert, standardErrorCodes: newAlert.standardErrorCodes.filter(c => c !== code) })
+                                        }
+                                      }}
+                                      className="rounded bg-gray-800 border-gray-700"
+                                    />
+                                    <span className="text-red-400">{code}</span>
+                                  </label>
+                                ))}
+                              </div>
+                              <div className="flex gap-2 mt-2">
+                                <button
+                                  onClick={() => setNewAlert({
+                                    ...newAlert,
+                                    standardErrorCodes: [...standardErrorCodes.client, ...standardErrorCodes.server]
+                                  })}
+                                  className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs hover:bg-gray-600"
+                                >Select All</button>
+                                <button
+                                  onClick={() => setNewAlert({ ...newAlert, standardErrorCodes: [] })}
+                                  className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs hover:bg-gray-600"
+                                >Clear All</button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Custom Error Codes */}
+                        <div className="space-y-2">
+                          <label className="text-gray-400 text-sm">Custom Status Codes</label>
+                          <div className="flex flex-wrap gap-2">
+                            {newAlert.customStatusCodes.map((code, idx) => (
+                              <span key={idx} className="px-2 py-1 bg-purple-900 text-purple-300 rounded text-sm flex items-center gap-1">
+                                {code}
+                                <button
+                                  onClick={() => setNewAlert({
+                                    ...newAlert,
+                                    customStatusCodes: newAlert.customStatusCodes.filter((_, i) => i !== idx)
+                                  })}
+                                  className="text-purple-400 hover:text-red-400"
+                                >×</button>
+                              </span>
+                            ))}
+                          </div>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              value={customCodeInput}
+                              onChange={(e) => setCustomCodeInput(e.target.value)}
+                              placeholder="e.g., 418"
+                              className="w-24 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                            />
+                            <button
+                              onClick={() => {
+                                const code = parseInt(customCodeInput)
+                                if (code && !newAlert.customStatusCodes.includes(code)) {
+                                  setNewAlert({ ...newAlert, customStatusCodes: [...newAlert.customStatusCodes, code] })
+                                  setCustomCodeInput('')
+                                }
+                              }}
+                              className="px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 text-sm"
+                            >Add</button>
+                          </div>
+                        </div>
+
+                        {/* Body Error Detection */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-gray-400 text-sm">Body Error Field (JSON path)</label>
+                            <input
+                              type="text"
+                              value={newAlert.bodyErrorField}
+                              onChange={(e) => setNewAlert({ ...newAlert, bodyErrorField: e.target.value })}
+                              placeholder="error.code or status"
+                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-gray-400 text-sm">Body Error Values</label>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {newAlert.bodyErrorValues.map((val, idx) => (
+                                <span key={idx} className="px-2 py-0.5 bg-orange-900 text-orange-300 rounded text-xs flex items-center gap-1">
+                                  {val}
+                                  <button
+                                    onClick={() => setNewAlert({
+                                      ...newAlert,
+                                      bodyErrorValues: newAlert.bodyErrorValues.filter((_, i) => i !== idx)
+                                    })}
+                                    className="text-orange-400 hover:text-red-400"
+                                  >×</button>
+                                </span>
+                              ))}
+                            </div>
+                            <div className="flex gap-2 mt-1">
+                              <input
+                                type="text"
+                                value={bodyErrorValueInput}
+                                onChange={(e) => setBodyErrorValueInput(e.target.value)}
+                                placeholder="ERROR_CODE"
+                                className="flex-1 px-2 py-1 bg-gray-800 text-white rounded border border-gray-700 text-xs"
+                              />
+                              <button
+                                onClick={() => {
+                                  if (bodyErrorValueInput && !newAlert.bodyErrorValues.includes(bodyErrorValueInput)) {
+                                    setNewAlert({ ...newAlert, bodyErrorValues: [...newAlert.bodyErrorValues, bodyErrorValueInput] })
+                                    setBodyErrorValueInput('')
+                                  }
+                                }}
+                                className="px-2 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 text-xs"
+                              >+</button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Header Error Detection */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-gray-400 text-sm">Header Error Field</label>
+                            <input
+                              type="text"
+                              value={newAlert.headerErrorField}
+                              onChange={(e) => setNewAlert({ ...newAlert, headerErrorField: e.target.value })}
+                              placeholder="X-Error-Code"
+                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-gray-400 text-sm">Header Error Values</label>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {newAlert.headerErrorValues.map((val, idx) => (
+                                <span key={idx} className="px-2 py-0.5 bg-pink-900 text-pink-300 rounded text-xs flex items-center gap-1">
+                                  {val}
+                                  <button
+                                    onClick={() => setNewAlert({
+                                      ...newAlert,
+                                      headerErrorValues: newAlert.headerErrorValues.filter((_, i) => i !== idx)
+                                    })}
+                                    className="text-pink-400 hover:text-red-400"
+                                  >×</button>
+                                </span>
+                              ))}
+                            </div>
+                            <div className="flex gap-2 mt-1">
+                              <input
+                                type="text"
+                                value={headerErrorValueInput}
+                                onChange={(e) => setHeaderErrorValueInput(e.target.value)}
+                                placeholder="ERROR"
+                                className="flex-1 px-2 py-1 bg-gray-800 text-white rounded border border-gray-700 text-xs"
+                              />
+                              <button
+                                onClick={() => {
+                                  if (headerErrorValueInput && !newAlert.headerErrorValues.includes(headerErrorValueInput)) {
+                                    setNewAlert({ ...newAlert, headerErrorValues: [...newAlert.headerErrorValues, headerErrorValueInput] })
+                                    setHeaderErrorValueInput('')
+                                  }
+                                }}
+                                className="px-2 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 text-xs"
+                              >+</button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Notification Channels */}
+                        <div className="space-y-2">
+                          <label className="text-gray-400 text-sm">Notification Channels</label>
+                          <div className="flex flex-wrap gap-4">
+                            <label className="flex items-center gap-2 text-white text-sm">
+                              <input
+                                type="checkbox"
+                                checked={newAlert.notifyEmail}
+                                onChange={(e) => setNewAlert({ ...newAlert, notifyEmail: e.target.checked })}
+                                className="rounded bg-gray-800 border-gray-700"
+                              />
+                              📧 Email
+                            </label>
+                            <label className="flex items-center gap-2 text-white text-sm">
+                              <input
+                                type="checkbox"
+                                checked={newAlert.notifyPush}
+                                onChange={(e) => setNewAlert({ ...newAlert, notifyPush: e.target.checked })}
+                                className="rounded bg-gray-800 border-gray-700"
+                              />
+                              🔔 Push
+                            </label>
+                            <label className="flex items-center gap-2 text-white text-sm">
+                              <input
+                                type="checkbox"
+                                checked={newAlert.notifySms}
+                                onChange={(e) => setNewAlert({ ...newAlert, notifySms: e.target.checked })}
+                                className="rounded bg-gray-800 border-gray-700"
+                              />
+                              📱 SMS
+                            </label>
+                            <label className="flex items-center gap-2 text-white text-sm">
+                              <input
+                                type="checkbox"
+                                checked={newAlert.notifyWebhook}
+                                onChange={(e) => setNewAlert({ ...newAlert, notifyWebhook: e.target.checked })}
+                                className="rounded bg-gray-800 border-gray-700"
+                              />
+                              🔗 Webhook
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 pt-4">
+                          <button
+                            onClick={handleCreateAlert}
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm"
+                          >
+                            Create Alert
+                          </button>
+                          <button
+                            onClick={() => setShowAddAlert(false)}
+                            className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 text-sm"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Alert List */}
+                  {alerts.length === 0 ? (
+                    <p className="text-gray-400 text-center py-8">No alert rules configured yet</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {alerts.map((alert) => (
+                        <div key={alert.id} className="bg-gray-900 rounded-lg p-4">
+                          {editingAlert?.id === alert.id ? (
+                            /* Edit Mode */
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-gray-400 text-xs mb-1">Title</label>
+                                  <input
+                                    type="text"
+                                    value={editingAlert.title}
+                                    onChange={(e) => setEditingAlert({ ...editingAlert, title: e.target.value })}
+                                    className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-gray-400 text-xs mb-1">Description</label>
+                                  <input
+                                    type="text"
+                                    value={editingAlert.description || ''}
+                                    onChange={(e) => setEditingAlert({ ...editingAlert, description: e.target.value || null })}
+                                    className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-gray-400 text-xs mb-1">Endpoint (optional)</label>
+                                  <input
+                                    type="text"
+                                    placeholder="/api/users/*"
+                                    value={editingAlert.endpoint || ''}
+                                    onChange={(e) => setEditingAlert({ ...editingAlert, endpoint: e.target.value || null })}
+                                    className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-gray-400 text-xs mb-1">Method</label>
+                                  <select
+                                    value={editingAlert.method || ''}
+                                    onChange={(e) => setEditingAlert({ ...editingAlert, method: e.target.value || null })}
+                                    className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                                  >
+                                    <option value="">All Methods</option>
+                                    <option value="GET">GET</option>
+                                    <option value="POST">POST</option>
+                                    <option value="PUT">PUT</option>
+                                    <option value="DELETE">DELETE</option>
+                                    <option value="PATCH">PATCH</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                              {/* Standard Error Codes */}
+                              <div>
+                                <label className="block text-gray-400 text-xs mb-2">Standard Error Codes</label>
+                                <div className="flex flex-wrap gap-2">
+                                  {[400, 401, 403, 404, 405, 408, 409, 422, 429, 500, 501, 502, 503, 504].map((code) => (
+                                    <button
+                                      key={code}
+                                      type="button"
+                                      onClick={() => {
+                                        const codes = editingAlert.standardErrorCodes.includes(code)
+                                          ? editingAlert.standardErrorCodes.filter(c => c !== code)
+                                          : [...editingAlert.standardErrorCodes, code]
+                                        setEditingAlert({ ...editingAlert, standardErrorCodes: codes })
+                                      }}
+                                      className={`px-2 py-1 text-xs rounded ${editingAlert.standardErrorCodes.includes(code)
+                                          ? code >= 500 ? 'bg-red-600 text-white' : 'bg-orange-600 text-white'
+                                          : 'bg-gray-700 text-gray-400'
+                                        }`}
+                                    >
+                                      {code}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Custom Status Codes */}
+                              <div>
+                                <label className="block text-gray-400 text-xs mb-1">Custom Status Codes (comma-separated)</label>
+                                <input
+                                  type="text"
+                                  placeholder="418, 451, 599"
+                                  value={editingAlert.customStatusCodes.join(', ')}
+                                  onChange={(e) => {
+                                    const codes = e.target.value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
+                                    setEditingAlert({ ...editingAlert, customStatusCodes: codes })
+                                  }}
+                                  className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                                />
+                              </div>
+
+                              {/* Body Error Detection */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-gray-400 text-xs mb-1">Body Error Field (JSON path)</label>
+                                  <input
+                                    type="text"
+                                    placeholder="error.code"
+                                    value={editingAlert.bodyErrorField || ''}
+                                    onChange={(e) => setEditingAlert({ ...editingAlert, bodyErrorField: e.target.value || null })}
+                                    className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-gray-400 text-xs mb-1">Body Error Values (comma-separated)</label>
+                                  <input
+                                    type="text"
+                                    placeholder="INVALID_TOKEN, EXPIRED"
+                                    value={editingAlert.bodyErrorValues.join(', ')}
+                                    onChange={(e) => {
+                                      const values = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                                      setEditingAlert({ ...editingAlert, bodyErrorValues: values })
+                                    }}
+                                    className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Notification Channels */}
+                              <div>
+                                <label className="block text-gray-400 text-xs mb-2">Notify Via</label>
+                                <div className="flex gap-4">
+                                  <label className="flex items-center gap-2 text-sm">
+                                    <input
+                                      type="checkbox"
+                                      checked={editingAlert.notifyEmail}
+                                      onChange={(e) => setEditingAlert({ ...editingAlert, notifyEmail: e.target.checked })}
+                                      className="rounded bg-gray-700 border-gray-600"
+                                    />
+                                    <span className="text-gray-300">Email</span>
+                                  </label>
+                                  <label className="flex items-center gap-2 text-sm">
+                                    <input
+                                      type="checkbox"
+                                      checked={editingAlert.notifyPush}
+                                      onChange={(e) => setEditingAlert({ ...editingAlert, notifyPush: e.target.checked })}
+                                      className="rounded bg-gray-700 border-gray-600"
+                                    />
+                                    <span className="text-gray-300">Push</span>
+                                  </label>
+                                  <label className="flex items-center gap-2 text-sm">
+                                    <input
+                                      type="checkbox"
+                                      checked={editingAlert.notifySms}
+                                      onChange={(e) => setEditingAlert({ ...editingAlert, notifySms: e.target.checked })}
+                                      className="rounded bg-gray-700 border-gray-600"
+                                    />
+                                    <span className="text-gray-300">SMS</span>
+                                  </label>
+                                  <label className="flex items-center gap-2 text-sm">
+                                    <input
+                                      type="checkbox"
+                                      checked={editingAlert.notifyWebhook}
+                                      onChange={(e) => setEditingAlert({ ...editingAlert, notifyWebhook: e.target.checked })}
+                                      className="rounded bg-gray-700 border-gray-600"
+                                    />
+                                    <span className="text-gray-300">Webhook</span>
+                                  </label>
+                                </div>
+                              </div>
+
+                              <div className="flex gap-2 pt-2">
+                                <button
+                                  onClick={() => handleUpdateAlert(editingAlert, true)}
+                                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm"
+                                >
+                                  Save Changes
+                                </button>
+                                <button
+                                  onClick={() => setEditingAlert(null)}
+                                  className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 text-sm"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            /* View Mode */
+                            <>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={alert.isEnabled}
+                                      onChange={(e) => handleUpdateAlert({ ...alert, isEnabled: e.target.checked })}
+                                      className="sr-only peer"
+                                    />
+                                    <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                                  </label>
+                                  <div>
+                                    <h4 className="text-white font-medium">{alert.title}</h4>
+                                    {alert.description && <p className="text-gray-400 text-sm">{alert.description}</p>}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-gray-400 text-xs">{alert._count.monitoredErrors} errors</span>
+                                  <button
+                                    onClick={() => setEditingAlert(alert)}
+                                    className="text-gray-500 hover:text-blue-400 text-sm"
+                                  >Edit</button>
+                                  <button
+                                    onClick={() => handleDeleteAlert(alert.id)}
+                                    className="text-gray-500 hover:text-red-400 text-sm"
+                                  >Delete</button>
+                                </div>
+                              </div>
+                              <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                                {alert.endpoint && (
+                                  <span className="px-2 py-1 bg-gray-800 text-gray-400 rounded">
+                                    {alert.method || '*'} {alert.endpoint}
+                                  </span>
+                                )}
+                                {alert.standardErrorCodes.length > 0 && (
+                                  <span className="px-2 py-1 bg-gray-800 text-gray-400 rounded">
+                                    Status: {alert.standardErrorCodes.join(', ')}
+                                  </span>
+                                )}
+                                {alert.customStatusCodes.length > 0 && (
+                                  <span className="px-2 py-1 bg-purple-900 text-purple-300 rounded">
+                                    Custom: {alert.customStatusCodes.join(', ')}
+                                  </span>
+                                )}
+                                {alert.bodyErrorField && (
+                                  <span className="px-2 py-1 bg-orange-900 text-orange-300 rounded">
+                                    Body: {alert.bodyErrorField}
+                                  </span>
+                                )}
+                                {alert.headerErrorField && (
+                                  <span className="px-2 py-1 bg-pink-900 text-pink-300 rounded">
+                                    Header: {alert.headerErrorField}
+                                  </span>
+                                )}
+                                <span className="px-2 py-1 bg-gray-800 text-gray-400 rounded">
+                                  {[
+                                    alert.notifyEmail && 'Email',
+                                    alert.notifyPush && 'Push',
+                                    alert.notifySms && 'SMS',
+                                    alert.notifyWebhook && 'Webhook'
+                                  ].filter(Boolean).join(', ') || 'No notifications'}
+                                </span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Product Features */}
+              {settingsTab === 'features' && (
+                <div className="space-y-6">
+                  {/* Subscription Status Warning */}
+                  {subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') && (
+                    <div className="bg-red-900/20 border-l-4 border-red-600 p-4 rounded">
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl">⚠️</span>
+                        <div className="flex-1">
+                          <h3 className="text-red-400 font-semibold mb-1">
+                            {!subscriptionStatus.enabled
+                              ? 'Subscription Disabled'
+                              : subscriptionStatus.status !== 'active'
+                                ? `Subscription ${subscriptionStatus.status.charAt(0).toUpperCase() + subscriptionStatus.status.slice(1)}`
+                                : 'Trial Expired'}
+                          </h3>
+                          <p className="text-gray-300 text-sm mb-3">
+                            {!subscriptionStatus.enabled
+                              ? 'Your subscription has been disabled by an administrator. SDK features are disabled and no new data will be collected. Please contact support.'
+                              : subscriptionStatus.status !== 'active'
+                                ? `Your subscription is ${subscriptionStatus.status}. SDK features are disabled and no new data will be collected.`
+                                : 'Your free trial has ended. Features are disabled and no new data will be collected. Upgrade your subscription to re-enable all features.'}
+                          </p>
+                          <Link
+                            href="/subscription"
+                            className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
+                          >
+                            View Subscription
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="bg-gray-900 rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="text-2xl">⚙️</span>
+                      <div>
+                        <h3 className="text-white font-medium">SDK Feature Flags</h3>
+                        <p className="text-gray-400 text-sm">Control which features are enabled in the SDK. Changes take effect on next app launch.</p>
+                        {subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') && (
+                          <p className="text-red-400 text-sm mt-1">
+                            ⚠️ Features are disabled {!subscriptionStatus.enabled ? 'due to subscription being disabled by admin' : subscriptionStatus.status !== 'active' ? `due to subscription being ${subscriptionStatus.status}` : 'due to expired trial subscription'}.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {featureFlagsLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <svg className="animate-spin h-6 w-6 text-gray-400" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        <span className="ml-2 text-gray-400">Loading feature flags...</span>
+                      </div>
+                    ) : featureFlags ? (
+                      <div className="space-y-6">
+                        {/* Master Kill Switch */}
+                        <div className={`p-4 rounded-lg border-2 ${featureFlags.sdkEnabled ? 'bg-green-900/20 border-green-600' : 'bg-red-900/20 border-red-600'}`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl">{featureFlags.sdkEnabled ? '🟢' : '🔴'}</span>
+                              <div>
+                                <p className="text-white font-medium">SDK Enabled (Master Switch)</p>
+                                <p className={`text-sm ${featureFlags.sdkEnabled ? 'text-green-400' : 'text-red-400'}`}>
+                                  {featureFlags.sdkEnabled
+                                    ? 'SDK is active - all enabled features will work'
+                                    : 'SDK is disabled - ALL functionality is turned off'}
+                                </p>
+                              </div>
+                            </div>
+                            <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                              <input
+                                type="checkbox"
+                                checked={featureFlags.sdkEnabled}
+                                onChange={(e) => updateFeatureFlag('sdkEnabled', e.target.checked)}
+                                disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
+                                className="sr-only peer"
+                              />
+                              <div className={`w-14 h-7 ${featureFlags.sdkEnabled ? 'bg-green-600' : 'bg-red-600'} peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all`}></div>
+                            </label>
+                          </div>
+                          {!featureFlags.sdkEnabled && (
+                            <p className="mt-3 text-sm text-red-300 bg-red-900/30 p-2 rounded">
+                              Warning: When SDK is disabled, no data will be collected from mobile apps. API tracing, logging, screen tracking, and all other features will be completely inactive.
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Core Features */}
+                        <div className={featureFlags.sdkEnabled && (!subscriptionStatus || (subscriptionStatus.enabled && subscriptionStatus.trialActive && subscriptionStatus.status === 'active')) ? '' : 'opacity-50 pointer-events-none'}>
+                          <h4 className="text-gray-400 text-sm font-medium mb-3">
+                            Core Features
+                            {!featureFlags.sdkEnabled && <span className="text-red-400"> (SDK Disabled)</span>}
+                            {subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') && (
+                              <span className="text-red-400">
+                                {' '}({!subscriptionStatus.enabled ? 'Subscription Disabled' : subscriptionStatus.status !== 'active' ? `Subscription ${subscriptionStatus.status}` : 'Trial Expired'})
+                              </span>
+                            )}
+                          </h4>
+                          <div className={`space-y-3 ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'pointer-events-none opacity-50' : ''}`}>
+                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <span className="text-lg">📡</span>
+                                <div>
+                                  <p className="text-white text-sm font-medium">API Tracking</p>
+                                  <p className="text-gray-500 text-xs">Track HTTP requests and responses</p>
+                                </div>
+                              </div>
+                              <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                                <input
+                                  type="checkbox"
+                                  checked={featureFlags.apiTracking}
+                                  onChange={(e) => updateFeatureFlag('apiTracking', e.target.checked)}
+                                  disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                              </label>
+                            </div>
+
+                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <span className="text-lg">📱</span>
+                                <div>
+                                  <p className="text-white text-sm font-medium">Screen Tracking</p>
+                                  <p className="text-gray-500 text-xs">Track screen views and navigation flow</p>
+                                </div>
+                              </div>
+                              <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                                <input
+                                  type="checkbox"
+                                  checked={featureFlags.screenTracking}
+                                  onChange={(e) => updateFeatureFlag('screenTracking', e.target.checked)}
+                                  disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                              </label>
+                            </div>
+
+                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <span className="text-lg">💥</span>
+                                <div>
+                                  <p className="text-white text-sm font-medium">Crash Reporting</p>
+                                  <p className="text-gray-500 text-xs">Capture and report app crashes</p>
+                                </div>
+                              </div>
+                              <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                                <input
+                                  type="checkbox"
+                                  checked={featureFlags.crashReporting}
+                                  onChange={(e) => updateFeatureFlag('crashReporting', e.target.checked)}
+                                  disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                              </label>
+                            </div>
+
+                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <span className="text-lg">📝</span>
+                                <div>
+                                  <p className="text-white text-sm font-medium">Logging</p>
+                                  <p className="text-gray-500 text-xs">Send app logs to dashboard</p>
+                                </div>
+                              </div>
+                              <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                                <input
+                                  type="checkbox"
+                                  checked={featureFlags.logging}
+                                  onChange={(e) => updateFeatureFlag('logging', e.target.checked)}
+                                  disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Additional Features */}
+                        <div className={featureFlags.sdkEnabled && (!subscriptionStatus || (subscriptionStatus.enabled && subscriptionStatus.trialActive && subscriptionStatus.status === 'active')) ? '' : 'opacity-50 pointer-events-none'}>
+                          <h4 className="text-gray-400 text-sm font-medium mb-3">
+                            Additional Features
+                            {!featureFlags.sdkEnabled && <span className="text-red-400">(SDK Disabled)</span>}
+                            {subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') && (
+                              <span className="text-red-400">
+                                {' '}({!subscriptionStatus.enabled ? 'Subscription Disabled' : subscriptionStatus.status !== 'active' ? `Subscription ${subscriptionStatus.status}` : 'Trial Expired'})
+                              </span>
+                            )}
+                          </h4>
+                          <div className={`space-y-3 ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'pointer-events-none opacity-50' : ''}`}>
+                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <span className="text-lg">📲</span>
+                                <div>
+                                  <p className="text-white text-sm font-medium">Device Tracking</p>
+                                  <p className="text-gray-500 text-xs">Register and track devices</p>
+                                </div>
+                              </div>
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={featureFlags.deviceTracking}
+                                  onChange={(e) => updateFeatureFlag('deviceTracking', e.target.checked)}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                              </label>
+                            </div>
+
+                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <span className="text-lg">🔗</span>
+                                <div>
+                                  <p className="text-white text-sm font-medium">Session Tracking</p>
+                                  <p className="text-gray-500 text-xs">Track user sessions</p>
+                                </div>
+                              </div>
+                              <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                                <input
+                                  type="checkbox"
+                                  checked={featureFlags.sessionTracking}
+                                  onChange={(e) => updateFeatureFlag('sessionTracking', e.target.checked)}
+                                  disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                              </label>
+                            </div>
+
+                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <span className="text-lg">⚡</span>
+                                <div>
+                                  <p className="text-white text-sm font-medium">Business Config</p>
+                                  <p className="text-gray-500 text-xs">Enable remote business configuration</p>
+                                </div>
+                              </div>
+                              <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                                <input
+                                  type="checkbox"
+                                  checked={featureFlags.businessConfig}
+                                  onChange={(e) => updateFeatureFlag('businessConfig', e.target.checked)}
+                                  disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                              </label>
+                            </div>
+
+                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <span className="text-lg">🌍</span>
+                                <div>
+                                  <p className="text-white text-sm font-medium">Localization</p>
+                                  <p className="text-gray-500 text-xs">Enable remote localization strings</p>
+                                </div>
+                              </div>
+                              <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                                <input
+                                  type="checkbox"
+                                  checked={featureFlags.localization}
+                                  onChange={(e) => updateFeatureFlag('localization', e.target.checked)}
+                                  disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Performance Options */}
+                        <div className={featureFlags.sdkEnabled && (!subscriptionStatus || (subscriptionStatus.enabled && subscriptionStatus.trialActive && subscriptionStatus.status === 'active')) ? '' : 'opacity-50 pointer-events-none'}>
+                          <h4 className="text-gray-400 text-sm font-medium mb-3">
+                            Performance Options
+                            {!featureFlags.sdkEnabled && <span className="text-red-400">(SDK Disabled)</span>}
+                            {subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') && (
+                              <span className="text-red-400">
+                                {' '}({!subscriptionStatus.enabled ? 'Subscription Disabled' : subscriptionStatus.status !== 'active' ? `Subscription ${subscriptionStatus.status}` : 'Trial Expired'})
+                              </span>
+                            )}
+                          </h4>
+                          <div className={`space-y-3 ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'pointer-events-none opacity-50' : ''}`}>
+                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <span className="text-lg">📴</span>
+                                <div>
+                                  <p className="text-white text-sm font-medium">Offline Support</p>
+                                  <p className="text-gray-500 text-xs">Queue events when offline and sync later</p>
+                                </div>
+                              </div>
+                              <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                                <input
+                                  type="checkbox"
+                                  checked={featureFlags.offlineSupport}
+                                  onChange={(e) => updateFeatureFlag('offlineSupport', e.target.checked)}
+                                  disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                              </label>
+                            </div>
+
+                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <span className="text-lg">📦</span>
+                                <div>
+                                  <p className="text-white text-sm font-medium">Batch Events</p>
+                                  <p className="text-gray-500 text-xs">Batch events before sending to reduce network calls</p>
+                                </div>
+                              </div>
+                              <label className={`relative inline-flex items-center ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                                <input
+                                  type="checkbox"
+                                  checked={featureFlags.batchEvents}
+                                  onChange={(e) => updateFeatureFlag('batchEvents', e.target.checked)}
+                                  disabled={!!(subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active'))}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-gray-400 text-center py-8">Failed to load feature flags</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* SDK Settings */}
+              {settingsTab === 'sdk' && (
+                <div className="space-y-6">
+                  {sdkSettingsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <svg className="animate-spin h-6 w-6 text-gray-400" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      <span className="ml-2 text-gray-400">Loading SDK settings...</span>
+                    </div>
+                  ) : sdkSettings ? (
+                    <div className="space-y-6">
+                      {/* Tracking Mode - Controls which devices send data */}
+                      <div className="bg-gray-900 rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="text-2xl">📡</span>
+                          <div>
+                            <h3 className="text-white font-medium">Tracking Mode</h3>
+                            <p className="text-gray-400 text-sm">Control which devices send API traces and session data</p>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <div
+                            className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${sdkSettings.trackingMode === 'all'
+                                ? 'bg-blue-600/20 border-2 border-blue-500'
+                                : 'bg-gray-800 hover:bg-gray-750 border-2 border-transparent'
+                              }`}
+                            onClick={() => updateSdkSetting({ trackingMode: 'all' })}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-lg">🌍</span>
+                              <div>
+                                <p className="text-white text-sm font-medium">All Devices</p>
+                                <p className="text-gray-500 text-xs">Track all devices (recommended for development/testing)</p>
+                              </div>
+                            </div>
+                            {sdkSettings.trackingMode === 'all' && (
+                              <span className="text-blue-400 text-lg">✓</span>
+                            )}
+                          </div>
+
+                          <div
+                            className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${sdkSettings.trackingMode === 'debug_only'
+                                ? 'bg-orange-600/20 border-2 border-orange-500'
+                                : 'bg-gray-800 hover:bg-gray-750 border-2 border-transparent'
+                              }`}
+                            onClick={() => updateSdkSetting({ trackingMode: 'debug_only' })}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-lg">🐛</span>
+                              <div>
+                                <p className="text-white text-sm font-medium">Debug Devices Only</p>
+                                <p className="text-gray-500 text-xs">Only track devices with debug mode enabled (recommended for production)</p>
+                              </div>
+                            </div>
+                            {sdkSettings.trackingMode === 'debug_only' && (
+                              <span className="text-orange-400 text-lg">✓</span>
+                            )}
+                          </div>
+
+                          <div
+                            className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${sdkSettings.trackingMode === 'none'
+                                ? 'bg-red-600/20 border-2 border-red-500'
+                                : 'bg-gray-800 hover:bg-gray-750 border-2 border-transparent'
+                              }`}
+                            onClick={() => updateSdkSetting({ trackingMode: 'none' })}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-lg">🚫</span>
+                              <div>
+                                <p className="text-white text-sm font-medium">Disabled</p>
+                                <p className="text-gray-500 text-xs">No devices will send API traces or session data</p>
+                              </div>
+                            </div>
+                            {sdkSettings.trackingMode === 'none' && (
+                              <span className="text-red-400 text-lg">✓</span>
+                            )}
+                          </div>
+                        </div>
+                        {sdkSettings.trackingMode === 'debug_only' && (
+                          <div className="mt-4 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg">
+                            <p className="text-orange-400 text-sm">
+                              💡 <strong>Tip:</strong> Enable debug mode on specific devices from the Devices tab to start tracking them.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Security Settings */}
+                      <div className="bg-gray-900 rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="text-2xl">🔒</span>
+                          <div>
+                            <h3 className="text-white font-medium">Security Settings</h3>
+                            <p className="text-gray-400 text-sm">Control data capture and privacy settings</p>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <span className="text-lg">📤</span>
+                              <div>
+                                <p className="text-white text-sm font-medium">Capture Request Bodies</p>
+                                <p className="text-gray-500 text-xs">Include request body content in API traces</p>
+                              </div>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={sdkSettings.captureRequestBodies}
+                                onChange={(e) => updateSdkSetting({ captureRequestBodies: e.target.checked })}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                          </div>
+
+                          <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <span className="text-lg">📥</span>
+                              <div>
+                                <p className="text-white text-sm font-medium">Capture Response Bodies</p>
+                                <p className="text-gray-500 text-xs">Include response body content in API traces</p>
+                              </div>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={sdkSettings.captureResponseBodies}
+                                onChange={(e) => updateSdkSetting({ captureResponseBodies: e.target.checked })}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                          </div>
+
+                          <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <span className="text-lg">🖨️</span>
+                              <div>
+                                <p className="text-white text-sm font-medium">Capture Print Statements</p>
+                                <p className="text-gray-500 text-xs">Auto-capture print() statements as logs</p>
+                              </div>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={sdkSettings.capturePrintStatements}
+                                onChange={(e) => updateSdkSetting({ capturePrintStatements: e.target.checked })}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                          </div>
+
+                          <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <span className="text-lg">🔐</span>
+                              <div>
+                                <p className="text-white text-sm font-medium">Sanitize Sensitive Data</p>
+                                <p className="text-gray-500 text-xs">Automatically redact sensitive fields from traces</p>
+                              </div>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={sdkSettings.sanitizeSensitiveData}
+                                onChange={(e) => updateSdkSetting({ sanitizeSensitiveData: e.target.checked })}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                          </div>
+
+                          {/* Sensitive Field Patterns */}
+                          {sdkSettings.sanitizeSensitiveData && (
+                            <div className="p-3 bg-gray-800 rounded-lg">
+                              <p className="text-white text-sm font-medium mb-2">Sensitive Field Patterns</p>
+                              <p className="text-gray-500 text-xs mb-3">Fields matching these patterns will be redacted</p>
+                              <div className="flex flex-wrap gap-2 mb-3">
+                                {sdkSettings.sensitiveFieldPatterns.map((pattern, idx) => (
+                                  <span key={idx} className="px-3 py-1 bg-gray-700 text-gray-300 rounded-full text-sm flex items-center gap-2">
+                                    {pattern}
+                                    <button
+                                      onClick={() => updateSdkSetting({
+                                        sensitiveFieldPatterns: sdkSettings.sensitiveFieldPatterns.filter((_, i) => i !== idx)
+                                      })}
+                                      className="text-gray-500 hover:text-red-400"
+                                    >x</button>
+                                  </span>
+                                ))}
+                              </div>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  value={newSensitivePattern}
+                                  onChange={(e) => setNewSensitivePattern(e.target.value)}
+                                  placeholder="Add pattern (e.g., credit_card)"
+                                  className="flex-1 px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 text-sm"
+                                />
+                                <button
+                                  onClick={() => {
+                                    if (newSensitivePattern && !sdkSettings.sensitiveFieldPatterns.includes(newSensitivePattern)) {
+                                      updateSdkSetting({
+                                        sensitiveFieldPatterns: [...sdkSettings.sensitiveFieldPatterns, newSensitivePattern]
+                                      })
+                                      setNewSensitivePattern('')
+                                    }
+                                  }}
+                                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 text-sm"
+                                >Add</button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Performance Settings */}
+                      <div className="bg-gray-900 rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="text-2xl">⚡</span>
+                          <div>
+                            <h3 className="text-white font-medium">Performance Settings</h3>
+                            <p className="text-gray-400 text-sm">Configure batching and queue behavior</p>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <span className="text-lg">📦</span>
+                              <div>
+                                <p className="text-white text-sm font-medium">Enable Batching</p>
+                                <p className="text-gray-500 text-xs">Batch events before sending to reduce network calls</p>
+                              </div>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={sdkSettings.enableBatching}
+                                onChange={(e) => updateSdkSetting({ enableBatching: e.target.checked })}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                          </div>
+
+                          <div className="p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center gap-3 mb-3">
+                              <span className="text-lg">📝</span>
+                              <div>
+                                <p className="text-white text-sm font-medium">Max Log Queue Size</p>
+                                <p className="text-gray-500 text-xs">Maximum logs to queue before flushing</p>
+                              </div>
+                            </div>
+                            <input
+                              type="number"
+                              value={sdkSettings.maxLogQueueSize}
+                              onChange={(e) => updateSdkSetting({ maxLogQueueSize: parseInt(e.target.value) || 100 })}
+                              min="10"
+                              max="1000"
+                              className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 text-sm"
+                            />
+                          </div>
+
+                          <div className="p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center gap-3 mb-3">
+                              <span className="text-lg">📡</span>
+                              <div>
+                                <p className="text-white text-sm font-medium">Max Trace Queue Size</p>
+                                <p className="text-gray-500 text-xs">Maximum API traces to queue before flushing</p>
+                              </div>
+                            </div>
+                            <input
+                              type="number"
+                              value={sdkSettings.maxTraceQueueSize}
+                              onChange={(e) => updateSdkSetting({ maxTraceQueueSize: parseInt(e.target.value) || 50 })}
+                              min="5"
+                              max="500"
+                              className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 text-sm"
+                            />
+                          </div>
+
+                          <div className="p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center gap-3 mb-3">
+                              <span className="text-lg">⏱️</span>
+                              <div>
+                                <p className="text-white text-sm font-medium">Flush Interval (seconds)</p>
+                                <p className="text-gray-500 text-xs">How often to send queued events</p>
+                              </div>
+                            </div>
+                            <input
+                              type="number"
+                              value={sdkSettings.flushIntervalSeconds}
+                              onChange={(e) => updateSdkSetting({ flushIntervalSeconds: parseInt(e.target.value) || 30 })}
+                              min="5"
+                              max="300"
+                              className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 text-sm"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Log Control Settings */}
+                      <div className="bg-gray-900 rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="text-2xl">📋</span>
+                          <div>
+                            <h3 className="text-white font-medium">Log Control</h3>
+                            <p className="text-gray-400 text-sm">Configure logging behavior and levels</p>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center gap-3 mb-3">
+                              <span className="text-lg">📊</span>
+                              <div>
+                                <p className="text-white text-sm font-medium">Minimum Log Level</p>
+                                <p className="text-gray-500 text-xs">Only capture logs at or above this level</p>
+                              </div>
+                            </div>
+                            <select
+                              value={sdkSettings.minLogLevel}
+                              onChange={(e) => updateSdkSetting({ minLogLevel: e.target.value })}
+                              className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 text-sm"
+                            >
+                              <option value="verbose">Verbose (all logs)</option>
+                              <option value="debug">Debug</option>
+                              <option value="info">Info</option>
+                              <option value="warn">Warning</option>
+                              <option value="error">Error only</option>
+                            </select>
+                          </div>
+
+                          <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <span className="text-lg">🔍</span>
+                              <div>
+                                <p className="text-white text-sm font-medium">Verbose Errors</p>
+                                <p className="text-gray-500 text-xs">Include stack traces and extra context in error logs</p>
+                              </div>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={sdkSettings.verboseErrors}
+                                onChange={(e) => updateSdkSetting({ verboseErrors: e.target.checked })}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-gray-400 text-center py-8">Failed to load SDK settings</p>
+                  )}
+                </div>
+              )}
+
+              {/* Project Settings Tab */}
+              {settingsTab === 'project' && (
+                <div className="space-y-6">
+                  {/* Project Name */}
+                  <div className="bg-gray-900 rounded-lg p-6">
+                    <h3 className="text-white font-medium mb-4">Project Name</h3>
+                    {isEditingName ? (
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="text"
+                          value={editingProjectName}
+                          onChange={(e) => setEditingProjectName(e.target.value)}
+                          className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Project name"
+                          disabled={updatingName}
+                        />
+                        <button
+                          onClick={async () => {
+                            if (!editingProjectName.trim() || editingProjectName.trim() === projectName) {
+                              setIsEditingName(false)
+                              setEditingProjectName(projectName)
+                              return
+                            }
+                            setUpdatingName(true)
+                            try {
+                              await api.projects.update(projectId, editingProjectName.trim(), token!)
+                              setProjectName(editingProjectName.trim())
+                              setIsEditingName(false)
+                            } catch (error: any) {
+                              alert(error?.message || 'Failed to update project name')
+                              setEditingProjectName(projectName)
+                            } finally {
+                              setUpdatingName(false)
+                            }
+                          }}
+                          disabled={updatingName || !editingProjectName.trim()}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white rounded transition-colors"
+                        >
+                          {updatingName ? 'Saving...' : 'Save'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsEditingName(false)
+                            setEditingProjectName(projectName)
+                          }}
+                          disabled={updatingName}
+                          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <span className="text-gray-300">{projectName}</span>
+                        <button
+                          onClick={() => setIsEditingName(true)}
+                          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded transition-colors text-sm"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* API Key */}
+                  <div className="bg-gray-900 rounded-lg p-6">
+                    <h3 className="text-white font-medium mb-4">API Key</h3>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="text"
+                        value={apiKey}
+                        readOnly
+                        className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-300 font-mono text-sm"
+                      />
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(apiKey)
+                          setCopied(true)
+                          setTimeout(() => setCopied(false), 2000)
+                        }}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors text-sm"
+                      >
+                        {copied ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
+                    <p className="text-gray-400 text-sm mt-2">
+                      Use this API key to initialize the DevBridge SDK in your mobile app.
+                    </p>
+                  </div>
+
+                  {/* Danger Zone */}
+                  <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="text-2xl">⚠️</span>
+                      <div>
+                        <h3 className="text-red-400 font-bold text-lg">Danger Zone</h3>
+                        <p className="text-gray-300 text-sm">Deleting a project will permanently remove all associated data including devices, logs, traces, crashes, and configurations.</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+                    >
+                      Delete Project
+                    </button>
+                  </div>
+
+                  {/* Delete Confirmation Modal */}
+                  {showDeleteConfirm && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                      <div className="bg-gray-900 rounded-lg p-6 w-full max-w-md border border-red-500/50">
+                        <h3 className="text-red-400 font-bold text-lg mb-2">Delete Project</h3>
+                        <p className="text-gray-300 mb-4">
+                          Are you sure you want to delete <strong className="text-white">{projectName}</strong>? This action cannot be undone and will permanently delete:
+                        </p>
+                        <ul className="list-disc list-inside text-gray-400 text-sm mb-6 space-y-1">
+                          <li>All devices and device data</li>
+                          <li>All logs, traces, and crashes</li>
+                          <li>All business configurations</li>
+                          <li>All localization data</li>
+                          <li>All API mocks and environments</li>
+                          <li>All alerts and monitoring configurations</li>
+                        </ul>
+                        <div className="flex justify-end gap-3">
+                          <button
+                            onClick={() => setShowDeleteConfirm(false)}
+                            disabled={deletingProject}
+                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={async () => {
+                              setDeletingProject(true)
+                              try {
+                                await api.projects.delete(projectId, token!)
+                                // Redirect to projects list
+                                router.push('/projects')
+                              } catch (error: any) {
+                                alert(error?.message || 'Failed to delete project')
+                                setDeletingProject(false)
+                                setShowDeleteConfirm(false)
+                              }
+                            }}
+                            disabled={deletingProject}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-800 text-white rounded transition-colors"
+                          >
+                            {deletingProject ? 'Deleting...' : 'Delete Project'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Data Cleanup Tab */}
+              {settingsTab === 'cleanup' && (
+                <div className="space-y-6">
+                  {/* Warning Banner */}
+                  <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl">⚠️</span>
+                      <div>
+                        <h3 className="text-red-400 font-bold text-lg">Danger Zone</h3>
+                        <p className="text-gray-300 text-sm">These actions will permanently delete data and cannot be undone.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Cleanup Actions */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Delete Devices */}
+                    <div className="bg-gray-900 rounded-lg p-6 hover:bg-gray-850 transition-colors">
+                      <div className="flex items-start gap-4">
+                        <span className="text-4xl">📱</span>
+                        <div className="flex-1">
+                          <h3 className="text-white font-semibold text-lg mb-2">Delete All Devices</h3>
+                          <p className="text-gray-400 text-sm mb-4">
+                            Permanently removes all registered devices and their associated data.
+                          </p>
+                          <ul className="text-gray-500 text-xs space-y-1 mb-4">
+                            <li>• Device registrations</li>
+                            <li>• Debug mode settings</li>
+                            <li>• Device metadata</li>
+                          </ul>
+                          <button
+                            onClick={() => {
+                              if (window.confirm('⚠️ Are you absolutely sure?\n\nThis will permanently delete ALL devices and their data.\n\nType "DELETE" in the next prompt to confirm.')) {
+                                const confirmation = window.prompt('Type DELETE to confirm:')
+                                if (confirmation === 'DELETE') {
+                                  handleCleanupData('devices')
+                                }
+                              }
+                            }}
+                            className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 font-medium text-sm transition-colors"
+                          >
+                            🗑️ Delete All Devices
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Delete API Traces */}
+                    <div className="bg-gray-900 rounded-lg p-6 hover:bg-gray-850 transition-colors">
+                      <div className="flex items-start gap-4">
+                        <span className="text-4xl">📡</span>
+                        <div className="flex-1">
+                          <h3 className="text-white font-semibold text-lg mb-2">Delete All API Traces</h3>
+                          <p className="text-gray-400 text-sm mb-4">
+                            Permanently removes all captured API request/response traces.
+                          </p>
+                          <ul className="text-gray-500 text-xs space-y-1 mb-4">
+                            <li>• HTTP requests/responses</li>
+                            <li>• Request/response bodies</li>
+                            <li>• Headers and metadata</li>
+                          </ul>
+                          <button
+                            onClick={() => {
+                              if (window.confirm('⚠️ Are you absolutely sure?\n\nThis will permanently delete ALL API traces.\n\nType "DELETE" in the next prompt to confirm.')) {
+                                const confirmation = window.prompt('Type DELETE to confirm:')
+                                if (confirmation === 'DELETE') {
+                                  handleCleanupData('traces')
+                                }
+                              }
+                            }}
+                            className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 font-medium text-sm transition-colors"
+                          >
+                            🗑️ Delete All API Traces
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Delete Logs */}
+                    <div className="bg-gray-900 rounded-lg p-6 hover:bg-gray-850 transition-colors">
+                      <div className="flex items-start gap-4">
+                        <span className="text-4xl">📝</span>
+                        <div className="flex-1">
+                          <h3 className="text-white font-semibold text-lg mb-2">Delete All Logs</h3>
+                          <p className="text-gray-400 text-sm mb-4">
+                            Permanently removes all application logs.
+                          </p>
+                          <ul className="text-gray-500 text-xs space-y-1 mb-4">
+                            <li>• Debug logs</li>
+                            <li>• Info logs</li>
+                            <li>• Error logs</li>
+                          </ul>
+                          <button
+                            onClick={() => {
+                              if (window.confirm('⚠️ Are you absolutely sure?\n\nThis will permanently delete ALL logs.\n\nType "DELETE" in the next prompt to confirm.')) {
+                                const confirmation = window.prompt('Type DELETE to confirm:')
+                                if (confirmation === 'DELETE') {
+                                  handleCleanupData('logs')
+                                }
+                              }
+                            }}
+                            className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 font-medium text-sm transition-colors"
+                          >
+                            🗑️ Delete All Logs
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Delete Sessions */}
+                    <div className="bg-gray-900 rounded-lg p-6 hover:bg-gray-850 transition-colors">
+                      <div className="flex items-start gap-4">
+                        <span className="text-4xl">🔄</span>
+                        <div className="flex-1">
+                          <h3 className="text-white font-semibold text-lg mb-2">Delete All Sessions</h3>
+                          <p className="text-gray-400 text-sm mb-4">
+                            Permanently removes all session data and their events.
+                          </p>
+                          <ul className="text-gray-500 text-xs space-y-1 mb-4">
+                            <li>• Session records</li>
+                            <li>• Session events</li>
+                            <li>• Session metadata</li>
+                          </ul>
+                          <button
+                            onClick={() => {
+                              if (window.confirm('⚠️ Are you absolutely sure?\n\nThis will permanently delete ALL sessions.\n\nType "DELETE" in the next prompt to confirm.')) {
+                                const confirmation = window.prompt('Type DELETE to confirm:')
+                                if (confirmation === 'DELETE') {
+                                  handleCleanupData('sessions')
+                                }
+                              }
+                            }}
+                            className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 font-medium text-sm transition-colors"
+                          >
+                            🗑️ Delete All Sessions
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Delete Crashes */}
+                    <div className="bg-gray-900 rounded-lg p-6 hover:bg-gray-850 transition-colors">
+                      <div className="flex items-start gap-4">
+                        <span className="text-4xl">💥</span>
+                        <div className="flex-1">
+                          <h3 className="text-white font-semibold text-lg mb-2">Delete All Crashes</h3>
+                          <p className="text-gray-400 text-sm mb-4">
+                            Permanently removes all crash reports and stack traces.
+                          </p>
+                          <ul className="text-gray-500 text-xs space-y-1 mb-4">
+                            <li>• Crash reports</li>
+                            <li>• Stack traces</li>
+                            <li>• Crash metadata</li>
+                          </ul>
+                          <button
+                            onClick={() => {
+                              if (window.confirm('⚠️ Are you absolutely sure?\n\nThis will permanently delete ALL crash reports.\n\nType "DELETE" in the next prompt to confirm.')) {
+                                const confirmation = window.prompt('Type DELETE to confirm:')
+                                if (confirmation === 'DELETE') {
+                                  handleCleanupData('crashes')
+                                }
+                              }
+                            }}
+                            className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 font-medium text-sm transition-colors"
+                          >
+                            🗑️ Delete All Crashes
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Delete Screens */}
+                    <div className="bg-gray-900 rounded-lg p-6 hover:bg-gray-850 transition-colors">
+                      <div className="flex items-start gap-4">
+                        <span className="text-4xl">🖥️</span>
+                        <div className="flex-1">
+                          <h3 className="text-white font-semibold text-lg mb-2">Delete All Screens</h3>
+                          <p className="text-gray-400 text-sm mb-4">
+                            Permanently removes all screen tracking data.
+                          </p>
+                          <ul className="text-gray-500 text-xs space-y-1 mb-4">
+                            <li>• Screen views</li>
+                            <li>• Screen transitions</li>
+                            <li>• Screen metadata</li>
+                          </ul>
+                          <button
+                            onClick={() => {
+                              if (window.confirm('⚠️ Are you absolutely sure?\n\nThis will permanently delete ALL screen data.\n\nType "DELETE" in the next prompt to confirm.')) {
+                                const confirmation = window.prompt('Type DELETE to confirm:')
+                                if (confirmation === 'DELETE') {
+                                  handleCleanupData('screens')
+                                }
+                              }
+                            }}
+                            className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 font-medium text-sm transition-colors"
+                          >
+                            🗑️ Delete All Screens
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Delete Everything */}
+                  <div className="bg-gradient-to-r from-red-900/30 to-orange-900/30 border-2 border-red-500 rounded-lg p-6">
+                    <div className="flex items-start gap-4">
+                      <span className="text-5xl">☢️</span>
+                      <div className="flex-1">
+                        <h3 className="text-red-400 font-bold text-xl mb-2">Nuclear Option: Delete Everything</h3>
+                        <p className="text-gray-300 text-sm mb-4">
+                          This will delete <strong>ALL DATA</strong> from this project including devices, traces, logs, sessions, crashes, and screens.
+                          This action is <strong className="text-red-400">IRREVERSIBLE</strong>.
+                        </p>
+                        <button
+                          onClick={() => {
+                            if (window.confirm('☢️ NUCLEAR OPTION - DELETE EVERYTHING\n\nThis will PERMANENTLY DELETE ALL DATA:\n• All devices\n• All API traces\n• All logs\n• All sessions\n• All crashes\n• All screens\n\nTHIS CANNOT BE UNDONE!\n\nType "DELETE EVERYTHING" in the next prompt to confirm.')) {
+                              const confirmation = window.prompt('Type "DELETE EVERYTHING" (without quotes) to confirm:')
+                              if (confirmation === 'DELETE EVERYTHING') {
+                                handleCleanupData('all')
+                              }
+                            }
+                          }}
+                          className="w-full px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-lg hover:from-red-500 hover:to-orange-500 font-bold text-base transition-all shadow-lg"
+                        >
+                          ☢️ DELETE EVERYTHING
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -7164,263 +7354,29 @@ export default function ProjectDetailPage() {
             </div>
           )}
 
-          {/* Data Cleanup Tab */}
-          {settingsTab === 'cleanup' && (
-            <div className="space-y-6">
-              {/* Warning Banner */}
-              <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-4">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">⚠️</span>
-                  <div>
-                    <h3 className="text-red-400 font-bold text-lg">Danger Zone</h3>
-                    <p className="text-gray-300 text-sm">These actions will permanently delete data and cannot be undone.</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Cleanup Actions */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Delete Devices */}
-                <div className="bg-gray-900 rounded-lg p-6 hover:bg-gray-850 transition-colors">
-                  <div className="flex items-start gap-4">
-                    <span className="text-4xl">📱</span>
-                    <div className="flex-1">
-                      <h3 className="text-white font-semibold text-lg mb-2">Delete All Devices</h3>
-                      <p className="text-gray-400 text-sm mb-4">
-                        Permanently removes all registered devices and their associated data.
-                      </p>
-                      <ul className="text-gray-500 text-xs space-y-1 mb-4">
-                        <li>• Device registrations</li>
-                        <li>• Debug mode settings</li>
-                        <li>• Device metadata</li>
-                      </ul>
-                      <button
-                        onClick={() => {
-                          if (window.confirm('⚠️ Are you absolutely sure?\n\nThis will permanently delete ALL devices and their data.\n\nType "DELETE" in the next prompt to confirm.')) {
-                            const confirmation = window.prompt('Type DELETE to confirm:')
-                            if (confirmation === 'DELETE') {
-                              handleCleanupData('devices')
-                            }
-                          }
-                        }}
-                        className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 font-medium text-sm transition-colors"
-                      >
-                        🗑️ Delete All Devices
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Delete API Traces */}
-                <div className="bg-gray-900 rounded-lg p-6 hover:bg-gray-850 transition-colors">
-                  <div className="flex items-start gap-4">
-                    <span className="text-4xl">📡</span>
-                    <div className="flex-1">
-                      <h3 className="text-white font-semibold text-lg mb-2">Delete All API Traces</h3>
-                      <p className="text-gray-400 text-sm mb-4">
-                        Permanently removes all captured API request/response traces.
-                      </p>
-                      <ul className="text-gray-500 text-xs space-y-1 mb-4">
-                        <li>• HTTP requests/responses</li>
-                        <li>• Request/response bodies</li>
-                        <li>• Headers and metadata</li>
-                      </ul>
-                      <button
-                        onClick={() => {
-                          if (window.confirm('⚠️ Are you absolutely sure?\n\nThis will permanently delete ALL API traces.\n\nType "DELETE" in the next prompt to confirm.')) {
-                            const confirmation = window.prompt('Type DELETE to confirm:')
-                            if (confirmation === 'DELETE') {
-                              handleCleanupData('traces')
-                            }
-                          }
-                        }}
-                        className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 font-medium text-sm transition-colors"
-                      >
-                        🗑️ Delete All API Traces
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Delete Logs */}
-                <div className="bg-gray-900 rounded-lg p-6 hover:bg-gray-850 transition-colors">
-                  <div className="flex items-start gap-4">
-                    <span className="text-4xl">📝</span>
-                    <div className="flex-1">
-                      <h3 className="text-white font-semibold text-lg mb-2">Delete All Logs</h3>
-                      <p className="text-gray-400 text-sm mb-4">
-                        Permanently removes all application logs.
-                      </p>
-                      <ul className="text-gray-500 text-xs space-y-1 mb-4">
-                        <li>• Debug logs</li>
-                        <li>• Info logs</li>
-                        <li>• Error logs</li>
-                      </ul>
-                      <button
-                        onClick={() => {
-                          if (window.confirm('⚠️ Are you absolutely sure?\n\nThis will permanently delete ALL logs.\n\nType "DELETE" in the next prompt to confirm.')) {
-                            const confirmation = window.prompt('Type DELETE to confirm:')
-                            if (confirmation === 'DELETE') {
-                              handleCleanupData('logs')
-                            }
-                          }
-                        }}
-                        className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 font-medium text-sm transition-colors"
-                      >
-                        🗑️ Delete All Logs
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Delete Sessions */}
-                <div className="bg-gray-900 rounded-lg p-6 hover:bg-gray-850 transition-colors">
-                  <div className="flex items-start gap-4">
-                    <span className="text-4xl">🔄</span>
-                    <div className="flex-1">
-                      <h3 className="text-white font-semibold text-lg mb-2">Delete All Sessions</h3>
-                      <p className="text-gray-400 text-sm mb-4">
-                        Permanently removes all session data and their events.
-                      </p>
-                      <ul className="text-gray-500 text-xs space-y-1 mb-4">
-                        <li>• Session records</li>
-                        <li>• Session events</li>
-                        <li>• Session metadata</li>
-                      </ul>
-                      <button
-                        onClick={() => {
-                          if (window.confirm('⚠️ Are you absolutely sure?\n\nThis will permanently delete ALL sessions.\n\nType "DELETE" in the next prompt to confirm.')) {
-                            const confirmation = window.prompt('Type DELETE to confirm:')
-                            if (confirmation === 'DELETE') {
-                              handleCleanupData('sessions')
-                            }
-                          }
-                        }}
-                        className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 font-medium text-sm transition-colors"
-                      >
-                        🗑️ Delete All Sessions
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Delete Crashes */}
-                <div className="bg-gray-900 rounded-lg p-6 hover:bg-gray-850 transition-colors">
-                  <div className="flex items-start gap-4">
-                    <span className="text-4xl">💥</span>
-                    <div className="flex-1">
-                      <h3 className="text-white font-semibold text-lg mb-2">Delete All Crashes</h3>
-                      <p className="text-gray-400 text-sm mb-4">
-                        Permanently removes all crash reports and stack traces.
-                      </p>
-                      <ul className="text-gray-500 text-xs space-y-1 mb-4">
-                        <li>• Crash reports</li>
-                        <li>• Stack traces</li>
-                        <li>• Crash metadata</li>
-                      </ul>
-                      <button
-                        onClick={() => {
-                          if (window.confirm('⚠️ Are you absolutely sure?\n\nThis will permanently delete ALL crash reports.\n\nType "DELETE" in the next prompt to confirm.')) {
-                            const confirmation = window.prompt('Type DELETE to confirm:')
-                            if (confirmation === 'DELETE') {
-                              handleCleanupData('crashes')
-                            }
-                          }
-                        }}
-                        className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 font-medium text-sm transition-colors"
-                      >
-                        🗑️ Delete All Crashes
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Delete Screens */}
-                <div className="bg-gray-900 rounded-lg p-6 hover:bg-gray-850 transition-colors">
-                  <div className="flex items-start gap-4">
-                    <span className="text-4xl">🖥️</span>
-                    <div className="flex-1">
-                      <h3 className="text-white font-semibold text-lg mb-2">Delete All Screens</h3>
-                      <p className="text-gray-400 text-sm mb-4">
-                        Permanently removes all screen tracking data.
-                      </p>
-                      <ul className="text-gray-500 text-xs space-y-1 mb-4">
-                        <li>• Screen views</li>
-                        <li>• Screen transitions</li>
-                        <li>• Screen metadata</li>
-                      </ul>
-                      <button
-                        onClick={() => {
-                          if (window.confirm('⚠️ Are you absolutely sure?\n\nThis will permanently delete ALL screen data.\n\nType "DELETE" in the next prompt to confirm.')) {
-                            const confirmation = window.prompt('Type DELETE to confirm:')
-                            if (confirmation === 'DELETE') {
-                              handleCleanupData('screens')
-                            }
-                          }
-                        }}
-                        className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 font-medium text-sm transition-colors"
-                      >
-                        🗑️ Delete All Screens
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Delete Everything */}
-              <div className="bg-gradient-to-r from-red-900/30 to-orange-900/30 border-2 border-red-500 rounded-lg p-6">
-                <div className="flex items-start gap-4">
-                  <span className="text-5xl">☢️</span>
-                  <div className="flex-1">
-                    <h3 className="text-red-400 font-bold text-xl mb-2">Nuclear Option: Delete Everything</h3>
-                    <p className="text-gray-300 text-sm mb-4">
-                      This will delete <strong>ALL DATA</strong> from this project including devices, traces, logs, sessions, crashes, and screens. 
-                      This action is <strong className="text-red-400">IRREVERSIBLE</strong>.
-                    </p>
-                    <button
-                      onClick={() => {
-                        if (window.confirm('☢️ NUCLEAR OPTION - DELETE EVERYTHING\n\nThis will PERMANENTLY DELETE ALL DATA:\n• All devices\n• All API traces\n• All logs\n• All sessions\n• All crashes\n• All screens\n\nTHIS CANNOT BE UNDONE!\n\nType "DELETE EVERYTHING" in the next prompt to confirm.')) {
-                          const confirmation = window.prompt('Type "DELETE EVERYTHING" (without quotes) to confirm:')
-                          if (confirmation === 'DELETE EVERYTHING') {
-                            handleCleanupData('all')
-                          }
-                        }
-                      }}
-                      className="w-full px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-lg hover:from-red-500 hover:to-orange-500 font-bold text-base transition-all shadow-lg"
-                    >
-                      ☢️ DELETE EVERYTHING
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {activeTab === 'business-config' && token && (
+            <BusinessConfigTab
+              projectId={projectId}
+              token={token}
+              sharedUsage={sharedUsage}
+            />
           )}
-        </div>
-      )}
 
-      {activeTab === 'business-config' && token && (
-        <BusinessConfigTab 
-          projectId={projectId} 
-          token={token} 
-          sharedUsage={sharedUsage}
-        />
-      )}
+          {activeTab === 'localization' && token && (
+            <LocalizationTab
+              projectId={projectId}
+              token={token}
+              sharedUsage={sharedUsage}
+            />
+          )}
 
-      {activeTab === 'localization' && token && (
-        <LocalizationTab 
-          projectId={projectId} 
-          token={token} 
-          sharedUsage={sharedUsage}
-        />
-      )}
+          {activeTab === 'mocks' && token && (
+            <MocksPage />
+          )}
 
-      {activeTab === 'mocks' && token && (
-        <MocksPage />
-      )}
-
-      {activeTab === 'setup' && (
-        <SetupInstructions apiKey={apiKey} />
-      )}
+          {activeTab === 'setup' && (
+            <SetupInstructions apiKey={apiKey} />
+          )}
         </div>
       </div>
     </div>

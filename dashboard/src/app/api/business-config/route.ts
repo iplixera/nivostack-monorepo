@@ -138,11 +138,13 @@ export async function GET(request: NextRequest) {
           const defaultValue = defaultValueFromMeta !== undefined ? defaultValueFromMeta : extractValue(config)
 
           // Check for active experiments on this config
-          // Note: Experiment model may not exist in all schemas, so we check if it's available
+          // TODO: Experiment model needs to be added to Prisma schema
+          // Experiment logic is disabled until model is added
           let activeExperiment = null
+          /* COMMENTED OUT UNTIL EXPERIMENT MODEL IS ADDED
           try {
-            if (prisma.experiment) {
-              activeExperiment = await prisma.experiment.findFirst({
+            if ((prisma as any).experiment) {
+              activeExperiment = await (prisma as any).experiment.findFirst({
                 where: {
                   configId: config.id,
                   status: 'running',
@@ -168,10 +170,13 @@ export async function GET(request: NextRequest) {
             // Experiment model not available, skip experiment logic
             console.warn('Experiment model not available:', e)
           }
+          */
 
           let finalValue = defaultValue
           let targetingMatched = false
 
+          // TODO: Experiment logic disabled until Experiment model is added
+          /* COMMENTED OUT UNTIL EXPERIMENT MODEL IS ADDED
           // If experiment exists, assign user to variant
           if (activeExperiment) {
             try {
@@ -190,10 +195,10 @@ export async function GET(request: NextRequest) {
                 }
               )
 
-              if (assignment && prisma.experimentAssignment) {
+              if (assignment && (prisma as any).experimentAssignment) {
                 try {
                   // Store assignment if not exists
-                  await prisma.experimentAssignment.upsert({
+                  await (prisma as any).experimentAssignment.upsert({
                     where: {
                       experimentId_deviceId_userId: {
                         experimentId: activeExperiment.id,
@@ -226,6 +231,7 @@ export async function GET(request: NextRequest) {
               // Fallback to targeting/default
             }
           }
+          */
 
           // If no experiment or experiment assignment failed, evaluate targeting rules
           if (finalValue === defaultValue && targetingRules) {
@@ -582,14 +588,14 @@ export async function PUT(request: NextRequest) {
     )) {
       const finalValue = valueType !== undefined ? value : extractValue(existingConfig)
       const finalType = valueType !== undefined ? valueType : existingConfig.valueType
-      const finalSchema = validationSchema !== undefined ? validationSchema : existingConfig.validationSchema
+      const finalSchema = validationSchema !== undefined ? validationSchema : (existingConfig as any).validationSchema
       const finalConstraints = {
-        minValue: minValue !== undefined ? minValue : existingConfig.minValue,
-        maxValue: maxValue !== undefined ? maxValue : existingConfig.maxValue,
-        minLength: minLength !== undefined ? minLength : existingConfig.minLength,
-        maxLength: maxLength !== undefined ? maxLength : existingConfig.maxLength,
-        pattern: pattern !== undefined ? pattern : existingConfig.pattern,
-        allowedValues: allowedValues !== undefined ? allowedValues : existingConfig.allowedValues
+        minValue: minValue !== undefined ? minValue : (existingConfig as any).minValue,
+        maxValue: maxValue !== undefined ? maxValue : (existingConfig as any).maxValue,
+        minLength: minLength !== undefined ? minLength : (existingConfig as any).minLength,
+        maxLength: maxLength !== undefined ? maxLength : (existingConfig as any).maxLength,
+        pattern: pattern !== undefined ? pattern : (existingConfig as any).pattern,
+        allowedValues: allowedValues !== undefined ? allowedValues : (existingConfig as any).allowedValues
       }
 
       const validation = validateConfigValue(finalValue, finalType, finalSchema, finalConstraints)
@@ -771,6 +777,11 @@ async function logConfigChange(
 ) {
   try {
     // Get user name for display
+    // TODO: ConfigChangeLog model needs to be added to Prisma schema
+    // Change logging is disabled until model is added
+    return
+    
+    /* COMMENTED OUT UNTIL CONFIGCHANGELOG MODEL IS ADDED
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { name: true, email: true }
@@ -788,6 +799,7 @@ async function logConfigChange(
         changes: changes || null
       }
     })
+    */
   } catch (error) {
     console.error('Failed to log config change:', error)
     // Don't fail the request if logging fails
@@ -808,6 +820,11 @@ async function trackConfigUsage(
     cacheHit: boolean
   }
 ) {
+  // TODO: ConfigUsageMetric model needs to be added to Prisma schema
+  // Metrics tracking is disabled until model is added
+  return
+  
+  /* COMMENTED OUT UNTIL CONFIGUSAGEMETRIC MODEL IS ADDED
   try {
     const uniqueKey = `${projectId}:${configKey}:${metrics.deviceId || 'none'}:${metrics.userId || 'none'}`
     
@@ -842,4 +859,5 @@ async function trackConfigUsage(
     console.error('Failed to track config usage:', error)
     // Don't fail the request if tracking fails
   }
+  */
 }

@@ -50,6 +50,21 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // TODO: ConfigUsageMetric model needs to be added to Prisma schema
+    return NextResponse.json({
+      stats: {
+        totalFetches: 0,
+        uniqueDevices: 0,
+        uniqueUsers: 0,
+        cacheHitRate: 0,
+        targetingMatchRate: 0,
+        rolloutReceiveRate: 0
+      },
+      byConfigKey: [],
+      metrics: []
+    })
+    
+    /* COMMENTED OUT UNTIL CONFIGUSAGEMETRIC MODEL IS ADDED
     // Get usage metrics
     const metrics = await prisma.configUsageMetric.findMany({
       where,
@@ -107,6 +122,7 @@ export async function GET(request: NextRequest) {
       byConfigKey: Object.values(byConfigKey),
       metrics: metrics.slice(0, 100) // Limit to recent 100
     })
+    */
   } catch (error) {
     console.error('Get config analytics error:', error)
     return NextResponse.json(

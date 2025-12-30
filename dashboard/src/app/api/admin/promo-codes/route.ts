@@ -13,6 +13,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 403 })
     }
 
+    // TODO: PromoCode model needs to be added to Prisma schema
+    return NextResponse.json({ promoCodes: [] })
+    
+    /* COMMENTED OUT UNTIL PROMOCODE MODEL IS ADDED
     const promoCodes = await prisma.promoCode.findMany({
       include: {
         _count: {
@@ -27,6 +31,7 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({ promoCodes })
+    */
   } catch (error) {
     console.error('Get promo codes error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -79,6 +84,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // TODO: PromoCode model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'PromoCode model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL PROMOCODE MODEL IS ADDED
     // Check if code already exists
     const existing = await prisma.promoCode.findUnique({
       where: { code },
@@ -107,6 +116,7 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({ promoCode }, { status: 201 })
+    */
   } catch (error) {
     console.error('Create promo code error:', error)
     return NextResponse.json(

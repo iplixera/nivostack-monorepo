@@ -573,6 +573,13 @@ export async function createSubscriptionForUser(
   let discountAmount = options?.discountAmount || null
   let discountedPrice = plan.price
 
+  // TODO: PromoCode model needs to be added to Prisma schema
+  // Promo code validation is disabled until model is added
+  if (options?.promoCodeId) {
+    throw new Error('PromoCode model not yet implemented')
+  }
+  
+  /* COMMENTED OUT UNTIL PROMOCODE MODEL IS ADDED
   // If promo code provided, validate and apply
   if (options?.promoCodeId) {
     const promoCode = await prisma.promoCode.findUnique({
@@ -626,7 +633,10 @@ export async function createSubscriptionForUser(
         },
       },
     })
-  } else if (options?.discountPercent) {
+  }
+  */
+  
+  if (options?.discountPercent) {
     // Direct percentage discount
     discountedPrice = plan.price * (1 - options.discountPercent / 100)
   } else if (options?.discountAmount) {

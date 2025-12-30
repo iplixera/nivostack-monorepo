@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { validateApiKey } from '@/lib/auth'
+import { subscribeToConfigUpdates } from '@/lib/business-config/events'
 
 /**
  * GET /api/business-config/stream

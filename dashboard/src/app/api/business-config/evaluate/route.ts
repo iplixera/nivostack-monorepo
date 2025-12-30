@@ -35,9 +35,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Config not found' }, { status: 404 })
     }
 
-    // Check rollout percentage
+    // Check rollout percentage (default to 100 if field doesn't exist)
+    const rolloutPercentage = (config as any).rolloutPercentage || 100
     const receivesRollout = shouldReceiveRollout(
-      config.rolloutPercentage || 100,
+      rolloutPercentage,
       (context || {}) as TargetingContext
     )
 
@@ -51,6 +52,7 @@ export async function POST(request: NextRequest) {
 
     // Helper to extract value based on type
     function extractValue(c: typeof config): any {
+      if (!c) return null
       switch (c.valueType) {
         case 'string': return c.stringValue
         case 'integer': return c.integerValue
@@ -67,12 +69,14 @@ export async function POST(request: NextRequest) {
 
     // Evaluate targeting rules
     let finalValue = defaultValue
-    if (config.targetingRules) {
+    const targetingRules = (config as any).targetingRules
+    if (targetingRules) {
       try {
+        const configDefaultValue = (config as any).defaultValue
         finalValue = evaluateTargeting(
-          config.targetingRules as any,
+          targetingRules as any,
           (context || {}) as TargetingContext,
-          config.defaultValue !== null ? config.defaultValue : defaultValue
+          configDefaultValue !== null && configDefaultValue !== undefined ? configDefaultValue : defaultValue
         )
       } catch (error) {
         return NextResponse.json({
@@ -85,7 +89,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       receivesRollout: true,
       value: finalValue,
-      matchedTargeting: config.targetingRules ? true : false
+      matchedTargeting: targetingRules ? true : false
     })
   } catch (error) {
     console.error('Evaluate config error:', error)

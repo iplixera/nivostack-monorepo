@@ -2,6 +2,9 @@ import { prisma } from './prisma'
 import { getUsageStats } from './subscription'
 import { sendEmail } from './email'
 
+// TODO: Offer model needs to be added to Prisma schema
+// All functions below are stubbed until the Offer model is defined
+
 export type OfferType = 'early_renewal' | 'extension' | 'upgrade'
 export type OfferStatus = 'pending' | 'sent' | 'accepted' | 'declined' | 'expired'
 
@@ -26,6 +29,10 @@ export async function createEarlyRenewalOffers(
   discountPercent: number = 10,
   daysUntilExpiry: number = 7
 ): Promise<{ created: number; errors: string[] }> {
+  // TODO: Uncomment when Offer model is added to Prisma schema
+  return { created: 0, errors: ['Offer model not yet implemented'] }
+  
+  /* COMMENTED OUT UNTIL OFFER MODEL IS ADDED
   const errors: string[] = []
   let created = 0
 
@@ -108,6 +115,7 @@ export async function createEarlyRenewalOffers(
   }
 
   return { created, errors }
+  */
 }
 
 /**
@@ -117,6 +125,10 @@ export async function createExtensionOffers(
   extensionDays: number = 30,
   discountPercent: number = 15
 ): Promise<{ created: number; errors: string[] }> {
+  // TODO: Uncomment when Offer model is added to Prisma schema
+  return { created: 0, errors: ['Offer model not yet implemented'] }
+  
+  /* COMMENTED OUT UNTIL OFFER MODEL IS ADDED
   const errors: string[] = []
   let created = 0
 
@@ -208,6 +220,7 @@ export async function createExtensionOffers(
   }
 
   return { created, errors }
+  */
 }
 
 /**
@@ -216,6 +229,10 @@ export async function createExtensionOffers(
 export async function createUpgradeOffers(
   discountPercent: number = 20
 ): Promise<{ created: number; errors: string[] }> {
+  // TODO: Uncomment when Offer model is added to Prisma schema
+  return { created: 0, errors: ['Offer model not yet implemented'] }
+  
+  /* COMMENTED OUT UNTIL OFFER MODEL IS ADDED
   const errors: string[] = []
   let created = 0
 
@@ -304,12 +321,17 @@ export async function createUpgradeOffers(
   }
 
   return { created, errors }
+  */
 }
 
 /**
  * Accept an offer
  */
 export async function acceptOffer(offerId: string): Promise<{ success: boolean; error?: string }> {
+  // TODO: Uncomment when Offer model is added to Prisma schema
+  return { success: false, error: 'Offer model not yet implemented' }
+  
+  /* COMMENTED OUT UNTIL OFFER MODEL IS ADDED
   try {
     const offer = await prisma.offer.findUnique({
       where: { id: offerId },
@@ -410,5 +432,6 @@ export async function acceptOffer(offerId: string): Promise<{ success: boolean; 
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
   }
+  */
 }
 

@@ -16,6 +16,10 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 403 })
     }
 
+    // TODO: PromoCode model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'Promo code not found' }, { status: 404 })
+    
+    /* COMMENTED OUT UNTIL PROMOCODE MODEL IS ADDED
     const { id } = await params
     const promoCode = await prisma.promoCode.findUnique({
       where: { id },
@@ -33,6 +37,7 @@ export async function GET(
     }
 
     return NextResponse.json({ promoCode })
+    */
   } catch (error) {
     console.error('Get promo code error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -53,6 +58,10 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 403 })
     }
 
+    // TODO: PromoCode model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'PromoCode model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL PROMOCODE MODEL IS ADDED
     const { id } = await params
     const body = await request.json()
 
@@ -72,6 +81,7 @@ export async function PATCH(
     })
 
     return NextResponse.json({ promoCode })
+    */
   } catch (error) {
     console.error('Update promo code error:', error)
     return NextResponse.json(
@@ -95,6 +105,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 403 })
     }
 
+    // TODO: PromoCode model needs to be added to Prisma schema
+    return NextResponse.json({ error: 'PromoCode model not yet implemented' }, { status: 500 })
+    
+    /* COMMENTED OUT UNTIL PROMOCODE MODEL IS ADDED
     const { id } = await params
 
     // Check if promo code is in use
@@ -114,6 +128,7 @@ export async function DELETE(
     })
 
     return NextResponse.json({ success: true })
+    */
   } catch (error) {
     console.error('Delete promo code error:', error)
     return NextResponse.json(

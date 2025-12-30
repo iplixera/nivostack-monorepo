@@ -41,7 +41,7 @@ export async function PATCH(
     }
 
     // Verify user owns the project
-    if (device.project.userId !== user.id) {
+    if (!device.project || device.project.userId !== user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
@@ -129,7 +129,7 @@ export async function GET(
     }
 
     // Verify user owns the project
-    if (device.project.userId !== user.id) {
+    if (!device.project || device.project.userId !== user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 

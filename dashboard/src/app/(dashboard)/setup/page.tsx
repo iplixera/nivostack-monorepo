@@ -13,14 +13,14 @@ export default function SetupPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !token) {
       router.push('/login')
       return
     }
 
     const fetchProjects = async () => {
       try {
-        const response = await api.projects.list()
+        const response = await api.projects.list(token)
         setProjects(response.projects || [])
         if (response.projects && response.projects.length > 0) {
           setSelectedProjectId(response.projects[0].id)
@@ -33,7 +33,7 @@ export default function SetupPage() {
     }
 
     fetchProjects()
-  }, [user, router])
+  }, [user, token, router])
 
   const selectedProject = projects.find(p => p.id === selectedProjectId)
   const apiKey = selectedProject?.apiKey || ''

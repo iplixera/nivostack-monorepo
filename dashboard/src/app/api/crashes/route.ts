@@ -170,13 +170,14 @@ export async function GET(request: NextRequest) {
     }
 
     if (startDate || endDate) {
-      where.timestamp = {}
+      const timestampFilter: { gte?: Date; lte?: Date } = {}
       if (startDate) {
-        where.timestamp.gte = new Date(startDate)
+        timestampFilter.gte = new Date(startDate)
       }
       if (endDate) {
-        where.timestamp.lte = new Date(endDate)
+        timestampFilter.lte = new Date(endDate)
       }
+      where.timestamp = timestampFilter
     }
 
     if (search) {

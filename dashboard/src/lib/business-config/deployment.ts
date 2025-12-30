@@ -71,7 +71,7 @@ export function calculateNextDeploymentStep(
         completed: currentPercentage >= 100
       }
 
-    case 'linear':
+    case 'linear': {
       const steps = config.linearSteps || 5
       const interval = config.linearInterval || 30 // Default 30 minutes
       const stepSize = 100 / steps
@@ -96,8 +96,9 @@ export function calculateNextDeploymentStep(
         nextUpdateTime,
         completed: false
       }
+    }
 
-    case 'exponential':
+    case 'exponential': {
       const base = config.exponentialBase || 5
       const multiplier = config.exponentialMultiplier || 2
       const expInterval = config.exponentialInterval || 15 // Default 15 minutes
@@ -140,6 +141,7 @@ export function calculateNextDeploymentStep(
         nextUpdateTime,
         completed: false
       }
+    }
 
     default:
       return {

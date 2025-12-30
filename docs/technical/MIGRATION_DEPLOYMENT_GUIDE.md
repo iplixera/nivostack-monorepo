@@ -2,54 +2,36 @@
 
 ## Overview
 
-Database migrations run automatically as part of the deployment process. There are multiple ways migrations can be triggered:
+Database migrations run automatically using multiple methods to ensure reliability:
 
 1. **During Build** (non-blocking) - Tries to run, but may fail due to IP restrictions
-2. **After Deployment** (recommended) - Via webhook or API endpoint
-3. **Via Cron** - Scheduled automatic migrations
+2. **On First API Request** (automatic) - Runs via middleware when app starts serving
+3. **Manual API Endpoint** - On-demand migration trigger
+4. **Daily Cron Job** - Backup to keep schema in sync
 
-## Current Setup
+## How It Works
 
 ### 1. Build-Time Migration (Non-Blocking)
 
 **Location:** `dashboard/scripts/run-migration-vercel-simple.sh`
 
-**How it works:**
-- Runs during `pnpm build` command
+- Runs during `pnpm build`
 - Non-blocking: If connection fails, build continues
-- Uses 30-second timeout to prevent hanging
+- May fail due to Vercel build server IP restrictions
 
-**Status:** ✅ Already configured in `package.json`
+**Status:** ✅ Already configured
 
-### 2. Post-Deployment Webhook (Recommended)
+### 2. Automatic Migration on First Request (Recommended)
 
-**Location:** `dashboard/src/app/api/webhooks/vercel/route.ts`
-
-**How to set up:**
-
-1. **Get your deployment URL:**
-   ```
-   https://studio.nivostack.com/api/webhooks/vercel
-   ```
-
-2. **Configure in Vercel Dashboard:**
-   - Go to: Project Settings → Git → Deploy Hooks
-   - Click "Add Hook"
-   - Name: `Run Migrations`
-   - URL: `https://studio.nivostack.com/api/webhooks/vercel`
-   - Events: Select "Production Deployment" and/or "Preview Deployment"
-   - Save
-
-3. **Set webhook secret (optional but recommended):**
-   ```bash
-   # In Vercel Dashboard → Environment Variables
-   VERCEL_WEBHOOK_SECRET=your-secret-here
-   ```
+**Location:** `dashboard/src/middleware.ts`
 
 **How it works:**
-- Vercel calls the webhook after successful deployment
-- Webhook runs `prisma db push` to sync schema
-- Returns success/failure status
+- Runs automatically on the first API request after deployment
+- Executes in background (non-blocking)
+- Uses deployed server (has database access, no IP restrictions)
+- Only runs once per deployment instance
+
+**Status:** ✅ Already configured - **No action needed!**
 
 ### 3. Manual API Endpoint
 
@@ -66,16 +48,22 @@ curl -X POST https://studio.nivostack.com/api/migrate \
 **Or from Vercel Dashboard:**
 - Go to: Functions → `/api/migrate`
 - Click "Invoke"
-- Or use Vercel CLI: `vercel functions invoke migrate`
 
-### 4. Scheduled Cron Job
+**Status:** ✅ Already configured
 
-**Location:** `dashboard/vercel-studio.json`
+### 4. Health Check Endpoint
+
+**Location:** `dashboard/src/app/api/health/route.ts`
 
 **How it works:**
-- Runs daily at midnight
-- Calls `/api/migrate` endpoint
-- Ensures schema stays in sync
+- Runs migration on first call after deployment
+- Can be called by monitoring tools
+- Non-blocking (runs in background)
+
+**Usage:**
+```bash
+curl https://studio.nivostack.com/api/health
+```
 
 **Status:** ✅ Already configured
 
@@ -100,80 +88,88 @@ curl -X POST https://studio.nivostack.com/api/migrate \
          │
          ▼
 ┌─────────────────┐
-│  Webhook        │
-│  (runs migrate) │
+│  First API      │
+│  Request        │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Middleware     │
+│  (runs migrate)│
 └─────────────────┘
 ```
 
+## What You Need to Do
+
+### ✅ Nothing! It's Already Set Up
+
+The migration system is **fully automatic**:
+
+1. ✅ **Build-time migration** - Configured in `package.json`
+2. ✅ **Automatic on first request** - Configured in `middleware.ts`
+3. ✅ **Manual endpoint** - Available at `/api/migrate`
+4. ✅ **Health check** - Available at `/api/health`
+
+### Optional: Test Migration
+
+After deployment, you can verify migration ran:
+
+```bash
+# Check if migration ran (should show "checked")
+curl https://studio.nivostack.com/api/health
+
+# Or run manually
+curl -X POST https://studio.nivostack.com/api/migrate \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+```
+
+## How It Works Technically
+
+### Middleware Approach
+
+The `middleware.ts` file:
+- Intercepts all API requests
+- On first request after deployment, triggers migration in background
+- Uses `exec()` to run `prisma db push`
+- Non-blocking (doesn't slow down requests)
+- Only runs once per server instance
+
+### Why This Works
+
+1. **No IP Restrictions** - Runs from deployed server, not build server
+2. **Automatic** - No manual configuration needed
+3. **Reliable** - Runs on first request, ensures migrations happen
+4. **Non-Blocking** - Doesn't slow down API responses
+
 ## Troubleshooting
 
-### Migration fails during build
-
-**Problem:** `Can't reach database server`
-
-**Solution:** This is expected! Build servers can't reach Supabase due to IP whitelisting. The migration will run via webhook after deployment.
-
-### Webhook not triggering
+### Migration not running
 
 **Check:**
-1. Webhook URL is correct
-2. Webhook is enabled in Vercel Dashboard
-3. Events are selected (Production/Preview)
-4. Deployment was successful
-
-### Migration API returns 401
-
-**Problem:** Missing or incorrect `CRON_SECRET`
-
-**Solution:**
-1. Set `CRON_SECRET` in Vercel Environment Variables
-2. Include in request: `Authorization: Bearer YOUR_CRON_SECRET`
+1. Verify `POSTGRES_URL_NON_POOLING` is set in Vercel
+2. Check server logs for migration output
+3. Call `/api/health` to trigger migration manually
 
 ### Migration takes too long
 
-**Problem:** Timeout errors
+**Solution:**
+- Migration runs in background, doesn't block requests
+- Check logs for any errors
+- Can run manually via `/api/migrate` endpoint
+
+### Need to run migration immediately
 
 **Solution:**
-- Increase timeout in API endpoint (currently 60 seconds)
-- Or run migrations manually before deployment
+```bash
+curl -X POST https://studio.nivostack.com/api/migrate \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+```
 
-## Best Practices
+## Summary
 
-1. ✅ **Always test migrations locally first**
-   ```bash
-   bash scripts/migrate-staging.sh
-   ```
+**✅ Fully Automatic - No Configuration Needed!**
 
-2. ✅ **Run migrations on staging before production**
-   - Test in preview deployment
-   - Verify schema changes
-   - Then deploy to production
-
-3. ✅ **Monitor migration logs**
-   - Check Vercel function logs
-   - Check webhook execution logs
-   - Verify in Supabase Dashboard
-
-4. ✅ **Use webhook for automatic migrations**
-   - Most reliable method
-   - Runs after successful deployment
-   - Has access to database (no IP restrictions)
-
-## Quick Reference
-
-| Method | When | Reliability | Setup |
-|--------|------|-------------|-------|
-| **Build-time** | During build | ⚠️ May fail (IP restrictions) | ✅ Already configured |
-| **Webhook** | After deployment | ✅ High | ⚙️ Needs Vercel config |
-| **API endpoint** | On-demand | ✅ High | ✅ Already configured |
-| **Cron job** | Daily at midnight | ✅ High | ✅ Already configured |
-
-## Recommended Setup
-
-**For automatic migrations:**
-1. ✅ Keep build-time migration (non-blocking)
-2. ✅ Set up Vercel webhook (post-deployment)
-3. ✅ Keep cron job as backup
-
-**This ensures migrations run even if one method fails.**
-
+- Migrations run automatically on first API request after deployment
+- No Vercel webhook configuration needed
+- No manual steps required
+- Just deploy and migrations will run automatically

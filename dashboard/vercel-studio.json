@@ -53,9 +53,5 @@
       "path": "/api/cron/create-offers",
       "schedule": "0 10 * * *"
     },
-    {
-      "path": "/api/migrate",
-      "schedule": "0 0 * * *"
-    }
   ]
 }

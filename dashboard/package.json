@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "_deploy": "echo deploy",
     "build": "bash scripts/generate-prisma-safe.sh && next build --webpack",
     "start": "next start",
     "lint": "eslint",

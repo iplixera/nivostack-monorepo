@@ -95,7 +95,7 @@ type LogLevels = {
 type Crash = {
   id: string
   message: string
-  stackTrace: string
+  stackTrace: string | null
   metadata: Record<string, unknown> | null
   timestamp: string
   device?: { deviceId: string; platform: string; model: string }

@@ -10,28 +10,5 @@
       "main": true,
       "develop": true
     }
-  },
-  "ignoreCommand": "BRANCH=\"$(echo $VERCEL_GIT_COMMIT_REF | cut -d/ -f1)\"; [ \"$VERCEL_GIT_COMMIT_REF\" = \"main\" ] || [ \"$VERCEL_GIT_COMMIT_REF\" = \"develop\" ] || [ \"$BRANCH\" = \"feature\" ] || [ \"$BRANCH\" = \"bugfix\" ] || [ \"$BRANCH\" = \"hotfix\" ] || exit 1",
-  "crons": [
-    {
-      "path": "/api/cron/expire-trials",
-      "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/renew-subscriptions",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/retry-payments",
-      "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/send-reminders",
-      "schedule": "0 9 * * *"
-    },
-    {
-      "path": "/api/cron/create-offers",
-      "schedule": "0 10 * * *"
-    }
-  ]
+  }
 }

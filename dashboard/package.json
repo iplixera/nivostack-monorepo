@@ -7,7 +7,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "npx prisma generate --schema=../prisma/schema.prisma",
+    "postinstall": "pnpm exec prisma generate --schema=../prisma/schema.prisma",
     "db:seed": "tsx ../prisma/seed.ts",
     "db:health": "tsx ../scripts/db-health-check.ts",
     "env:check": "bash ../scripts/check-env.sh",

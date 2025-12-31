@@ -2338,15 +2338,6 @@ export default function ProjectDetailPage() {
 
               {deviceSubTab === 'settings' && token && (
                 <div className="space-y-6">
-                  {(() => {
-                    console.log('🔧 Device Settings render:', {
-                      sdkSettingsLoading,
-                      hasSdkSettings: !!sdkSettings,
-                      token: !!token,
-                      projectId
-                    })
-                    return null
-                  })()}
                   {sdkSettingsLoading ? (
                     <div className="bg-gray-900 rounded-lg p-8 text-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
@@ -2361,11 +2352,13 @@ export default function ProjectDetailPage() {
                       <div>
                         <h3 className="text-white font-medium">Tracking Mode</h3>
                         <p className="text-gray-400 text-sm">Control which devices send API traces and session data</p>
+                        {/* Debug: Show current value */}
+                        <p className="text-gray-500 text-xs mt-1">Current: <span className="font-mono text-blue-400">{sdkSettings.trackingMode || 'not set'}</span></p>
                       </div>
                     </div>
                     <div className="space-y-3">
                       <div
-                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${sdkSettings.trackingMode === 'all'
+                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${(sdkSettings.trackingMode === 'all')
                             ? 'bg-blue-600/20 border-2 border-blue-500'
                             : 'bg-gray-800 hover:bg-gray-750 border-2 border-transparent'
                           }`}
@@ -2378,13 +2371,13 @@ export default function ProjectDetailPage() {
                             <p className="text-gray-500 text-xs">Track all devices (recommended for development/testing)</p>
                           </div>
                         </div>
-                        {sdkSettings.trackingMode === 'all' && (
+                        {(sdkSettings.trackingMode === 'all') && (
                           <span className="text-blue-400 text-lg">✓</span>
                         )}
                       </div>
 
                       <div
-                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${sdkSettings.trackingMode === 'debug_only'
+                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${(sdkSettings.trackingMode === 'debug_only')
                             ? 'bg-orange-600/20 border-2 border-orange-500'
                             : 'bg-gray-800 hover:bg-gray-750 border-2 border-transparent'
                           }`}
@@ -2397,13 +2390,13 @@ export default function ProjectDetailPage() {
                             <p className="text-gray-500 text-xs">Only track devices with debug mode enabled (recommended for production)</p>
                           </div>
                         </div>
-                        {sdkSettings.trackingMode === 'debug_only' && (
+                        {(sdkSettings.trackingMode === 'debug_only') && (
                           <span className="text-orange-400 text-lg">✓</span>
                         )}
                       </div>
 
                       <div
-                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${sdkSettings.trackingMode === 'none'
+                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${(sdkSettings.trackingMode === 'none' || sdkSettings.trackingMode === 'disabled')
                             ? 'bg-red-600/20 border-2 border-red-500'
                             : 'bg-gray-800 hover:bg-gray-750 border-2 border-transparent'
                           }`}
@@ -2416,7 +2409,7 @@ export default function ProjectDetailPage() {
                             <p className="text-gray-500 text-xs">No devices will send API traces or session data</p>
                           </div>
                         </div>
-                        {sdkSettings.trackingMode === 'none' && (
+                        {(sdkSettings.trackingMode === 'none' || sdkSettings.trackingMode === 'disabled') && (
                           <span className="text-red-400 text-lg">✓</span>
                         )}
                       </div>
@@ -2747,26 +2740,43 @@ export default function ProjectDetailPage() {
                       <div>
                         <h3 className="text-white font-medium">Log Control</h3>
                         <p className="text-gray-400 text-sm">Control log levels and filtering</p>
+                        {!featureFlags?.logging && (
+                          <p className="text-orange-400 text-xs mt-1">
+                            ⚠️ Logging feature flag is disabled in Project Settings. Log Control settings won't take effect until logging is enabled.
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="space-y-3">
                       <div className="p-3 bg-gray-800 rounded-lg">
                         <p className="text-white text-sm font-medium mb-2">Minimum Log Level</p>
-                        <p className="text-gray-500 text-xs mb-3">Only logs at or above this level will be captured</p>
-                        <div className="flex gap-2">
-                          {['verbose', 'debug', 'info', 'warn', 'error'].map((level) => (
+                        <p className="text-gray-500 text-xs mb-3">
+                          {sdkSettings.minLogLevel === 'disabled' 
+                            ? 'Logging is disabled - no logs will be captured'
+                            : `Only logs at or above this level will be captured`}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {['disabled', 'verbose', 'debug', 'info', 'warn', 'error'].map((level) => (
                             <button
                               key={level}
-                              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${sdkSettings.minLogLevel === level
-                                  ? 'bg-blue-600 text-white'
+                              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                                sdkSettings.minLogLevel === level
+                                  ? level === 'disabled'
+                                    ? 'bg-red-600 text-white'
+                                    : 'bg-blue-600 text-white'
                                   : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                }`}
+                              }`}
                               onClick={() => updateSdkSetting({ minLogLevel: level })}
                             >
-                              {level.charAt(0).toUpperCase() + level.slice(1)}
+                              {level === 'disabled' ? '🚫 Disabled' : level.charAt(0).toUpperCase() + level.slice(1)}
                             </button>
                           ))}
                         </div>
+                        {sdkSettings.minLogLevel === 'disabled' && (
+                          <div className="mt-3 p-2 bg-red-500/10 border border-red-500/30 rounded text-xs text-red-400">
+                            ⚠️ All logging is disabled. No logs will be captured regardless of log level.
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
                         <div className="flex items-center gap-3">

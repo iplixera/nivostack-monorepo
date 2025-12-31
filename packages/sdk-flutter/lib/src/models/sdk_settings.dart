@@ -55,12 +55,19 @@ class NivoStackSdkSettings {
 
   /// Check if a log level should be captured based on minLogLevel
   bool shouldCaptureLogLevel(String level) {
+    // If logging is disabled, don't capture any logs
+    if (minLogLevel.toLowerCase() == 'disabled') {
+      return false;
+    }
+
     const levelOrder = ['verbose', 'debug', 'info', 'warn', 'error', 'assert'];
     final minIndex = levelOrder.indexOf(minLogLevel.toLowerCase());
     final levelIndex = levelOrder.indexOf(level.toLowerCase());
 
-    // If either level is unknown, default to capturing
-    if (minIndex == -1 || levelIndex == -1) return true;
+    // If either level is unknown, default to capturing (unless disabled)
+    if (minIndex == -1 || levelIndex == -1) {
+      return minLogLevel.toLowerCase() != 'disabled';
+    }
 
     return levelIndex >= minIndex;
   }

@@ -16,10 +16,11 @@ class NivoStackApiClient {
     required this.apiKey,
   }) {
     // Dio instance for ingest endpoints (traces, logs, crashes, sessions, devices)
+    // Increased receiveTimeout to 10 seconds for device registration which can take longer
     _ingestDio = Dio(BaseOptions(
       baseUrl: ingestUrl,
       connectTimeout: const Duration(seconds: 3),
-      receiveTimeout: const Duration(seconds: 3),
+      receiveTimeout: const Duration(seconds: 10), // Increased from 3s to handle slow device registration
       headers: {
         'Content-Type': 'application/json',
         'X-API-Key': apiKey,
@@ -27,10 +28,11 @@ class NivoStackApiClient {
     ));
 
     // Dio instance for control endpoints (config, localization, feature flags)
+    // Increased receiveTimeout to 15 seconds for config fetches which can take longer
     _controlDio = Dio(BaseOptions(
       baseUrl: controlUrl,
       connectTimeout: const Duration(seconds: 3),
-      receiveTimeout: const Duration(seconds: 3),
+      receiveTimeout: const Duration(seconds: 15), // Increased from 3s to handle slow config responses
       headers: {
         'Content-Type': 'application/json',
         'X-API-Key': apiKey,

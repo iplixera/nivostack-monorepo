@@ -1422,6 +1422,16 @@
     border-color: var(--color-red-500);
   }
 
+  .border-red-500\/30 {
+    border-color: #fb2c364d;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .border-red-500\/30 {
+      border-color: color-mix(in oklab, var(--color-red-500) 30%, transparent);
+    }
+  }
+
   .border-red-500\/50 {
     border-color: #fb2c3680;
   }
@@ -1872,6 +1882,16 @@
 
   .bg-red-500 {
     background-color: var(--color-red-500);
+  }
+
+  .bg-red-500\/10 {
+    background-color: #fb2c361a;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-red-500\/10 {
+      background-color: color-mix(in oklab, var(--color-red-500) 10%, transparent);
+    }
   }
 
   .bg-red-600 {

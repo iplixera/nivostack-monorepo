@@ -17,7 +17,7 @@ const DEFAULT_SDK_SETTINGS = {
   maxTraceQueueSize: 50,
   flushIntervalSeconds: 30,
   enableBatching: true,
-  // Log control
+  // Log control - 'debug' by default (can be set to 'disabled' to turn off logging)
   minLogLevel: 'debug',
   verboseErrors: false,
 }
@@ -120,10 +120,14 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    // Normalize 'disabled' to 'none' for UI consistency
+    const trackingMode = settings.trackingMode || DEFAULT_SDK_SETTINGS.trackingMode
+    const normalizedTrackingMode = trackingMode === 'disabled' ? 'none' : trackingMode
+
     return NextResponse.json({
       settings: {
-        // Tracking mode - 'disabled' by default
-        trackingMode: settings.trackingMode || DEFAULT_SDK_SETTINGS.trackingMode,
+        // Tracking mode - normalized to 'none' if 'disabled'
+        trackingMode: normalizedTrackingMode,
         // Security
         captureRequestBodies: settings.captureRequestBodies,
         captureResponseBodies: settings.captureResponseBodies,

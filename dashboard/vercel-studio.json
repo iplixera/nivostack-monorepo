@@ -3,7 +3,6 @@
   "outputDirectory": ".next",
   "framework": "nextjs",
   "installCommand": "pnpm install",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- dashboard/ || exit 1",
   "routes": [
     {
       "src": "/api/(.*)",
@@ -53,6 +52,6 @@
     {
       "path": "/api/cron/create-offers",
       "schedule": "0 10 * * *"
-    },
+    }
   ]
 }

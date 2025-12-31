@@ -585,11 +585,34 @@ class NivoStack {
     // Pre-populate business config cache
     final businessConfigData = response['businessConfig'];
     if (businessConfigData != null) {
+      final configs = businessConfigData['configs'] as Map<String, dynamic>? ?? {};
+      final meta = businessConfigData['meta'] as Map<String, dynamic>? ?? {};
+      
+      // Debug: Log maintenance_enabled value before setting
+      final maintenanceEnabledBefore = _businessConfig.getBool('maintenance_enabled', defaultValue: false);
+      final maintenanceEnabledInResponse = configs['maintenance_enabled'];
+      print('🔧 NivoStack: maintenance_enabled BEFORE setFromInitData: $maintenanceEnabledBefore');
+      print('🔧 NivoStack: maintenance_enabled IN RESPONSE: $maintenanceEnabledInResponse');
+      
+      // Debug: Log sync_nivostack value from API response
+      final syncNivoStackInResponse = configs['sync_nivostack'];
+      print('🔧 NivoStack: sync_nivostack IN API RESPONSE: $syncNivoStackInResponse (type: ${syncNivoStackInResponse.runtimeType})');
+      
       _businessConfig.setFromInitData(
-        configs: businessConfigData['configs'] ?? {},
-        meta: businessConfigData['meta'] ?? {},
+        configs: configs,
+        meta: meta,
       );
-      print('NivoStack: Business config pre-loaded from init');
+      
+      // Debug: Log maintenance_enabled value after setting
+      final maintenanceEnabledAfter = _businessConfig.getBool('maintenance_enabled', defaultValue: false);
+      print('🔧 NivoStack: maintenance_enabled AFTER setFromInitData: $maintenanceEnabledAfter');
+      
+      // Debug: Log sync_nivostack value after setting
+      final syncNivoStackAfter = _businessConfig.getBool('sync_nivostack', defaultValue: false);
+      print('🔧 NivoStack: sync_nivostack AFTER setFromInitData: $syncNivoStackAfter');
+      print('🔧 NivoStack: Business config pre-loaded from init');
+    } else {
+      print('🔧 NivoStack: WARNING - businessConfig is null in response, not updating cache');
     }
 
     // Pre-populate localization cache if available
@@ -784,6 +807,20 @@ class NivoStack {
 
       // New config received - parse and apply
       if (response.data != null) {
+        // Debug: Log business config from response before applying
+        final businessConfigInResponse = response.data!['businessConfig'];
+        if (businessConfigInResponse != null) {
+          final configs = businessConfigInResponse['configs'] as Map<String, dynamic>?;
+          if (configs != null) {
+            final maintenanceEnabled = configs['maintenance_enabled'];
+            print('🔧 NivoStack refreshConfig: maintenance_enabled in API response: $maintenanceEnabled');
+          } else {
+            print('🔧 NivoStack refreshConfig: WARNING - businessConfig.configs is null in response');
+          }
+        } else {
+          print('🔧 NivoStack refreshConfig: WARNING - businessConfig is null in API response');
+        }
+        
         _applyInitResponse(response.data!);
         await _configCache.save(response.data!, etag: response.etag);
         
@@ -799,6 +836,10 @@ class NivoStack {
           print('NivoStack: Config refreshed and cached (etag: ${response.etag})');
         }
 
+        // Debug: Verify maintenance_enabled after applying config
+        final maintenanceAfterApply = _businessConfig.getBool('maintenance_enabled', defaultValue: false);
+        print('🔧 NivoStack refreshConfig: maintenance_enabled AFTER _applyInitResponse: $maintenanceAfterApply');
+        
         // Check app blocking status after config refresh
         _checkAppBlockingStatus();
 
@@ -939,8 +980,22 @@ class NivoStack {
 
   /// Check if maintenance mode is currently active
   bool isMaintenanceEnabled() {
-    if (!_featureFlags.businessConfig) return false;
-    return _businessConfig.getBool('maintenance_enabled', defaultValue: false);
+    if (!_featureFlags.businessConfig) {
+      print('🔧 NivoStack: isMaintenanceEnabled() - businessConfig feature flag is disabled');
+      return false;
+    }
+    final maintenanceEnabled = _businessConfig.getBool('maintenance_enabled', defaultValue: false);
+    print('🔧 NivoStack: isMaintenanceEnabled() = $maintenanceEnabled');
+    
+    // Debug: Also log what's in the cache
+    final config = _businessConfig.get('maintenance_enabled');
+    if (config != null) {
+      print('🔧 NivoStack: maintenance_enabled config object: key=${config.key}, value=${config.value}, type=${config.valueType}');
+    } else {
+      print('🔧 NivoStack: maintenance_enabled config NOT FOUND in cache');
+    }
+    
+    return maintenanceEnabled;
   }
 
   /// Get maintenance end time if configured

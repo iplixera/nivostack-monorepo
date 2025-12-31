@@ -2286,10 +2286,17 @@ export default function ProjectDetailPage() {
                 </div>
               )}
 
-              {deviceSubTab === 'settings' && token && sdkSettings && (
+              {deviceSubTab === 'settings' && token && (
                 <div className="space-y-6">
-                  {/* Tracking Mode */}
-                  <div className="bg-gray-900 rounded-lg p-4">
+                  {sdkSettingsLoading ? (
+                    <div className="bg-gray-900 rounded-lg p-8 text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                      <p className="text-gray-400">Loading device settings...</p>
+                    </div>
+                  ) : sdkSettings ? (
+                    <>
+                      {/* Tracking Mode */}
+                      <div className="bg-gray-900 rounded-lg p-4">
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-2xl">📡</span>
                       <div>
@@ -2363,6 +2370,12 @@ export default function ProjectDetailPage() {
                       </div>
                     )}
                   </div>
+                    </>
+                  ) : (
+                    <div className="bg-gray-900 rounded-lg p-8 text-center">
+                      <p className="text-gray-400">Failed to load device settings. Please try refreshing the page.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -3367,10 +3380,17 @@ export default function ProjectDetailPage() {
                 </>
               )}
 
-              {tracesSubTab === 'security' && token && sdkSettings && (
+              {tracesSubTab === 'security' && token && (
                 <div className="space-y-6">
-                  {/* Security Settings */}
-                  <div className="bg-gray-900 rounded-lg p-4">
+                  {sdkSettingsLoading ? (
+                    <div className="bg-gray-900 rounded-lg p-8 text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                      <p className="text-gray-400">Loading security settings...</p>
+                    </div>
+                  ) : sdkSettings ? (
+                    <>
+                      {/* Security Settings */}
+                      <div className="bg-gray-900 rounded-lg p-4">
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-2xl">🔒</span>
                       <div>
@@ -3477,6 +3497,12 @@ export default function ProjectDetailPage() {
                       )}
                     </div>
                   </div>
+                    </>
+                  ) : (
+                    <div className="bg-gray-900 rounded-lg p-8 text-center">
+                      <p className="text-gray-400">Failed to load security settings. Please try refreshing the page.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

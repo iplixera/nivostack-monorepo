@@ -34,10 +34,9 @@ export POSTGRES_PRISMA_URL="$PROD_DIRECT"
 export POSTGRES_URL_NON_POOLING="$PROD_DIRECT"
 
 # Push schema
-pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss
+pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate
 
-# Generate client
-pnpm dlx prisma@5.22.0 generate --schema=prisma/schema.prisma
+# Note: Client generation skipped - it's already generated during build
 
 echo ""
 echo "✅ Production migration completed!"

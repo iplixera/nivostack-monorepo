@@ -30,6 +30,10 @@ docs/
 ## 🚀 Quick Links by Role
 
 ### SDK Developer
+- **[SDK Integration Guides](./guides/SDK_INTEGRATION_INDEX.md)** - Complete integration guides
+  - [Flutter SDK Integration](./guides/FLUTTER_SDK_INTEGRATION.md) - Flutter (iOS + Android)
+  - [Android SDK Integration](./guides/ANDROID_SDK_INTEGRATION.md) - Native Android
+  - [iOS SDK Integration](./guides/IOS_SDK_INTEGRATION.md) - Native iOS
 - [SDK Release Notes](./releases/sdk/)
 - [SDK Publishing Guide](./best-practices/SDK_PUBLISHING_GUIDE.md)
 - [SDK Versioning Strategy](./best-practices/SDK_VERSIONING_STRATEGY.md)

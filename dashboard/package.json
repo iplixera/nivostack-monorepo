@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "_deploy": "echo deploy",
-    "migrate": "bash scripts/run-migration-vercel-simple.sh",
-    "build": "(bash scripts/run-migration-vercel-simple.sh || echo 'Migration skipped') && bash scripts/generate-prisma-safe.sh && next build --webpack",
+    "migrate": "pnpm dlx prisma@5.22.0 db push --schema=../prisma/schema.prisma --accept-data-loss --skip-generate",
+    "build": "pnpm dlx prisma@5.22.0 generate --schema=../prisma/schema.prisma && (pnpm dlx prisma@5.22.0 db push --schema=../prisma/schema.prisma --accept-data-loss --skip-generate || echo '⚠️  Migration skipped - will run on first API request') && next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "echo 'Skipping prisma generate in postinstall'",

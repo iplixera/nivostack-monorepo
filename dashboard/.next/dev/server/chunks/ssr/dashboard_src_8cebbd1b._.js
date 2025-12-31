@@ -293,7 +293,7 @@ const api = {
                     configKey,
                     context
                 },
-                customHeaders: {
+                headers: {
                     'X-API-Key': apiKey
                 }
             }),
@@ -333,7 +333,7 @@ const api = {
                     userId,
                     context
                 },
-                customHeaders: {
+                headers: {
                     'X-API-Key': apiKey
                 }
             }),
@@ -347,7 +347,7 @@ const api = {
                     eventValue,
                     metadata
                 },
-                customHeaders: {
+                headers: {
                     'X-API-Key': apiKey
                 }
             })
@@ -660,7 +660,7 @@ const api = {
             }),
         // OTA Updates
         checkOTA: (projectId, currentVersion, languageCode, apiKey)=>fetchApi(`/api/localization/ota/check?projectId=${projectId}${currentVersion ? `&currentVersion=${currentVersion}` : ''}&languageCode=${languageCode}`, {
-                customHeaders: {
+                headers: {
                     'X-API-Key': apiKey
                 }
             }),
@@ -673,7 +673,7 @@ const api = {
                     toVersion,
                     languageCode
                 },
-                customHeaders: {
+                headers: {
                     'X-API-Key': apiKey
                 }
             })
@@ -739,9 +739,6 @@ const api = {
                 method: 'DELETE',
                 token
             })
-    },
-    plans: {
-        list: ()=>fetchApi('/api/plans')
     },
     admin: {
         getUsers: (token)=>fetchApi('/api/admin/users', {

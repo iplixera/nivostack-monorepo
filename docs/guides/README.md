@@ -20,6 +20,12 @@ Guides for developers working on the NivoStack project.
 - **[Supabase Setup](./setup/SUPABASE_SETUP.md)** - Supabase database setup
 - **[GitHub CLI Setup](./setup/GITHUB_CLI_SETUP.md)** - GitHub CLI configuration
 
+### SDK Integration Guides
+- **[SDK Integration Index](./SDK_INTEGRATION_INDEX.md)** - Overview of all SDKs
+- **[Flutter SDK Integration](./FLUTTER_SDK_INTEGRATION.md)** - Flutter SDK (iOS + Android)
+- **[Android SDK Integration](./ANDROID_SDK_INTEGRATION.md)** - Native Android SDK
+- **[iOS SDK Integration](./IOS_SDK_INTEGRATION.md)** - Native iOS SDK
+
 ---
 
 ## 🚀 Quick Start

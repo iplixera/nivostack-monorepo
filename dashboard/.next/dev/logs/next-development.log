@@ -1,34 +1,566 @@
-[00:00:00.646] Server  LOG      ✓ Ready in 467ms
-[00:00:23.444] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:28.075] Server  ERROR   Login error: SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)
-[15:05:43.451] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[15:05:47.412] Browser ERROR   Failed to fetch usage stats: {}
-[15:05:47.412] Browser ERROR   Failed to fetch usage stats: {}
-[15:05:56.315] Server  LOG     Fetching subscriptions...
-[15:05:56.324] Server  LOG     Fetched 1 subscriptions
-[15:05:56.328] Server  LOG     Fetching subscriptions...
-[15:05:56.331] Server  LOG     Fetched 1 subscriptions
-[15:05:56.434] Browser LOG     Loading subscriptions with token...
-[15:05:56.434] Browser LOG     Loading subscriptions with token...
-[15:05:56.434] Browser LOG     Subscriptions API response: {"subscriptions":[{"cancelledAt":null,"cancelledReason":null,"createdAt":"2025-12-27T16:13:35.347Z","currentPeriodEnd":"2026-01-26T16:13:35.346Z","currentPeriodStart":"2025-12-27T16:13:35.346Z","disabledAt":"2025-12-27T17:33:35.393Z","disabledBy":"cmjknh4fe000413qbictwe8cg","enabled":true,"enabledAt":null,"enabledBy":null,"id":"cmjoi2k8i00029z09qxxssldq","invoices":[],"plan":{"displayName":"Free Plan","id":"cmjknh4de000013qbted39wpn","maxApiEndpoints":2,"maxApiRequests":2,"maxBusinessConfigKeys":2,"maxCrashes":2,"maxDevices":2,"maxLocalizationKeys":2,"maxLocalizationLanguages":2,"maxLogs":2,"maxMockEndpoints":2,"maxProjects":1,"maxSessions":2,"name":"free","price":0,"retentionDays":30},"planId":"cmjknh4de000013qbted39wpn","quotaMaxApiEndpoints":null,"quotaMaxApiRequests":null,"quotaMaxBusinessConfigKeys":null,"quotaMaxCrashes":null,"quotaMaxDevices":null,"quotaMaxLocalizationKeys":null,"quotaMaxLocalizationLanguages":null,"quotaMaxLogs":null,"quotaMaxMockEndpoints":null,"quotaMaxProjects":null,"quotaMaxSessions":null,"status":"active","trialEndDate":"2026-01-26T16:13:35.346Z","trialStartDate":"2025-12-27T16:13:35.346Z","updatedAt":"2025-12-27T18:28:22.590Z","user":{"email":"freeplan@dev.com","id":"cmjoi2k8a00009z09555j6rh9","name":"Free Plan "},"userId":"cmjoi2k8a00009z09555j6rh9"}]}
-[15:05:56.434] Browser LOG     Subscriptions loaded: 1
-[15:05:56.434] Browser LOG     Subscriptions API response: {"subscriptions":[{"cancelledAt":null,"cancelledReason":null,"createdAt":"2025-12-27T16:13:35.347Z","currentPeriodEnd":"2026-01-26T16:13:35.346Z","currentPeriodStart":"2025-12-27T16:13:35.346Z","disabledAt":"2025-12-27T17:33:35.393Z","disabledBy":"cmjknh4fe000413qbictwe8cg","enabled":true,"enabledAt":null,"enabledBy":null,"id":"cmjoi2k8i00029z09qxxssldq","invoices":[],"plan":{"displayName":"Free Plan","id":"cmjknh4de000013qbted39wpn","maxApiEndpoints":2,"maxApiRequests":2,"maxBusinessConfigKeys":2,"maxCrashes":2,"maxDevices":2,"maxLocalizationKeys":2,"maxLocalizationLanguages":2,"maxLogs":2,"maxMockEndpoints":2,"maxProjects":1,"maxSessions":2,"name":"free","price":0,"retentionDays":30},"planId":"cmjknh4de000013qbted39wpn","quotaMaxApiEndpoints":null,"quotaMaxApiRequests":null,"quotaMaxBusinessConfigKeys":null,"quotaMaxCrashes":null,"quotaMaxDevices":null,"quotaMaxLocalizationKeys":null,"quotaMaxLocalizationLanguages":null,"quotaMaxLogs":null,"quotaMaxMockEndpoints":null,"quotaMaxProjects":null,"quotaMaxSessions":null,"status":"active","trialEndDate":"2026-01-26T16:13:35.346Z","trialStartDate":"2025-12-27T16:13:35.346Z","updatedAt":"2025-12-27T18:28:22.590Z","user":{"email":"freeplan@dev.com","id":"cmjoi2k8a00009z09555j6rh9","name":"Free Plan "},"userId":"cmjoi2k8a00009z09555j6rh9"}]}
-[15:05:56.434] Browser LOG     Subscriptions loaded: 1
-[15:05:57.852] Server  ERROR   Get forecast error: TypeError: Cannot read properties of undefined (reading 'limit')
-[15:05:57.887] Server  ERROR   Get analytics error: TypeError: Cannot read properties of undefined (reading 'limit')
-[15:05:58.000] Server  ERROR   Get analytics error: TypeError: Cannot read properties of undefined (reading 'limit')
-[15:05:58.030] Server  ERROR   Get forecast error: TypeError: Cannot read properties of undefined (reading 'limit')
-[15:06:04.934] Server  LOG     Fetching subscriptions...
-[15:06:04.943] Server  LOG     Fetched 1 subscriptions
-[15:06:04.948] Server  LOG     Fetching subscriptions...
-[15:06:04.951] Server  LOG     Fetched 1 subscriptions
-[15:06:05.054] Browser LOG     Loading subscriptions with token...
-[15:06:05.054] Browser LOG     Loading subscriptions with token...
-[15:06:05.054] Browser LOG     Subscriptions API response: {"subscriptions":[{"cancelledAt":null,"cancelledReason":null,"createdAt":"2025-12-27T16:13:35.347Z","currentPeriodEnd":"2026-01-26T16:13:35.346Z","currentPeriodStart":"2025-12-27T16:13:35.346Z","disabledAt":"2025-12-27T17:33:35.393Z","disabledBy":"cmjknh4fe000413qbictwe8cg","enabled":true,"enabledAt":null,"enabledBy":null,"id":"cmjoi2k8i00029z09qxxssldq","invoices":[],"plan":{"displayName":"Free Plan","id":"cmjknh4de000013qbted39wpn","maxApiEndpoints":2,"maxApiRequests":2,"maxBusinessConfigKeys":2,"maxCrashes":2,"maxDevices":2,"maxLocalizationKeys":2,"maxLocalizationLanguages":2,"maxLogs":2,"maxMockEndpoints":2,"maxProjects":1,"maxSessions":2,"name":"free","price":0,"retentionDays":30},"planId":"cmjknh4de000013qbted39wpn","quotaMaxApiEndpoints":null,"quotaMaxApiRequests":null,"quotaMaxBusinessConfigKeys":null,"quotaMaxCrashes":null,"quotaMaxDevices":null,"quotaMaxLocalizationKeys":null,"quotaMaxLocalizationLanguages":null,"quotaMaxLogs":null,"quotaMaxMockEndpoints":null,"quotaMaxProjects":null,"quotaMaxSessions":null,"status":"active","trialEndDate":"2026-01-26T16:13:35.346Z","trialStartDate":"2025-12-27T16:13:35.346Z","updatedAt":"2025-12-27T18:28:22.590Z","user":{"email":"freeplan@dev.com","id":"cmjoi2k8a00009z09555j6rh9","name":"Free Plan "},"userId":"cmjoi2k8a00009z09555j6rh9"}]}
-[15:06:05.054] Browser LOG     Subscriptions loaded: 1
-[15:06:05.054] Browser LOG     Subscriptions API response: {"subscriptions":[{"cancelledAt":null,"cancelledReason":null,"createdAt":"2025-12-27T16:13:35.347Z","currentPeriodEnd":"2026-01-26T16:13:35.346Z","currentPeriodStart":"2025-12-27T16:13:35.346Z","disabledAt":"2025-12-27T17:33:35.393Z","disabledBy":"cmjknh4fe000413qbictwe8cg","enabled":true,"enabledAt":null,"enabledBy":null,"id":"cmjoi2k8i00029z09qxxssldq","invoices":[],"plan":{"displayName":"Free Plan","id":"cmjknh4de000013qbted39wpn","maxApiEndpoints":2,"maxApiRequests":2,"maxBusinessConfigKeys":2,"maxCrashes":2,"maxDevices":2,"maxLocalizationKeys":2,"maxLocalizationLanguages":2,"maxLogs":2,"maxMockEndpoints":2,"maxProjects":1,"maxSessions":2,"name":"free","price":0,"retentionDays":30},"planId":"cmjknh4de000013qbted39wpn","quotaMaxApiEndpoints":null,"quotaMaxApiRequests":null,"quotaMaxBusinessConfigKeys":null,"quotaMaxCrashes":null,"quotaMaxDevices":null,"quotaMaxLocalizationKeys":null,"quotaMaxLocalizationLanguages":null,"quotaMaxLogs":null,"quotaMaxMockEndpoints":null,"quotaMaxProjects":null,"quotaMaxSessions":null,"status":"active","trialEndDate":"2026-01-26T16:13:35.346Z","trialStartDate":"2025-12-27T16:13:35.346Z","updatedAt":"2025-12-27T18:28:22.590Z","user":{"email":"freeplan@dev.com","id":"cmjoi2k8a00009z09555j6rh9","name":"Free Plan "},"userId":"cmjoi2k8a00009z09555j6rh9"}]}
-[15:06:05.054] Browser LOG     Subscriptions loaded: 1
-[15:06:07.841] Server  ERROR   Get analytics error: TypeError: Cannot read properties of undefined (reading 'limit')
-[15:06:07.873] Server  ERROR   Get forecast error: TypeError: Cannot read properties of undefined (reading 'limit')
-[15:06:07.933] Server  ERROR   Get forecast error: TypeError: Cannot read properties of undefined (reading 'limit')
-[15:06:07.965] Server  ERROR   Get analytics error: TypeError: Cannot read properties of undefined (reading 'limit')
+[00:00:01.102] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:01.207] Server  LOG      ✓ Ready in 977ms
+[00:00:05.848] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[00:01:17.943] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[00:01:17.970] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:18.012] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[00:01:18.073] Server  LOG     prisma:error "\nInvalid `__TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].plan.findMany()` invocation in\n/Users/karim-f/Code/nivostack-monorepo-checkout/dashboard/.next/dev/server/chunks/[root-of-the-server]__a9e6b334._.js:104:159\n\n  101     });\n  102 }\n  103 async function getPublicPlans() {\n→ 104     return __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].plan.findMany(\nerror: Environment variable not found: POSTGRES_PRISMA_URL.\n  -->  schema.prisma:7\n   | \n 6 |   provider  = \"postgresql\"\n 7 |   url       = env(\"POSTGRES_PRISMA_URL\")\n   | \n\nValidation Error Count: 1"
+[00:01:18.132] Server  ERROR   Get plans error: PrismaClientInitializationError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].plan.findMany()` invocation in
+/Users/karim-f/Code/nivostack-monorepo-checkout/dashboard/.next/dev/server/chunks/[root-of-the-server]__a9e6b334._.js:104:159
+
+  101     });
+  102 }
+  103 async function getPublicPlans() {
+→ 104     return __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].plan.findMany(
+error: Environment variable not found: POSTGRES_PRISMA_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("POSTGRES_PRISMA_URL")
+   | 
+
+Validation Error Count: 1
+[00:01:18.382] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[00:01:18.390] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:18.396] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[00:01:18.398] Server  LOG     prisma:error "\nInvalid `__TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].plan.findMany()` invocation in\n/Users/karim-f/Code/nivostack-monorepo-checkout/dashboard/.next/dev/server/chunks/[root-of-the-server]__a9e6b334._.js:104:159\n\n  101     });\n  102 }\n  103 async function getPublicPlans() {\n→ 104     return __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].plan.findMany(\nerror: Environment variable not found: POSTGRES_PRISMA_URL.\n  -->  schema.prisma:7\n   | \n 6 |   provider  = \"postgresql\"\n 7 |   url       = env(\"POSTGRES_PRISMA_URL\")\n   | \n\nValidation Error Count: 1"
+[00:01:18.431] Server  ERROR   Get plans error: PrismaClientInitializationError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].plan.findMany()` invocation in
+/Users/karim-f/Code/nivostack-monorepo-checkout/dashboard/.next/dev/server/chunks/[root-of-the-server]__a9e6b334._.js:104:159
+
+  101     });
+  102 }
+  103 async function getPublicPlans() {
+→ 104     return __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].plan.findMany(
+error: Environment variable not found: POSTGRES_PRISMA_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("POSTGRES_PRISMA_URL")
+   | 
+
+Validation Error Count: 1
+[00:01:18.744] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[00:01:18.751] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:18.756] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[00:01:18.758] Server  LOG     prisma:error "\nInvalid `__TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].plan.findMany()` invocation in\n/Users/karim-f/Code/nivostack-monorepo-checkout/dashboard/.next/dev/server/chunks/[root-of-the-server]__a9e6b334._.js:104:159\n\n  101     });\n  102 }\n  103 async function getPublicPlans() {\n→ 104     return __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].plan.findMany(\nerror: Environment variable not found: POSTGRES_PRISMA_URL.\n  -->  schema.prisma:7\n   | \n 6 |   provider  = \"postgresql\"\n 7 |   url       = env(\"POSTGRES_PRISMA_URL\")\n   | \n\nValidation Error Count: 1"
+[00:01:18.788] Server  ERROR   Get plans error: PrismaClientInitializationError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].plan.findMany()` invocation in
+/Users/karim-f/Code/nivostack-monorepo-checkout/dashboard/.next/dev/server/chunks/[root-of-the-server]__a9e6b334._.js:104:159
+
+  101     });
+  102 }
+  103 async function getPublicPlans() {
+→ 104     return __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].plan.findMany(
+error: Environment variable not found: POSTGRES_PRISMA_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("POSTGRES_PRISMA_URL")
+   | 
+
+Validation Error Count: 1
+[00:01:36.361] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[00:01:36.387] Server  LOG     prisma:error "\nInvalid `__TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].user.findUnique()` invocation in\n/Users/karim-f/Code/nivostack-monorepo-checkout/dashboard/.next/dev/server/chunks/[root-of-the-server]__e08161f4._.js:253:175\n\n  250         status: 400\n  251     });\n  252 }\n→ 253 const user = await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].user.findUnique(\nerror: Environment variable not found: POSTGRES_PRISMA_URL.\n  -->  schema.prisma:7\n   | \n 6 |   provider  = \"postgresql\"\n 7 |   url       = env(\"POSTGRES_PRISMA_URL\")\n   | \n\nValidation Error Count: 1"
+[00:01:36.450] Server  ERROR   Login error: PrismaClientInitializationError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findUnique()` invocation in
+/Users/karim-f/Code/nivostack-monorepo-checkout/dashboard/.next/dev/server/chunks/[root-of-the-server]__e08161f4._.js:253:175
+
+  250         status: 400
+  251     });
+  252 }
+→ 253 const user = await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findUnique(
+error: Environment variable not found: POSTGRES_PRISMA_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("POSTGRES_PRISMA_URL")
+   | 
+
+Validation Error Count: 1
+[00:01:48.148] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[00:01:48.160] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:50.038] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[00:01:50.043] Server  LOG     prisma:error "\nInvalid `__TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].user.findUnique()` invocation in\n/Users/karim-f/Code/nivostack-monorepo-checkout/dashboard/.next/dev/server/chunks/[root-of-the-server]__e08161f4._.js:253:175\n\n  250         status: 400\n  251     });\n  252 }\n→ 253 const user = await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].user.findUnique(\nerror: Environment variable not found: POSTGRES_PRISMA_URL.\n  -->  schema.prisma:7\n   | \n 6 |   provider  = \"postgresql\"\n 7 |   url       = env(\"POSTGRES_PRISMA_URL\")\n   | \n\nValidation Error Count: 1"
+[00:01:50.086] Server  ERROR   Login error: PrismaClientInitializationError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findUnique()` invocation in
+/Users/karim-f/Code/nivostack-monorepo-checkout/dashboard/.next/dev/server/chunks/[root-of-the-server]__e08161f4._.js:253:175
+
+  250         status: 400
+  251     });
+  252 }
+→ 253 const user = await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findUnique(
+error: Environment variable not found: POSTGRES_PRISMA_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("POSTGRES_PRISMA_URL")
+   | 
+
+Validation Error Count: 1
+[00:01:55.950] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[00:01:55.953] Server  LOG     prisma:error "\nInvalid `__TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].user.findUnique()` invocation in\n/Users/karim-f/Code/nivostack-monorepo-checkout/dashboard/.next/dev/server/chunks/[root-of-the-server]__e08161f4._.js:253:175\n\n  250         status: 400\n  251     });\n  252 }\n→ 253 const user = await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].user.findUnique(\nerror: Environment variable not found: POSTGRES_PRISMA_URL.\n  -->  schema.prisma:7\n   | \n 6 |   provider  = \"postgresql\"\n 7 |   url       = env(\"POSTGRES_PRISMA_URL\")\n   | \n\nValidation Error Count: 1"
+[00:01:55.984] Server  ERROR   Login error: PrismaClientInitializationError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findUnique()` invocation in
+/Users/karim-f/Code/nivostack-monorepo-checkout/dashboard/.next/dev/server/chunks/[root-of-the-server]__e08161f4._.js:253:175
+
+  250         status: 400
+  251     });
+  252 }
+→ 253 const user = await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findUnique(
+error: Environment variable not found: POSTGRES_PRISMA_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("POSTGRES_PRISMA_URL")
+   | 
+
+Validation Error Count: 1
+[00:02:02.462] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[00:02:02.477] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:02:02.495] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[00:02:02.503] Server  LOG     prisma:error "\nInvalid `__TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].plan.findMany()` invocation in\n/Users/karim-f/Code/nivostack-monorepo-checkout/dashboard/.next/dev/server/chunks/[root-of-the-server]__a9e6b334._.js:104:159\n\n  101     });\n  102 }\n  103 async function getPublicPlans() {\n→ 104     return __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].plan.findMany(\nerror: Environment variable not found: POSTGRES_PRISMA_URL.\n  -->  schema.prisma:7\n   | \n 6 |   provider  = \"postgresql\"\n 7 |   url       = env(\"POSTGRES_PRISMA_URL\")\n   | \n\nValidation Error Count: 1"
+[00:02:02.539] Server  ERROR   Get plans error: PrismaClientInitializationError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].plan.findMany()` invocation in
+/Users/karim-f/Code/nivostack-monorepo-checkout/dashboard/.next/dev/server/chunks/[root-of-the-server]__a9e6b334._.js:104:159
+
+  101     });
+  102 }
+  103 async function getPublicPlans() {
+→ 104     return __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].plan.findMany(
+error: Environment variable not found: POSTGRES_PRISMA_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("POSTGRES_PRISMA_URL")
+   | 
+
+Validation Error Count: 1
+[00:02:06.006] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[00:02:06.009] Server  LOG     prisma:error "\nInvalid `__TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].user.findUnique()` invocation in\n/Users/karim-f/Code/nivostack-monorepo-checkout/dashboard/.next/dev/server/chunks/[root-of-the-server]__e08161f4._.js:253:175\n\n  250         status: 400\n  251     });\n  252 }\n→ 253 const user = await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].user.findUnique(\nerror: Environment variable not found: POSTGRES_PRISMA_URL.\n  -->  schema.prisma:7\n   | \n 6 |   provider  = \"postgresql\"\n 7 |   url       = env(\"POSTGRES_PRISMA_URL\")\n   | \n\nValidation Error Count: 1"
+[00:02:06.042] Server  ERROR   Login error: PrismaClientInitializationError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findUnique()` invocation in
+/Users/karim-f/Code/nivostack-monorepo-checkout/dashboard/.next/dev/server/chunks/[root-of-the-server]__e08161f4._.js:253:175
+
+  250         status: 400
+  251     });
+  252 }
+→ 253 const user = await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findUnique(
+error: Environment variable not found: POSTGRES_PRISMA_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("POSTGRES_PRISMA_URL")
+   | 
+
+Validation Error Count: 1
+[00:33:56.959] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[00:33:56.982] Server  LOG     prisma:error "\nInvalid `__TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].project.findUnique()` invocation in\n/Users/karim-f/Code/nivostack-monorepo-checkout/dashboard/.next/dev/server/chunks/[root-of-the-server]__e08161f4._.js:189:177\n\n  186     return user?.isAdmin === true;\n  187 }\n  188 async function getProjectByApiKey(apiKey) {\n→ 189     const project = await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].project.findUnique(\nerror: Environment variable not found: POSTGRES_PRISMA_URL.\n  -->  schema.prisma:7\n   | \n 6 |   provider  = \"postgresql\"\n 7 |   url       = env(\"POSTGRES_PRISMA_URL\")\n   | \n\nValidation Error Count: 1"
+[00:33:57.045] Server  ERROR   Create log error: PrismaClientInitializationError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].project.findUnique()` invocation in
+/Users/karim-f/Code/nivostack-monorepo-checkout/dashboard/.next/dev/server/chunks/[root-of-the-server]__e08161f4._.js:189:177
+
+  186     return user?.isAdmin === true;
+  187 }
+  188 async function getProjectByApiKey(apiKey) {
+→ 189     const project = await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].project.findUnique(
+error: Environment variable not found: POSTGRES_PRISMA_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("POSTGRES_PRISMA_URL")
+   | 
+
+Validation Error Count: 1
+[00:50:23.286] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[00:50:23.299] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[00:50:24.272] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[01:29:00.397] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[01:29:00.399] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[01:33:49.378] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[01:33:49.381] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[01:54:30.909] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[01:55:48.282] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[01:55:48.286] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[01:55:48.287] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[05:02:21.969] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[05:02:22.087] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+
+[05:02:22.104] Server  WARN     ⚠ ./dashboard/src/middleware.ts:17:14
+Ecmascript file had an error
+  15 |     exec(
+  16 |       `POSTGRES_PRISMA_URL="${process.env.POSTGRES_URL_NON_POOLING}" POSTGRES_URL_NON_POOLING="${process.env.POSTGRES_URL_NON_POOLING}" pnpm dlx prisma@5.22.0 db push --schema=prisma/schema.prisma --accept-data-loss --skip-generate 2>&1`,
+> 17 |       { cwd: process.cwd(), timeout: 30000 },
+     |              ^^^^^^^^^^^
+  18 |       (error: any, stdout: string, stderr: string) => {
+  19 |         if (error) {
+  20 |           console.error('Background migration error:', error.message)
+
+A Node.js API is used (process.cwd at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+

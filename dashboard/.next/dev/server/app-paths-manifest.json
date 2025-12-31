@@ -1,21 +1,8 @@
 {
-  "/(dashboard)/admin/page": "app/(dashboard)/admin/page.js",
-  "/(dashboard)/admin/plans/page": "app/(dashboard)/admin/plans/page.js",
-  "/(dashboard)/admin/subscriptions/page": "app/(dashboard)/admin/subscriptions/page.js",
-  "/(dashboard)/admin/users/page": "app/(dashboard)/admin/users/page.js",
-  "/(dashboard)/projects/page": "app/(dashboard)/projects/page.js",
-  "/api/admin/analytics/route": "app/api/admin/analytics/route.js",
-  "/api/admin/forecast/route": "app/api/admin/forecast/route.js",
-  "/api/admin/plans/route": "app/api/admin/plans/route.js",
-  "/api/admin/revenue/route": "app/api/admin/revenue/route.js",
-  "/api/admin/stats/route": "app/api/admin/stats/route.js",
-  "/api/admin/subscriptions/route": "app/api/admin/subscriptions/route.js",
-  "/api/admin/users/route": "app/api/admin/users/route.js",
   "/api/auth/login/route": "app/api/auth/login/route.js",
+  "/api/health/route": "app/api/health/route.js",
+  "/api/logs/route": "app/api/logs/route.js",
   "/api/plans/route": "app/api/plans/route.js",
-  "/api/projects/route": "app/api/projects/route.js",
-  "/api/subscription/route": "app/api/subscription/route.js",
-  "/api/subscription/usage/route": "app/api/subscription/usage/route.js",
   "/login/page": "app/login/page.js",
   "/page": "app/page.js"
 }

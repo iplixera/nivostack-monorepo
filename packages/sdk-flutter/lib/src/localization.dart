@@ -257,4 +257,49 @@ class NivoStackLocalization {
       _notifyListeners();
     }
   }
+
+  /// Set localization data from SDK init response (pre-populates cache without network request)
+  ///
+  /// This is called during SDK initialization when using the combined /api/sdk-init
+  /// endpoint to avoid an additional network request for localization.
+  void setFromInitData({
+    required List<Map<String, dynamic>> languages,
+    required Map<String, String> translations,
+    String? defaultLanguageCode,
+  }) {
+    // Parse and set languages
+    _languages = languages
+        .map((json) => NivoStackLanguage.fromJson(json))
+        .where((lang) => lang.isEnabled)
+        .toList();
+
+    // Set default language if provided, otherwise use first default language
+    String? languageCode = defaultLanguageCode;
+    if (languageCode == null) {
+      final defaultLang = _languages.firstWhere(
+        (l) => l.isDefault,
+        orElse: () => _languages.isNotEmpty ? _languages.first : throw StateError('No languages available'),
+      );
+      languageCode = defaultLang.code;
+    }
+
+    // Set current language and translations
+    _currentLanguageCode = languageCode;
+    _currentLanguage = _languages.firstWhere(
+      (l) => l.code == languageCode,
+      orElse: () => _languages.first,
+    );
+
+    // Cache translations
+    _translationsCache[languageCode] = translations;
+    _lastFetchTimes[languageCode] = DateTime.now();
+
+    // Persist language selection
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setString(_prefKeyLanguage, languageCode!);
+    });
+
+    // Notify listeners
+    _notifyListeners();
+  }
 }

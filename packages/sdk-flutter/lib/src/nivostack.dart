@@ -473,6 +473,27 @@ class NivoStack {
       );
     }
 
+    // Apply cached localization if available
+    if (cached.localization != null && _featureFlags.localization) {
+      final localizationData = cached.localization!;
+      final languages = localizationData['languages'] as List<dynamic>?;
+      final translations = localizationData['translations'] as Map<String, dynamic>?;
+      final defaultLanguage = localizationData['defaultLanguage'] as String?;
+
+      if (languages != null && translations != null) {
+        final translationsMap = Map<String, String>.from(
+          translations.map((key, value) => MapEntry(key.toString(), value.toString())),
+        );
+        final languagesList = languages.map((l) => Map<String, dynamic>.from(l as Map)).toList();
+
+        _localization.setFromInitData(
+          languages: languagesList,
+          translations: translationsMap,
+          defaultLanguageCode: defaultLanguage,
+        );
+      }
+    }
+
     // Apply cached device config
     if (cached.deviceConfig != null) {
       _deviceConfig = NivoStackDeviceConfig.fromJson(cached.deviceConfig!);
@@ -531,6 +552,31 @@ class NivoStack {
         meta: businessConfigData['meta'] ?? {},
       );
       print('NivoStack: Business config pre-loaded from init');
+    }
+
+    // Pre-populate localization cache if available
+    final localizationData = response['localization'];
+    if (localizationData != null && _featureFlags.localization) {
+      final languages = localizationData['languages'] as List<dynamic>?;
+      final translations = localizationData['translations'] as Map<String, dynamic>?;
+      final defaultLanguage = localizationData['defaultLanguage'] as String?;
+
+      if (languages != null && translations != null) {
+        // Convert translations to Map<String, String>
+        final translationsMap = Map<String, String>.from(
+          translations.map((key, value) => MapEntry(key.toString(), value.toString())),
+        );
+
+        // Convert languages to List<Map<String, dynamic>>
+        final languagesList = languages.map((l) => Map<String, dynamic>.from(l as Map)).toList();
+
+        _localization.setFromInitData(
+          languages: languagesList,
+          translations: translationsMap,
+          defaultLanguageCode: defaultLanguage,
+        );
+        print('NivoStack: Localization pre-loaded from init (${translationsMap.length} translations, ${languagesList.length} languages)');
+      }
     }
 
     // Parse device config (tracking status, debug mode)

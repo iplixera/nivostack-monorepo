@@ -142,7 +142,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch all data in PARALLEL for maximum performance
-    const [featureFlags, sdkSettings, businessConfigs, apiConfigs, device] = await Promise.all([
+    const [featureFlags, sdkSettings, businessConfigs, apiConfigs, device, languages, defaultLanguageTranslations] = await Promise.all([
       // Feature Flags
       prisma.featureFlags.findUnique({
         where: { projectId },
@@ -226,7 +226,58 @@ export async function GET(request: NextRequest) {
               debugModeExpiresAt: true
             }
           })
-        : Promise.resolve(null)
+        : Promise.resolve(null),
+
+      // Languages (for localization)
+      prisma.language.findMany({
+        where: { projectId, isEnabled: true },
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          nativeName: true,
+          isDefault: true,
+          isEnabled: true,
+          isRTL: true,
+        },
+        orderBy: { isDefault: 'desc' }
+      }),
+
+      // Default language translations (if localization feature is enabled)
+      // We'll check feature flags later, but fetch translations in parallel
+      (async () => {
+        const defaultLang = await prisma.language.findFirst({
+          where: { projectId, isDefault: true, isEnabled: true },
+          select: { id: true, code: true }
+        })
+        if (!defaultLang) return null
+
+        const translations = await prisma.translation.findMany({
+          where: {
+            projectId,
+            languageId: defaultLang.id
+          },
+          include: {
+            key: {
+              select: {
+                key: true,
+                category: true
+              }
+            }
+          }
+        })
+
+        // Format as key-value object
+        const translationsObject: Record<string, string> = {}
+        for (const t of translations) {
+          translationsObject[t.key.key] = t.value
+        }
+
+        return {
+          languageCode: defaultLang.code,
+          translations: translationsObject
+        }
+      })()
     ])
 
     // Use build snapshot if available, otherwise use live data
@@ -307,9 +358,27 @@ export async function GET(request: NextRequest) {
       deviceConfig,
     }
 
-    // Include localization if available from build snapshot
+    // Include localization if available from build snapshot OR fetch live data
     if (buildLocalization) {
+      // Use build snapshot localization
       configData.localization = buildLocalization
+    } else if ((featureFlags || DEFAULT_FEATURE_FLAGS).localization && languages && languages.length > 0) {
+      // Include live localization data
+      const languagesList = languages.map(lang => ({
+        id: lang.id,
+        code: lang.code,
+        name: lang.name,
+        nativeName: lang.nativeName,
+        isDefault: lang.isDefault,
+        isEnabled: lang.isEnabled,
+        isRTL: lang.isRTL,
+      }))
+
+      configData.localization = {
+        languages: languagesList,
+        translations: defaultLanguageTranslations?.translations || {},
+        defaultLanguage: defaultLanguageTranslations?.languageCode || languagesList.find(l => l.isDefault)?.code || languagesList[0]?.code,
+      }
     }
 
     // Include build info if using build snapshot

@@ -387,6 +387,7 @@ model BusinessConfig {
   @@index([category])
   @@index([isEnabled])
   @@index([projectId, isEnabled]) // Composite index for SDK init query
+  @@index([projectId, category]) // For category filtering
 }
 
 // Uploaded files storage tracking
@@ -422,6 +423,7 @@ model Language {
   @@unique([projectId, code])
   @@index([projectId])
   @@index([isDefault])
+  @@index([projectId, isDefault, isEnabled]) // Composite index for SDK init query
 }
 
 // Localization Key - the unique keys for translations
@@ -463,6 +465,7 @@ model Translation {
   @@index([projectId])
   @@index([keyId])
   @@index([languageId])
+  @@index([projectId, languageId]) // Composite index for translation queries
 }
 
 // SDK Feature Flags - Control which SDK features are enabled per project

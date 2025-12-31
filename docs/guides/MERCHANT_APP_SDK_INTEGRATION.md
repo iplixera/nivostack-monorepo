@@ -9,7 +9,11 @@
 This guide provides step-by-step instructions for integrating the NivoStack Flutter SDK into the Merchant App. The SDK has been updated to:
 - ✅ Simplified initialization (API key only)
 - ✅ Automatic endpoint configuration
+- ✅ Automatic build mode detection (debug → preview, release → production)
+- ✅ Automatic localization fetching (included in SDK init, no separate request)
 - ✅ Same features as before (API tracing, screen tracking, business config, localization)
+
+**Important**: No code changes needed in your Merchant App! The SDK automatically handles all optimizations.
 
 ---
 
@@ -336,13 +340,21 @@ await NivoStack.init(
 await NivoStack.init(
   apiKey: 'your-api-key',  // ✅ Only API key needed
 );
-// URLs are automatically configured
+// Everything is automatic:
+// - URLs are automatically configured
+// - Build mode is automatically detected
+// - Localization is automatically fetched (included in init)
 ```
 
 **What Changed:**
 - ✅ Removed `ingestUrl` parameter (automatically set to `https://ingest.nivostack.com`)
 - ✅ Removed `controlUrl` parameter (automatically set to `https://api.nivostack.com`)
+- ✅ **NEW**: Build mode automatically detected (debug → preview, release → production)
+- ✅ **NEW**: Localization automatically fetched from SDK init (no separate request)
+- ✅ **NEW**: Faster initialization (1 request instead of 2)
 - ✅ All other features remain the same
+
+**No Code Changes Required**: Your existing code continues to work! All optimizations are automatic.
 
 ---
 

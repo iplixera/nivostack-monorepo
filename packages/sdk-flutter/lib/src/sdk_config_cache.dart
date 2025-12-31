@@ -86,6 +86,7 @@ class SdkConfigCache {
         featureFlags: data['featureFlags'] as Map<String, dynamic>?,
         sdkSettings: data['sdkSettings'] as Map<String, dynamic>?,
         businessConfig: data['businessConfig'] as Map<String, dynamic>?,
+        localization: data['localization'] as Map<String, dynamic>?,
         deviceConfig: data['deviceConfig'] as Map<String, dynamic>?,
         cachedAt: cachedAt,
         isStale: age > cacheDuration,
@@ -161,6 +162,9 @@ class CachedSdkConfig {
   /// Business config from cache
   final Map<String, dynamic>? businessConfig;
 
+  /// Localization from cache (languages and translations)
+  final Map<String, dynamic>? localization;
+
   /// Device config from cache (tracking status, debug mode)
   final Map<String, dynamic>? deviceConfig;
 
@@ -177,6 +181,7 @@ class CachedSdkConfig {
     this.featureFlags,
     this.sdkSettings,
     this.businessConfig,
+    this.localization,
     this.deviceConfig,
     required this.cachedAt,
     required this.isStale,
@@ -185,7 +190,7 @@ class CachedSdkConfig {
 
   /// Check if cache has usable data
   bool get hasData =>
-      featureFlags != null || sdkSettings != null || businessConfig != null || deviceConfig != null;
+      featureFlags != null || sdkSettings != null || businessConfig != null || localization != null || deviceConfig != null;
 
   /// Age of the cache
   Duration get age => DateTime.now().difference(cachedAt);

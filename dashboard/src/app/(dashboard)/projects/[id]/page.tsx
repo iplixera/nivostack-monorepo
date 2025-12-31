@@ -861,12 +861,28 @@ export default function ProjectDetailPage() {
       const res = await fetch(`/api/sdk-settings?projectId=${projectId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        console.error('Failed to fetch SDK settings:', {
+          status: res.status,
+          statusText: res.statusText,
+          error: errorData.error || 'Unknown error'
+        })
+        setSdkSettings(null)
+        return
+      }
+      
       const data = await res.json()
       if (data.settings) {
         setSdkSettings(data.settings)
+      } else {
+        console.warn('SDK settings response missing settings field:', data)
+        setSdkSettings(null)
       }
     } catch (error) {
       console.error('Failed to fetch SDK settings:', error)
+      setSdkSettings(null)
     } finally {
       setSdkSettingsLoading(false)
     }
@@ -1268,6 +1284,9 @@ export default function ProjectDetailPage() {
       try {
         // Fetch subscription status
         fetchSubscriptionStatus()
+        
+        // Fetch SDK settings early (needed for devices and traces tabs)
+        fetchSdkSettings()
 
         // Only fetch project info and default tab (devices) on initial load
         const [devicesRes, projectsRes] = await Promise.all([
@@ -1588,6 +1607,13 @@ export default function ProjectDetailPage() {
       fetchFlow()
     }
   }, [activeTab, loading, selectedFlowSession])
+
+  // Fetch SDK settings when devices, traces, or settings tabs are selected (needed for sub-tabs)
+  useEffect(() => {
+    if ((activeTab === 'devices' || activeTab === 'traces' || activeTab === 'settings') && !loading && !sdkSettings && !sdkSettingsLoading) {
+      fetchSdkSettings()
+    }
+  }, [activeTab, loading])
 
   // Fetch settings when settings tab is selected
   useEffect(() => {

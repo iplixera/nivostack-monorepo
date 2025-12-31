@@ -855,36 +855,50 @@ export default function ProjectDetailPage() {
   }
 
   const fetchSdkSettings = async () => {
-    if (!token || !projectId) return
+    if (!token || !projectId) {
+      console.log('🔧 fetchSdkSettings: Missing token or projectId', { token: !!token, projectId })
+      return
+    }
+    console.log('🔧 fetchSdkSettings: Starting fetch', { projectId })
     setSdkSettingsLoading(true)
     try {
-      const res = await fetch(`/api/sdk-settings?projectId=${projectId}`, {
+      const url = `/api/sdk-settings?projectId=${projectId}`
+      console.log('🔧 fetchSdkSettings: Fetching from', url)
+      const res = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       
+      console.log('🔧 fetchSdkSettings: Response status', res.status, res.statusText)
+      
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}))
-        console.error('Failed to fetch SDK settings:', {
+        console.error('❌ Failed to fetch SDK settings:', {
           status: res.status,
           statusText: res.statusText,
-          error: errorData.error || 'Unknown error'
+          error: errorData.error || 'Unknown error',
+          errorData
         })
         setSdkSettings(null)
         return
       }
       
       const data = await res.json()
+      console.log('🔧 fetchSdkSettings: Response data', data)
+      console.log('🔧 fetchSdkSettings: data.settings exists?', !!data.settings)
+      
       if (data.settings) {
+        console.log('✅ fetchSdkSettings: Setting SDK settings', data.settings)
         setSdkSettings(data.settings)
       } else {
-        console.warn('SDK settings response missing settings field:', data)
+        console.warn('⚠️ SDK settings response missing settings field:', data)
         setSdkSettings(null)
       }
     } catch (error) {
-      console.error('Failed to fetch SDK settings:', error)
+      console.error('❌ Failed to fetch SDK settings:', error)
       setSdkSettings(null)
     } finally {
       setSdkSettingsLoading(false)
+      console.log('🔧 fetchSdkSettings: Loading complete')
     }
   }
 
@@ -1610,10 +1624,20 @@ export default function ProjectDetailPage() {
 
   // Fetch SDK settings when devices, traces, or settings tabs are selected (needed for sub-tabs)
   useEffect(() => {
-    if ((activeTab === 'devices' || activeTab === 'traces' || activeTab === 'settings') && !loading && !sdkSettings && !sdkSettingsLoading) {
-      fetchSdkSettings()
+    if ((activeTab === 'devices' || activeTab === 'traces' || activeTab === 'settings') && !loading) {
+      // Only fetch if we don't have settings yet and we're not already loading
+      if (!sdkSettings && !sdkSettingsLoading) {
+        console.log('🔧 useEffect: Fetching SDK settings for tab', activeTab)
+        fetchSdkSettings()
+      } else {
+        console.log('🔧 useEffect: Skipping fetch', {
+          hasSdkSettings: !!sdkSettings,
+          sdkSettingsLoading,
+          activeTab
+        })
+      }
     }
-  }, [activeTab, loading])
+  }, [activeTab, loading, sdkSettings, sdkSettingsLoading])
 
   // Fetch settings when settings tab is selected
   useEffect(() => {
@@ -2314,6 +2338,15 @@ export default function ProjectDetailPage() {
 
               {deviceSubTab === 'settings' && token && (
                 <div className="space-y-6">
+                  {(() => {
+                    console.log('🔧 Device Settings render:', {
+                      sdkSettingsLoading,
+                      hasSdkSettings: !!sdkSettings,
+                      token: !!token,
+                      projectId
+                    })
+                    return null
+                  })()}
                   {sdkSettingsLoading ? (
                     <div className="bg-gray-900 rounded-lg p-8 text-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>

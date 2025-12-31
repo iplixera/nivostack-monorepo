@@ -211,13 +211,14 @@ export async function GET(request: NextRequest) {
       }),
 
       // Device (if deviceId provided) - for device-specific config
+      // Note: Using findFirst because there's no unique constraint on projectId+deviceId
+      // (projectId is nullable, so uniqueness is enforced at application level)
       deviceId
-        ? (prisma.device.findUnique as any)({
+        ? prisma.device.findFirst({
             where: {
-              projectId_deviceId: {
-                projectId,
-                deviceId
-              }
+              projectId,
+              deviceId,
+              status: 'active' // Only get active devices
             },
             select: {
               id: true,
@@ -428,8 +429,17 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('SDK init error:', error)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        ...(process.env.NODE_ENV === 'development' && {
+          details: errorMessage,
+          stack: errorStack
+        })
+      },
       { status: 500 }
     )
   }

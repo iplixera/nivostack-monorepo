@@ -24,19 +24,20 @@ export async function GET(request: NextRequest) {
 
             try {
         // Get the correct path to prisma schema
-        // In Vercel, we're in /var/task, need to go up to find prisma
-        const schemaPath = path.join(process.cwd(), '..', 'prisma', 'schema.prisma')
+        // In Vercel, we need to resolve from the dashboard directory
+        const cwd = typeof process.cwd === 'function' ? process.cwd() : '/vercel/path0/dashboard'
+        const schemaPath = path.join(cwd, '..', 'prisma', 'schema.prisma')
         
         console.log('🔄 Running database migration...')
         console.log('Schema path:', schemaPath)
-        console.log('Working directory:', process.cwd())
+        console.log('Working directory:', cwd)
         
         // Use npx instead of pnpm dlx (pnpm not available in Vercel runtime)
         // npx is available and will use the locally installed prisma
         const { stdout, stderr } = await execAsync(
-          `npx prisma@5.22.0 db push --schema="${schemaPath}" --accept-data-loss --skip-generate`,
+          `npx --yes prisma@5.22.0 db push --schema="${schemaPath}" --accept-data-loss --skip-generate`,
           {
-            cwd: process.cwd(),
+            cwd: cwd,
             timeout: 60000, // 60 seconds
             maxBuffer: 10 * 1024 * 1024, // 10MB
             env: {

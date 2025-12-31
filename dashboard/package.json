@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "_deploy": "echo deploy",
-    "migrate": "npx prisma@5.22.0 db push --schema=../prisma/schema.prisma --accept-data-loss --skip-generate",
-    "build": "npx prisma@5.22.0 generate --schema=../prisma/schema.prisma && (npx prisma@5.22.0 db push --schema=../prisma/schema.prisma --accept-data-loss --skip-generate || echo '⚠️  Migration skipped - will run on first API request') && next build --webpack",
+    "migrate": "bash scripts/run-prisma-safe.sh push || echo 'Migration skipped'",
+    "build": "bash scripts/run-prisma-safe.sh generate && (bash scripts/run-prisma-safe.sh push || echo '⚠️  Migration skipped - will run on first API request') && next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "echo 'Skipping prisma generate in postinstall'",

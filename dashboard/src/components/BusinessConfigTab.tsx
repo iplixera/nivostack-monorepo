@@ -401,12 +401,18 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
       const res = await fetch(`/api/config-categories?projectId=${projectId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
+      if (!res.ok) {
+        throw new Error(`Failed to fetch categories: ${res.statusText}`)
+      }
       const data = await res.json()
       if (data.categories) {
         setConfigCategories(data.categories)
+      } else {
+        setConfigCategories([])
       }
     } catch (err) {
       console.error('Failed to fetch config categories:', err)
+      setConfigCategories([])
     }
   }
 
@@ -418,8 +424,10 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
   // Refresh categories when switching to categories tab
   useEffect(() => {
     if (activeSubTab === 'categories') {
-      fetchConfigCategories()
-      fetchConfigs() // Also refresh configs to get latest category strings
+      setLoading(true)
+      Promise.all([fetchConfigCategories(), fetchConfigs()]).finally(() => {
+        setLoading(false)
+      })
     }
   }, [activeSubTab])
 
@@ -847,21 +855,25 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
       {/* Categories Sub-tab */}
       {activeSubTab === 'categories' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Categories</h3>
-            <button
-              onClick={() => {
-                resetCategoryForm()
-                setShowCategoryManager(true)
-              }}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-            >
-              + Add Category
-            </button>
-          </div>
-          
-          {/* Combine managed categories and string categories from configs */}
-          {(() => {
+          {loading && configCategories.length === 0 && categories.length === 0 ? (
+            <div className="text-gray-400 text-center py-8">Loading categories...</div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white">Categories</h3>
+                <button
+                  onClick={() => {
+                    resetCategoryForm()
+                    setShowCategoryManager(true)
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  + Add Category
+                </button>
+              </div>
+              
+              {/* Combine managed categories and string categories from configs */}
+              {(() => {
             // Get all managed categories
             const managedCategories = configCategories || []
             
@@ -949,6 +961,8 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
               </div>
             )
           })()}
+            </>
+          )}
         </div>
       )}
 
@@ -1071,6 +1085,13 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
         </div>
         <div className="flex items-center space-x-2">
           <button
+            onClick={() => setShowTemplates(true)}
+            disabled={!!(businessConfigUsage && businessConfigUsage.limit !== null && businessConfigUsage.percentage >= 100)}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            + Add Template
+          </button>
+          <button
             onClick={() => {
               resetForm()
               setShowAddForm(true)
@@ -1091,8 +1112,13 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
 
       {/* Category Manager Modal */}
       {showCategoryManager && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-xl w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            setShowCategoryManager(false)
+            resetCategoryForm()
+          }
+        }}>
+          <div className="bg-gray-900 rounded-xl w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="p-4 border-b border-gray-800 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-white">Manage Categories</h3>
               <button
@@ -1100,7 +1126,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
                   setShowCategoryManager(false)
                   resetCategoryForm()
                 }}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-white text-xl leading-none"
               >
                 ✕
               </button>

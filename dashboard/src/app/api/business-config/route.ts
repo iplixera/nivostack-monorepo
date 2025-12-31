@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
     const projectId = request.nextUrl.searchParams.get('projectId')
     const category = request.nextUrl.searchParams.get('category')
     const key = request.nextUrl.searchParams.get('key')
+    const buildMode = request.nextUrl.searchParams.get('buildMode') as 'preview' | 'production' | null
 
     // SDK request - return configs for mobile app (simplified format for caching)
     if (apiKey) {
@@ -69,6 +70,27 @@ export async function GET(request: NextRequest) {
             error: validation.error || 'Subscription invalid',
             message: validation.error || 'Please upgrade to continue using DevBridge.'
           }, { status: 403 })
+        }
+
+        // Check if build mode is requested and get active build snapshot
+        if (buildMode === 'preview' || buildMode === 'production') {
+          const { getActiveBuild } = await import('@/lib/build')
+          const activeBuild = await getActiveBuild(projectId, buildMode)
+          if (activeBuild?.businessConfigSnapshot) {
+            // Return build snapshot data
+            const snapshot = activeBuild.businessConfigSnapshot as any
+            return NextResponse.json({
+              configs: snapshot.configs || {},
+              meta: snapshot.meta || {},
+              build: {
+                version: activeBuild.version,
+                name: activeBuild.name,
+                mode: activeBuild.mode,
+                createdAt: activeBuild.createdAt.toISOString(),
+              },
+            })
+          }
+          // If no active build found, fall through to live data
         }
 
         // Get user/device context from request (optional)

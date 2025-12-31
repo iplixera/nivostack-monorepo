@@ -6,6 +6,7 @@ import { verifyToken } from '@/lib/auth'
 export async function GET(request: NextRequest) {
   try {
     const languageCode = request.nextUrl.searchParams.get('lang')
+    const buildMode = request.nextUrl.searchParams.get('buildMode') as 'preview' | 'production' | null
     let projectId: string
 
     // Check for API key first (SDK access)
@@ -30,6 +31,44 @@ export async function GET(request: NextRequest) {
           error: validation.error || 'Subscription invalid',
           message: validation.error || 'Please upgrade to continue using DevBridge.'
         }, { status: 403 })
+      }
+
+      // Check if build mode is requested and get active build snapshot
+      if (buildMode === 'preview' || buildMode === 'production') {
+        const { getActiveBuild } = await import('@/lib/build')
+        const activeBuild = await getActiveBuild(projectId, buildMode)
+        if (activeBuild?.localizationSnapshot) {
+          // Return build snapshot data
+          const snapshot = activeBuild.localizationSnapshot as any
+          // Filter by language if requested
+          if (languageCode && snapshot.translations && snapshot.translations[languageCode]) {
+            return NextResponse.json({
+              translations: snapshot.translations[languageCode],
+              language: snapshot.languages?.[languageCode] || null,
+              build: {
+                version: activeBuild.version,
+                name: activeBuild.name,
+                mode: activeBuild.mode,
+                createdAt: activeBuild.createdAt.toISOString(),
+              },
+            })
+          } else if (!languageCode && snapshot.translations) {
+            // Return all translations or default language
+            const defaultLang = Object.keys(snapshot.translations)[0]
+            return NextResponse.json({
+              translations: snapshot.translations[defaultLang] || {},
+              language: snapshot.languages?.[defaultLang] || null,
+              build: {
+                version: activeBuild.version,
+                name: activeBuild.name,
+                mode: activeBuild.mode,
+                createdAt: activeBuild.createdAt.toISOString(),
+              },
+            })
+          }
+          // If language not found in snapshot, fall through to live data
+        }
+        // If no active build found, fall through to live data
       }
     } else {
       // Dashboard access via JWT - requires projectId in query params

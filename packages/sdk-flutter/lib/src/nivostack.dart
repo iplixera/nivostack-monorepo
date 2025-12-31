@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
 
@@ -241,11 +242,15 @@ class NivoStack {
   /// Fetch SDK init data in background (doesn't load cache, just fetches fresh data)
   Future<void> _fetchSdkInitDataBackground() async {
     try {
+      // Determine build mode: debug builds use 'preview', release builds use 'production'
+      final buildMode = kDebugMode ? 'preview' : 'production';
+      
       // Get cached ETag for conditional request
       final cached = await _configCache.load();
       final response = await _apiClient.getSdkInit(
         etag: cached?.etag,
         deviceId: _registeredDeviceId,
+        buildMode: buildMode, // Pass build mode to fetch appropriate build snapshot
       );
 
       // Handle 304 Not Modified - config unchanged

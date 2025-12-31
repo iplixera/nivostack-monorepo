@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createHash } from 'crypto'
+import { getActiveBuild } from '@/lib/build'
 
 /**
  * Combined SDK Initialization Endpoint
@@ -87,6 +88,7 @@ export async function GET(request: NextRequest) {
     const apiKey = request.headers.get('x-api-key')
     const { searchParams } = new URL(request.url)
     const deviceId = searchParams.get('deviceId') // Platform device ID to look up device config
+    const buildMode = searchParams.get('buildMode') as 'preview' | 'production' | null // 'preview' for debug builds, 'production' for release builds
 
     if (!apiKey) {
       return NextResponse.json(
@@ -120,6 +122,24 @@ export async function GET(request: NextRequest) {
     }
 
     const projectId = project.id
+
+    // Check if build mode is requested and get active build
+    let activeBuild: Awaited<ReturnType<typeof getActiveBuild>> = null
+    let buildBusinessConfig: { configs: Record<string, unknown>; meta: Record<string, any> } | null = null
+    let buildLocalization: any = null
+
+    if (buildMode === 'preview' || buildMode === 'production') {
+      activeBuild = await getActiveBuild(projectId, buildMode)
+      if (activeBuild) {
+        // Use build snapshot data instead of live data
+        if (activeBuild.businessConfigSnapshot) {
+          buildBusinessConfig = activeBuild.businessConfigSnapshot as any
+        }
+        if (activeBuild.localizationSnapshot) {
+          buildLocalization = activeBuild.localizationSnapshot as any
+        }
+      }
+    }
 
     // Fetch all data in PARALLEL for maximum performance
     const [featureFlags, sdkSettings, businessConfigs, apiConfigs, device] = await Promise.all([
@@ -209,16 +229,23 @@ export async function GET(request: NextRequest) {
         : Promise.resolve(null)
     ])
 
-    // Transform business configs to key-value format
-    const configMap: Record<string, unknown> = {}
-    const configMeta: Record<string, { type: string; category: string | null; version: number }> = {}
+    // Use build snapshot if available, otherwise use live data
+    let configMap: Record<string, unknown> = {}
+    let configMeta: Record<string, { type: string; category: string | null; version: number }> = {}
 
-    for (const config of businessConfigs) {
-      configMap[config.key] = extractValue(config)
-      configMeta[config.key] = {
-        type: config.valueType,
-        category: config.category,
-        version: config.version,
+    if (buildBusinessConfig) {
+      // Use build snapshot
+      configMap = buildBusinessConfig.configs || {}
+      configMeta = buildBusinessConfig.meta || {}
+    } else {
+      // Transform live business configs to key-value format
+      for (const config of businessConfigs) {
+        configMap[config.key] = extractValue(config)
+        configMeta[config.key] = {
+          type: config.valueType,
+          category: config.category,
+          version: config.version,
+        }
       }
     }
 
@@ -267,7 +294,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build config data (without timestamp - used for ETag)
-    const configData = {
+    const configData: any = {
       featureFlags: featureFlags || DEFAULT_FEATURE_FLAGS,
       sdkSettings: {
         settings: effectiveSettings,
@@ -278,6 +305,21 @@ export async function GET(request: NextRequest) {
         meta: configMeta,
       },
       deviceConfig,
+    }
+
+    // Include localization if available from build snapshot
+    if (buildLocalization) {
+      configData.localization = buildLocalization
+    }
+
+    // Include build info if using build snapshot
+    if (activeBuild) {
+      configData.build = {
+        version: activeBuild.version,
+        name: activeBuild.name,
+        mode: activeBuild.mode,
+        createdAt: activeBuild.createdAt.toISOString(),
+      }
     }
 
     // Generate ETag from config data (excludes timestamp)

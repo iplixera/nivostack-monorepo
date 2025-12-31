@@ -272,15 +272,21 @@ class NivoStackApiClient {
   /// Supports conditional requests with ETag:
   /// - Pass [etag] to enable 304 Not Modified responses
   /// - Pass [deviceId] to get device-specific config (debug mode, tracking)
+  /// - Pass [buildMode] to fetch build snapshot ('preview' for debug builds, 'production' for release builds)
   /// - Returns [SdkInitResponse] with data, etag, and notModified flag
-  Future<SdkInitResponse> getSdkInit({String? etag, String? deviceId}) async {
+  Future<SdkInitResponse> getSdkInit({String? etag, String? deviceId, String? buildMode}) async {
+    final queryParams = <String, dynamic>{
+      if (deviceId != null) 'deviceId': deviceId,
+      if (buildMode != null) 'buildMode': buildMode, // 'preview' or 'production'
+    };
+    
     final headers = <String, dynamic>{
       if (etag != null) 'If-None-Match': etag,
-      if (deviceId != null) 'X-Device-Id': deviceId,
     };
     
     final response = await _controlDio.get(
       '/api/sdk-init',
+      queryParameters: queryParams.isNotEmpty ? queryParams : null,
       options: Options(
         headers: headers.isNotEmpty ? headers : null,
         // Don't throw on 304 - we want to handle it

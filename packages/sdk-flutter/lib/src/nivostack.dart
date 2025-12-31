@@ -1425,7 +1425,8 @@ class NivoStack {
       'responseBody': shouldCaptureResponse ? sanitizedResponseBody : null,
       'duration': duration,
       'error': error,
-      'screenName': _currentScreen,
+      // Only include screenName if screen tracking is enabled
+      'screenName': _featureFlags.screenTracking ? _currentScreen : null,
       'networkType': networkType,
       'sessionToken': _featureFlags.sessionTracking ? _sessionToken : null,
       'timestamp': DateTime.now().toIso8601String(),
@@ -1499,7 +1500,7 @@ class NivoStack {
       'lineNumber': lineNumber,
       'functionName': functionName,
       'className': className,
-      'screenName': _currentScreen,
+      'screenName': _featureFlags.screenTracking ? _currentScreen : null,
       'timestamp': DateTime.now().toIso8601String(),
     };
 
@@ -1573,7 +1574,7 @@ class NivoStack {
         stackTrace: stackTrace,
         metadata: {
           ...?metadata,
-          'screenName': _currentScreen,
+          'screenName': _featureFlags.screenTracking ? _currentScreen : null,
           'sessionToken': _featureFlags.sessionTracking ? _sessionToken : null,
         },
       );

@@ -4550,7 +4550,18 @@ export default function ProjectDetailPage() {
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" style={{ minHeight: '600px' }}>
                         {/* Left: Flow Visualization */}
                         <div className="bg-gray-900 rounded-lg p-4 overflow-auto">
-                          <h3 className="text-white font-medium mb-4">Screen Flow</h3>
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-white font-medium">Screen Flow</h3>
+                            {featureFlags && (!featureFlags.screenTracking || !featureFlags.sessionTracking) && (
+                              <div className="px-3 py-1.5 bg-orange-500/10 border border-orange-500/30 rounded text-xs text-orange-400">
+                                ⚠️ {!featureFlags.screenTracking && !featureFlags.sessionTracking 
+                                  ? 'Screen & Session Tracking disabled - showing historical data only'
+                                  : !featureFlags.screenTracking 
+                                    ? 'Screen Tracking disabled - showing historical data only'
+                                    : 'Session Tracking disabled - showing historical data only'}
+                              </div>
+                            )}
+                          </div>
 
                           {/* Session Sequence - Clickable */}
                           {(() => {

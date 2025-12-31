@@ -33,11 +33,9 @@ void main() async {
   try {
     print('Initializing NivoStack SDK...');
     
-    // For local development/testing, you can optionally specify baseUrl
-    // In production, baseUrl defaults to https://ingest.nivostack.com
+    // Initialize SDK - API endpoints are automatically configured
     await NivoStack.init(
-      apiKey: 'cmjoin79y00069z09upepkf11', // Project ID is derived from API key
-      // baseUrl: getBaseUrl(), // Optional: only for local development/testing
+      apiKey: 'cmjoin79y00069z09upepkf11', // Get from dashboard
       enabled: true,
     );
     

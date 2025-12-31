@@ -153,21 +153,17 @@ class NivoStack {
   /// Initialize NivoStack SDK
   ///
   /// [apiKey] - Project API key from NivoStack Studio dashboard (project ID is derived from this)
-  /// [ingestUrl] - Optional ingest API URL for sending data (defaults to 'https://ingest.nivostack.com')
-  ///               Used for: traces, logs, crashes, sessions, device registration
-  ///               Only specify this for development/testing with local servers
-  /// [controlUrl] - Optional control API URL for fetching config (defaults to 'https://api.nivostack.com')
-  ///                Used for: business config, localization, feature flags, SDK settings
-  ///                Only specify this for development/testing with local servers
   /// [enabled] - Enable/disable SDK (useful for debug vs release builds)
+  ///
+  /// API endpoints are automatically configured:
+  /// - Ingest API: https://ingest.nivostack.com (for sending data)
+  /// - Control API: https://api.nivostack.com (for fetching config)
   ///
   /// This method returns immediately after loading cached config (if available).
   /// Network operations (config fetch, device registration, session start) run
   /// in the background and do NOT block app startup.
   static Future<NivoStack> init({
     required String apiKey,
-    String? ingestUrl,
-    String? controlUrl,
     bool enabled = true,
   }) async {
     if (_instance != null) {
@@ -177,8 +173,8 @@ class NivoStack {
     final stopwatch = Stopwatch()..start();
 
     _instance = NivoStack._(
-      ingestUrl: ingestUrl ?? kDefaultNivoStackIngestUrl,
-      controlUrl: controlUrl ?? kDefaultNivoStackControlUrl,
+      ingestUrl: kDefaultNivoStackIngestUrl,
+      controlUrl: kDefaultNivoStackControlUrl,
       apiKey: apiKey,
       enabled: enabled,
     );

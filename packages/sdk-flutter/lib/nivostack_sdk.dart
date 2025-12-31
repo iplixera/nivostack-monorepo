@@ -13,8 +13,7 @@
 ///
 /// void main() async {
 ///   // Initialize SDK
-///   // baseUrl defaults to https://ingest.nivostack.com (no need to specify)
-///   // projectId is automatically derived from apiKey
+///   // API endpoints are automatically configured (no need to specify URLs)
 ///   await NivoStack.init(
 ///     apiKey: 'your-project-api-key',
 ///   );

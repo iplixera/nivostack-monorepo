@@ -56,11 +56,12 @@ void main() async {
   
   // Initialize NivoStack SDK
   await NivoStack.init(
-    ingestUrl: 'https://ingest.nivostack.com',  // For sending data
-    controlUrl: 'https://api.nivostack.com',    // For fetching config
-    apiKey: 'your-project-api-key',             // Get from dashboard
-    projectId: 'your-project-id'                 // Get from dashboard
+    apiKey: 'your-project-api-key',  // Get from dashboard
   );
+  
+  // API endpoints are automatically configured:
+  // - Ingest API: https://ingest.nivostack.com (for sending data)
+  // - Control API: https://api.nivostack.com (for fetching config)
   
   runApp(MyApp());
 }
@@ -279,8 +280,6 @@ void main() async {
   
   // Initialize SDK
   await NivoStack.init(
-    ingestUrl: 'https://ingest.nivostack.com',
-    controlUrl: 'https://api.nivostack.com',
     apiKey: 'your-api-key',
     projectId: 'your-project-id',
   );
@@ -371,8 +370,9 @@ flutter run
 Initialize the SDK.
 
 **Parameters:**
-- `ingestUrl`: URL for sending data (default: `https://ingest.nivostack.com`)
-- `controlUrl`: URL for fetching config (default: `https://api.nivostack.com`)
+**Note:** API endpoints are automatically configured and cannot be changed. URLs are:
+- Ingest API: `https://ingest.nivostack.com` (for sending data)
+- Control API: `https://api.nivostack.com` (for fetching config)
 - `apiKey`: Project API key (required)
 - `projectId`: Project ID (required)
 

@@ -587,19 +587,38 @@ export async function PUT(request: NextRequest) {
     if (description !== undefined) updateData.description = description || null
     if (category !== undefined) updateData.category = category || null
     if (isEnabled !== undefined) updateData.isEnabled = isEnabled
-    if (metadata !== undefined) updateData.metadata = metadata
-    if (targetingRules !== undefined) updateData.targetingRules = targetingRules || null
-    if (defaultValue !== undefined) updateData.defaultValue = defaultValue !== null ? defaultValue : null
-    if (rolloutPercentage !== undefined) updateData.rolloutPercentage = Math.max(0, Math.min(100, rolloutPercentage))
-    if (validationSchema !== undefined) updateData.validationSchema = validationSchema || null
-    if (minValue !== undefined) updateData.minValue = minValue !== null ? minValue : null
-    if (maxValue !== undefined) updateData.maxValue = maxValue !== null ? maxValue : null
-    if (minLength !== undefined) updateData.minLength = minLength !== null ? minLength : null
-    if (maxLength !== undefined) updateData.maxLength = maxLength !== null ? maxLength : null
-    if (pattern !== undefined) updateData.pattern = pattern || null
-    if (allowedValues !== undefined) updateData.allowedValues = allowedValues || null
-    if (deploymentStrategy !== undefined) updateData.deploymentStrategy = deploymentStrategy || null
-    if (deploymentConfig !== undefined) updateData.deploymentConfig = deploymentConfig || null
+
+    // Store advanced fields in metadata JSON (same as POST handler)
+    const existingMetadata = (existingConfig.metadata as Record<string, unknown> | null) || {}
+    const advancedMetadata: Record<string, unknown> = { ...existingMetadata }
+    
+    // Merge provided metadata first
+    if (metadata !== undefined && metadata !== null) {
+      Object.assign(advancedMetadata, metadata)
+    }
+    
+    // Then merge advanced fields (these override metadata if provided)
+    if (targetingRules !== undefined) advancedMetadata.targetingRules = targetingRules || null
+    if (defaultValue !== undefined) advancedMetadata.defaultValue = defaultValue !== null ? defaultValue : null
+    if (rolloutPercentage !== undefined) advancedMetadata.rolloutPercentage = Math.max(0, Math.min(100, rolloutPercentage))
+    if (validationSchema !== undefined) advancedMetadata.validationSchema = validationSchema || null
+    if (minValue !== undefined) advancedMetadata.minValue = minValue !== null ? minValue : null
+    if (maxValue !== undefined) advancedMetadata.maxValue = maxValue !== null ? maxValue : null
+    if (minLength !== undefined) advancedMetadata.minLength = minLength !== null ? minLength : null
+    if (maxLength !== undefined) advancedMetadata.maxLength = maxLength !== null ? maxLength : null
+    if (pattern !== undefined) advancedMetadata.pattern = pattern || null
+    if (allowedValues !== undefined) advancedMetadata.allowedValues = allowedValues || null
+    if (deploymentStrategy !== undefined) advancedMetadata.deploymentStrategy = deploymentStrategy || null
+    if (deploymentConfig !== undefined) advancedMetadata.deploymentConfig = deploymentConfig || null
+    
+    // Set metadata if any advanced fields were provided or metadata was explicitly set
+    if (targetingRules !== undefined || defaultValue !== undefined || rolloutPercentage !== undefined ||
+        validationSchema !== undefined || minValue !== undefined || maxValue !== undefined ||
+        minLength !== undefined || maxLength !== undefined || pattern !== undefined ||
+        allowedValues !== undefined || deploymentStrategy !== undefined || deploymentConfig !== undefined ||
+        metadata !== undefined) {
+      updateData.metadata = Object.keys(advancedMetadata).length > 0 ? advancedMetadata : null
+    }
 
     // Validate value if validation constraints are being updated
     if (value !== undefined && (
@@ -610,14 +629,14 @@ export async function PUT(request: NextRequest) {
     )) {
       const finalValue = valueType !== undefined ? value : extractValue(existingConfig)
       const finalType = valueType !== undefined ? valueType : existingConfig.valueType
-      const finalSchema = validationSchema !== undefined ? validationSchema : (existingConfig as any).validationSchema
+      const finalSchema = validationSchema !== undefined ? validationSchema : (existingMetadata.validationSchema as any)
       const finalConstraints = {
-        minValue: minValue !== undefined ? minValue : (existingConfig as any).minValue,
-        maxValue: maxValue !== undefined ? maxValue : (existingConfig as any).maxValue,
-        minLength: minLength !== undefined ? minLength : (existingConfig as any).minLength,
-        maxLength: maxLength !== undefined ? maxLength : (existingConfig as any).maxLength,
-        pattern: pattern !== undefined ? pattern : (existingConfig as any).pattern,
-        allowedValues: allowedValues !== undefined ? allowedValues : (existingConfig as any).allowedValues
+        minValue: minValue !== undefined ? minValue : (existingMetadata.minValue as any),
+        maxValue: maxValue !== undefined ? maxValue : (existingMetadata.maxValue as any),
+        minLength: minLength !== undefined ? minLength : (existingMetadata.minLength as any),
+        maxLength: maxLength !== undefined ? maxLength : (existingMetadata.maxLength as any),
+        pattern: pattern !== undefined ? pattern : (existingMetadata.pattern as any),
+        allowedValues: allowedValues !== undefined ? allowedValues : (existingMetadata.allowedValues as any)
       }
 
       const validation = validateConfigValue(finalValue, finalType, finalSchema, finalConstraints)

@@ -5,6 +5,7 @@ import 'dart:ui';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/widgets.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
 
@@ -91,6 +92,12 @@ class NivoStack {
   // Queue for batching logs
   final List<Map<String, dynamic>> _logQueue = [];
   Timer? _flushTimer;
+  
+  // Config sync timer and lifecycle observer
+  Timer? _syncTimer;
+  Duration? _syncInterval; // null = periodic sync disabled, only lifecycle sync
+  bool _isAppActive = true;
+  WidgetsBindingObserver? _lifecycleObserver;
 
   // These are now controlled by SDK settings
   Duration get _flushInterval => Duration(seconds: _sdkSettings.flushIntervalSeconds);
@@ -155,6 +162,8 @@ class NivoStack {
   ///
   /// [apiKey] - Project API key from NivoStack Studio dashboard (project ID is derived from this)
   /// [enabled] - Enable/disable SDK (useful for debug vs release builds)
+  /// [syncInterval] - Interval for periodic config sync. Default: null (periodic sync disabled, only lifecycle sync).
+  ///                  Set to a Duration (e.g., Duration(minutes: 15)) to enable periodic sync.
   ///
   /// API endpoints are automatically configured:
   /// - Ingest API: https://ingest.nivostack.com (for sending data)
@@ -163,9 +172,27 @@ class NivoStack {
   /// This method returns immediately after loading cached config (if available).
   /// Network operations (config fetch, device registration, session start) run
   /// in the background and do NOT block app startup.
+  ///
+  /// Config sync behavior (when enabled: true):
+  /// - Syncs immediately when app comes to foreground (lifecycle sync)
+  /// - Syncs periodically when app is active (if syncInterval is provided)
+  /// - Stops periodic sync when app is backgrounded (battery efficient)
+  ///
+  /// Examples:
+  /// ```dart
+  /// // Only lifecycle sync (syncs on app foreground)
+  /// await NivoStack.init(apiKey: 'your-key');
+  ///
+  /// // Lifecycle + periodic sync (every 15 minutes)
+  /// await NivoStack.init(
+  ///   apiKey: 'your-key',
+  ///   syncInterval: Duration(minutes: 15),
+  /// );
+  /// ```
   static Future<NivoStack> init({
     required String apiKey,
     bool enabled = true,
+    Duration? syncInterval,
   }) async {
     if (_instance != null) {
       return _instance!;
@@ -180,6 +207,9 @@ class NivoStack {
       enabled: enabled,
     );
 
+    // Set sync interval (null = periodic sync disabled, only lifecycle sync)
+    _instance!._syncInterval = syncInterval;
+
     // Initialize device info (required for basic operation)
     await _instance!._initDeviceInfo();
     print('NivoStack: Device info initialized in ${stopwatch.elapsedMilliseconds}ms');
@@ -192,6 +222,9 @@ class NivoStack {
         _instance!._configFetched = true;
         print('NivoStack: Cached config loaded in ${stopwatch.elapsedMilliseconds}ms (age: ${cached.age.inSeconds}s)');
       }
+
+      // Setup lifecycle observer for automatic sync on app foreground
+      _instance!._setupLifecycleObserver();
 
       // Run network operations in background - DO NOT BLOCK app startup
       // ignore: unawaited_futures
@@ -232,6 +265,11 @@ class NivoStack {
       _isFullyInitialized = true;
       _initError = null;
       print('NivoStack: Full background initialization completed in ${stopwatch.elapsedMilliseconds}ms');
+      
+      // Start periodic sync timer after initialization (only if app is active)
+      if (_isAppActive) {
+        _startSyncTimer();
+      }
     } catch (e) {
       _initError = e.toString();
       print('NivoStack: Background initialization failed: $e');
@@ -1125,6 +1163,65 @@ class NivoStack {
     });
   }
 
+  /// Setup lifecycle observer to track app state changes
+  void _setupLifecycleObserver() {
+    _lifecycleObserver = _NivoStackLifecycleObserver(this);
+    WidgetsBinding.instance.addObserver(_lifecycleObserver!);
+    print('NivoStack: Lifecycle observer setup - will sync on app foreground');
+  }
+
+  /// Called when app comes to foreground
+  void _onAppResumed() {
+    _isAppActive = true;
+    print('NivoStack: App resumed - syncing config...');
+    
+    // Immediate sync on foreground
+    refreshConfig().catchError((e) {
+      print('NivoStack: Foreground sync failed: $e');
+    });
+    
+    // Start periodic sync timer
+    _startSyncTimer();
+  }
+
+  /// Called when app goes to background
+  void _onAppPaused() {
+    _isAppActive = false;
+    print('NivoStack: App paused - stopping periodic sync');
+    _stopSyncTimer();
+  }
+
+  /// Start periodic config sync timer
+  void _startSyncTimer() {
+    _syncTimer?.cancel();
+    
+    if (!enabled || !_isAppActive) {
+      return;
+    }
+    
+    // Don't start if syncInterval is null (periodic sync disabled)
+    if (_syncInterval == null) {
+      return;
+    }
+    
+    _syncTimer = Timer.periodic(_syncInterval!, (_) {
+      if (_isAppActive && enabled) {
+        print('NivoStack: Periodic config sync...');
+        refreshConfig().catchError((e) {
+          print('NivoStack: Periodic sync failed: $e');
+        });
+      }
+    });
+    
+    print('NivoStack: Started periodic sync (interval: ${_syncInterval!.inMinutes}min)');
+  }
+
+  /// Stop periodic config sync timer
+  void _stopSyncTimer() {
+    _syncTimer?.cancel();
+    _syncTimer = null;
+  }
+
   Future<void> _registerDevice() async {
     if (!_featureFlags.sdkEnabled) return;  // Master kill switch
     if (!_featureFlags.deviceTracking) return;
@@ -1644,6 +1741,16 @@ class NivoStack {
 
   /// Dispose SDK resources
   Future<void> dispose() async {
+    // Clean up lifecycle observer
+    if (_lifecycleObserver != null) {
+      WidgetsBinding.instance.removeObserver(_lifecycleObserver!);
+      _lifecycleObserver = null;
+    }
+    
+    // Stop sync timer
+    _stopSyncTimer();
+    
+    // Clean up flush timer
     _flushTimer?.cancel();
     await _flushTraceQueue();
     await _flushLogQueue();
@@ -1819,6 +1926,30 @@ class NivoStack {
         },
       ),
     ) as R;
+  }
+}
+
+/// Lifecycle observer for automatic config sync on app foreground
+class _NivoStackLifecycleObserver extends WidgetsBindingObserver {
+  final NivoStack _sdk;
+
+  _NivoStackLifecycleObserver(this._sdk);
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        _sdk._onAppResumed();
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+        _sdk._onAppPaused();
+        break;
+      case AppLifecycleState.detached:
+      case AppLifecycleState.hidden:
+        // Handle other states if needed
+        break;
+    }
   }
 }
 

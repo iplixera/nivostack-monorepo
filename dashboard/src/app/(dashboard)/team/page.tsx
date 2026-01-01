@@ -345,6 +345,41 @@ export default function TeamPage() {
         )}
       </div>
 
+      {/* Pending Invitations for User */}
+      {pendingInvitationsForUser.length > 0 && (
+        <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">
+            Pending Invitations ({pendingInvitationsForUser.length})
+          </h3>
+          <div className="space-y-3">
+            {pendingInvitationsForUser.map((invitation) => (
+              <div
+                key={invitation.id}
+                className="bg-gray-900 rounded-lg border border-gray-800 p-4 flex items-center justify-between"
+              >
+                <div className="flex-1">
+                  <div className="text-white font-medium">{invitation.project.name}</div>
+                  <div className="text-sm text-gray-400 mt-1">
+                    Invited by {invitation.invitedBy.name || invitation.invitedBy.email} as{' '}
+                    <span className="capitalize">{invitation.role}</span>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Expires {new Date(invitation.expiresAt).toLocaleDateString()}
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleAcceptPendingInvitation(invitation)}
+                  disabled={acceptingInvitation === invitation.id}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                >
+                  {acceptingInvitation === invitation.id ? 'Accepting...' : 'Accept Invitation'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Project Selector */}
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-2">Select Project</label>

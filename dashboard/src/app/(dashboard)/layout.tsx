@@ -94,14 +94,17 @@ export default function DashboardLayout({
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
               <div className="flex items-center space-x-8">
-                {isProjectPage && currentProject ? (
+                {isProjectPage ? (
                   // Project selector dropdown
                   <div className="relative">
                     <button
                       onClick={() => setShowProjectDropdown(!showProjectDropdown)}
                       className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white transition-colors"
+                      disabled={projectsLoading}
                     >
-                      <span className="text-lg font-semibold">{currentProject.name}</span>
+                      <span className="text-lg font-semibold">
+                        {currentProject ? currentProject.name : (projectsLoading ? 'Loading...' : 'Project')}
+                      </span>
                       <svg
                         className={`w-4 h-4 transition-transform ${showProjectDropdown ? 'rotate-180' : ''}`}
                         fill="none"
@@ -112,7 +115,7 @@ export default function DashboardLayout({
                       </svg>
                     </button>
                     
-                    {showProjectDropdown && (
+                    {showProjectDropdown && !projectsLoading && (
                       <>
                         <div
                           className="fixed inset-0 z-10"

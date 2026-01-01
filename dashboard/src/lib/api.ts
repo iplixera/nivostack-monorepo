@@ -1827,6 +1827,27 @@ export const api = {
         '/api/admin/configurations/test',
         { method: 'POST', body: { category, key, testType, testData }, token }
       ),
+    getMigrationStatus: (token: string) =>
+      fetchApi<{ 
+        status: 'complete' | 'pending' | 'error';
+        checks: Record<string, boolean>;
+        missingItems: string[];
+        message: string;
+      }>(
+        '/api/admin/migrations/run',
+        { token }
+      ),
+    runMigrations: (token: string) =>
+      fetchApi<{ 
+        success: boolean;
+        message: string;
+        output?: string;
+        warnings?: string;
+        error?: string;
+      }>(
+        '/api/admin/migrations/run',
+        { method: 'POST', token }
+      ),
   },
   builds: {
     create: (projectId: string, token: string, data: { featureType: string; name?: string; description?: string }) =>

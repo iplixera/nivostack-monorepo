@@ -8,6 +8,109 @@ import BarChart from '@/components/charts/BarChart'
 import PieChart from '@/components/charts/PieChart'
 import LineChart from '@/components/charts/LineChart'
 
+// Migration Manager Component
+function MigrationManager({ token }: { token: string | null }) {
+  const [status, setStatus] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+  const [running, setRunning] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!token) return
+    loadStatus()
+  }, [token])
+
+  const loadStatus = async () => {
+    if (!token) return
+    try {
+      setLoading(true)
+      const data = await api.admin.getMigrationStatus(token)
+      setStatus(data)
+      setMessage(null)
+    } catch (error: any) {
+      console.error('Error loading migration status:', error)
+      setMessage(`Error: ${error.message}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const runMigrations = async () => {
+    if (!token) return
+    if (!confirm('Are you sure you want to run database migrations? This will create missing tables and columns.')) {
+      return
+    }
+
+    try {
+      setRunning(true)
+      setMessage('Running migrations...')
+      const result = await api.admin.runMigrations(token)
+      
+      if (result.success) {
+        setMessage(`✅ ${result.message}`)
+        // Reload status after a short delay
+        setTimeout(() => {
+          loadStatus()
+        }, 2000)
+      } else {
+        setMessage(`❌ ${result.message}: ${result.error || 'Unknown error'}`)
+      }
+    } catch (error: any) {
+      console.error('Error running migrations:', error)
+      setMessage(`❌ Error: ${error.message}`)
+    } finally {
+      setRunning(false)
+    }
+  }
+
+  if (!status) {
+    return (
+      <button
+        onClick={loadStatus}
+        disabled={loading}
+        className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-sm disabled:opacity-50"
+      >
+        {loading ? 'Loading...' : 'Check Migrations'}
+      </button>
+    )
+  }
+
+  const needsMigration = status.status === 'pending'
+
+  return (
+    <div className="relative">
+      <button
+        onClick={needsMigration ? runMigrations : loadStatus}
+        disabled={running || loading}
+        className={`px-4 py-2 rounded-lg transition-colors text-sm disabled:opacity-50 ${
+          needsMigration
+            ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
+            : 'bg-gray-800 hover:bg-gray-700 text-white'
+        }`}
+      >
+        {running ? 'Running...' : needsMigration ? 'Run Migrations' : '✓ Migrations OK'}
+      </button>
+      
+      {message && (
+        <div className="absolute top-full left-0 mt-2 w-96 bg-gray-900 border border-gray-700 rounded-lg p-4 shadow-xl z-50">
+          <div className="text-sm text-white whitespace-pre-wrap">{message}</div>
+          {status.missingItems && status.missingItems.length > 0 && (
+            <div className="mt-2 text-xs text-gray-400">
+              Missing: {status.missingItems.join(', ')}
+            </div>
+          )}
+          <button
+            onClick={() => setMessage(null)}
+            className="mt-2 text-xs text-gray-400 hover:text-white"
+          >
+            Close
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function AdminDashboardPage() {
   const { token } = useAuth()
   const [stats, setStats] = useState<any>(null)
@@ -99,6 +202,7 @@ export default function AdminDashboardPage() {
           <p className="text-gray-400">Platform analytics, forecasting, and user management</p>
         </div>
         <div className="flex gap-2">
+          <MigrationManager token={token} />
           <Link
             href="/admin/offers"
             className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-sm"

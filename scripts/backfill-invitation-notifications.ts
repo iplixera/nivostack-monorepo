@@ -5,9 +5,24 @@
  * notifications for pending invitations (e.g., if they were invited before registering)
  * 
  * Usage: tsx scripts/backfill-invitation-notifications.ts
+ * Or: cd dashboard && pnpm backfill:invitations
  */
 
+import { config } from 'dotenv'
+import { resolve } from 'path'
 import { PrismaClient } from '@prisma/client'
+
+// Load environment variables from .env.local (in project root)
+const envPath = resolve(__dirname, '../.env.local')
+config({ path: envPath })
+
+// Verify database URL is loaded
+if (!process.env.POSTGRES_PRISMA_URL) {
+  console.error('❌ Error: POSTGRES_PRISMA_URL not found in environment variables')
+  console.error(`   Expected .env.local at: ${envPath}`)
+  console.error('   Make sure .env.local exists in the project root')
+  process.exit(1)
+}
 
 const prisma = new PrismaClient()
 

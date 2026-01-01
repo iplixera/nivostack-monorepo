@@ -577,6 +577,8 @@ model Plan {
   maxBusinessConfigKeys  Int? // Business config keys, null = unlimited
   maxLocalizationLanguages Int? // Localization languages, null = unlimited
   maxLocalizationKeys    Int? // Localization keys, null = unlimited
+  maxTeamMembers         Int? // Maximum team members (null = unlimited)
+  maxSeats               Int? // Alias for maxTeamMembers (for clarity)
   retentionDays          Int? // Data retention period, null = unlimited
 
   // Feature Flags

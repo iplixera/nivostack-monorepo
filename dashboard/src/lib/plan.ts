@@ -36,9 +36,20 @@ export type Plan = {
  * Get a plan by ID
  */
 export async function getPlan(planId: string): Promise<Plan | null> {
-  return prisma.plan.findUnique({
-    where: { id: planId },
-  }) as unknown as Promise<Plan | null>
+  try {
+    return await prisma.plan.findUnique({
+      where: { id: planId },
+    }) as unknown as Promise<Plan | null>
+  } catch (error: any) {
+    // If Plan table or columns don't exist (migration not run), return null
+    if (error?.message?.includes('does not exist') || 
+        error?.message?.includes('column') ||
+        error?.code === 'P2022' || error?.code === 'P2021') {
+      console.warn('Plan table or columns not found, returning null:', error.message)
+      return null
+    }
+    throw error
+  }
 }
 
 /**

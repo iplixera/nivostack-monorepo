@@ -22,12 +22,15 @@ echo ""
 
 # Step 2: Run Database Migrations (REQUIRED for deployment)
 echo "2️⃣  Running Database Migrations..."
+set +e  # Don't exit on error for migrations
 if bash scripts/run-prisma-safe.sh push --skip-generate 2>&1; then
     echo "   ✅ Migrations applied successfully"
 else
     echo "   ⚠️  Migration failed or skipped (will run on first API request)"
     echo "   This is OK if database is not reachable during build"
+    echo "   Error handling in code will prevent 500 errors"
 fi
+set -e  # Re-enable exit on error
 echo ""
 
 # Step 3: Build Next.js App

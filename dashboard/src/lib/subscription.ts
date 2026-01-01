@@ -67,14 +67,33 @@ export async function createSubscription(
  * Get user's subscription
  */
 export async function getSubscription(userId: string): Promise<Subscription | null> {
-  const sub = await prisma.subscription.findUnique({
-    where: { userId },
-    include: {
-      plan: true,
-    },
-  })
-  // Type assertion to include admin fields
-  return sub as Subscription | null
+  try {
+    const sub = await prisma.subscription.findUnique({
+      where: { userId },
+      include: {
+        plan: true,
+      },
+    })
+    // Type assertion to include admin fields
+    return sub as Subscription | null
+  } catch (error: any) {
+    // If Plan table or columns don't exist (migration not run), try without plan
+    if (error?.message?.includes('does not exist') || 
+        error?.message?.includes('column') ||
+        error?.code === 'P2022' || error?.code === 'P2021') {
+      console.warn('Plan table or columns not found, fetching subscription without plan:', error.message)
+      try {
+        const sub = await prisma.subscription.findUnique({
+          where: { userId },
+        })
+        return sub as Subscription | null
+      } catch (innerError) {
+        console.error('Failed to fetch subscription:', innerError)
+        return null
+      }
+    }
+    throw error
+  }
 }
 
 /**
@@ -142,16 +161,31 @@ export async function getUsageStats(userId: string) {
     return null
   }
 
-  const plan = await getPlan(subscription.planId)
+  let plan
+  try {
+    plan = await getPlan(subscription.planId)
+  } catch (error: any) {
+    // If Plan table or columns don't exist (migration not run), return null
+    if (error?.message?.includes('does not exist') || 
+        error?.message?.includes('column') ||
+        error?.code === 'P2022' || error?.code === 'P2021') {
+      console.warn('Plan table or columns not found, returning null for usage stats:', error.message)
+      return null
+    }
+    throw error
+  }
+
   if (!plan) {
     return null
   }
 
   // Use quota overrides if set, otherwise use plan defaults
-  const getLimit = (quotaOverride: number | null | undefined, planLimit: number | null) => {
-    return quotaOverride !== undefined && quotaOverride !== null ? quotaOverride : planLimit
+  const getLimit = (quotaOverride: number | null | undefined, planLimit: number | null | undefined) => {
+    return quotaOverride !== undefined && quotaOverride !== null ? quotaOverride : (planLimit ?? null)
   }
 
+  // Safely access plan fields that might not exist yet
+  const planAny = plan as any
   const maxProjects = getLimit((subscription as any).quotaMaxProjects, plan.maxProjects)
   const maxDevices = getLimit((subscription as any).quotaMaxDevices, plan.maxDevices)
   const maxMockEndpoints = getLimit((subscription as any).quotaMaxMockEndpoints, plan.maxMockEndpoints)
@@ -163,7 +197,8 @@ export async function getUsageStats(userId: string) {
   const maxBusinessConfigKeys = getLimit((subscription as any).quotaMaxBusinessConfigKeys, plan.maxBusinessConfigKeys)
   const maxLocalizationLanguages = getLimit((subscription as any).quotaMaxLocalizationLanguages, plan.maxLocalizationLanguages)
   const maxLocalizationKeys = getLimit((subscription as any).quotaMaxLocalizationKeys, plan.maxLocalizationKeys)
-  const maxTeamMembers = getLimit((subscription as any).quotaMaxTeamMembers, plan.maxTeamMembers ?? plan.maxSeats)
+  // Safely access maxTeamMembers/maxSeats which might not exist yet
+  const maxTeamMembers = getLimit((subscription as any).quotaMaxTeamMembers, planAny.maxTeamMembers ?? planAny.maxSeats ?? null)
 
   // FIXED: Use currentPeriodStart/currentPeriodEnd instead of trialStartDate/trialEndDate
   const periodStart = subscription.currentPeriodStart

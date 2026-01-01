@@ -168,8 +168,6 @@ export async function getUsageStats(userId: string) {
   // FIXED: Use currentPeriodStart/currentPeriodEnd instead of trialStartDate/trialEndDate
   const periodStart = subscription.currentPeriodStart
   const periodEnd = subscription.currentPeriodEnd
-  
-  const maxTeamMembers = getLimit((subscription as any).quotaMaxTeamMembers, plan.maxTeamMembers ?? plan.maxSeats)
 
   // Count usage for current billing period
   const [mockEndpoints, logs, sessions, crashes, devices, projects, apiEndpoints, apiRequests, businessConfigKeys, localizationLanguages, localizationKeys, teamMembers] = await Promise.all([

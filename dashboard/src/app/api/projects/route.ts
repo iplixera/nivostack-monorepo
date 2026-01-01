@@ -44,7 +44,14 @@ export async function GET(request: NextRequest) {
                 }
               }
             }
-          }
+          },
+          inviter: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
         },
         orderBy: { joinedAt: 'desc' }
       })
@@ -62,6 +69,7 @@ export async function GET(request: NextRequest) {
       projectMap.set(project.id, {
         ...project,
         role: 'owner', // User's role in project
+        invitedBy: null, // Owned projects don't have an inviter
       })
     })
 
@@ -71,6 +79,11 @@ export async function GET(request: NextRequest) {
         projectMap.set(member.project.id, {
           ...member.project,
           role: member.role, // User's role in project
+          invitedBy: member.inviter ? {
+            name: member.inviter.name,
+            email: member.inviter.email,
+          } : null,
+          joinedAt: member.joinedAt,
         })
       }
     })

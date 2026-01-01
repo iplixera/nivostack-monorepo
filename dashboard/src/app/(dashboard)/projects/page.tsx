@@ -11,6 +11,11 @@ type Project = {
   apiKey: string
   createdAt: string
   role?: 'owner' | 'admin' | 'member' | 'viewer' // User's role in the project
+  invitedBy?: {
+    name: string | null
+    email: string
+  } | null // Who invited the user (null for owned projects)
+  joinedAt?: string | null // When user joined (for invited projects)
   _count: {
     devices: number
     logs: number
@@ -186,21 +191,21 @@ export default function ProjectsPage() {
               <Link
                 key={project.id}
                 href={`/projects/${project.id}`}
-                className={`block p-6 rounded-lg transition-colors ${
+                className={`block p-6 rounded-lg transition-all ${
                   isOwned
                     ? 'bg-gray-900 hover:bg-gray-800 border border-gray-800'
-                    : 'bg-gray-900/80 hover:bg-gray-800/80 border border-blue-900/50'
+                    : 'bg-gray-900/80 hover:bg-gray-800/80 border border-blue-900/50 hover:border-blue-800/70'
                 }`}
               >
                 <div className="flex items-start justify-between mb-3">
-                  <h2 className="text-lg font-semibold text-white flex-1">{project.name}</h2>
+                  <h2 className="text-lg font-semibold text-white flex-1 pr-2">{project.name}</h2>
                   {isOwned && (
-                    <span className="ml-2 px-2 py-1 text-xs font-medium rounded bg-purple-900/30 text-purple-400 border border-purple-800/50">
+                    <span className="flex-shrink-0 px-2 py-1 text-xs font-medium rounded bg-purple-900/30 text-purple-400 border border-purple-800/50">
                       Owned
                     </span>
                   )}
                   {isInvited && (
-                    <span className={`ml-2 px-2 py-1 text-xs font-medium rounded ${
+                    <span className={`flex-shrink-0 px-2 py-1 text-xs font-medium rounded ${
                       project.role === 'admin'
                         ? 'bg-blue-900/30 text-blue-400 border border-blue-800/50'
                         : project.role === 'member'
@@ -211,6 +216,19 @@ export default function ProjectsPage() {
                     </span>
                   )}
                 </div>
+                
+                {/* Show inviter info for invited projects */}
+                {isInvited && project.invitedBy && (
+                  <div className="mb-3 text-xs text-gray-500">
+                    Invited by {project.invitedBy.name || project.invitedBy.email}
+                    {project.joinedAt && (
+                      <span className="ml-2">
+                        • Joined {new Date(project.joinedAt).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                )}
+                
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="text-gray-400">
                     <span className="text-white font-medium">{project._count.devices}</span> devices

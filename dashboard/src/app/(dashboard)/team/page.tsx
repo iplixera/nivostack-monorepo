@@ -151,20 +151,24 @@ export default function TeamPage() {
         setPendingInvitationsForUser(invitations)
         
         // Add projects with pending invitations to the projects list (if not already there)
-        const projectIds = new Set(projects.map((p) => p.id))
-        invitations.forEach((inv: PendingInvitationForUser) => {
-          if (!projectIds.has(inv.projectId)) {
-            // Add project to list with role 'member' (they have pending invitation)
-            setProjects((prev) => [
-              ...prev,
-              {
+        // Use functional update to ensure we have the latest projects state
+        setProjects((prevProjects) => {
+          const projectIds = new Set(prevProjects.map((p) => p.id))
+          const newProjects = [...prevProjects]
+          
+          invitations.forEach((inv: PendingInvitationForUser) => {
+            if (!projectIds.has(inv.projectId)) {
+              // Add project to list with role 'member' (they have pending invitation)
+              newProjects.push({
                 id: inv.projectId,
                 name: inv.project.name,
                 role: 'member' as const,
-              },
-            ])
-            projectIds.add(inv.projectId)
-          }
+              })
+              projectIds.add(inv.projectId)
+            }
+          })
+          
+          return newProjects
         })
         
         // If there's a project query parameter and it's in pending invitations, select it
@@ -380,7 +384,8 @@ export default function TeamPage() {
     )
   }
 
-  if (projects.length === 0) {
+  // Show pending invitations even if no projects (but don't show empty state if there are pending invitations)
+  if (projects.length === 0 && pendingInvitationsForUser.length === 0 && !loading) {
     return (
       <div className="space-y-6">
         <div>
@@ -455,21 +460,23 @@ export default function TeamPage() {
         </div>
       )}
 
-      {/* Project Selector */}
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Select Project</label>
-        <select
-          value={selectedProject || ''}
-          onChange={(e) => setSelectedProject(e.target.value)}
-          className="w-full max-w-md px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {projects.map((project) => (
-            <option key={project.id} value={project.id}>
-              {project.name} ({project.role})
-            </option>
-          ))}
-        </select>
-      </div>
+      {/* Project Selector - Show if there are projects (including ones from pending invitations) */}
+      {projects.length > 0 && (
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Select Project</label>
+          <select
+            value={selectedProject || ''}
+            onChange={(e) => setSelectedProject(e.target.value)}
+            className="w-full max-w-md px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.name} ({project.role})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {error && (
         <div className="p-4 bg-red-900/30 border border-red-800 rounded-lg text-red-400 flex items-center justify-between">

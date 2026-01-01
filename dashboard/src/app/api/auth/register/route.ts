@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword, generateToken } from '@/lib/auth'
 import { createSubscription } from '@/lib/subscription'
+import { createInvitationNotification } from '@/lib/notifications'
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,6 +49,59 @@ export async function POST(request: NextRequest) {
       console.error('Failed to create subscription:', error)
       // Don't fail registration if subscription creation fails
       // Subscription can be created manually if needed
+    }
+
+    // Check for pending invitations for this email
+    // This handles the case where a user was invited before they registered
+    try {
+      const pendingInvitations = await prisma.projectInvitation.findMany({
+        where: {
+          email: email.toLowerCase(),
+          status: 'pending',
+          expiresAt: {
+            gt: new Date(), // Not expired
+          },
+        },
+        include: {
+          project: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          inviter: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      })
+
+      // Create notifications for each pending invitation
+      for (const invitation of pendingInvitations) {
+        try {
+          await createInvitationNotification(
+            user.id,
+            invitation.projectId,
+            invitation.id,
+            invitation.project.name,
+            invitation.inviter.name || invitation.inviter.email,
+            invitation.role
+          )
+        } catch (notifError) {
+          console.error('Failed to create invitation notification:', notifError)
+          // Don't fail registration if notification creation fails
+        }
+      }
+
+      if (pendingInvitations.length > 0) {
+        console.log(`Created ${pendingInvitations.length} invitation notification(s) for new user ${user.email}`)
+      }
+    } catch (invitationError) {
+      console.error('Error checking for pending invitations:', invitationError)
+      // Don't fail registration if invitation check fails
     }
 
     const token = generateToken(user.id)

@@ -136,6 +136,54 @@ export default function TeamPage() {
     }
   }
 
+  const fetchPendingInvitations = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch('/api/invitations/pending', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setPendingInvitationsForUser(data.invitations || [])
+      }
+    } catch (err) {
+      console.error('Failed to fetch pending invitations:', err)
+    }
+  }
+
+  const handleAcceptPendingInvitation = async (invitation: PendingInvitationForUser) => {
+    try {
+      setAcceptingInvitation(invitation.id)
+      setError(null)
+      const token = localStorage.getItem('token')
+
+      const response = await fetch(`/api/invitations/${invitation.token}/accept`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Refresh everything
+        await fetchUserProjects()
+        await fetchPendingInvitations()
+        // Select the project
+        setSelectedProject(invitation.projectId)
+        alert('Invitation accepted successfully!')
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Failed to accept invitation')
+      }
+    } catch (err: any) {
+      console.error('Failed to accept invitation:', err)
+      setError(err.message || 'Failed to accept invitation')
+    } finally {
+      setAcceptingInvitation(null)
+    }
+  }
+
   const fetchTeamData = async (projectId: string) => {
     try {
       setLoading(true)

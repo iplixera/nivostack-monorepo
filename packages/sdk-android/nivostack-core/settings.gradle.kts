@@ -15,5 +15,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "nivostack-core"
-include(":nivostack-core")
 

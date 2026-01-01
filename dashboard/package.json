@@ -21,7 +21,8 @@
     "clean:test-data": "tsx ../scripts/clean-test-data.ts",
     "test:plans": "tsx ../tests/admin-plans.test.ts",
     "test:subscriptions": "tsx ../tests/admin-subscriptions.test.ts",
-    "test:generate-data": "tsx ../tests/data-generator.ts"
+    "test:generate-data": "tsx ../tests/data-generator.ts",
+    "backfill:invitations": "tsx ../scripts/backfill-invitation-notifications.ts"
   },
   "prisma": {
     "schema": "../prisma/schema.prisma",

@@ -9,46 +9,46 @@ import { PrismaClient } from '@prisma/client'
  * Uses Prisma's programmatic API to push schema changes
  */
 export async function POST(request: NextRequest) {
-  try {
-    const admin = await validateAdmin(request)
-    if (!admin) {
-      return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 403 })
-    }
-
-    console.log('Running database migrations via Prisma...')
-
     try {
-      // Use Prisma's programmatic API
-      const { PrismaClient: Prisma } = await import('@prisma/client')
-      const prisma = new PrismaClient()
-      
-      // Push schema changes to database
-      // Note: This requires Prisma CLI to be available, but we can use $executeRaw for manual SQL
-      // Instead, we'll use Prisma's migrate API if available, or fall back to manual SQL
-      
-      // For now, we'll execute the necessary SQL directly
-      const results: string[] = []
-      const warnings: string[] = []
+        const admin = await validateAdmin(request)
+        if (!admin) {
+            return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 403 })
+        }
 
-      try {
-        // Add maxTeamMembers and maxSeats to Plan table
-        await prisma.$executeRawUnsafe(`
+        console.log('Running database migrations via Prisma...')
+
+        try {
+            // Use Prisma's programmatic API
+            const { PrismaClient: Prisma } = await import('@prisma/client')
+            const prisma = new PrismaClient()
+
+            // Push schema changes to database
+            // Note: This requires Prisma CLI to be available, but we can use $executeRaw for manual SQL
+            // Instead, we'll use Prisma's migrate API if available, or fall back to manual SQL
+
+            // For now, we'll execute the necessary SQL directly
+            const results: string[] = []
+            const warnings: string[] = []
+
+            try {
+                // Add maxTeamMembers and maxSeats to Plan table
+                await prisma.$executeRawUnsafe(`
           ALTER TABLE "Plan" 
           ADD COLUMN IF NOT EXISTS "maxTeamMembers" INTEGER,
           ADD COLUMN IF NOT EXISTS "maxSeats" INTEGER;
         `)
-        results.push('Added maxTeamMembers and maxSeats to Plan table')
-      } catch (e: any) {
-        if (e.message?.includes('already exists') || e.message?.includes('duplicate')) {
-          warnings.push('Plan columns may already exist')
-        } else {
-          throw e
-        }
-      }
+                results.push('Added maxTeamMembers and maxSeats to Plan table')
+            } catch (e: any) {
+                if (e.message?.includes('already exists') || e.message?.includes('duplicate')) {
+                    warnings.push('Plan columns may already exist')
+                } else {
+                    throw e
+                }
+            }
 
-      // Create ProjectMember table
-      try {
-        await prisma.$executeRawUnsafe(`
+            // Create ProjectMember table
+            try {
+                await prisma.$executeRawUnsafe(`
           CREATE TABLE IF NOT EXISTS "ProjectMember" (
             "id" TEXT NOT NULL,
             "projectId" TEXT NOT NULL,
@@ -63,18 +63,18 @@ export async function POST(request: NextRequest) {
             CONSTRAINT "ProjectMember_projectId_userId_key" UNIQUE ("projectId", "userId")
           );
         `)
-        results.push('Created ProjectMember table')
-      } catch (e: any) {
-        if (e.message?.includes('already exists')) {
-          warnings.push('ProjectMember table may already exist')
-        } else {
-          throw e
-        }
-      }
+                results.push('Created ProjectMember table')
+            } catch (e: any) {
+                if (e.message?.includes('already exists')) {
+                    warnings.push('ProjectMember table may already exist')
+                } else {
+                    throw e
+                }
+            }
 
-      // Create ProjectInvitation table
-      try {
-        await prisma.$executeRawUnsafe(`
+            // Create ProjectInvitation table
+            try {
+                await prisma.$executeRawUnsafe(`
           CREATE TABLE IF NOT EXISTS "ProjectInvitation" (
             "id" TEXT NOT NULL,
             "projectId" TEXT NOT NULL,
@@ -101,18 +101,18 @@ export async function POST(request: NextRequest) {
             CONSTRAINT "ProjectInvitation_token_key" UNIQUE ("token")
           );
         `)
-        results.push('Created ProjectInvitation table')
-      } catch (e: any) {
-        if (e.message?.includes('already exists')) {
-          warnings.push('ProjectInvitation table may already exist')
-        } else {
-          throw e
-        }
-      }
+                results.push('Created ProjectInvitation table')
+            } catch (e: any) {
+                if (e.message?.includes('already exists')) {
+                    warnings.push('ProjectInvitation table may already exist')
+                } else {
+                    throw e
+                }
+            }
 
-      // Create UserNotification table
-      try {
-        await prisma.$executeRawUnsafe(`
+            // Create UserNotification table
+            try {
+                await prisma.$executeRawUnsafe(`
           CREATE TABLE IF NOT EXISTS "UserNotification" (
             "id" TEXT NOT NULL,
             "userId" TEXT NOT NULL,
@@ -127,18 +127,18 @@ export async function POST(request: NextRequest) {
             CONSTRAINT "UserNotification_pkey" PRIMARY KEY ("id")
           );
         `)
-        results.push('Created UserNotification table')
-      } catch (e: any) {
-        if (e.message?.includes('already exists')) {
-          warnings.push('UserNotification table may already exist')
-        } else {
-          throw e
-        }
-      }
+                results.push('Created UserNotification table')
+            } catch (e: any) {
+                if (e.message?.includes('already exists')) {
+                    warnings.push('UserNotification table may already exist')
+                } else {
+                    throw e
+                }
+            }
 
-      // Create UserNotificationPreferences table
-      try {
-        await prisma.$executeRawUnsafe(`
+            // Create UserNotificationPreferences table
+            try {
+                await prisma.$executeRawUnsafe(`
           CREATE TABLE IF NOT EXISTS "UserNotificationPreferences" (
             "id" TEXT NOT NULL,
             "userId" TEXT NOT NULL,
@@ -155,18 +155,18 @@ export async function POST(request: NextRequest) {
             CONSTRAINT "UserNotificationPreferences_userId_key" UNIQUE ("userId")
           );
         `)
-        results.push('Created UserNotificationPreferences table')
-      } catch (e: any) {
-        if (e.message?.includes('already exists')) {
-          warnings.push('UserNotificationPreferences table may already exist')
-        } else {
-          throw e
-        }
-      }
+                results.push('Created UserNotificationPreferences table')
+            } catch (e: any) {
+                if (e.message?.includes('already exists')) {
+                    warnings.push('UserNotificationPreferences table may already exist')
+                } else {
+                    throw e
+                }
+            }
 
-      // Create indexes
-      try {
-        await prisma.$executeRawUnsafe(`
+            // Create indexes
+            try {
+                await prisma.$executeRawUnsafe(`
           CREATE INDEX IF NOT EXISTS "ProjectMember_projectId_idx" ON "ProjectMember"("projectId");
           CREATE INDEX IF NOT EXISTS "ProjectMember_userId_idx" ON "ProjectMember"("userId");
           CREATE INDEX IF NOT EXISTS "ProjectMember_role_idx" ON "ProjectMember"("role");
@@ -179,43 +179,43 @@ export async function POST(request: NextRequest) {
           CREATE INDEX IF NOT EXISTS "UserNotification_type_idx" ON "UserNotification"("type");
           CREATE INDEX IF NOT EXISTS "UserNotificationPreferences_userId_idx" ON "UserNotificationPreferences"("userId");
         `)
-        results.push('Created indexes')
-      } catch (e: any) {
-        warnings.push('Some indexes may already exist')
-      }
+                results.push('Created indexes')
+            } catch (e: any) {
+                warnings.push('Some indexes may already exist')
+            }
 
-      await prisma.$disconnect()
+            await prisma.$disconnect()
 
-      return NextResponse.json({
-        success: true,
-        message: 'Migrations applied successfully',
-        output: results.join('\n'),
-        warnings: warnings.length > 0 ? warnings.join('\n') : null,
-      })
+            return NextResponse.json({
+                success: true,
+                message: 'Migrations applied successfully',
+                output: results.join('\n'),
+                warnings: warnings.length > 0 ? warnings.join('\n') : null,
+            })
+        } catch (error: any) {
+            const errorMessage = error.message || String(error)
+            console.error('Migration error:', errorMessage)
+
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'Migration failed',
+                    error: errorMessage,
+                },
+                { status: 500 }
+            )
+        }
     } catch (error: any) {
-      const errorMessage = error.message || String(error)
-      console.error('Migration error:', errorMessage)
-
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Migration failed',
-          error: errorMessage,
-        },
-        { status: 500 }
-      )
+        console.error('Migration endpoint error:', error)
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Failed to run migrations',
+                error: error.message || String(error),
+            },
+            { status: 500 }
+        )
     }
-  } catch (error: any) {
-    console.error('Migration endpoint error:', error)
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Failed to run migrations',
-        error: error.message || String(error),
-      },
-      { status: 500 }
-    )
-  }
 }
 
 /**
@@ -224,101 +224,101 @@ export async function POST(request: NextRequest) {
  * Returns information about which tables/columns are missing
  */
 export async function GET(request: NextRequest) {
-  try {
-    const admin = await validateAdmin(request)
-    if (!admin) {
-      return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 403 })
-    }
-
-    const { prisma } = await import('@/lib/prisma')
-
-    // Check which tables/columns exist
-    const checks = {
-      projectMember: false,
-      projectInvitation: false,
-      userNotification: false,
-      userNotificationPreferences: false,
-      planMaxTeamMembers: false,
-      planMaxSeats: false,
-    }
-
     try {
-      // Try to query each table/column
-      await prisma.$queryRaw`SELECT 1 FROM "ProjectMember" LIMIT 1`
-      checks.projectMember = true
-    } catch (e: any) {
-      if (!e.message?.includes('does not exist')) {
-        console.warn('Error checking ProjectMember:', e.message)
-      }
+        const admin = await validateAdmin(request)
+        if (!admin) {
+            return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 403 })
+        }
+
+        const { prisma } = await import('@/lib/prisma')
+
+        // Check which tables/columns exist
+        const checks = {
+            projectMember: false,
+            projectInvitation: false,
+            userNotification: false,
+            userNotificationPreferences: false,
+            planMaxTeamMembers: false,
+            planMaxSeats: false,
+        }
+
+        try {
+            // Try to query each table/column
+            await prisma.$queryRaw`SELECT 1 FROM "ProjectMember" LIMIT 1`
+            checks.projectMember = true
+        } catch (e: any) {
+            if (!e.message?.includes('does not exist')) {
+                console.warn('Error checking ProjectMember:', e.message)
+            }
+        }
+
+        try {
+            await prisma.$queryRaw`SELECT 1 FROM "ProjectInvitation" LIMIT 1`
+            checks.projectInvitation = true
+        } catch (e: any) {
+            if (!e.message?.includes('does not exist')) {
+                console.warn('Error checking ProjectInvitation:', e.message)
+            }
+        }
+
+        try {
+            await prisma.$queryRaw`SELECT 1 FROM "UserNotification" LIMIT 1`
+            checks.userNotification = true
+        } catch (e: any) {
+            if (!e.message?.includes('does not exist')) {
+                console.warn('Error checking UserNotification:', e.message)
+            }
+        }
+
+        try {
+            await prisma.$queryRaw`SELECT 1 FROM "UserNotificationPreferences" LIMIT 1`
+            checks.userNotificationPreferences = true
+        } catch (e: any) {
+            if (!e.message?.includes('does not exist')) {
+                console.warn('Error checking UserNotificationPreferences:', e.message)
+            }
+        }
+
+        try {
+            await prisma.$queryRaw`SELECT "maxTeamMembers" FROM "Plan" LIMIT 1`
+            checks.planMaxTeamMembers = true
+        } catch (e: any) {
+            if (!e.message?.includes('does not exist') && !e.message?.includes('column')) {
+                console.warn('Error checking Plan.maxTeamMembers:', e.message)
+            }
+        }
+
+        try {
+            await prisma.$queryRaw`SELECT "maxSeats" FROM "Plan" LIMIT 1`
+            checks.planMaxSeats = true
+        } catch (e: any) {
+            if (!e.message?.includes('does not exist') && !e.message?.includes('column')) {
+                console.warn('Error checking Plan.maxSeats:', e.message)
+            }
+        }
+
+        const allComplete = Object.values(checks).every(v => v === true)
+        const missingItems = Object.entries(checks)
+            .filter(([_, exists]) => !exists)
+            .map(([name]) => name)
+
+        return NextResponse.json({
+            status: allComplete ? 'complete' : 'pending',
+            checks,
+            missingItems,
+            message: allComplete
+                ? 'All migrations are complete'
+                : `Missing: ${missingItems.join(', ')}`,
+        })
+    } catch (error: any) {
+        console.error('Migration status check error:', error)
+        return NextResponse.json(
+            {
+                status: 'error',
+                error: error.message || String(error),
+            },
+            { status: 500 }
+        )
     }
-
-    try {
-      await prisma.$queryRaw`SELECT 1 FROM "ProjectInvitation" LIMIT 1`
-      checks.projectInvitation = true
-    } catch (e: any) {
-      if (!e.message?.includes('does not exist')) {
-        console.warn('Error checking ProjectInvitation:', e.message)
-      }
-    }
-
-    try {
-      await prisma.$queryRaw`SELECT 1 FROM "UserNotification" LIMIT 1`
-      checks.userNotification = true
-    } catch (e: any) {
-      if (!e.message?.includes('does not exist')) {
-        console.warn('Error checking UserNotification:', e.message)
-      }
-    }
-
-    try {
-      await prisma.$queryRaw`SELECT 1 FROM "UserNotificationPreferences" LIMIT 1`
-      checks.userNotificationPreferences = true
-    } catch (e: any) {
-      if (!e.message?.includes('does not exist')) {
-        console.warn('Error checking UserNotificationPreferences:', e.message)
-      }
-    }
-
-    try {
-      await prisma.$queryRaw`SELECT "maxTeamMembers" FROM "Plan" LIMIT 1`
-      checks.planMaxTeamMembers = true
-    } catch (e: any) {
-      if (!e.message?.includes('does not exist') && !e.message?.includes('column')) {
-        console.warn('Error checking Plan.maxTeamMembers:', e.message)
-      }
-    }
-
-    try {
-      await prisma.$queryRaw`SELECT "maxSeats" FROM "Plan" LIMIT 1`
-      checks.planMaxSeats = true
-    } catch (e: any) {
-      if (!e.message?.includes('does not exist') && !e.message?.includes('column')) {
-        console.warn('Error checking Plan.maxSeats:', e.message)
-      }
-    }
-
-    const allComplete = Object.values(checks).every(v => v === true)
-    const missingItems = Object.entries(checks)
-      .filter(([_, exists]) => !exists)
-      .map(([name]) => name)
-
-    return NextResponse.json({
-      status: allComplete ? 'complete' : 'pending',
-      checks,
-      missingItems,
-      message: allComplete
-        ? 'All migrations are complete'
-        : `Missing: ${missingItems.join(', ')}`,
-    })
-  } catch (error: any) {
-    console.error('Migration status check error:', error)
-    return NextResponse.json(
-      {
-        status: 'error',
-        error: error.message || String(error),
-      },
-      { status: 500 }
-    )
-  }
 }
 

@@ -45,7 +45,7 @@ function MigrationManager({ token }: { token: string | null }) {
       setRunning(true)
       setMessage('Running migrations...')
       const result = await api.admin.runMigrations(token)
-      
+
       if (result.success) {
         setMessage(`✅ ${result.message}`)
         // Reload status after a short delay
@@ -82,15 +82,14 @@ function MigrationManager({ token }: { token: string | null }) {
       <button
         onClick={needsMigration ? runMigrations : loadStatus}
         disabled={running || loading}
-        className={`px-4 py-2 rounded-lg transition-colors text-sm disabled:opacity-50 ${
-          needsMigration
+        className={`px-4 py-2 rounded-lg transition-colors text-sm disabled:opacity-50 ${needsMigration
             ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
             : 'bg-gray-800 hover:bg-gray-700 text-white'
-        }`}
+          }`}
       >
         {running ? 'Running...' : needsMigration ? 'Run Migrations' : '✓ Migrations OK'}
       </button>
-      
+
       {message && (
         <div className="absolute top-full left-0 mt-2 w-96 bg-gray-900 border border-gray-700 rounded-lg p-4 shadow-xl z-50">
           <div className="text-sm text-white whitespace-pre-wrap">{message}</div>
@@ -217,31 +216,28 @@ export default function AdminDashboardPage() {
         <nav className="flex space-x-8">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === 'overview'
+            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'overview'
                 ? 'border-blue-500 text-blue-400'
                 : 'border-transparent text-gray-400 hover:text-gray-300'
-            }`}
+              }`}
           >
             Overview
           </button>
           <button
             onClick={() => setActiveTab('analytics')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === 'analytics'
+            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'analytics'
                 ? 'border-blue-500 text-blue-400'
                 : 'border-transparent text-gray-400 hover:text-gray-300'
-            }`}
+              }`}
           >
             Analytics
           </button>
           <button
             onClick={() => setActiveTab('forecast')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === 'forecast'
+            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'forecast'
                 ? 'border-blue-500 text-blue-400'
                 : 'border-transparent text-gray-400 hover:text-gray-300'
-            }`}
+              }`}
           >
             Forecasting
           </button>
@@ -517,11 +513,10 @@ function AnalyticsView({
                 setActiveSection('atRisk')
                 setCurrentPage(1)
               }}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                activeSection === 'atRisk'
+              className={`px-4 py-2 text-sm font-medium transition-colors ${activeSection === 'atRisk'
                   ? 'border-b-2 border-blue-500 text-blue-400'
                   : 'text-gray-400 hover:text-gray-300'
-              }`}
+                }`}
             >
               At Risk ({filteredAtRiskUsers.length})
             </button>
@@ -530,11 +525,10 @@ function AnalyticsView({
                 setActiveSection('atLimit')
                 setCurrentPage(1)
               }}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                activeSection === 'atLimit'
+              className={`px-4 py-2 text-sm font-medium transition-colors ${activeSection === 'atLimit'
                   ? 'border-b-2 border-blue-500 text-blue-400'
                   : 'text-gray-400 hover:text-gray-300'
-              }`}
+                }`}
             >
               At Limit ({filteredAtLimitUsers.length})
             </button>
@@ -543,11 +537,10 @@ function AnalyticsView({
                 setActiveSection('conversions')
                 setCurrentPage(1)
               }}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                activeSection === 'conversions'
+              className={`px-4 py-2 text-sm font-medium transition-colors ${activeSection === 'conversions'
                   ? 'border-b-2 border-blue-500 text-blue-400'
                   : 'text-gray-400 hover:text-gray-300'
-              }`}
+                }`}
             >
               Conversions ({filteredConversionOpps.length})
             </button>
@@ -616,13 +609,12 @@ function AnalyticsView({
                             </span>
                             <div className="w-24 bg-gray-800 rounded-full h-2">
                               <div
-                                className={`h-2 rounded-full ${
-                                  user.highestUsage.percentage >= 100
+                                className={`h-2 rounded-full ${user.highestUsage.percentage >= 100
                                     ? 'bg-red-600'
                                     : user.highestUsage.percentage >= 90
-                                    ? 'bg-yellow-600'
-                                    : 'bg-blue-600'
-                                }`}
+                                      ? 'bg-yellow-600'
+                                      : 'bg-blue-600'
+                                  }`}
                                 style={{ width: `${Math.min(100, user.highestUsage.percentage)}%` }}
                               />
                             </div>
@@ -633,13 +625,12 @@ function AnalyticsView({
                             {Object.entries(user.allMeters).slice(0, 2).map(([key, meter]: [string, any]) => (
                               <span
                                 key={key}
-                                className={`text-xs px-2 py-1 rounded ${
-                                  meter.percentage >= 100
+                                className={`text-xs px-2 py-1 rounded ${meter.percentage >= 100
                                     ? 'bg-red-900/30 text-red-400'
                                     : meter.percentage >= 80
-                                    ? 'bg-yellow-900/30 text-yellow-400'
-                                    : 'bg-gray-800 text-gray-400'
-                                }`}
+                                      ? 'bg-yellow-900/30 text-yellow-400'
+                                      : 'bg-gray-800 text-gray-400'
+                                  }`}
                               >
                                 {key}: {meter.percentage.toFixed(0)}%
                               </span>

@@ -37,6 +37,12 @@ interface Invitation {
   resendCount: number
 }
 
+interface SeatInfo {
+  current: number
+  limit: number | null
+  allowed: boolean
+}
+
 export default function TeamTab({ projectId }: { projectId: string }) {
   const { user } = useAuth()
   const [members, setMembers] = useState<TeamMember[]>([])
@@ -47,6 +53,7 @@ export default function TeamTab({ projectId }: { projectId: string }) {
   const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member')
   const [inviting, setInviting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [seatInfo, setSeatInfo] = useState<SeatInfo | null>(null)
 
   useEffect(() => {
     fetchTeamData()
@@ -57,12 +64,13 @@ export default function TeamTab({ projectId }: { projectId: string }) {
       setLoading(true)
       const token = localStorage.getItem('token')
 
-      // Fetch members
+      // Fetch members (includes seat info)
       const membersRes = await fetch(`/api/projects/${projectId}/members`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       const membersData = await membersRes.json()
       setMembers(membersData.members || [])
+      setSeatInfo(membersData.seatInfo || null)
 
       // Fetch invitations
       const invitationsRes = await fetch(`/api/projects/${projectId}/invitations`, {
@@ -234,6 +242,14 @@ export default function TeamTab({ projectId }: { projectId: string }) {
         <div>
           <h2 className="text-2xl font-bold text-white">Team</h2>
           <p className="text-gray-400 mt-1">Manage team members and invitations</p>
+          {seatInfo && seatInfo.limit !== null && (
+            <p className="text-sm text-gray-500 mt-1">
+              Seats: {seatInfo.current} / {seatInfo.limit}
+              {seatInfo.current >= seatInfo.limit && (
+                <span className="ml-2 text-red-400">(Limit reached)</span>
+              )}
+            </p>
+          )}
         </div>
         {error && (
           <div className="flex-1 max-w-md mx-4 p-3 bg-red-900/30 border border-red-800 rounded text-red-400 text-sm">

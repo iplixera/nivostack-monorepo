@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser } from '@/lib/auth'
-import { canPerformAction, getProjectMembers } from '@/lib/team-access'
+import { canPerformAction, getProjectMembers, checkSeatLimit } from '@/lib/team-access'
 
 /**
  * GET /api/projects/[id]/members
@@ -27,6 +27,9 @@ export async function GET(
 
     // Get members
     const members = await getProjectMembers(projectId)
+
+    // Get seat limit info
+    const seatCheck = await checkSeatLimit(projectId)
 
     // Get inviter names for members
     const membersWithInviter = await Promise.all(
@@ -62,6 +65,11 @@ export async function GET(
 
     return NextResponse.json({
       members: membersWithInviter,
+      seatInfo: {
+        current: seatCheck.current,
+        limit: seatCheck.limit,
+        allowed: seatCheck.allowed,
+      },
     })
   } catch (error) {
     console.error('Get members error:', error)

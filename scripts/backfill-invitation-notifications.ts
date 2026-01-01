@@ -119,8 +119,9 @@ async function backfillInvitationNotifications() {
               projectId: invitation.projectId,
               invitationId: invitation.id,
               role: invitation.role,
+              token: invitation.token, // Include token for direct acceptance
             },
-            actionUrl: `/projects/${invitation.projectId}/invitations/${invitation.id}`,
+            actionUrl: `/team?project=${invitation.projectId}`, // Link to team page
           },
         })
 

@@ -236,7 +236,8 @@ export async function POST(
           invitation.id,
           invitation.project.name,
           user.name || user.email,
-          role
+          role,
+          invitation.token // Pass token for direct acceptance
         )
       } catch (notifErr) {
         console.warn('Could not create notification:', notifErr)

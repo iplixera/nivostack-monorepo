@@ -42,7 +42,8 @@ export async function createInvitationNotification(
   invitationId: string,
   projectName: string,
   inviterName: string,
-  role: string
+  role: string,
+  invitationToken?: string
 ) {
   return await createNotification({
     userId,
@@ -53,8 +54,9 @@ export async function createInvitationNotification(
       projectId,
       invitationId,
       role,
+      token: invitationToken, // Include token for direct acceptance
     },
-    actionUrl: `/projects/${projectId}/invitations/${invitationId}`,
+    actionUrl: `/team?project=${projectId}`, // Link to team page where they can accept
   })
 }
 

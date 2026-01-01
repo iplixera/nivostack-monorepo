@@ -123,9 +123,46 @@ export default function NotificationBell() {
       await markAsRead(notification.id)
     }
 
+    // Handle invitation notifications specially - accept directly
+    if (notification.type === 'invitation' && notification.data?.token) {
+      setIsOpen(false)
+      await handleAcceptInvitation(notification.data.token, notification.data.projectId)
+      return
+    }
+
     if (notification.actionUrl) {
       setIsOpen(false)
       router.push(notification.actionUrl)
+    }
+  }
+
+  const handleAcceptInvitation = async (token: string, projectId: string) => {
+    try {
+      const authToken = localStorage.getItem('token')
+      const response = await fetch(`/api/invitations/${token}/accept`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Refresh notifications to remove accepted one
+        fetchNotifications()
+        // Navigate to project or show success
+        router.push(`/projects/${projectId}`)
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to accept invitation')
+        // Navigate to team page as fallback
+        router.push('/team')
+      }
+    } catch (error) {
+      console.error('Failed to accept invitation:', error)
+      alert('Failed to accept invitation. Please try again.')
+      // Navigate to team page as fallback
+      router.push('/team')
     }
   }
 

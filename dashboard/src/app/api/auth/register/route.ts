@@ -93,7 +93,8 @@ export async function POST(request: NextRequest) {
             invitation.id,
             invitation.project.name,
             invitation.inviter.name || invitation.inviter.email,
-            invitation.role
+            invitation.role,
+            invitation.token // Pass token for direct acceptance
           )
         } catch (notifError) {
           console.error('Failed to create invitation notification:', notifError)

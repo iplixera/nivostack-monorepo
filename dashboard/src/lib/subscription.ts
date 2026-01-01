@@ -315,6 +315,11 @@ export async function getUsageStats(userId: string) {
       limit: maxLocalizationKeys,
       percentage: maxLocalizationKeys ? (localizationKeys / maxLocalizationKeys) * 100 : 0,
     },
+    teamMembers: {
+      used: teamMembers,
+      limit: maxTeamMembers,
+      percentage: maxTeamMembers ? (teamMembers / maxTeamMembers) * 100 : 0,
+    },
     trialActive: await isTrialActive(subscription),
     trialEndDate: subscription.trialEndDate,
     currentPeriodStart: subscription.currentPeriodStart,

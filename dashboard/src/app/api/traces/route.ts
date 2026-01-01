@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { validateApiKey, getAuthUser } from '@/lib/auth'
 import { validateSubscription, validateFeature } from '@/lib/subscription-validation'
 import { checkThrottling } from '@/lib/throttling'
+import { canPerformAction } from '@/lib/team-access'
 
 // Default values for settings
 const DEFAULT_SDK_SETTINGS = {

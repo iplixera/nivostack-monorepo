@@ -11,9 +11,21 @@
 # next.js
 /.next/
 /out/
+**/.next/
+**/out/
 
 # production
 /build
+**/build/
+**/.gradle/
+
+# Android build artifacts
+**/local.properties
+**/*.apk
+**/*.aar
+
+# Dependencies (all node_modules everywhere)
+**/node_modules/
 
 # misc
 .DS_Store

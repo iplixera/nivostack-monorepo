@@ -160,6 +160,8 @@ export default function SubscriptionPage() {
           maxBusinessConfigKeys: plan.maxBusinessConfigKeys,
           maxLocalizationLanguages: plan.maxLocalizationLanguages,
           maxLocalizationKeys: plan.maxLocalizationKeys,
+          maxTeamMembers: plan.maxTeamMembers ?? plan.maxSeats,
+          maxSeats: plan.maxSeats ?? plan.maxTeamMembers,
           retentionDays: plan.retentionDays,
           allowCustomDomains: plan.allowCustomDomains,
           allowWebhooks: plan.allowWebhooks,
@@ -444,6 +446,9 @@ export default function SubscriptionPage() {
                 )}
                 {usage.localizationKeys && (
                   <UsageCard label="Localization Keys" used={usage.localizationKeys.used} limit={usage.localizationKeys.limit} />
+                )}
+                {usage.teamMembers && (
+                  <UsageCard label="Team Members" used={usage.teamMembers.used} limit={usage.teamMembers.limit} />
                 )}
               </div>
             </div>

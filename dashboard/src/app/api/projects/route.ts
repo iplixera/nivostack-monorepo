@@ -11,7 +11,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const projects = await prisma.project.findMany({
+    // Get projects where user is owner (legacy)
+    const ownedProjects = await prisma.project.findMany({
       where: { userId: user.id },
       include: {
         _count: {
@@ -25,6 +26,49 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { createdAt: 'desc' }
     })
+
+    // Get projects where user is a member
+    const memberProjects = await prisma.projectMember.findMany({
+      where: { userId: user.id },
+      include: {
+        project: {
+          include: {
+            _count: {
+              select: {
+                devices: true,
+                logs: true,
+                crashes: true,
+                apiTraces: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: { joinedAt: 'desc' }
+    })
+
+    // Combine and deduplicate (user might be both owner and member)
+    const projectMap = new Map()
+
+    // Add owned projects
+    ownedProjects.forEach((project) => {
+      projectMap.set(project.id, {
+        ...project,
+        role: 'owner', // User's role in project
+      })
+    })
+
+    // Add member projects (don't override if already owner)
+    memberProjects.forEach((member) => {
+      if (!projectMap.has(member.project.id)) {
+        projectMap.set(member.project.id, {
+          ...member.project,
+          role: member.role, // User's role in project
+        })
+      }
+    })
+
+    const projects = Array.from(projectMap.values())
 
     return NextResponse.json({ projects })
   } catch (error) {
@@ -94,7 +138,18 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ project })
+    // Create ProjectMember entry for owner
+    await prisma.projectMember.create({
+      data: {
+        projectId: project.id,
+        userId: user.id,
+        role: 'owner',
+        invitedAt: new Date(),
+        joinedAt: new Date(),
+      },
+    })
+
+    return NextResponse.json({ project: { ...project, role: 'owner' } })
   } catch (error) {
     console.error('Create project error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

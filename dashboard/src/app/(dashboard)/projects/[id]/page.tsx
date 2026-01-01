@@ -621,6 +621,7 @@ export default function ProjectDetailPage() {
   const [featureFlagsLoading, setFeatureFlagsLoading] = useState(false)
   const [sdkSettings, setSdkSettings] = useState<SdkSettings | null>(null)
   const [sdkSettingsLoading, setSdkSettingsLoading] = useState(false)
+  const [sdkSettingsError, setSdkSettingsError] = useState<boolean>(false)
   const [newSensitivePattern, setNewSensitivePattern] = useState('')
   const [standardErrorCodes, setStandardErrorCodes] = useState<{ client: number[]; server: number[] }>({ client: [], server: [] })
   const [showAddAlert, setShowAddAlert] = useState(false)
@@ -861,6 +862,7 @@ export default function ProjectDetailPage() {
     }
     console.log('🔧 fetchSdkSettings: Starting fetch', { projectId })
     setSdkSettingsLoading(true)
+    setSdkSettingsError(false) // Reset error state on new fetch
     try {
       const url = `/api/sdk-settings?projectId=${projectId}`
       console.log('🔧 fetchSdkSettings: Fetching from', url)
@@ -879,6 +881,7 @@ export default function ProjectDetailPage() {
           errorData
         })
         setSdkSettings(null)
+        setSdkSettingsError(true) // Set error flag to prevent retries
         return
       }
       
@@ -889,13 +892,16 @@ export default function ProjectDetailPage() {
       if (data.settings) {
         console.log('✅ fetchSdkSettings: Setting SDK settings', data.settings)
         setSdkSettings(data.settings)
+        setSdkSettingsError(false) // Clear error on success
       } else {
         console.warn('⚠️ SDK settings response missing settings field:', data)
         setSdkSettings(null)
+        setSdkSettingsError(true) // Set error flag
       }
     } catch (error) {
       console.error('❌ Failed to fetch SDK settings:', error)
       setSdkSettings(null)
+      setSdkSettingsError(true) // Set error flag to prevent retries
     } finally {
       setSdkSettingsLoading(false)
       console.log('🔧 fetchSdkSettings: Loading complete')
@@ -1626,28 +1632,33 @@ export default function ProjectDetailPage() {
   useEffect(() => {
     if ((activeTab === 'devices' || activeTab === 'traces' || activeTab === 'settings') && !loading) {
       // Only fetch if we don't have settings yet and we're not already loading
-      if (!sdkSettings && !sdkSettingsLoading) {
+      // Add a flag to prevent infinite retries on error
+      if (!sdkSettings && !sdkSettingsLoading && !sdkSettingsError) {
         console.log('🔧 useEffect: Fetching SDK settings for tab', activeTab)
         fetchSdkSettings()
       } else {
         console.log('🔧 useEffect: Skipping fetch', {
           hasSdkSettings: !!sdkSettings,
           sdkSettingsLoading,
+          sdkSettingsError,
           activeTab
         })
       }
     }
-  }, [activeTab, loading, sdkSettings, sdkSettingsLoading])
+  }, [activeTab, loading, sdkSettings, sdkSettingsLoading, sdkSettingsError])
 
   // Fetch settings when settings tab is selected
   useEffect(() => {
     if (activeTab === 'settings' && !loading) {
       fetchSettings()
       fetchFeatureFlags()
-      fetchSdkSettings()
+      // Only fetch SDK settings if we don't have an error (to prevent retry loop)
+      if (!sdkSettingsError) {
+        fetchSdkSettings()
+      }
       fetchSubscriptionStatus()
     }
-  }, [activeTab, loading])
+  }, [activeTab, loading, sdkSettingsError])
 
   // Fetch monitored errors when monitor tab is selected or filter changes
   useEffect(() => {

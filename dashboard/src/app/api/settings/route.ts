@@ -88,12 +88,15 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Missing projectId' }, { status: 400 })
     }
 
-    // Verify project ownership
-    const project = await prisma.project.findFirst({
-      where: {
-        id: projectId,
-        userId: payload.userId
-      }
+    // Verify user can manage settings (owner or admin only)
+    const canManage = await canPerformAction(payload.userId, projectId, 'manage_settings')
+    if (!canManage) {
+      return NextResponse.json({ error: 'Permission denied. Only owners and admins can update notification settings.' }, { status: 403 })
+    }
+
+    // Verify project exists
+    const project = await prisma.project.findUnique({
+      where: { id: projectId }
     })
 
     if (!project) {

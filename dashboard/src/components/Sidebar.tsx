@@ -71,7 +71,6 @@ export default function Sidebar({
       header: 'Settings',
       items: [
         { label: 'Project Settings', tab: 'settings', onClick: () => onTabChange?.('settings') },
-        { label: 'Team', tab: 'team', onClick: () => onTabChange?.('team') },
       ],
     },
   ]

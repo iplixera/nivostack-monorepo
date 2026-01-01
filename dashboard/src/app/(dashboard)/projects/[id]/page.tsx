@@ -11,7 +11,6 @@ import { SkeletonDeviceList, SkeletonSessionList, SkeletonLogList, SkeletonTrace
 import { DeviceCard, LogItem, TraceItem } from '@/components/ListItems'
 import BusinessConfigTab from '@/components/BusinessConfigTab'
 import LocalizationTab from '@/components/LocalizationTab'
-import TeamTab from '@/components/TeamTab'
 import MocksPage from './mocks/page'
 import Sidebar from '@/components/Sidebar'
 import DeviceComparison from '@/components/DeviceComparison'
@@ -132,7 +131,7 @@ type TraceDevice = {
   model: string
 }
 
-type Tab = 'devices' | 'logs' | 'crashes' | 'traces' | 'flow' | 'config' | 'analytics' | 'monitor' | 'settings' | 'setup' | 'business-config' | 'localization' | 'mocks' | 'team'
+type Tab = 'devices' | 'logs' | 'crashes' | 'traces' | 'flow' | 'config' | 'analytics' | 'monitor' | 'settings' | 'setup' | 'business-config' | 'localization' | 'mocks'
 
 type ApiConfig = {
   id: string
@@ -7273,10 +7272,6 @@ export default function ProjectDetailPage() {
               token={token}
               sharedUsage={sharedUsage}
             />
-          )}
-
-          {activeTab === 'team' && token && (
-            <TeamTab projectId={projectId} />
           )}
 
           {activeTab === 'mocks' && token && (

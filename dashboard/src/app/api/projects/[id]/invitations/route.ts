@@ -190,7 +190,7 @@ export async function POST(
       invitation = await prisma.projectInvitation.create({
         data: {
           projectId,
-          email,
+          email: email.toLowerCase(), // Normalize email to lowercase for consistent matching
           role,
           token,
           invitedBy: user.id,

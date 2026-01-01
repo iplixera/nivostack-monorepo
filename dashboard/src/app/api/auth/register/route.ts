@@ -53,10 +53,15 @@ export async function POST(request: NextRequest) {
 
     // Check for pending invitations for this email
     // This handles the case where a user was invited before they registered
+    // Use case-insensitive email matching
     try {
+      const emailLower = email.toLowerCase()
       const pendingInvitations = await prisma.projectInvitation.findMany({
         where: {
-          email: email.toLowerCase(),
+          email: {
+            equals: emailLower,
+            mode: 'insensitive', // Case-insensitive matching
+          },
           status: 'pending',
           expiresAt: {
             gt: new Date(), // Not expired

@@ -218,6 +218,10 @@ export async function DELETE(
       await tx.featureFlags.deleteMany({ where: { projectId: id } })
       await tx.sdkSettings.deleteMany({ where: { projectId: id } })
 
+      // Delete team members and invitations
+      await tx.projectMember.deleteMany({ where: { projectId: id } })
+      await tx.projectInvitation.deleteMany({ where: { projectId: id } })
+
       // Step 3: Delete the project itself
       // Note: Devices are NOT deleted - they are marked as deleted (status='deleted') above
       // We need to set projectId to null to break the foreign key constraint

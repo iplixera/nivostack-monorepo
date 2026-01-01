@@ -121,22 +121,31 @@ export default function TeamTab({ projectId }: { projectId: string }) {
 
   const handleResendInvitation = async (invitationId: string) => {
     try {
+      setError(null)
       const token = localStorage.getItem('token')
       const response = await fetch(`/api/projects/${projectId}/invitations/${invitationId}/resend`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       })
 
+      const data = await response.json()
+
       if (response.ok) {
         await fetchTeamData()
+      } else {
+        setError(data.error || 'Failed to resend invitation')
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to resend invitation:', err)
+      setError(err.message || 'Failed to resend invitation')
     }
   }
 
   const handleCancelInvitation = async (invitationId: string) => {
-    if (!confirm('Are you sure you want to cancel this invitation?')) return
+    const invitation = invitations.find((i) => i.id === invitationId)
+    if (!invitation) return
+
+    if (!confirm(`Are you sure you want to cancel the invitation to ${invitation.email}?`)) return
 
     try {
       const token = localStorage.getItem('token')
@@ -145,16 +154,25 @@ export default function TeamTab({ projectId }: { projectId: string }) {
         headers: { Authorization: `Bearer ${token}` },
       })
 
+      const data = await response.json()
+
       if (response.ok) {
         await fetchTeamData()
+        setError(null)
+      } else {
+        setError(data.error || 'Failed to cancel invitation')
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to cancel invitation:', err)
+      setError(err.message || 'Failed to cancel invitation')
     }
   }
 
   const handleRemoveMember = async (memberId: string) => {
-    if (!confirm('Are you sure you want to remove this member?')) return
+    const member = members.find((m) => m.id === memberId)
+    if (!member) return
+
+    if (!confirm(`Are you sure you want to remove ${member.user.name || member.user.email} from this project?`)) return
 
     try {
       const token = localStorage.getItem('token')
@@ -163,11 +181,17 @@ export default function TeamTab({ projectId }: { projectId: string }) {
         headers: { Authorization: `Bearer ${token}` },
       })
 
+      const data = await response.json()
+
       if (response.ok) {
         await fetchTeamData()
+        setError(null)
+      } else {
+        setError(data.error || 'Failed to remove member')
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to remove member:', err)
+      setError(err.message || 'Failed to remove member')
     }
   }
 
@@ -211,6 +235,17 @@ export default function TeamTab({ projectId }: { projectId: string }) {
           <h2 className="text-2xl font-bold text-white">Team</h2>
           <p className="text-gray-400 mt-1">Manage team members and invitations</p>
         </div>
+        {error && (
+          <div className="flex-1 max-w-md mx-4 p-3 bg-red-900/30 border border-red-800 rounded text-red-400 text-sm">
+            {error}
+            <button
+              onClick={() => setError(null)}
+              className="ml-2 text-red-300 hover:text-red-200"
+            >
+              ×
+            </button>
+          </div>
+        )}
         {canInvite && (
           <button
             onClick={() => setShowInviteModal(true)}

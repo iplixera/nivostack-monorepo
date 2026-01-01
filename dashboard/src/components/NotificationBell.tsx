@@ -118,14 +118,14 @@ export default function NotificationBell() {
     }
   }
 
-  const handleNotificationClick = (notification: Notification) => {
+  const handleNotificationClick = async (notification: Notification) => {
     if (!notification.read) {
-      markAsRead(notification.id)
+      await markAsRead(notification.id)
     }
 
     if (notification.actionUrl) {
-      router.push(notification.actionUrl)
       setIsOpen(false)
+      router.push(notification.actionUrl)
     }
   }
 

@@ -6,7 +6,7 @@
     "dev": "next dev",
     "_deploy": "echo deploy",
     "migrate": "bash scripts/run-prisma-safe.sh push || echo 'Migration skipped'",
-    "build": "bash scripts/run-prisma-safe.sh generate && (bash scripts/run-prisma-safe.sh push || echo '⚠️  Migration skipped - will run on first API request') && next build --webpack",
+    "build": "bash ../scripts/vercel-build.sh",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "echo 'Skipping prisma generate in postinstall'",

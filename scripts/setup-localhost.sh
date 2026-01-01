@@ -12,6 +12,11 @@ echo ""
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+# Ensure local database configuration (enforced)
+echo "🔒 Enforcing local database configuration..."
+bash scripts/ensure-local-database.sh
+echo ""
+
 # Check if .env.local exists
 if [ ! -f ".env.local" ]; then
     echo "📝 Creating .env.local file..."
@@ -43,9 +48,15 @@ else
     done
     echo ""
     
-    # Use localhost database for local development
-    echo "📋 Adding localhost database credentials for local development..."
+    # ALWAYS use localhost database for local development
+    echo "📋 Configuring localhost database (REQUIRED for development)..."
     echo ""
+    
+    # Remove any existing POSTGRES entries (local or remote)
+    echo "   Cleaning existing database configuration..."
+    sed -i.bak '/^POSTGRES_PRISMA_URL/d' .env.local 2>/dev/null || true
+    sed -i.bak '/^POSTGRES_URL_NON_POOLING/d' .env.local 2>/dev/null || true
+    sed -i.bak '/^#.*POSTGRES/d' .env.local 2>/dev/null || true
     
     # Check if docker-compose.yml exists
     if [ -f "docker-compose.yml" ]; then
@@ -53,20 +64,14 @@ else
         echo "   📋 Using localhost PostgreSQL (port 5433)"
         echo ""
         
-        # Check if variables already exist (commented out)
-        if grep -q "^#.*POSTGRES_PRISMA_URL" .env.local 2>/dev/null; then
-            echo "   Found commented POSTGRES_PRISMA_URL, uncommenting..."
-            sed -i.bak 's/^#.*POSTGRES_PRISMA_URL/POSTGRES_PRISMA_URL/' .env.local 2>/dev/null || true
-        else
-            echo "   Adding localhost database URLs..."
-            cat >> .env.local << 'EOF'
+        cat >> .env.local << 'EOF'
 
 # Database Configuration (Localhost for local development)
-# Using Docker PostgreSQL from docker-compose.yml
+# ALWAYS uses local Docker PostgreSQL - DO NOT use remote databases for localhost
+# Using Docker PostgreSQL from docker-compose.yml (port 5433)
 POSTGRES_PRISMA_URL=postgresql://postgres:devbridge_local_password@localhost:5433/devbridge
 POSTGRES_URL_NON_POOLING=postgresql://postgres:devbridge_local_password@localhost:5433/devbridge
 EOF
-        fi
     else
         echo "   ⚠️  docker-compose.yml not found"
         echo "   📋 Using localhost PostgreSQL (assuming default port 5432)"
@@ -74,6 +79,7 @@ EOF
         cat >> .env.local << 'EOF'
 
 # Database Configuration (Localhost for local development)
+# ALWAYS uses local PostgreSQL - DO NOT use remote databases for localhost
 # Update these if your local PostgreSQL uses different credentials
 POSTGRES_PRISMA_URL=postgresql://postgres:postgres@localhost:5432/nivostack
 POSTGRES_URL_NON_POOLING=postgresql://postgres:postgres@localhost:5432/nivostack

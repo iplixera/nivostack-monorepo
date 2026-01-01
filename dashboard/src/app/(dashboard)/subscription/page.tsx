@@ -64,6 +64,7 @@ type UsageStats = {
   businessConfigKeys?: { used: number; limit: number | null; percentage: number }
   localizationLanguages?: { used: number; limit: number | null; percentage: number }
   localizationKeys?: { used: number; limit: number | null; percentage: number }
+  teamMembers?: { used: number; limit: number | null; percentage: number }
   trialActive: boolean
   trialEndDate: string
   daysRemaining: number

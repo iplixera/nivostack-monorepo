@@ -163,13 +163,16 @@ export async function getUsageStats(userId: string) {
   const maxBusinessConfigKeys = getLimit((subscription as any).quotaMaxBusinessConfigKeys, plan.maxBusinessConfigKeys)
   const maxLocalizationLanguages = getLimit((subscription as any).quotaMaxLocalizationLanguages, plan.maxLocalizationLanguages)
   const maxLocalizationKeys = getLimit((subscription as any).quotaMaxLocalizationKeys, plan.maxLocalizationKeys)
+  const maxTeamMembers = getLimit((subscription as any).quotaMaxTeamMembers, plan.maxTeamMembers ?? plan.maxSeats)
 
   // FIXED: Use currentPeriodStart/currentPeriodEnd instead of trialStartDate/trialEndDate
   const periodStart = subscription.currentPeriodStart
   const periodEnd = subscription.currentPeriodEnd
+  
+  const maxTeamMembers = getLimit((subscription as any).quotaMaxTeamMembers, plan.maxTeamMembers ?? plan.maxSeats)
 
   // Count usage for current billing period
-  const [mockEndpoints, logs, sessions, crashes, devices, projects, apiEndpoints, apiRequests, businessConfigKeys, localizationLanguages, localizationKeys] = await Promise.all([
+  const [mockEndpoints, logs, sessions, crashes, devices, projects, apiEndpoints, apiRequests, businessConfigKeys, localizationLanguages, localizationKeys, teamMembers] = await Promise.all([
     // Mock Endpoints: Lifetime meter (never reset)
     prisma.mockEndpoint.count({
       where: {
@@ -234,6 +237,26 @@ export async function getUsageStats(userId: string) {
     prisma.localizationKey.count({
       where: { project: { userId } },
     }),
+    // Team Members: Count all members across all projects owned by user
+    // This includes the owner + all invited members
+    (async () => {
+      const ownedProjects = await prisma.project.findMany({
+        where: { userId },
+        select: { id: true },
+      })
+      const projectIds = ownedProjects.map(p => p.id)
+      if (projectIds.length === 0) return 0
+      
+      // Count unique members across all owned projects (including owners)
+      const memberCount = await prisma.projectMember.count({
+        where: { projectId: { in: projectIds } },
+        distinct: ['userId'],
+      })
+      
+      // Also count projects where user is the owner (if not already counted as member)
+      // Since owners might not have ProjectMember entries, we count them separately
+      return Math.max(memberCount, projectIds.length) // At least one member per project (the owner)
+    })(),
   ])
 
   return {

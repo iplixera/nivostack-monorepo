@@ -237,8 +237,9 @@ export async function getUsageStats(userId: string) {
     prisma.localizationKey.count({
       where: { project: { userId } },
     }),
-    // Team Members: Count all members across all projects owned by user
-    // This includes the owner + all invited members
+    // Team Members: Count all unique team members across all projects owned by user
+    // This counts all ProjectMember entries for projects owned by the user
+    // Note: The owner themselves are counted if they have ProjectMember entries
     (async () => {
       const ownedProjects = await prisma.project.findMany({
         where: { userId },
@@ -247,15 +248,19 @@ export async function getUsageStats(userId: string) {
       const projectIds = ownedProjects.map(p => p.id)
       if (projectIds.length === 0) return 0
       
-      // Count unique members across all owned projects (including owners)
-      const memberCount = await prisma.projectMember.count({
+      // Count unique users who are members of any owned project
+      // This includes all invited members (admin, member, viewer roles)
+      const uniqueMembers = await prisma.projectMember.findMany({
         where: { projectId: { in: projectIds } },
-        distinct: ['userId'],
+        select: { userId: true },
       })
       
-      // Also count projects where user is the owner (if not already counted as member)
-      // Since owners might not have ProjectMember entries, we count them separately
-      return Math.max(memberCount, projectIds.length) // At least one member per project (the owner)
+      // Get unique user IDs (using Set to deduplicate)
+      const uniqueUserIds = new Set(uniqueMembers.map(m => m.userId))
+      
+      // Return count of unique team members
+      // Note: This counts all members, not including the owner unless they have a ProjectMember entry
+      return uniqueUserIds.size
     })(),
   ])
 

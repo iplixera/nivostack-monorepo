@@ -107,20 +107,33 @@ export async function createHistoryRecord(
  * Get subscription history for a user
  */
 export async function getHistoryByUserId(userId: string): Promise<SubscriptionHistory[]> {
-  return (prisma as any).subscriptionHistory.findMany({
-    where: { userId },
-    orderBy: { periodStart: 'desc' },
-    include: {
-      plan: {
-        select: {
-          id: true,
-          name: true,
-          displayName: true,
-          price: true,
+  try {
+    // Check if SubscriptionHistory model exists
+    if (!('subscriptionHistory' in prisma)) {
+      // Model doesn't exist yet, return empty array
+      console.warn('SubscriptionHistory model not found in Prisma schema')
+      return []
+    }
+    
+    return (prisma as any).subscriptionHistory.findMany({
+      where: { userId },
+      orderBy: { periodStart: 'desc' },
+      include: {
+        plan: {
+          select: {
+            id: true,
+            name: true,
+            displayName: true,
+            price: true,
+          },
         },
       },
-    },
-  })
+    })
+  } catch (error) {
+    console.error('Error fetching subscription history:', error)
+    // Return empty array if model doesn't exist or query fails
+    return []
+  }
 }
 
 /**

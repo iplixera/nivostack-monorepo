@@ -47,6 +47,24 @@ interface SeatInfo {
   allowed: boolean
 }
 
+interface PendingInvitationForUser {
+  id: string
+  projectId: string
+  project: {
+    id: string
+    name: string
+  }
+  role: string
+  token: string
+  invitedBy: {
+    id: string
+    name: string | null
+    email: string
+  }
+  invitedAt: string
+  expiresAt: string
+}
+
 export default function TeamPage() {
   const { user } = useAuth()
   const searchParams = useSearchParams()
@@ -54,16 +72,19 @@ export default function TeamPage() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [members, setMembers] = useState<TeamMember[]>([])
   const [invitations, setInvitations] = useState<Invitation[]>([])
+  const [pendingInvitationsForUser, setPendingInvitationsForUser] = useState<PendingInvitationForUser[]>([])
   const [loading, setLoading] = useState(true)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member')
   const [inviting, setInviting] = useState(false)
+  const [acceptingInvitation, setAcceptingInvitation] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [seatInfo, setSeatInfo] = useState<SeatInfo | null>(null)
 
   useEffect(() => {
     fetchUserProjects()
+    fetchPendingInvitations()
   }, [])
 
   // Handle project query parameter from URL

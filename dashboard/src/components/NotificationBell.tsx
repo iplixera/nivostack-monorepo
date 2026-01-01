@@ -165,19 +165,24 @@ export default function NotificationBell() {
         const data = await response.json()
         // Refresh notifications to remove accepted one
         fetchNotifications()
-        // Navigate to project or show success
+        // Show success message
+        alert('Invitation accepted successfully!')
+        // Navigate to project
         router.push(`/projects/${projectId}`)
+        // Force page reload to refresh project list
+        window.location.href = `/projects/${projectId}`
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to accept invitation')
+        console.error('Failed to accept invitation:', error)
+        alert(error.error || 'Failed to accept invitation. Please try again.')
         // Navigate to team page as fallback
-        router.push('/team')
+        router.push(`/team?project=${projectId}`)
       }
     } catch (error) {
       console.error('Failed to accept invitation:', error)
       alert('Failed to accept invitation. Please try again.')
       // Navigate to team page as fallback
-      router.push('/team')
+      router.push(`/team?project=${projectId}`)
     }
   }
 

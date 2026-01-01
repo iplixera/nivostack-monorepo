@@ -1,20 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAuthUser } from '@/lib/auth'
+import { requireProjectAccess } from '@/lib/middleware/require-project-access'
 
 /**
  * PATCH /api/projects/[id]
  * Update project (name)
+ * Requires: manage_settings permission (admin or owner)
  */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getAuthUser(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const accessCheck = await requireProjectAccess(request, params, {
+      action: 'manage_settings',
+      errorMessage: 'You do not have permission to update this project',
+    })
+    if (accessCheck) return accessCheck
 
     const { id } = await params
     const { name } = await request.json()
@@ -23,9 +25,9 @@ export async function PATCH(
       return NextResponse.json({ error: 'Project name is required' }, { status: 400 })
     }
 
-    // Verify user owns the project
-    const project = await prisma.project.findFirst({
-      where: { id, userId: user.id }
+    // Verify project exists
+    const project = await prisma.project.findUnique({
+      where: { id }
     })
 
     if (!project) {
@@ -49,22 +51,25 @@ export async function PATCH(
  * DELETE /api/projects/[id]
  * Delete project and all associated data
  * Devices are soft-deleted (marked as deleted) for analytics purposes
+ * Requires: delete_project permission (owner only)
  */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getAuthUser(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const accessCheck = await requireProjectAccess(request, params, {
+      action: 'delete_project',
+      role: 'owner',
+      errorMessage: 'Only project owners can delete projects',
+    })
+    if (accessCheck) return accessCheck
 
     const { id } = await params
 
-    // Verify user owns the project
-    const project = await prisma.project.findFirst({
-      where: { id, userId: user.id }
+    // Verify project exists
+    const project = await prisma.project.findUnique({
+      where: { id }
     })
 
     if (!project) {

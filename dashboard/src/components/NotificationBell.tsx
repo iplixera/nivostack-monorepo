@@ -123,10 +123,25 @@ export default function NotificationBell() {
       await markAsRead(notification.id)
     }
 
-    // Handle invitation notifications specially - accept directly
-    if (notification.type === 'invitation' && notification.data?.token) {
+    // Handle invitation notifications specially
+    if (notification.type === 'invitation') {
       setIsOpen(false)
-      await handleAcceptInvitation(notification.data.token, notification.data.projectId)
+      
+      // If we have a token, accept directly
+      if (notification.data?.token) {
+        await handleAcceptInvitation(notification.data.token, notification.data.projectId)
+        return
+      }
+      
+      // Otherwise, navigate to team page (handles both new and old format URLs)
+      const projectId = notification.data?.projectId
+      if (projectId) {
+        router.push(`/team?project=${projectId}`)
+        return
+      }
+      
+      // Fallback: navigate to team page
+      router.push('/team')
       return
     }
 

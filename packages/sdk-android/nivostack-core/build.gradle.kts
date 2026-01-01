@@ -1,14 +1,21 @@
 // Root build file - defines plugin versions
-plugins {
-    id("com.android.library") version "8.2.0" apply false
-    id("org.jetbrains.kotlin.android") version "1.9.20" apply false
-    id("maven-publish") apply false
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.2.0")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.20")
+    }
 }
 
-// Apply plugins to root project (since this is a single-module library)
-apply(plugin = "com.android.library")
-apply(plugin = "org.jetbrains.kotlin.android")
-apply(plugin = "maven-publish")
+plugins {
+    id("com.android.library") version "8.2.0"
+    id("org.jetbrains.kotlin.android") version "1.9.20"
+    id("maven-publish")
+}
 
 // Publishing configuration
 apply(from = "publish.gradle.kts")

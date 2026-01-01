@@ -45,16 +45,31 @@ export async function GET(request: NextRequest) {
               }
             }
           },
-          inviter: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
         },
         orderBy: { joinedAt: 'desc' }
       })
+      
+      // Fetch inviter details for each member project
+      for (const member of memberProjects) {
+        if (member.invitedBy) {
+          try {
+            const inviter = await prisma.user.findUnique({
+              where: { id: member.invitedBy },
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            })
+            member.inviter = inviter
+          } catch (err) {
+            console.warn('Could not fetch inviter:', err)
+            member.inviter = null
+          }
+        } else {
+          member.inviter = null
+        }
+      }
     } catch (err: any) {
       // If ProjectMember model doesn't exist yet, skip member projects
       console.warn('Could not fetch member projects:', err.message)

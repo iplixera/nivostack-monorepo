@@ -36,20 +36,24 @@ export async function GET(
       members.map(async (member) => {
         let inviter = null
         if (member.invitedBy) {
-          const inviterUser = await prisma.user.findUnique({
-            where: { id: member.invitedBy },
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          })
-          if (inviterUser) {
-            inviter = {
-              id: inviterUser.id,
-              name: inviterUser.name,
-              email: inviterUser.email,
+          try {
+            const inviterUser = await prisma.user.findUnique({
+              where: { id: member.invitedBy },
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            })
+            if (inviterUser) {
+              inviter = {
+                id: inviterUser.id,
+                name: inviterUser.name,
+                email: inviterUser.email,
+              }
             }
+          } catch (err) {
+            console.warn('Could not fetch inviter:', err)
           }
         }
 

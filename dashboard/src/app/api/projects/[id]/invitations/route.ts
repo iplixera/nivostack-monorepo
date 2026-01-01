@@ -185,41 +185,63 @@ export async function POST(
     const token = `inv_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
 
     // Create invitation
-    const invitation = await prisma.projectInvitation.create({
-      data: {
-        projectId,
-        email,
-        role,
-        token,
-        invitedBy: user.id,
-        expiresAt,
-        status: 'pending',
-      },
-      include: {
-        project: {
-          select: {
-            id: true,
-            name: true,
+    let invitation: any
+    try {
+      invitation = await prisma.projectInvitation.create({
+        data: {
+          projectId,
+          email,
+          role,
+          token,
+          invitedBy: user.id,
+          expiresAt,
+          status: 'pending',
+        },
+        include: {
+          project: {
+            select: {
+              id: true,
+              name: true,
+            },
           },
         },
-      },
-    })
+      })
+    } catch (err: any) {
+      console.error('Error creating invitation:', err)
+      if (err.message?.includes('undefined') || err.message?.includes('create')) {
+        return NextResponse.json(
+          { error: 'Team invitations feature not available. Please ensure database migrations are complete.' },
+          { status: 503 }
+        )
+      }
+      throw err
+    }
 
     // Check if user exists (by email)
-    const invitedUser = await prisma.user.findUnique({
-      where: { email },
-    })
+    let invitedUser = null
+    try {
+      invitedUser = await prisma.user.findUnique({
+        where: { email },
+      })
+    } catch (err) {
+      console.warn('Could not check if user exists:', err)
+    }
 
     // Create notification if user exists
     if (invitedUser) {
-      await createInvitationNotification(
-        invitedUser.id,
-        projectId,
-        invitation.id,
-        invitation.project.name,
-        user.name || user.email,
-        role
-      )
+      try {
+        await createInvitationNotification(
+          invitedUser.id,
+          projectId,
+          invitation.id,
+          invitation.project.name,
+          user.name || user.email,
+          role
+        )
+      } catch (notifErr) {
+        console.warn('Could not create notification:', notifErr)
+        // Don't fail the invitation if notification creation fails
+      }
     }
 
     // TODO: Phase 3 - Send email if email_enabled is true

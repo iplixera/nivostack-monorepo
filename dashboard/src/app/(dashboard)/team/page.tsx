@@ -90,11 +90,14 @@ export default function TeamPage() {
   // Handle project query parameter from URL
   useEffect(() => {
     const projectParam = searchParams?.get('project')
-    if (projectParam && projects.length > 0) {
+    if (projectParam) {
       // Check if the project exists in the list
       const projectExists = projects.some((p) => p.id === projectParam)
       if (projectExists) {
         setSelectedProject(projectParam)
+      } else {
+        // Project might be in pending invitations, wait for them to load
+        // This will be handled in fetchPendingInvitations
       }
     }
   }, [searchParams, projects])
@@ -144,7 +147,31 @@ export default function TeamPage() {
       })
       if (response.ok) {
         const data = await response.json()
-        setPendingInvitationsForUser(data.invitations || [])
+        const invitations = data.invitations || []
+        setPendingInvitationsForUser(invitations)
+        
+        // Add projects with pending invitations to the projects list (if not already there)
+        const projectIds = new Set(projects.map((p) => p.id))
+        invitations.forEach((inv: PendingInvitationForUser) => {
+          if (!projectIds.has(inv.projectId)) {
+            // Add project to list with role 'member' (they have pending invitation)
+            setProjects((prev) => [
+              ...prev,
+              {
+                id: inv.projectId,
+                name: inv.project.name,
+                role: 'member' as const,
+              },
+            ])
+            projectIds.add(inv.projectId)
+          }
+        })
+        
+        // If there's a project query parameter and it's in pending invitations, select it
+        const projectParam = searchParams?.get('project')
+        if (projectParam && invitations.some((inv: PendingInvitationForUser) => inv.projectId === projectParam)) {
+          setSelectedProject(projectParam)
+        }
       }
     } catch (err) {
       console.error('Failed to fetch pending invitations:', err)

@@ -65,14 +65,25 @@ export async function getPlanByName(name: string): Promise<Plan | null> {
  * Get all public plans (for pricing page)
  */
 export async function getPublicPlans(): Promise<Plan[]> {
-  return prisma.plan.findMany({
-    where: {
-      isPublic: true,
-    },
-    orderBy: {
-      price: 'asc',
-    },
-  }) as unknown as Promise<Plan[]>
+  try {
+    return await prisma.plan.findMany({
+      where: {
+        isPublic: true,
+      },
+      orderBy: {
+        price: 'asc',
+      },
+    }) as unknown as Promise<Plan[]>
+  } catch (error: any) {
+    // If Plan table or columns don't exist (migration not run), return empty array
+    if (error?.message?.includes('does not exist') || 
+        error?.message?.includes('column') ||
+        error?.code === 'P2022' || error?.code === 'P2021') {
+      console.warn('Plan table or columns not found, returning empty array:', error.message)
+      return []
+    }
+    throw error
+  }
 }
 
 /**

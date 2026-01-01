@@ -15,7 +15,28 @@ export async function GET(request: NextRequest) {
 
     const usage = await getUsageStats(userId)
     if (!usage) {
-      return NextResponse.json({ error: 'Usage stats not found' }, { status: 404 })
+      // Return empty/default usage stats instead of 404
+      return NextResponse.json({ 
+        usage: {
+          mockEndpoints: { used: 0, limit: null, percentage: 0 },
+          apiEndpoints: { used: 0, limit: null, percentage: 0 },
+          apiRequests: { used: 0, limit: null, percentage: 0 },
+          logs: { used: 0, limit: null, percentage: 0 },
+          sessions: { used: 0, limit: null, percentage: 0 },
+          crashes: { used: 0, limit: null, percentage: 0 },
+          devices: { used: 0, limit: null, percentage: 0 },
+          projects: { used: 0, limit: null, percentage: 0 },
+          businessConfigKeys: { used: 0, limit: null, percentage: 0 },
+          localizationLanguages: { used: 0, limit: null, percentage: 0 },
+          localizationKeys: { used: 0, limit: null, percentage: 0 },
+          teamMembers: { used: 0, limit: null, percentage: 0 },
+          trialActive: false,
+          trialEndDate: new Date().toISOString(),
+          currentPeriodStart: new Date().toISOString(),
+          currentPeriodEnd: new Date().toISOString(),
+          daysRemaining: 0,
+        }
+      })
     }
 
     return NextResponse.json({ usage })

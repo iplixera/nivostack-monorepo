@@ -109,8 +109,14 @@ export async function createHistoryRecord(
 export async function getHistoryByUserId(userId: string): Promise<SubscriptionHistory[]> {
   try {
     // SubscriptionHistory model may not exist in schema yet
-    // Use type assertion and catch any errors
-    return (prisma as any).subscriptionHistory.findMany({
+    // Check if the model exists before trying to use it
+    const prismaAny = prisma as any
+    if (!prismaAny.subscriptionHistory || typeof prismaAny.subscriptionHistory.findMany !== 'function') {
+      console.warn('SubscriptionHistory model not found in Prisma schema, returning empty array')
+      return []
+    }
+
+    return await prismaAny.subscriptionHistory.findMany({
       where: { userId },
       orderBy: { periodStart: 'desc' },
       include: {
@@ -128,10 +134,12 @@ export async function getHistoryByUserId(userId: string): Promise<SubscriptionHi
     // If model doesn't exist, Prisma will throw an error
     // Return empty array gracefully
     if (error?.message?.includes('subscriptionHistory') || 
+        error?.message?.includes('does not exist') ||
+        error?.message?.includes('Unknown model') ||
         error?.code === 'P2001' || 
-        error?.name === 'PrismaClientKnownRequestError' ||
-        error?.message?.includes('Unknown model')) {
-      console.warn('SubscriptionHistory model not found in Prisma schema, returning empty array')
+        error?.code === 'P2021' ||
+        error?.name === 'PrismaClientKnownRequestError') {
+      console.warn('SubscriptionHistory model not found in Prisma schema, returning empty array:', error.message)
       return []
     }
     console.error('Error fetching subscription history:', error)

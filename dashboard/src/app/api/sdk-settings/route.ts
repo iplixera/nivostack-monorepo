@@ -51,9 +51,22 @@ export async function GET(request: NextRequest) {
       }
 
       // Check if user has access to project (owner or member)
-      const hasAccess = await canPerformAction(payload.userId, projectId, 'view')
-      if (!hasAccess) {
-        return NextResponse.json({ error: 'Project not found or access denied' }, { status: 404 })
+      try {
+        const hasAccess = await canPerformAction(payload.userId, projectId, 'view')
+        if (!hasAccess) {
+          return NextResponse.json({ error: 'Project not found or access denied' }, { status: 404 })
+        }
+      } catch (error: any) {
+        // If team access check fails (e.g., ProjectMember table doesn't exist),
+        // fall back to legacy ownership check
+        console.warn('Team access check failed, falling back to legacy check:', error.message)
+        const project = await prisma.project.findUnique({
+          where: { id: projectId },
+          select: { userId: true }
+        })
+        if (!project || project.userId !== payload.userId) {
+          return NextResponse.json({ error: 'Project not found or access denied' }, { status: 404 })
+        }
       }
 
       // Verify project exists

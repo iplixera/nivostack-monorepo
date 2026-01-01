@@ -28,19 +28,31 @@ export async function getUserProjectRole(
   userId: string,
   projectId: string
 ): Promise<ProjectRole | null> {
-  const member = await prisma.projectMember.findUnique({
-    where: {
-      projectId_userId: {
-        projectId,
-        userId,
+  try {
+    const member = await prisma.projectMember.findUnique({
+      where: {
+        projectId_userId: {
+          projectId,
+          userId,
+        },
       },
-    },
-    select: {
-      role: true,
-    },
-  })
+      select: {
+        role: true,
+      },
+    })
 
-  return member?.role as ProjectRole | null
+    return member?.role as ProjectRole | null
+  } catch (error: any) {
+    // If ProjectMember table doesn't exist (migration not run), return null
+    // This allows backward compatibility with legacy projects
+    if (error?.message?.includes('does not exist') || 
+        error?.message?.includes('model') ||
+        error?.code === 'P2021') {
+      console.warn('ProjectMember table not found, using legacy ownership check:', error.message)
+      return null
+    }
+    throw error
+  }
 }
 
 /**
@@ -140,31 +152,42 @@ export async function canPerformAction(
  * Get all members of a project
  */
 export async function getProjectMembers(projectId: string): Promise<ProjectMemberWithUser[]> {
-  const members = await prisma.projectMember.findMany({
-    where: { projectId },
-    include: {
-      user: {
-        select: {
-          id: true,
-          email: true,
-          name: true,
+  try {
+    const members = await prisma.projectMember.findMany({
+      where: { projectId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
         },
       },
-    },
-    orderBy: [
-      { role: 'asc' }, // owner first, then admin, member, viewer
-      { joinedAt: 'asc' },
-    ],
-  })
+      orderBy: [
+        { role: 'asc' }, // owner first, then admin, member, viewer
+        { joinedAt: 'asc' },
+      ],
+    })
 
-  return members.map((m) => ({
-    id: m.id,
-    role: m.role as ProjectRole,
-    user: m.user,
-    invitedBy: m.invitedBy,
-    invitedAt: m.invitedAt,
-    joinedAt: m.joinedAt,
-  }))
+    return members.map((m) => ({
+      id: m.id,
+      role: m.role as ProjectRole,
+      user: m.user,
+      invitedBy: m.invitedBy,
+      invitedAt: m.invitedAt,
+      joinedAt: m.joinedAt,
+    }))
+  } catch (error: any) {
+    // If ProjectMember table doesn't exist, return empty array
+    if (error?.message?.includes('does not exist') || 
+        error?.message?.includes('model') ||
+        error?.code === 'P2021') {
+      console.warn('ProjectMember table not found, returning empty members list:', error.message)
+      return []
+    }
+    throw error
+  }
 }
 
 /**
@@ -195,9 +218,22 @@ export async function checkSeatLimit(projectId: string): Promise<{ allowed: bool
   const maxSeats = plan?.maxTeamMembers ?? plan?.maxSeats ?? null
 
   // Count current members
-  const currentMembers = await prisma.projectMember.count({
-    where: { projectId },
-  })
+  let currentMembers = 0
+  try {
+    currentMembers = await prisma.projectMember.count({
+      where: { projectId },
+    })
+  } catch (error: any) {
+    // If ProjectMember table doesn't exist, assume 0 members (legacy project)
+    if (error?.message?.includes('does not exist') || 
+        error?.message?.includes('model') ||
+        error?.code === 'P2021') {
+      console.warn('ProjectMember table not found, assuming 0 members:', error.message)
+      currentMembers = 0
+    } else {
+      throw error
+    }
+  }
 
   // If no limit, allow unlimited
   if (maxSeats === null) {
@@ -215,19 +251,30 @@ export async function checkSeatLimit(projectId: string): Promise<{ allowed: bool
  * Get invitation expiry days from system configuration
  */
 export async function getInvitationExpiryDays(): Promise<number> {
-  const config = await prisma.systemConfiguration.findUnique({
-    where: {
-      category_key: {
-        category: 'notifications',
-        key: 'invitation_expiry_days',
+  try {
+    const config = await prisma.systemConfiguration.findUnique({
+      where: {
+        category_key: {
+          category: 'notifications',
+          key: 'invitation_expiry_days',
+        },
       },
-    },
-  })
+    })
 
-  if (config?.value) {
-    const days = parseInt(config.value, 10)
-    if (!isNaN(days) && days > 0) {
-      return days
+    if (config?.value) {
+      const days = parseInt(config.value, 10)
+      if (!isNaN(days) && days > 0) {
+        return days
+      }
+    }
+  } catch (error: any) {
+    // If SystemConfiguration table doesn't exist, use default
+    if (error?.message?.includes('does not exist') || 
+        error?.message?.includes('model') ||
+        error?.code === 'P2021') {
+      console.warn('SystemConfiguration table not found, using default expiry:', error.message)
+    } else {
+      throw error
     }
   }
 

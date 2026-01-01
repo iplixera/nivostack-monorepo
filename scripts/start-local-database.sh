@@ -32,7 +32,15 @@ cd "$ROOT_DIR"
 
 # Start PostgreSQL container
 echo "🚀 Starting PostgreSQL container..."
-docker-compose up -d postgres
+
+# Check if container already exists
+if docker ps -a | grep -q "devbridge-postgres"; then
+    echo "   Container already exists, starting it..."
+    docker start devbridge-postgres 2>/dev/null || docker-compose up -d postgres
+else
+    echo "   Creating new container..."
+    docker-compose up -d postgres
+fi
 
 # Wait for database to be ready
 echo ""

@@ -15,4 +15,11 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
 })
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma
+  
+  // In development, ensure Prisma client is properly initialized
+  if (typeof prisma.user === 'undefined') {
+    console.warn('⚠️  Prisma client models not available. Restart dev server after running: pnpm prisma generate')
+  }
+}

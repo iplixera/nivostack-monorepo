@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 16, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/dashboard/src/middleware.ts"],"sourcesContent":["import { NextResponse } from 'next/server'\nimport type { NextRequest } from 'next/server'\n\n// Note: Migration is handled by /api/health endpoint\n// Middleware runs in Edge runtime which doesn't support child_process\n// So we can't run migrations here - rely on /api/health instead\n\nexport function middleware(request: NextRequest) {\n  // Middleware just passes through - migration handled by /api/health\n  return NextResponse.next()\n}\n\nexport const config = {\n  matcher: '/api/:path*',\n}\n\n"],"names":[],"mappings":";;;;;;AAAA;AAAA;;AAOO,SAAS,WAAW,OAAoB;IAC7C,oEAAoE;IACpE,OAAO,iWAAY,CAAC,IAAI;AAC1B;AAEO,MAAM,SAAS;IACpB,SAAS;AACX"}}]
-}

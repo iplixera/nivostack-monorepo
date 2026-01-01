@@ -10,6 +10,7 @@ type Project = {
   name: string
   apiKey: string
   createdAt: string
+  role?: 'owner' | 'admin' | 'member' | 'viewer' // User's role in the project
   _count: {
     devices: number
     logs: number
@@ -177,29 +178,56 @@ export default function ProjectsPage() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => (
-            <Link
-              key={project.id}
-              href={`/projects/${project.id}`}
-              className="block p-6 bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors"
-            >
-              <h2 className="text-lg font-semibold text-white mb-2">{project.name}</h2>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="text-gray-400">
-                  <span className="text-white font-medium">{project._count.devices}</span> devices
+          {projects.map((project) => {
+            const isOwned = project.role === 'owner'
+            const isInvited = project.role && project.role !== 'owner'
+            
+            return (
+              <Link
+                key={project.id}
+                href={`/projects/${project.id}`}
+                className={`block p-6 rounded-lg transition-colors ${
+                  isOwned
+                    ? 'bg-gray-900 hover:bg-gray-800 border border-gray-800'
+                    : 'bg-gray-900/80 hover:bg-gray-800/80 border border-blue-900/50'
+                }`}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <h2 className="text-lg font-semibold text-white flex-1">{project.name}</h2>
+                  {isOwned && (
+                    <span className="ml-2 px-2 py-1 text-xs font-medium rounded bg-purple-900/30 text-purple-400 border border-purple-800/50">
+                      Owned
+                    </span>
+                  )}
+                  {isInvited && (
+                    <span className={`ml-2 px-2 py-1 text-xs font-medium rounded ${
+                      project.role === 'admin'
+                        ? 'bg-blue-900/30 text-blue-400 border border-blue-800/50'
+                        : project.role === 'member'
+                        ? 'bg-green-900/30 text-green-400 border border-green-800/50'
+                        : 'bg-gray-700/30 text-gray-400 border border-gray-600/50'
+                    }`}>
+                      {project.role === 'admin' ? 'Admin' : project.role === 'member' ? 'Member' : 'Viewer'}
+                    </span>
+                  )}
                 </div>
-                <div className="text-gray-400">
-                  <span className="text-white font-medium">{project._count.logs}</span> logs
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="text-gray-400">
+                    <span className="text-white font-medium">{project._count.devices}</span> devices
+                  </div>
+                  <div className="text-gray-400">
+                    <span className="text-white font-medium">{project._count.logs}</span> logs
+                  </div>
+                  <div className="text-gray-400">
+                    <span className="text-red-400 font-medium">{project._count.crashes}</span> crashes
+                  </div>
+                  <div className="text-gray-400">
+                    <span className="text-white font-medium">{project._count.apiTraces}</span> traces
+                  </div>
                 </div>
-                <div className="text-gray-400">
-                  <span className="text-red-400 font-medium">{project._count.crashes}</span> crashes
-                </div>
-                <div className="text-gray-400">
-                  <span className="text-white font-medium">{project._count.apiTraces}</span> traces
-                </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            )
+          })}
         </div>
       )}
 

@@ -115,6 +115,27 @@
             android:layout_marginBottom="8dp"
             android:text="@string/track_screen" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnRefreshConfig"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Refresh Config" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnFlush"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Flush Events" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnTrackApiTrace"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Track API Trace" />
+
     </LinearLayout>
 </ScrollView>
 

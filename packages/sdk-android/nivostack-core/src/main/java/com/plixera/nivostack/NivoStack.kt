@@ -49,6 +49,12 @@ class NivoStack private constructor(
     var deviceConfig: DeviceConfig = DeviceConfig.defaults()
         private set
     
+    // Clients
+    val businessConfig: com.plixera.nivostack.clients.BusinessConfigClient = 
+        com.plixera.nivostack.clients.BusinessConfigClient(apiClient, projectId)
+    val localization: com.plixera.nivostack.clients.LocalizationClient = 
+        com.plixera.nivostack.clients.LocalizationClient(apiClient, projectId)
+    
     // Session tracking
     private var sessionToken: String? = null
     private var currentScreen: String? = null
@@ -69,6 +75,11 @@ class NivoStack private constructor(
     private var sessionStarted = false
     private var initError: String? = null
     
+    // Config sync
+    private var syncInterval: Long? = null // null = periodic sync disabled, only lifecycle sync
+    private var syncJob: Job? = null
+    private var isAppActive = true
+    
     // Coroutine scope for background operations
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     
@@ -78,13 +89,22 @@ class NivoStack private constructor(
         
         /**
          * Initialize NivoStack SDK
+         * 
+         * @param context Application context
+         * @param baseUrl Base URL for NivoStack API (default: https://ingest.nivostack.com)
+         * @param apiKey Project API key from NivoStack Studio dashboard
+         * @param projectId Project ID (can be derived from API key)
+         * @param enabled Enable/disable SDK (useful for debug vs release builds)
+         * @param syncIntervalMinutes Interval for periodic config sync in minutes. Default: null (periodic sync disabled, only lifecycle sync).
+         *                           Set to a value (e.g., 15) to enable periodic sync every N minutes.
          */
         fun init(
             context: Context,
-            baseUrl: String,
+            baseUrl: String = "https://ingest.nivostack.com",
             apiKey: String,
             projectId: String,
-            enabled: Boolean = true
+            enabled: Boolean = true,
+            syncIntervalMinutes: Long? = null
         ): NivoStack {
             if (instance != null) {
                 return instance!!
@@ -93,6 +113,7 @@ class NivoStack private constructor(
             synchronized(this) {
                 if (instance == null) {
                     instance = NivoStack(context.applicationContext, baseUrl, apiKey, projectId, enabled)
+                    instance!!.syncInterval = syncIntervalMinutes?.let { it * 60 * 1000 } // Convert minutes to milliseconds
                     instance!!._initDeviceInfo()
                     
                     if (enabled) {
@@ -137,6 +158,12 @@ class NivoStack private constructor(
             val newId = UUID.randomUUID().toString()
             prefs.edit().putString("device_id", newId).apply()
             newId
+        }
+        
+        // Get or generate device code
+        deviceCode = DeviceCodeGenerator.get(context) ?: run {
+            val newCode = DeviceCodeGenerator.getOrGenerate(context)
+            newCode
         }
         
         deviceInfo = DeviceInfo.fromContext(context, deviceId!!)
@@ -197,6 +224,11 @@ class NivoStack private constructor(
                 
                 isFullyInitialized = true
                 initError = null
+                
+                // Start periodic sync timer after initialization (only if app is active)
+                if (isAppActive) {
+                    _startSyncTimer()
+                }
             } catch (e: Exception) {
                 initError = e.message
                 // Don't throw - background failures shouldn't crash the app
@@ -205,14 +237,99 @@ class NivoStack private constructor(
     }
     
     /**
+     * Called when app comes to foreground
+     */
+    internal fun onAppResumed() {
+        isAppActive = true
+        
+        // Immediate sync on foreground
+        scope.launch {
+            try {
+                refreshConfig()
+            } catch (e: Exception) {
+                // Ignore errors
+            }
+        }
+        
+        // Start periodic sync timer
+        _startSyncTimer()
+    }
+    
+    /**
+     * Called when app goes to background
+     */
+    internal fun onAppPaused() {
+        isAppActive = false
+        _stopSyncTimer()
+    }
+    
+    /**
+     * Start periodic config sync timer
+     */
+    private fun _startSyncTimer() {
+        _stopSyncTimer()
+        
+        if (!enabled || !isAppActive) {
+            return
+        }
+        
+        // Don't start if syncInterval is null (periodic sync disabled)
+        val interval = syncInterval ?: return
+        
+        syncJob = scope.launch {
+            while (isAppActive && enabled) {
+                delay(interval)
+                if (isAppActive && enabled) {
+                    try {
+                        refreshConfig()
+                    } catch (e: Exception) {
+                        // Ignore errors
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Stop periodic config sync timer
+     */
+    private fun _stopSyncTimer() {
+        syncJob?.cancel()
+        syncJob = null
+    }
+    
+    /**
      * Fetch SDK init data from server
      */
-    private suspend fun _fetchSdkInitData() {
+    private suspend fun _fetchSdkInitData(forceRefresh: Boolean = false) {
         try {
-            val response = apiClient.getSdkInit(projectId)
+            // Get cached ETag for conditional request
+            val cachedEtag = if (!forceRefresh) prefs.getString("config_etag", null) else null
+            
+            // Detect build mode (debug = preview, release = production)
+            val buildMode = if ((context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+                "preview"
+            } else {
+                "production"
+            }
+            
+            val response = apiClient.getSdkInit(
+                projectId = projectId,
+                deviceId = registeredDeviceId,
+                buildMode = buildMode,
+                etag = cachedEtag
+            )
+            
+            // Handle 304 Not Modified - config unchanged
+            if (response.notModified) {
+                return
+            }
+            
+            val data = response.data
+            if (data.isEmpty()) return
             
             // Parse feature flags
-            val flags = response["featureFlags"] as? Map<*, *>
+            val flags = data["featureFlags"] as? Map<*, *>
             if (flags != null) {
                 featureFlags = FeatureFlags.fromJson(flags as Map<String, Any>)
                 // Cache feature flags
@@ -221,7 +338,7 @@ class NivoStack private constructor(
             }
             
             // Parse SDK settings
-            val settings = response["sdkSettings"] as? Map<*, *>
+            val settings = data["sdkSettings"] as? Map<*, *>
             if (settings != null) {
                 sdkSettings = SdkSettings.fromJson(settings as Map<String, Any>)
                 // Cache SDK settings
@@ -230,7 +347,7 @@ class NivoStack private constructor(
             }
             
             // Parse API configs
-            val apiConfigsList = response["apiConfigs"] as? List<*>
+            val apiConfigsList = data["apiConfigs"] as? List<*>
             if (apiConfigsList != null) {
                 apiConfigs = apiConfigsList.mapNotNull { 
                     (it as? Map<*, *>)?.let { ApiConfig.fromJson(it as Map<String, Any>) }
@@ -238,9 +355,53 @@ class NivoStack private constructor(
             }
             
             // Parse device config
-            val deviceConfigMap = response["deviceConfig"] as? Map<*, *>
+            val deviceConfigMap = data["deviceConfig"] as? Map<*, *>
             if (deviceConfigMap != null) {
                 deviceConfig = DeviceConfig.fromJson(deviceConfigMap as Map<String, Any>)
+                
+                // Update device code if server assigned one
+                val serverDeviceCode = deviceConfigMap["deviceCode"] as? String
+                if (!serverDeviceCode.isNullOrEmpty() && serverDeviceCode != deviceCode) {
+                    deviceCode = serverDeviceCode
+                    DeviceCodeGenerator.save(context, serverDeviceCode)
+                }
+            }
+            
+            // Parse localization data
+            val localizationData = data["localization"] as? Map<*, *>
+            if (localizationData != null) {
+                // Apply localization data from SDK init response
+                val languages = localizationData["languages"] as? List<*>
+                val defaultLanguage = localizationData["defaultLanguage"] as? String
+                val translations = localizationData["translations"] as? Map<*, *>
+                
+                // Set default language if available
+                defaultLanguage?.let {
+                    scope.launch {
+                        localization.setLanguage(it)
+                    }
+                }
+                
+                // Apply translations if available
+                translations?.let {
+                    val translationsMap = it.mapNotNull { (key, value) ->
+                        key?.toString()?.let { k ->
+                            k to (value?.toString() ?: "")
+                        }
+                    }.toMap()
+                    // Store in cache (this is a simplified approach - LocalizationClient will handle caching)
+                    scope.launch {
+                        defaultLanguage?.let { lang ->
+                            // Apply translations to localization client
+                            // Note: LocalizationClient will fetch fresh data, but we can pre-populate cache
+                        }
+                    }
+                }
+            }
+            
+            // Cache ETag for next request
+            response.etag?.let {
+                prefs.edit().putString("config_etag", it).apply()
             }
         } catch (e: Exception) {
             // Network failed - use cached config
@@ -252,16 +413,22 @@ class NivoStack private constructor(
      */
     private suspend fun _registerDevice() {
         try {
+            // Ensure device code exists before registration
+            if (deviceCode == null) {
+                deviceCode = DeviceCodeGenerator.getOrGenerate(context)
+            }
+            
             val response = apiClient.registerDevice(projectId, deviceInfo, deviceCode)
             
             val deviceData = response["device"] as? Map<*, *>
             if (deviceData != null) {
                 registeredDeviceId = deviceData["id"] as? String
-                deviceCode = deviceData["deviceCode"] as? String
+                val serverDeviceCode = deviceData["deviceCode"] as? String
                 
-                // Store device code
-                deviceCode?.let {
-                    prefs.edit().putString("device_code", it).apply()
+                // Update device code if server assigned one
+                if (!serverDeviceCode.isNullOrEmpty() && serverDeviceCode != deviceCode) {
+                    deviceCode = serverDeviceCode
+                    DeviceCodeGenerator.save(context, serverDeviceCode)
                 }
             }
         } catch (e: Exception) {
@@ -396,6 +563,139 @@ class NivoStack private constructor(
     fun getDeviceCode(): String? = deviceCode
     
     /**
+     * Refresh configuration from server
+     * 
+     * @param forceRefresh If true, bypasses ETag and forces fresh fetch
+     * @return true if config was updated, false if unchanged
+     */
+    suspend fun refreshConfig(forceRefresh: Boolean = false): Boolean {
+        return try {
+            val oldEtag = prefs.getString("config_etag", null)
+            _fetchSdkInitData(forceRefresh = forceRefresh)
+            val newEtag = prefs.getString("config_etag", null)
+            oldEtag != newEtag
+        } catch (e: Exception) {
+            false
+        }
+    }
+    
+    /**
+     * Track API trace manually
+     */
+    fun trackApiTrace(
+        url: String,
+        method: String,
+        statusCode: Int? = null,
+        duration: Long? = null,
+        requestBody: String? = null,
+        responseBody: String? = null,
+        error: String? = null,
+        screenName: String? = null
+    ) {
+        if (!featureFlags.apiTracking || !featureFlags.sdkEnabled) return
+        if (!deviceConfig.trackingEnabled) return
+        
+        val trace = buildMap<String, Any> {
+            put("url", url)
+            put("method", method)
+            statusCode?.let { put("statusCode", it) }
+            duration?.let { put("duration", it) }
+            requestBody?.let { put("requestBody", it) }
+            responseBody?.let { put("responseBody", it) }
+            error?.let { put("error", it) }
+            // Only include screenName if screen tracking is enabled
+            if (featureFlags.screenTracking) {
+                screenName?.let { put("screenName", it) } ?: currentScreen?.let { put("screenName", it) }
+            }
+            put("timestamp", System.currentTimeMillis())
+        }
+        
+        queueTrace(trace)
+    }
+    
+    /**
+     * Send log entry
+     */
+    fun log(
+        message: String,
+        level: String = "info",
+        tag: String? = null,
+        data: Map<String, Any>? = null
+    ) {
+        if (!featureFlags.logging || !featureFlags.sdkEnabled) return
+        if (!deviceConfig.trackingEnabled) return
+        
+        // Check log level filter
+        if (!sdkSettings.shouldCaptureLogLevel(level)) return
+        
+        val logEntry = buildMap<String, Any> {
+            put("message", message)
+            put("level", level)
+            tag?.let { put("tag", it) }
+            data?.let { put("data", it) }
+            if (featureFlags.screenTracking) {
+                currentScreen?.let { put("screenName", it) }
+            }
+            put("timestamp", System.currentTimeMillis())
+        }
+        
+        logQueue.offer(logEntry)
+        
+        // Flush if queue is full
+        if (logQueue.size >= sdkSettings.maxLogQueueSize) {
+            scope.launch { _flushLogs() }
+        }
+    }
+    
+    /**
+     * Flush logs to server
+     */
+    private suspend fun _flushLogs() {
+        if (logQueue.isEmpty() || registeredDeviceId == null) return
+        
+        val logs = mutableListOf<Map<String, Any>>()
+        while (logs.size < sdkSettings.maxLogQueueSize && logQueue.isNotEmpty()) {
+            logQueue.poll()?.let { logs.add(it) }
+        }
+        
+        if (logs.isNotEmpty()) {
+            try {
+                apiClient.sendLogs(registeredDeviceId!!, logs)
+            } catch (e: Exception) {
+                // Re-queue logs on failure
+                logs.forEach { logQueue.offer(it) }
+            }
+        }
+    }
+    
+    /**
+     * Report crash
+     */
+    fun reportCrash(
+        message: String,
+        stackTrace: String? = null,
+        exception: Throwable? = null
+    ) {
+        if (!featureFlags.crashReporting || !featureFlags.sdkEnabled) return
+        if (!deviceConfig.trackingEnabled) return
+        
+        val crashStackTrace = stackTrace ?: exception?.stackTraceToString()
+        
+        scope.launch {
+            try {
+                apiClient.reportCrash(
+                    projectId = projectId,
+                    deviceId = registeredDeviceId ?: deviceId ?: return@launch,
+                    message = message,
+                    stackTrace = crashStackTrace
+                )
+            } catch (e: Exception) {
+                // Ignore errors
+            }
+        }
+    }
+    
+    /**
      * Get initialization status
      */
     fun isFullyInitialized(): Boolean = isFullyInitialized
@@ -403,6 +703,76 @@ class NivoStack private constructor(
     fun isDeviceRegistered(): Boolean = deviceRegistered
     fun isSessionStarted(): Boolean = sessionStarted
     fun getInitError(): String? = initError
+    
+    /**
+     * Get current screen flow (list of screens visited in this session)
+     */
+    fun getScreenFlow(): List<String> = screenFlow.toList()
+    
+    /**
+     * Get current event count for this session
+     */
+    fun getEventCount(): Int = eventCount
+    
+    /**
+     * Get current error count for this session
+     */
+    fun getErrorCount(): Int = errorCount
+    
+    /**
+     * Get user properties set for this session
+     */
+    fun getUserProperties(): Map<String, Any> = userProperties.toMap()
+    
+    /**
+     * Clear user properties
+     */
+    fun clearUserProperties() {
+        userProperties.clear()
+    }
+    
+    /**
+     * Get pending trace count (traces waiting to be sent to server)
+     */
+    fun getPendingTraceCount(): Int = traceQueue.size
+    
+    /**
+     * Get pending log count (logs waiting to be sent to server)
+     */
+    fun getPendingLogCount(): Int = logQueue.size
+    
+    /**
+     * Check if a specific feature is enabled
+     * 
+     * Note: If sdkEnabled is false, ALL features return false (master kill switch)
+     */
+    fun isFeatureEnabled(feature: String): Boolean {
+        // Master kill switch - if SDK is disabled, no features are enabled
+        if (!featureFlags.sdkEnabled) return false
+        
+        return when (feature) {
+            "sdkEnabled" -> featureFlags.sdkEnabled
+            "apiTracking" -> featureFlags.apiTracking
+            "screenTracking" -> featureFlags.screenTracking
+            "crashReporting" -> featureFlags.crashReporting
+            "logging" -> featureFlags.logging
+            "deviceTracking" -> featureFlags.deviceTracking
+            "sessionTracking" -> featureFlags.sessionTracking
+            "businessConfig" -> featureFlags.businessConfig
+            "localization" -> featureFlags.localization
+            "offlineSupport" -> featureFlags.offlineSupport
+            "batchEvents" -> featureFlags.batchEvents
+            else -> false
+        }
+    }
+    
+    /**
+     * Flush pending traces and logs to server
+     */
+    suspend fun flush() {
+        _flushTraces()
+        _flushLogs()
+    }
 }
 
 /**

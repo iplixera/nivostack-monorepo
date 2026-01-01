@@ -23,7 +23,8 @@ class NivoStackAndroidApplication : Application() {
             baseUrl = baseUrl,
             apiKey = "cmjoin79y00069z09upepkf11", // Your API key
             projectId = "cmjoin79y00059z09y0x3eym7", // Your project ID
-            enabled = true
+            enabled = true,
+            syncIntervalMinutes = 15L // Sync config every 15 minutes when app is active
         )
         
         // Register lifecycle observer for screen tracking

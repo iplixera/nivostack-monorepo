@@ -43,6 +43,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnSetUser: com.google.android.material.button.MaterialButton
     private lateinit var btnClearUser: com.google.android.material.button.MaterialButton
     private lateinit var btnTrackScreen: com.google.android.material.button.MaterialButton
+    private lateinit var btnRefreshConfig: com.google.android.material.button.MaterialButton
+    private lateinit var btnFlush: com.google.android.material.button.MaterialButton
+    private lateinit var btnTrackApiTrace: com.google.android.material.button.MaterialButton
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +63,9 @@ class MainActivity : AppCompatActivity() {
         btnSetUser = findViewById(R.id.btnSetUser)
         btnClearUser = findViewById(R.id.btnClearUser)
         btnTrackScreen = findViewById(R.id.btnTrackScreen)
+        btnRefreshConfig = findViewById(R.id.btnRefreshConfig)
+        btnFlush = findViewById(R.id.btnFlush)
+        btnTrackApiTrace = findViewById(R.id.btnTrackApiTrace)
         
         setupButtons()
         updateStatus()
@@ -76,6 +82,9 @@ class MainActivity : AppCompatActivity() {
         btnSetUser.setOnClickListener { setUser() }
         btnClearUser.setOnClickListener { clearUser() }
         btnTrackScreen.setOnClickListener { trackScreen() }
+        btnRefreshConfig.setOnClickListener { refreshConfig() }
+        btnFlush.setOnClickListener { flush() }
+        btnTrackApiTrace.setOnClickListener { trackApiTrace() }
     }
     
     private fun updateStatus() {
@@ -93,6 +102,10 @@ class MainActivity : AppCompatActivity() {
             appendLine("Session Started: ${instance.isSessionStarted()}")
             appendLine("Device Code: ${instance.getDeviceCode() ?: "N/A"}")
             appendLine("Tracking Enabled: ${instance.isTrackingEnabled}")
+            appendLine("Pending Traces: ${instance.getPendingTraceCount()}")
+            appendLine("Pending Logs: ${instance.getPendingLogCount()}")
+            appendLine("Event Count: ${instance.getEventCount()}")
+            appendLine("Error Count: ${instance.getErrorCount()}")
             instance.getInitError()?.let {
                 appendLine("Init Error: $it")
             }
@@ -114,12 +127,19 @@ class MainActivity : AppCompatActivity() {
             appendLine("Session Started: ${instance.isSessionStarted()}")
             appendLine("Device Code: ${instance.getDeviceCode() ?: "N/A"}")
             appendLine("Tracking Enabled: ${instance.isTrackingEnabled}")
+            appendLine("Pending Traces: ${instance.getPendingTraceCount()}")
+            appendLine("Pending Logs: ${instance.getPendingLogCount()}")
+            appendLine("Event Count: ${instance.getEventCount()}")
+            appendLine("Error Count: ${instance.getErrorCount()}")
             appendLine()
             appendLine("Feature Flags:")
             appendLine("  SDK Enabled: ${instance.featureFlags.sdkEnabled}")
             appendLine("  API Tracking: ${instance.featureFlags.apiTracking}")
             appendLine("  Screen Tracking: ${instance.featureFlags.screenTracking}")
             appendLine("  Logging: ${instance.featureFlags.logging}")
+            appendLine("  Crash Reporting: ${instance.featureFlags.crashReporting}")
+            appendLine("  Business Config: ${instance.featureFlags.businessConfig}")
+            appendLine("  Localization: ${instance.featureFlags.localization}")
             instance.getInitError()?.let {
                 appendLine()
                 appendLine("Init Error: $it")
@@ -229,56 +249,17 @@ class MainActivity : AppCompatActivity() {
             showError("SDK not initialized")
             return
         }
-        showLoading(true)
         
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val deviceInfoField = NivoStack::class.java.getDeclaredField("deviceInfo")
-                deviceInfoField.isAccessible = true
-                val deviceInfo = deviceInfoField.get(instance) as com.plixera.nivostack.models.DeviceInfo
-                
-                val baseUrlField = NivoStack::class.java.getDeclaredField("baseUrl")
-                baseUrlField.isAccessible = true
-                val baseUrl = baseUrlField.get(instance) as String
-                
-                val apiKeyField = NivoStack::class.java.getDeclaredField("apiKey")
-                apiKeyField.isAccessible = true
-                val apiKey = apiKeyField.get(instance) as String
-                
-                val body = mapOf(
-                    "deviceId" to deviceInfo.deviceId,
-                    "level" to "info",
-                    "tag" to "ExampleApp",
-                    "message" to "Test log message from example app",
-                    "data" to mapOf("timestamp" to Date().toString())
-                )
-                
-                val requestBody = gson.toJson(body).toRequestBody(jsonMediaType)
-                val request = Request.Builder()
-                    .url("$baseUrl/api/logs")
-                    .post(requestBody)
-                    .addHeader("Content-Type", "application/json")
-                    .addHeader("X-API-Key", apiKey)
-                    .build()
-                
-                val response = directOkHttpClient.newCall(request).execute()
-                val responseBody = response.body?.string() ?: "{}"
-                
-                runOnUiThread {
-                    showLoading(false)
-                    if (response.isSuccessful) {
-                        showMessage("Log sent successfully: HTTP ${response.code} ${response.message}\nResponse: $responseBody")
-                    } else {
-                        showErrorWithDetails("Log failed", response.code, response.message, responseBody)
-                    }
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    showLoading(false)
-                    showError("Log failed: ${e.message}")
-                }
-            }
-        }
+        // Use public API method
+        instance.log(
+            message = "Test log message from example app",
+            level = "info",
+            tag = "ExampleApp",
+            data = mapOf("timestamp" to Date().toString())
+        )
+        
+        showMessage("Log queued successfully. Pending logs: ${instance.getPendingLogCount()}")
+        updateStatus()
     }
     
     private fun testCrash() {
@@ -286,59 +267,18 @@ class MainActivity : AppCompatActivity() {
             showError("SDK not initialized")
             return
         }
-        showLoading(true)
         
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val deviceInfoField = NivoStack::class.java.getDeclaredField("deviceInfo")
-                deviceInfoField.isAccessible = true
-                val deviceInfo = deviceInfoField.get(instance) as com.plixera.nivostack.models.DeviceInfo
-                
-                val projectIdField = NivoStack::class.java.getDeclaredField("projectId")
-                projectIdField.isAccessible = true
-                val projectId = projectIdField.get(instance) as String
-                
-                val baseUrlField = NivoStack::class.java.getDeclaredField("baseUrl")
-                baseUrlField.isAccessible = true
-                val baseUrl = baseUrlField.get(instance) as String
-                
-                val apiKeyField = NivoStack::class.java.getDeclaredField("apiKey")
-                apiKeyField.isAccessible = true
-                val apiKey = apiKeyField.get(instance) as String
-                
-                val body = mapOf(
-                    "projectId" to projectId,
-                    "deviceId" to deviceInfo.deviceId,
-                    "message" to "Test crash from example app",
-                    "stackTrace" to Thread.currentThread().stackTrace.joinToString("\n")
-                )
-                
-                val requestBody = gson.toJson(body).toRequestBody(jsonMediaType)
-                val request = Request.Builder()
-                    .url("$baseUrl/api/crashes")
-                    .post(requestBody)
-                    .addHeader("Content-Type", "application/json")
-                    .addHeader("X-API-Key", apiKey)
-                    .build()
-                
-                val response = directOkHttpClient.newCall(request).execute()
-                val responseBody = response.body?.string() ?: "{}"
-                
-                runOnUiThread {
-                    showLoading(false)
-                    if (response.isSuccessful) {
-                        showMessage("Crash report sent successfully: HTTP ${response.code} ${response.message}\nResponse: $responseBody")
-                    } else {
-                        showErrorWithDetails("Crash report failed", response.code, response.message, responseBody)
-                    }
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    showLoading(false)
-                    showError("Crash report failed: ${e.message}")
-                }
-            }
+        // Use public API method
+        try {
+            throw RuntimeException("Test crash from example app")
+        } catch (e: Exception) {
+            instance.reportCrash(
+                message = "Test crash from example app",
+                exception = e
+            )
+            showMessage("Crash report sent successfully")
         }
+        updateStatus()
     }
     
     private fun refreshBusinessConfig() {
@@ -350,35 +290,12 @@ class MainActivity : AppCompatActivity() {
         
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val projectIdField = NivoStack::class.java.getDeclaredField("projectId")
-                projectIdField.isAccessible = true
-                val projectId = projectIdField.get(instance) as String
-                
-                val baseUrlField = NivoStack::class.java.getDeclaredField("baseUrl")
-                baseUrlField.isAccessible = true
-                val baseUrl = baseUrlField.get(instance) as String
-                
-                val apiKeyField = NivoStack::class.java.getDeclaredField("apiKey")
-                apiKeyField.isAccessible = true
-                val apiKey = apiKeyField.get(instance) as String
-                
-                val url = "$baseUrl/api/business-config?projectId=$projectId".toHttpUrl()
-                val request = Request.Builder()
-                    .url(url)
-                    .get()
-                    .addHeader("X-API-Key", apiKey)
-                    .build()
-                
-                val response = directOkHttpClient.newCall(request).execute()
-                val responseBody = response.body?.string() ?: "{}"
+                instance.businessConfig.refresh()
+                val configs = instance.businessConfig.fetchAll(forceRefresh = true)
                 
                 runOnUiThread {
                     showLoading(false)
-                    if (response.isSuccessful) {
-                        showMessage("Business config refreshed: HTTP ${response.code} ${response.message}\nResponse: $responseBody")
-                    } else {
-                        showErrorWithDetails("Business config failed", response.code, response.message, responseBody)
-                    }
+                    showMessage("Business config refreshed: ${configs.size} configs loaded")
                 }
             } catch (e: Exception) {
                 runOnUiThread {
@@ -398,35 +315,12 @@ class MainActivity : AppCompatActivity() {
         
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val projectIdField = NivoStack::class.java.getDeclaredField("projectId")
-                projectIdField.isAccessible = true
-                val projectId = projectIdField.get(instance) as String
-                
-                val baseUrlField = NivoStack::class.java.getDeclaredField("baseUrl")
-                baseUrlField.isAccessible = true
-                val baseUrl = baseUrlField.get(instance) as String
-                
-                val apiKeyField = NivoStack::class.java.getDeclaredField("apiKey")
-                apiKeyField.isAccessible = true
-                val apiKey = apiKeyField.get(instance) as String
-                
-                val url = "$baseUrl/api/localization/translations?projectId=$projectId&lang=en".toHttpUrl()
-                val request = Request.Builder()
-                    .url(url)
-                    .get()
-                    .addHeader("X-API-Key", apiKey)
-                    .build()
-                
-                val response = directOkHttpClient.newCall(request).execute()
-                val responseBody = response.body?.string() ?: "{}"
+                instance.localization.setLanguage("en")
+                val translations = instance.localization.fetchTranslations("en")
                 
                 runOnUiThread {
                     showLoading(false)
-                    if (response.isSuccessful) {
-                        showMessage("Localization refreshed: HTTP ${response.code} ${response.message}\nResponse: $responseBody")
-                    } else {
-                        showErrorWithDetails("Localization failed", response.code, response.message, responseBody)
-                    }
+                    showMessage("Localization refreshed: ${translations.size} translations loaded")
                 }
             } catch (e: Exception) {
                 runOnUiThread {
@@ -442,58 +336,16 @@ class MainActivity : AppCompatActivity() {
             showError("SDK not initialized")
             return
         }
-        showLoading(true)
         
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val deviceInfoField = NivoStack::class.java.getDeclaredField("deviceInfo")
-                deviceInfoField.isAccessible = true
-                val deviceInfo = deviceInfoField.get(instance) as com.plixera.nivostack.models.DeviceInfo
-                
-                val baseUrlField = NivoStack::class.java.getDeclaredField("baseUrl")
-                baseUrlField.isAccessible = true
-                val baseUrl = baseUrlField.get(instance) as String
-                
-                val apiKeyField = NivoStack::class.java.getDeclaredField("apiKey")
-                apiKeyField.isAccessible = true
-                val apiKey = apiKeyField.get(instance) as String
-                
-                val registeredDeviceIdField = NivoStack::class.java.getDeclaredField("registeredDeviceId")
-                registeredDeviceIdField.isAccessible = true
-                val deviceId = registeredDeviceIdField.get(instance) as? String ?: deviceInfo.deviceId
-                
-                val body = mapOf(
-                    "userId" to "user_${System.currentTimeMillis()}",
-                    "email" to "test@example.com",
-                    "name" to "Test User"
-                )
-                
-                val requestBody = gson.toJson(body).toRequestBody(jsonMediaType)
-                val request = Request.Builder()
-                    .url("$baseUrl/api/devices/$deviceId/user")
-                    .patch(requestBody)
-                    .addHeader("Content-Type", "application/json")
-                    .addHeader("X-API-Key", apiKey)
-                    .build()
-                
-                val response = directOkHttpClient.newCall(request).execute()
-                val responseBody = response.body?.string() ?: "{}"
-                
-                runOnUiThread {
-                    showLoading(false)
-                    if (response.isSuccessful) {
-                        showMessage("User set successfully: HTTP ${response.code} ${response.message}\nResponse: $responseBody")
-                    } else {
-                        showErrorWithDetails("Set user failed", response.code, response.message, responseBody)
-                    }
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    showLoading(false)
-                    showError("Set user failed: ${e.message}")
-                }
-            }
-        }
+        // Use public API method
+        instance.setUser(
+            userId = "user_${System.currentTimeMillis()}",
+            email = "test@example.com",
+            name = "Test User"
+        )
+        
+        showMessage("User set successfully")
+        updateStatus()
     }
     
     private fun clearUser() {
@@ -501,50 +353,12 @@ class MainActivity : AppCompatActivity() {
             showError("SDK not initialized")
             return
         }
-        showLoading(true)
         
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val deviceInfoField = NivoStack::class.java.getDeclaredField("deviceInfo")
-                deviceInfoField.isAccessible = true
-                val deviceInfo = deviceInfoField.get(instance) as com.plixera.nivostack.models.DeviceInfo
-                
-                val baseUrlField = NivoStack::class.java.getDeclaredField("baseUrl")
-                baseUrlField.isAccessible = true
-                val baseUrl = baseUrlField.get(instance) as String
-                
-                val apiKeyField = NivoStack::class.java.getDeclaredField("apiKey")
-                apiKeyField.isAccessible = true
-                val apiKey = apiKeyField.get(instance) as String
-                
-                val registeredDeviceIdField = NivoStack::class.java.getDeclaredField("registeredDeviceId")
-                registeredDeviceIdField.isAccessible = true
-                val deviceId = registeredDeviceIdField.get(instance) as? String ?: deviceInfo.deviceId
-                
-                val request = Request.Builder()
-                    .url("$baseUrl/api/devices/$deviceId/user")
-                    .delete()
-                    .addHeader("X-API-Key", apiKey)
-                    .build()
-                
-                val response = directOkHttpClient.newCall(request).execute()
-                val responseBody = response.body?.string() ?: "{}"
-                
-                runOnUiThread {
-                    showLoading(false)
-                    if (response.isSuccessful) {
-                        showMessage("User cleared successfully: HTTP ${response.code} ${response.message}\nResponse: $responseBody")
-                    } else {
-                        showErrorWithDetails("Clear user failed", response.code, response.message, responseBody)
-                    }
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    showLoading(false)
-                    showError("Clear user failed: ${e.message}")
-                }
-            }
-        }
+        // Use public API method
+        instance.clearUser()
+        
+        showMessage("User cleared successfully")
+        updateStatus()
     }
     
     private fun trackScreen() {
@@ -553,63 +367,12 @@ class MainActivity : AppCompatActivity() {
             return
         }
         
-        if (!instance.isDeviceRegistered()) {
-            showError("Device not registered. Cannot track screen.")
-            return
-        }
-        
-        val sessionTokenField = NivoStack::class.java.getDeclaredField("sessionToken")
-        sessionTokenField.isAccessible = true
-        val sessionToken = sessionTokenField.get(instance) as? String
-        
-        if (sessionToken == null || !instance.featureFlags.sessionTracking) {
-            showError("Session tracking not enabled or session not started.")
-            return
-        }
-        
-        showLoading(true)
+        // Use public API method
         val screenName = "TestScreen_${System.currentTimeMillis()}"
+        instance.trackScreen(screenName)
         
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val baseUrlField = NivoStack::class.java.getDeclaredField("baseUrl")
-                baseUrlField.isAccessible = true
-                val baseUrl = baseUrlField.get(instance) as String
-                
-                val apiKeyField = NivoStack::class.java.getDeclaredField("apiKey")
-                apiKeyField.isAccessible = true
-                val apiKey = apiKeyField.get(instance) as String
-                
-                val body = mapOf(
-                    "screenName" to screenName
-                )
-                
-                val requestBody = gson.toJson(body).toRequestBody(jsonMediaType)
-                val request = Request.Builder()
-                    .url("$baseUrl/api/sessions/$sessionToken")
-                    .patch(requestBody)
-                    .addHeader("Content-Type", "application/json")
-                    .addHeader("X-API-Key", apiKey)
-                    .build()
-                
-                val response = directOkHttpClient.newCall(request).execute()
-                val responseBody = response.body?.string() ?: "{}"
-                
-                runOnUiThread {
-                    showLoading(false)
-                    if (response.isSuccessful) {
-                        showMessage("Screen tracked: $screenName (HTTP ${response.code} ${response.message})\nResponse: $responseBody")
-                    } else {
-                        showErrorWithDetails("Screen tracking failed", response.code, response.message, responseBody)
-                    }
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    showLoading(false)
-                    showError("Screen tracking failed: ${e.message}")
-                }
-            }
-        }
+        showMessage("Screen tracked: $screenName")
+        updateStatus()
     }
     
     private fun showLoading(show: Boolean) {
@@ -627,6 +390,73 @@ class MainActivity : AppCompatActivity() {
         Snackbar.make(root, message, Snackbar.LENGTH_LONG)
             .setBackgroundTint(0xFFD32F2F.toInt())
             .show()
+        updateStatus()
+    }
+    
+    private fun refreshConfig() {
+        val instance = NivoStack.instanceOrNull() ?: run {
+            showError("SDK not initialized")
+            return
+        }
+        showLoading(true)
+        
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val updated = instance.refreshConfig(forceRefresh = false)
+                runOnUiThread {
+                    showLoading(false)
+                    showMessage(if (updated) "Config refreshed successfully" else "Config unchanged (304 Not Modified)")
+                    updateStatus()
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    showLoading(false)
+                    showError("Refresh config failed: ${e.message}")
+                }
+            }
+        }
+    }
+    
+    private fun flush() {
+        val instance = NivoStack.instanceOrNull() ?: run {
+            showError("SDK not initialized")
+            return
+        }
+        showLoading(true)
+        
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                instance.flush()
+                runOnUiThread {
+                    showLoading(false)
+                    showMessage("Flushed pending traces and logs. Pending: ${instance.getPendingTraceCount()} traces, ${instance.getPendingLogCount()} logs")
+                    updateStatus()
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    showLoading(false)
+                    showError("Flush failed: ${e.message}")
+                }
+            }
+        }
+    }
+    
+    private fun trackApiTrace() {
+        val instance = NivoStack.instanceOrNull() ?: run {
+            showError("SDK not initialized")
+            return
+        }
+        
+        // Use public API method
+        instance.trackApiTrace(
+            url = "https://api.example.com/test",
+            method = "GET",
+            statusCode = 200,
+            duration = 150L,
+            screenName = "MainActivity"
+        )
+        
+        showMessage("API trace tracked. Pending traces: ${instance.getPendingTraceCount()}")
         updateStatus()
     }
     

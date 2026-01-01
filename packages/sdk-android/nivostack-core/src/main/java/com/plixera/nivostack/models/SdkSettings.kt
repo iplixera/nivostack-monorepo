@@ -50,6 +50,9 @@ data class SdkSettings(
      * Check if a log level should be captured based on minLogLevel
      */
     fun shouldCaptureLogLevel(level: String): Boolean {
+        // If logging is disabled, don't capture any logs
+        if (minLogLevel.lowercase() == "disabled") return false
+        
         val levelOrder = listOf("verbose", "debug", "info", "warn", "error", "assert")
         val minIndex = levelOrder.indexOf(minLogLevel.lowercase())
         val levelIndex = levelOrder.indexOf(level.lowercase())

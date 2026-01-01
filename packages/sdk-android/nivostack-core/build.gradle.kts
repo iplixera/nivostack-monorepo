@@ -4,6 +4,9 @@ plugins {
     id("maven-publish")
 }
 
+// Publishing configuration is in publish.gradle.kts
+apply(from = "publish.gradle.kts")
+
 android {
     namespace = "com.plixera.nivostack"
     compileSdk = 34

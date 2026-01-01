@@ -361,21 +361,62 @@ class ApiClient(
 
     /**
      * Fetch all SDK initialization data in a single request
+     * 
+     * @param projectId Project ID
+     * @param deviceId Optional device ID (for returning devices)
+     * @param buildMode Optional build mode ("preview" or "production")
+     * @param etag Optional ETag for conditional request (304 Not Modified)
+     * @return Map containing response data and metadata (etag, notModified)
      */
-    suspend fun getSdkInit(projectId: String): Map<String, Any> {
-        val url = "$baseUrl/api/sdk-init".toHttpUrl().newBuilder()
+    suspend fun getSdkInit(
+        projectId: String,
+        deviceId: String? = null,
+        buildMode: String? = null,
+        etag: String? = null
+    ): SdkInitResponse {
+        val urlBuilder = "$baseUrl/api/sdk-init".toHttpUrl().newBuilder()
             .addQueryParameter("projectId", projectId)
-            .build()
+        deviceId?.let { urlBuilder.addQueryParameter("deviceId", it) }
+        buildMode?.let { urlBuilder.addQueryParameter("buildMode", it) }
+        val url = urlBuilder.build()
 
-        val request = Request.Builder()
+        val requestBuilder = Request.Builder()
             .url(url)
             .get()
             .addHeader("X-API-Key", apiKey)
-            .build()
+        etag?.let { requestBuilder.addHeader("If-None-Match", it) }
+        val request = requestBuilder.build()
 
         val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: "{}"
-        return gson.fromJson(responseBody, Map::class.java) as Map<String, Any>
+        val responseEtag = response.header("ETag")
+        val notModified = response.code == 304
+        
+        val responseBody = if (notModified) {
+            "{}"
+        } else {
+            response.body?.string() ?: "{}"
+        }
+        
+        val data = if (notModified) {
+            emptyMap<String, Any>()
+        } else {
+            gson.fromJson(responseBody, Map::class.java) as Map<String, Any>
+        }
+        
+        return SdkInitResponse(
+            data = data,
+            etag = responseEtag,
+            notModified = notModified
+        )
     }
+    
+    /**
+     * Response wrapper for SDK init API
+     */
+    data class SdkInitResponse(
+        val data: Map<String, Any>,
+        val etag: String?,
+        val notModified: Boolean
+    )
 }
 

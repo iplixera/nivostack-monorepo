@@ -513,9 +513,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'projectId is required' }, { status: 400 })
     }
 
-    // Verify user owns the project
-    const project = await prisma.project.findFirst({
-      where: { id: projectId, userId: user.id }
+    // Check if user has access to project (owner or member)
+    const hasAccess = await canPerformAction(user.id, projectId, 'view')
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'Project not found or access denied' }, { status: 404 })
+    }
+
+    // Verify project exists
+    const project = await prisma.project.findUnique({
+      where: { id: projectId }
     })
 
     if (!project) {

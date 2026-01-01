@@ -7,6 +7,7 @@ import { useAuth } from '@/components/AuthProvider'
 import SubscriptionBanner from '@/components/SubscriptionBanner'
 import Sidebar from '@/components/Sidebar'
 import UserProfileDropdown from '@/components/UserProfileDropdown'
+import NotificationBell from '@/components/NotificationBell'
 
 export default function DashboardLayout({
   children,
@@ -138,6 +139,7 @@ export default function DashboardLayout({
                 )}
               </div>
               <div className="flex items-center space-x-4">
+                <NotificationBell />
                 <UserProfileDropdown />
               </div>
             </div>

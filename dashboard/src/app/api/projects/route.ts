@@ -28,24 +28,31 @@ export async function GET(request: NextRequest) {
     })
 
     // Get projects where user is a member
-    const memberProjects = await prisma.projectMember.findMany({
-      where: { userId: user.id },
-      include: {
-        project: {
-          include: {
-            _count: {
-              select: {
-                devices: true,
-                logs: true,
-                crashes: true,
-                apiTraces: true
+    let memberProjects: any[] = []
+    try {
+      memberProjects = await prisma.projectMember.findMany({
+        where: { userId: user.id },
+        include: {
+          project: {
+            include: {
+              _count: {
+                select: {
+                  devices: true,
+                  logs: true,
+                  crashes: true,
+                  apiTraces: true
+                }
               }
             }
           }
-        }
-      },
-      orderBy: { joinedAt: 'desc' }
-    })
+        },
+        orderBy: { joinedAt: 'desc' }
+      })
+    } catch (err: any) {
+      // If ProjectMember model doesn't exist yet, skip member projects
+      console.warn('Could not fetch member projects:', err.message)
+      memberProjects = []
+    }
 
     // Combine and deduplicate (user might be both owner and member)
     const projectMap = new Map()

@@ -256,6 +256,18 @@ export default function TeamTab({ projectId }: { projectId: string }) {
         )}
       </div>
 
+      {error && (
+        <div className="p-4 bg-red-900/30 border border-red-800 rounded-lg text-red-400 flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            onClick={() => setError(null)}
+            className="ml-4 text-red-300 hover:text-red-200 font-bold"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {/* Members Section */}
       <div>
         <h3 className="text-lg font-semibold text-white mb-4">Members ({members.length})</h3>

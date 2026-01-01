@@ -8,9 +8,12 @@ Enable team collaboration by allowing project owners to invite team members with
 
 1. **Simple Onboarding**: Invite team members via email or shareable link
 2. **Role-Based Access**: Control what team members can do (Owner, Admin, Member, Viewer)
-3. **In-App Notifications**: Users see pending invitations in Studio
-4. **Email Integration**: Send invitation emails via email service
+3. **In-App Notifications**: Users see pending invitations in Studio (Phase 1)
+4. **Email Integration**: AWS SES integration (Phase 2) - Domain registered in GoDaddy
 5. **Multi-Project Support**: Users can be members of multiple projects
+6. **Seat Limits**: Plan-based limits on team members
+7. **User Preferences**: Users can enable/disable email notifications
+8. **Invitation Resend**: Resend invitations with status tracking
 
 ---
 
@@ -62,10 +65,22 @@ model ProjectInvitation {
   // Invitation source
   invitedBy String   // User ID who sent invitation
   invitedAt DateTime @default(now())
-  expiresAt DateTime // Invitation expiry (default: 7 days)
+  expiresAt DateTime // Invitation expiry (configurable via SystemConfiguration)
   
   // Status: "pending" | "accepted" | "expired" | "cancelled"
   status    String   @default("pending")
+  
+  // Email tracking
+  emailSent      Boolean   @default(false) // Whether email was sent
+  emailSentAt    DateTime? // When email was sent
+  emailDelivered Boolean   @default(false) // Whether email was delivered (SES)
+  emailOpened    Boolean   @default(false) // Whether email was opened (SES)
+  emailClicked    Boolean   @default(false) // Whether link was clicked (SES)
+  
+  // Resend tracking
+  resendCount    Int       @default(0) // Number of times invitation was resent
+  lastResentAt   DateTime? // Last time invitation was resent
+  lastResentBy   String?   // User ID who last resent
   
   // Acceptance tracking
   acceptedAt DateTime?
@@ -79,6 +94,7 @@ model ProjectInvitation {
   @@index([token])
   @@index([status])
   @@index([expiresAt])
+  @@index([emailSent])
 }
 ```
 
@@ -123,6 +139,32 @@ model User {
   projectMemberships ProjectMember[]
   invitations        ProjectInvitation[] // Invitations sent by this user
   notifications      UserNotification[]
+  notificationPreferences UserNotificationPreferences?
+}
+```
+
+**UserNotificationPreferences:**
+```prisma
+model UserNotificationPreferences {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Email notification preferences
+  emailInvitations      Boolean @default(true) // Receive invitation emails
+  emailProjectUpdates   Boolean @default(true) // Receive project update emails
+  emailAlerts           Boolean @default(true) // Receive alert emails
+  emailWeeklyDigest     Boolean @default(false) // Receive weekly digest
+  
+  // In-app notification preferences
+  inAppInvitations      Boolean @default(true) // Show invitation notifications
+  inAppProjectUpdates   Boolean @default(true) // Show project update notifications
+  inAppAlerts           Boolean @default(true) // Show alert notifications
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 ```
 
@@ -135,6 +177,19 @@ model Project {
   
   // Keep userId for backward compatibility (owner)
   // ownerId is now the userId of the ProjectMember with role="owner"
+}
+```
+
+**Plan Model - Add Seat Limits:**
+```prisma
+model Plan {
+  // ... existing fields ...
+  
+  // Team & Seats
+  maxTeamMembers Int? // Maximum team members (null = unlimited)
+  maxSeats        Int? // Alias for maxTeamMembers (for clarity)
+  
+  // ... rest of fields ...
 }
 ```
 
@@ -219,13 +274,49 @@ model Project {
     invitedBy: { id: string, name: string, email: string }
     invitedAt: string
     expiresAt: string
-    status: string
+    status: "pending" | "accepted" | "expired" | "cancelled"
+    // Email tracking
+    emailSent: boolean
+    emailSentAt: string | null
+    emailDelivered: boolean
+    emailOpened: boolean
+    emailClicked: boolean
+    // Resend tracking
+    resendCount: number
+    lastResentAt: string | null
+    lastResentBy: { id: string, name: string, email: string } | null
   }>
 }
 ```
 
 #### `DELETE /api/projects/[id]/invitations/[invitationId]`
 **Cancel invitation**
+
+#### `POST /api/projects/[id]/invitations/[invitationId]/resend`
+**Resend invitation**
+```typescript
+{
+  // Optional: new expiry date
+  expiresInDays?: number
+}
+```
+**Response:**
+```typescript
+{
+  invitation: {
+    id: string
+    email: string
+    status: "pending" | "sent" | "delivered" | "opened" | "clicked"
+    resendCount: number
+    lastResentAt: string
+    emailSent: boolean
+    emailSentAt: string
+    emailDelivered: boolean
+    emailOpened: boolean
+    emailClicked: boolean
+  }
+}
+```
 
 #### `GET /api/invitations/[token]`
 **Get invitation details (public endpoint, no auth)**
@@ -382,7 +473,67 @@ model Project {
 
 ---
 
-## Email Service Integration
+## Email Service Integration - AWS SES
+
+### Phase 1: In-App Notifications Only
+- **No email sending** in Phase 1
+- Users see invitations in Studio notification bell
+- Invitation links work without email
+
+### Phase 2: AWS SES Integration
+
+**Domain Setup**: Domain registered in GoDaddy, mail service configured there.
+
+#### AWS SES Setup Steps
+
+**Step 1: Verify Domain in AWS SES**
+1. Go to AWS SES Console → Verified identities
+2. Click "Create identity" → Choose "Domain"
+3. Enter your domain (e.g., `nivostack.com`)
+4. AWS provides DNS records to add:
+   - **CNAME records** for domain verification
+   - **MX records** (if receiving emails)
+   - **TXT record** for SPF
+   - **TXT record** for DKIM (3 records)
+5. Add these records in **GoDaddy DNS settings**
+6. Wait for verification (usually 24-48 hours)
+
+**Step 2: Request Production Access**
+1. AWS SES starts in "Sandbox" mode (can only send to verified emails)
+2. Request production access:
+   - Go to AWS SES → Account dashboard
+   - Click "Request production access"
+   - Fill out form (use case: Team invitation emails)
+   - Wait for approval (usually 24 hours)
+
+**Step 3: Configure SMTP Credentials**
+1. Go to AWS SES → SMTP settings
+2. Click "Create SMTP credentials"
+3. Save credentials securely (IAM user with SES sending permissions)
+
+**Step 4: Set Up Environment Variables**
+```env
+AWS_SES_REGION=us-east-1
+AWS_SES_ACCESS_KEY_ID=your_access_key
+AWS_SES_SECRET_ACCESS_KEY=your_secret_key
+AWS_SES_FROM_EMAIL=noreply@nivostack.com
+AWS_SES_FROM_NAME=NivoStack
+```
+
+**Step 5: Install AWS SDK**
+```bash
+pnpm add @aws-sdk/client-ses
+```
+
+**Step 6: Create Email Service**
+- Create `src/lib/email/ses.ts` for SES integration
+- Create `src/lib/email/templates.ts` for email templates
+- Create `src/lib/email/invitation.ts` for invitation emails
+
+**Step 7: Configure Email Tracking**
+- Set up SES event publishing to SNS
+- Track email delivery, opens, clicks
+- Update `ProjectInvitation` model with tracking fields
 
 ### Email Templates
 
@@ -390,42 +541,91 @@ model Project {
 **Subject**: `You've been invited to join {projectName} on NivoStack`
 
 **Content**:
-```
-Hi there,
-
-{inviterName} ({inviterEmail}) has invited you to join the "{projectName}" project on NivoStack as a {role}.
-
-Click the link below to accept the invitation:
-{acceptLink}
-
-This invitation will expire on {expiresAt}.
-
-If you don't have a NivoStack account, you'll be prompted to create one.
-
-Best regards,
-The NivoStack Team
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .button { display: inline-block; padding: 12px 24px; background: #0070f3; color: white; text-decoration: none; border-radius: 5px; }
+    .footer { margin-top: 30px; font-size: 12px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>You've been invited to join {projectName}</h2>
+    <p>Hi there,</p>
+    <p>{inviterName} ({inviterEmail}) has invited you to join the "<strong>{projectName}</strong>" project on NivoStack as a <strong>{role}</strong>.</p>
+    <p><a href="{acceptLink}" class="button">Accept Invitation</a></p>
+    <p>Or copy and paste this link into your browser:</p>
+    <p style="word-break: break-all; color: #666;">{acceptLink}</p>
+    <p>This invitation will expire on <strong>{expiresAt}</strong>.</p>
+    <p>If you don't have a NivoStack account, you'll be prompted to create one.</p>
+    <div class="footer">
+      <p>Best regards,<br>The NivoStack Team</p>
+      <p>This email was sent to {email}. If you didn't expect this invitation, you can safely ignore it.</p>
+    </div>
+  </div>
+</body>
+</html>
 ```
 
 #### 2. Invitation Accepted Email (to inviter)
 **Subject**: `{inviteeEmail} accepted your invitation to {projectName}`
 
-### Email Service Options
+**Content**:
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Invitation Accepted</h2>
+    <p>Hi {inviterName},</p>
+    <p><strong>{inviteeEmail}</strong> has accepted your invitation to join the "<strong>{projectName}</strong>" project.</p>
+    <p><a href="{projectUrl}">View Project</a></p>
+  </div>
+</body>
+</html>
+```
 
-**Option 1: Resend (Recommended)**
-- Simple API
-- Good free tier
-- Easy integration
+#### 3. Invitation Resent Email
+**Subject**: `Reminder: You've been invited to join {projectName} on NivoStack`
 
-**Option 2: SendGrid**
-- More features
-- Better analytics
-- Requires setup
+**Content**: Same as invitation email, with note: "This is a reminder. You previously received this invitation on {originalInvitedAt}."
 
-**Option 3: AWS SES**
-- Cost-effective at scale
-- More complex setup
+### System Configuration for Email
 
-**Implementation**: Start with Resend, can switch later.
+Add to `SystemConfiguration`:
+- `category: "notifications"`
+- `key: "invitation_expiry_days"` → Default: 7 (configurable by admin)
+- `key: "email_enabled"` → Enable/disable email sending globally
+- `key: "email_from_address"` → Default sender email
+- `key: "email_from_name"` → Default sender name
+
+### Email Tracking
+
+**SES Event Types**:
+- `send` - Email sent successfully
+- `delivery` - Email delivered
+- `open` - Email opened (if tracking enabled)
+- `click` - Link clicked (if tracking enabled)
+- `bounce` - Email bounced
+- `complaint` - Marked as spam
+
+**Implementation**:
+1. Set up SNS topic for SES events
+2. Create webhook endpoint: `/api/webhooks/ses`
+3. Update `ProjectInvitation` with tracking data
+4. Show status in UI: "Sent", "Delivered", "Opened", "Clicked", "Pending"
 
 ---
 
@@ -433,43 +633,65 @@ The NivoStack Team
 
 ### Phase 1: Database & Core Models (Week 1)
 - [ ] Add `ProjectMember` model
-- [ ] Add `ProjectInvitation` model
+- [ ] Add `ProjectInvitation` model (with email tracking fields)
 - [ ] Add `UserNotification` model
+- [ ] Add `UserNotificationPreferences` model
 - [ ] Update `User` and `Project` models
+- [ ] Update `Plan` model with `maxTeamMembers` / `maxSeats`
+- [ ] Add SystemConfiguration for invitation expiry (default: 7 days)
 - [ ] Run migrations
 - [ ] Create seed data for testing
 
 ### Phase 2: API Endpoints (Week 1-2)
 - [ ] Invitation CRUD endpoints
+- [ ] Invitation resend endpoint with status tracking
 - [ ] Team member management endpoints
 - [ ] Notification endpoints
+- [ ] User notification preferences endpoints
+- [ ] Seat limit checking (check plan limits before inviting)
 - [ ] Update project access checks
 - [ ] Add role-based authorization middleware
 
-### Phase 3: Email Integration (Week 2)
-- [ ] Set up Resend account
-- [ ] Create email templates
-- [ ] Implement email sending service
-- [ ] Send invitation emails
-- [ ] Send acceptance notification emails
+### Phase 3: In-App Notifications (Week 2)
+- [ ] Notification bell component
+- [ ] Notification dropdown
+- [ ] Create notifications when invitations sent
+- [ ] Mark notifications as read
+- [ ] Notification preferences UI
 
 ### Phase 4: UI Components (Week 2-3)
 - [ ] Team management page
-- [ ] Invitation modals
+- [ ] Invitation modals (with resend option)
 - [ ] Invitation acceptance page
-- [ ] Notification bell component
+- [ ] Invitation status indicators (Sent, Delivered, Opened, Clicked, Pending)
 - [ ] Update project list with roles
+- [ ] User notification preferences page
 
 ### Phase 5: Authorization & Access Control (Week 3)
 - [ ] Role-based access middleware
 - [ ] Update all API endpoints with role checks
 - [ ] Update UI to hide/disable based on role
 - [ ] Add role badges throughout UI
+- [ ] Seat limit enforcement
 
-### Phase 6: Testing & Polish (Week 3-4)
-- [ ] Test invitation flows
-- [ ] Test role-based access
+### Phase 6: AWS SES Integration (Week 4) - OPTIONAL
+- [ ] Verify domain in AWS SES
+- [ ] Request production access
+- [ ] Set up SMTP credentials
+- [ ] Install AWS SDK
+- [ ] Create email service (`src/lib/email/ses.ts`)
+- [ ] Create email templates
+- [ ] Implement invitation email sending
+- [ ] Set up SES event tracking (SNS webhook)
+- [ ] Update invitation status based on email events
 - [ ] Test email delivery
+
+### Phase 7: Testing & Polish (Week 3-4)
+- [ ] Test invitation flows (with and without email)
+- [ ] Test role-based access
+- [ ] Test seat limits
+- [ ] Test invitation resend
+- [ ] Test notification preferences
 - [ ] Test edge cases (expired invitations, etc.)
 - [ ] Add loading states and error handling
 - [ ] Add analytics tracking
@@ -547,13 +769,41 @@ The NivoStack Team
 
 ---
 
-## Questions to Resolve
+## Configuration & Settings
 
-1. **Email Service**: Confirm Resend vs SendGrid vs AWS SES
-2. **Invitation Expiry**: Default 7 days - is this acceptable?
-3. **Role Limits**: Should there be limits on number of admins/members?
-4. **Notification Preferences**: Allow users to disable email notifications?
-5. **Invitation Resend**: Allow resending expired invitations?
+### System Configuration (Admin)
+
+**Category**: `notifications`
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `invitation_expiry_days` | `7` | Number of days before invitation expires |
+| `email_enabled` | `false` | Enable/disable email sending globally (Phase 1: false) |
+| `email_from_address` | `noreply@nivostack.com` | Default sender email |
+| `email_from_name` | `NivoStack` | Default sender name |
+
+### Plan Seat Limits
+
+Each plan has `maxTeamMembers` / `maxSeats`:
+- **Free Plan**: 1 seat (owner only)
+- **Pro Plan**: 5 seats
+- **Team Plan**: 20 seats
+- **Enterprise**: Unlimited (null)
+
+### User Notification Preferences
+
+Users can control:
+- **Email notifications**: Enable/disable email invitations
+- **In-app notifications**: Enable/disable in-app notifications
+- Per notification type: Invitations, Project Updates, Alerts
+
+## Resolved Decisions
+
+✅ **Email Service**: AWS SES (domain in GoDaddy)  
+✅ **Invitation Expiry**: 7 days default, configurable by admin  
+✅ **Seat Limits**: Yes, per plan  
+✅ **Notification Preferences**: Yes, users can enable/disable  
+✅ **Invitation Resend**: Yes, with status tracking (Sent, Delivered, Opened, Clicked, Pending)
 
 ---
 

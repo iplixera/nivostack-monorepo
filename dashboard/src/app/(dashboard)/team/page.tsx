@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import Link from 'next/link'
 
@@ -48,6 +49,7 @@ interface SeatInfo {
 
 export default function TeamPage() {
   const { user } = useAuth()
+  const searchParams = useSearchParams()
   const [projects, setProjects] = useState<Project[]>([])
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [members, setMembers] = useState<TeamMember[]>([])
@@ -64,6 +66,18 @@ export default function TeamPage() {
     fetchUserProjects()
   }, [])
 
+  // Handle project query parameter from URL
+  useEffect(() => {
+    const projectParam = searchParams?.get('project')
+    if (projectParam && projects.length > 0) {
+      // Check if the project exists in the list
+      const projectExists = projects.some((p) => p.id === projectParam)
+      if (projectExists) {
+        setSelectedProject(projectParam)
+      }
+    }
+  }, [searchParams, projects])
+
   useEffect(() => {
     if (selectedProject) {
       fetchTeamData(selectedProject)
@@ -72,6 +86,7 @@ export default function TeamPage() {
 
   const fetchUserProjects = async () => {
     try {
+      setLoading(true)
       const token = localStorage.getItem('token')
       const response = await fetch('/api/projects', {
         headers: { Authorization: `Bearer ${token}` },
@@ -84,13 +99,19 @@ export default function TeamPage() {
       )
       setProjects(manageableProjects)
       
-      // Select first project by default
-      if (manageableProjects.length > 0 && !selectedProject) {
+      // Check for project query parameter first
+      const projectParam = searchParams?.get('project')
+      if (projectParam && manageableProjects.some((p) => p.id === projectParam)) {
+        setSelectedProject(projectParam)
+      } else if (manageableProjects.length > 0 && !selectedProject) {
+        // Select first project by default if no query param
         setSelectedProject(manageableProjects[0].id)
       }
     } catch (err) {
       console.error('Failed to fetch projects:', err)
       setError('Failed to load projects')
+    } finally {
+      setLoading(false)
     }
   }
 

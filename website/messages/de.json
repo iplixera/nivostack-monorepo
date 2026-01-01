@@ -1,0 +1,180 @@
+{
+  "common": {
+    "brand": {
+      "name": "NivoStack",
+      "tagline": "Plattform für Mobile App Monitoring und Konfiguration",
+      "description": "Vollständige Plattform für Mobile App Monitoring und Konfiguration. Verfolgen Sie API-Aufrufe, überwachen Sie Protokolle, fangen Sie Abstürze ab, verwalten Sie Konfigurationen und simulieren Sie APIs—alles von einem Dashboard aus."
+    },
+    "nav": {
+      "features": "Funktionen",
+      "pricing": "Preise",
+      "about": "Über uns",
+      "contact": "Kontakt",
+      "signIn": "Anmelden",
+      "startFree": "Kostenlos starten"
+    },
+    "cta": {
+      "startFree": "Kostenlos für immer starten",
+      "learnMore": "Mehr erfahren",
+      "contactSales": "Verkauf kontaktieren",
+      "getStarted": "Loslegen"
+    },
+    "footer": {
+      "product": "Produkt",
+      "company": "Unternehmen",
+      "legal": "Rechtliches",
+      "resources": "Ressourcen",
+      "rights": "Alle Rechte vorbehalten"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Mobile Apps",
+      "titleHighlight": "Remote Debuggen",
+      "subtitle": "Vollständige Plattform für Mobile App Monitoring und Konfiguration. Verfolgen Sie API-Aufrufe, überwachen Sie Protokolle, fangen Sie Abstürze ab, verwalten Sie Konfigurationen und simulieren Sie APIs—alles von einem Dashboard aus.",
+      "noCreditCard": "Keine Kreditkarte erforderlich • Einrichtung in 2 Minuten"
+    },
+    "stats": {
+      "faster": "Schnellere SDK-Initialisierung",
+      "initTime": "Durchschnittliche Initialisierungszeit",
+      "uptime": "Betriebszeit",
+      "support": "Support",
+      "performance": "Leistungsverbesserung",
+      "fromTo": "Von 4.3s auf 290ms",
+      "reliable": "Zuverlässige Infrastruktur",
+      "alwaysHere": "Immer da, um zu helfen"
+    },
+    "features": {
+      "title": "Alles was Sie Brauchen in Einer Plattform",
+      "subtitle": "Ersetzen Sie mehrere teure Tools durch eine einheitliche, erschwingliche Lösung"
+    },
+    "platforms": {
+      "title": "Funktioniert mit Ihrem Stack",
+      "subtitle": "Native SDKs für alle wichtigen mobilen Plattformen"
+    },
+    "testimonials": {
+      "title": "Von Entwicklern Geliebt",
+      "subtitle": "Sehen Sie, was Teams über NivoStack sagen"
+    }
+  },
+  "features": {
+    "hero": {
+      "title": "Leistungsstarke Funktionen für",
+      "titleHighlight": "Moderne Mobile Apps",
+      "subtitle": "Alles was Sie brauchen, um Ihre mobilen Anwendungen zu überwachen, zu debuggen und zu konfigurieren—alles in einer einheitlichen Plattform."
+    },
+    "categories": {
+      "monitoring": {
+        "name": "Monitoring & Observability",
+        "description": "Echtzeit-Einblick in die Leistung Ihrer App"
+      },
+      "debugging": {
+        "name": "Debugging & Fehlerbehebung",
+        "description": "Debuggen Sie Probleme schneller mit umfassenden Tools"
+      },
+      "configuration": {
+        "name": "Remote-Konfiguration",
+        "description": "Steuern Sie Ihre App ohne Bereitstellungen"
+      },
+      "analytics": {
+        "name": "Analysen & Insights",
+        "description": "Verstehen Sie Benutzerverhalten und App-Leistung"
+      }
+    },
+    "comparison": {
+      "title": "Ersetzen Sie Mehrere Tools",
+      "subtitle": "NivoStack ersetzt teure SaaS-Tools durch eine einheitliche Plattform",
+      "whatYouGet": "Was Sie Bekommen",
+      "whatYouSave": "Was Sie Sparen"
+    }
+  },
+  "pricing": {
+    "hero": {
+      "title": "Einfache, Transparente",
+      "titleHighlight": "Preise",
+      "subtitle": "Starten Sie kostenlos für immer. Upgraden Sie, wenn Sie mehr brauchen. Keine Kreditkarte erforderlich."
+    },
+    "plans": {
+      "free": {
+        "name": "Kostenlos für Immer",
+        "description": "Perfekt zum Einstieg"
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Für wachsende Teams",
+        "popular": "BELIEBTESTE"
+      },
+      "team": {
+        "name": "Team",
+        "description": "Für Teams und Agenturen"
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "description": "Maßgeschneiderte Lösungen für große Organisationen"
+      }
+    },
+    "faq": {
+      "title": "Häufig Gestellte Fragen"
+    },
+    "enterprise": {
+      "title": "Benötigen Sie Maßgeschneiderte Lösungen?",
+      "subtitle": "Enterprise-Pläne umfassen dedizierten Support, benutzerdefinierte Integrationen, SLA-Garantien und On-Premise-Optionen."
+    }
+  },
+  "about": {
+    "hero": {
+      "title": "Tools für",
+      "titleHighlight": "Moderne Entwickler Bauen",
+      "subtitle": "Wir haben es uns zur Aufgabe gemacht, Mobile App Monitoring und Konfiguration zu vereinfachen."
+    },
+    "mission": {
+      "title": "Unsere Mission",
+      "content": "Mobile App Entwickler mit leistungsstarken, erschwinglichen Tools zu befähigen, die Monitoring, Debugging und Konfigurationsverwaltung vereinfachen. Wir glauben, dass jeder Entwickler Zugang zu Tools auf Unternehmensniveau ohne den Unternehmenspreis haben sollte."
+    },
+    "vision": {
+      "title": "Unsere Vision",
+      "content": "Die führende Plattform für Mobile App Teams zu werden und mehrere teure SaaS-Tools durch eine einheitliche, erschwingliche Lösung zu ersetzen. Wir stellen uns eine Zukunft vor, in der Entwickler weniger Zeit mit der Konfiguration von Tools und mehr Zeit mit dem Bauen großartiger Produkte verbringen."
+    },
+    "values": {
+      "title": "Unsere Werte"
+    },
+    "story": {
+      "title": "Unsere Geschichte"
+    }
+  },
+  "contact": {
+    "hero": {
+      "title": "Kontaktieren Sie Uns",
+      "subtitle": "Haben Sie Fragen? Wir würden gerne von Ihnen hören. Senden Sie uns eine Nachricht und wir werden so schnell wie möglich antworten."
+    },
+    "form": {
+      "title": "Senden Sie uns eine Nachricht",
+      "name": "Name",
+      "email": "E-Mail",
+      "subject": "Betreff",
+      "message": "Nachricht",
+      "selectSubject": "Wählen Sie einen Betreff",
+      "sales": "Verkaufsanfrage",
+      "support": "Technischer Support",
+      "partnership": "Partnerschaft",
+      "other": "Andere",
+      "placeholder": "Teilen Sie uns mit, wie wir helfen können...",
+      "send": "Nachricht Senden",
+      "sending": "Wird gesendet...",
+      "success": "Vielen Dank! Wir werden uns bald bei Ihnen melden.",
+      "error": "Etwas ist schief gelaufen. Bitte versuchen Sie es erneut oder senden Sie uns direkt eine E-Mail."
+    },
+    "info": {
+      "title": "Kontaktinformationen",
+      "general": "Allgemeine Anfragen",
+      "support": "Support",
+      "sales": "Verkauf",
+      "responseTime": "Antwortzeit: Innerhalb von 24 Stunden",
+      "enterprise": "Für Unternehmensanfragen",
+      "hours": "Bürozeiten",
+      "hoursContent": "Montag - Freitag: 9:00 - 18:00 Uhr EST\nSamstag - Sonntag: Geschlossen",
+      "follow": "Folgen Sie Uns"
+    }
+  }
+}
+

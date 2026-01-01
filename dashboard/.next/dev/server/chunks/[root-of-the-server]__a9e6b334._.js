@@ -69,7 +69,13 @@ const prisma = globalForPrisma.prisma ?? new __TURBOPACK__imported__module__$5b$
         'warn'
     ] : "TURBOPACK unreachable"
 });
-if ("TURBOPACK compile-time truthy", 1) globalForPrisma.prisma = prisma;
+if ("TURBOPACK compile-time truthy", 1) {
+    globalForPrisma.prisma = prisma;
+    // In development, ensure Prisma client is properly initialized
+    if (typeof prisma.user === 'undefined') {
+        console.warn('⚠️  Prisma client models not available. Restart dev server after running: pnpm prisma generate');
+    }
+}
 }),
 "[project]/dashboard/src/lib/plan.ts [app-route] (ecmascript)", ((__turbopack_context__) => {
 "use strict";

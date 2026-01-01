@@ -93,7 +93,13 @@ const prisma = globalForPrisma.prisma ?? new __TURBOPACK__imported__module__$5b$
         'warn'
     ] : "TURBOPACK unreachable"
 });
-if ("TURBOPACK compile-time truthy", 1) globalForPrisma.prisma = prisma;
+if ("TURBOPACK compile-time truthy", 1) {
+    globalForPrisma.prisma = prisma;
+    // In development, ensure Prisma client is properly initialized
+    if (typeof prisma.user === 'undefined') {
+        console.warn('⚠️  Prisma client models not available. Restart dev server after running: pnpm prisma generate');
+    }
+}
 }),
 "[project]/dashboard/src/lib/auth.ts [app-route] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
@@ -405,11 +411,12 @@ async function getUsageStats(userId) {
     const maxBusinessConfigKeys = getLimit(subscription.quotaMaxBusinessConfigKeys, plan.maxBusinessConfigKeys);
     const maxLocalizationLanguages = getLimit(subscription.quotaMaxLocalizationLanguages, plan.maxLocalizationLanguages);
     const maxLocalizationKeys = getLimit(subscription.quotaMaxLocalizationKeys, plan.maxLocalizationKeys);
+    const maxTeamMembers = getLimit(subscription.quotaMaxTeamMembers, plan.maxTeamMembers ?? plan.maxSeats);
     // FIXED: Use currentPeriodStart/currentPeriodEnd instead of trialStartDate/trialEndDate
     const periodStart = subscription.currentPeriodStart;
     const periodEnd = subscription.currentPeriodEnd;
     // Count usage for current billing period
-    const [mockEndpoints, logs, sessions, crashes, devices, projects, apiEndpoints, apiRequests, businessConfigKeys, localizationLanguages, localizationKeys] = await Promise.all([
+    const [mockEndpoints, logs, sessions, crashes, devices, projects, apiEndpoints, apiRequests, businessConfigKeys, localizationLanguages, localizationKeys, teamMembers] = await Promise.all([
         // Mock Endpoints: Lifetime meter (never reset)
         __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].mockEndpoint.count({
             where: {
@@ -521,7 +528,39 @@ async function getUsageStats(userId) {
                     userId
                 }
             }
-        })
+        }),
+        // Team Members: Count all unique team members across all projects owned by user
+        // This counts all ProjectMember entries for projects owned by the user
+        // Note: The owner themselves are counted if they have ProjectMember entries
+        (async ()=>{
+            const ownedProjects = await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].project.findMany({
+                where: {
+                    userId
+                },
+                select: {
+                    id: true
+                }
+            });
+            const projectIds = ownedProjects.map((p)=>p.id);
+            if (projectIds.length === 0) return 0;
+            // Count unique users who are members of any owned project
+            // This includes all invited members (admin, member, viewer roles)
+            const uniqueMembers = await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].projectMember.findMany({
+                where: {
+                    projectId: {
+                        in: projectIds
+                    }
+                },
+                select: {
+                    userId: true
+                }
+            });
+            // Get unique user IDs (using Set to deduplicate)
+            const uniqueUserIds = new Set(uniqueMembers.map((m)=>m.userId));
+            // Return count of unique team members
+            // Note: This counts all members, not including the owner unless they have a ProjectMember entry
+            return uniqueUserIds.size;
+        })()
     ]);
     return {
         mockEndpoints: {
@@ -578,6 +617,11 @@ async function getUsageStats(userId) {
             used: localizationKeys,
             limit: maxLocalizationKeys,
             percentage: maxLocalizationKeys ? localizationKeys / maxLocalizationKeys * 100 : 0
+        },
+        teamMembers: {
+            used: teamMembers,
+            limit: maxTeamMembers,
+            percentage: maxTeamMembers ? teamMembers / maxTeamMembers * 100 : 0
         },
         trialActive: await isTrialActive(subscription),
         trialEndDate: subscription.trialEndDate,

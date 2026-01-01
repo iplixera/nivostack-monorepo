@@ -1,0 +1,180 @@
+{
+  "common": {
+    "brand": {
+      "name": "NivoStack",
+      "tagline": "Plataforma de Monitoreo y Configuración de Aplicaciones Móviles",
+      "description": "Plataforma completa de monitoreo y configuración de aplicaciones móviles. Rastrea llamadas API, monitorea registros, detecta fallos, gestiona configuraciones y simula APIs—todo desde un panel."
+    },
+    "nav": {
+      "features": "Características",
+      "pricing": "Precios",
+      "about": "Acerca de",
+      "contact": "Contacto",
+      "signIn": "Iniciar Sesión",
+      "startFree": "Comenzar Gratis"
+    },
+    "cta": {
+      "startFree": "Comenzar Gratis para Siempre",
+      "learnMore": "Saber Más",
+      "contactSales": "Contactar Ventas",
+      "getStarted": "Comenzar"
+    },
+    "footer": {
+      "product": "Producto",
+      "company": "Empresa",
+      "legal": "Legal",
+      "resources": "Recursos",
+      "rights": "Todos los derechos reservados"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Depura Aplicaciones Móviles",
+      "titleHighlight": "Remotamente",
+      "subtitle": "Plataforma completa de monitoreo y configuración de aplicaciones móviles. Rastrea llamadas API, monitorea registros, detecta fallos, gestiona configuraciones y simula APIs—todo desde un panel.",
+      "noCreditCard": "No se requiere tarjeta de crédito • Configuración en 2 minutos"
+    },
+    "stats": {
+      "faster": "Inicialización SDK Más Rápida",
+      "initTime": "Tiempo Promedio de Inicialización",
+      "uptime": "Tiempo de Actividad",
+      "support": "Soporte",
+      "performance": "Mejora de rendimiento",
+      "fromTo": "De 4.3s a 290ms",
+      "reliable": "Infraestructura confiable",
+      "alwaysHere": "Siempre aquí para ayudar"
+    },
+    "features": {
+      "title": "Todo lo que Necesitas en Una Plataforma",
+      "subtitle": "Reemplaza múltiples herramientas costosas con una solución unificada y asequible"
+    },
+    "platforms": {
+      "title": "Funciona con tu Stack",
+      "subtitle": "SDKs nativos para todas las principales plataformas móviles"
+    },
+    "testimonials": {
+      "title": "Amado por Desarrolladores",
+      "subtitle": "Ve lo que los equipos dicen sobre NivoStack"
+    }
+  },
+  "features": {
+    "hero": {
+      "title": "Características Poderosas para",
+      "titleHighlight": "Aplicaciones Móviles Modernas",
+      "subtitle": "Todo lo que necesitas para monitorear, depurar y configurar tus aplicaciones móviles—todo en una plataforma unificada."
+    },
+    "categories": {
+      "monitoring": {
+        "name": "Monitoreo y Observabilidad",
+        "description": "Visibilidad en tiempo real del rendimiento de tu aplicación"
+      },
+      "debugging": {
+        "name": "Depuración y Solución de Problemas",
+        "description": "Depura problemas más rápido con herramientas completas"
+      },
+      "configuration": {
+        "name": "Configuración Remota",
+        "description": "Controla tu aplicación sin despliegues"
+      },
+      "analytics": {
+        "name": "Analíticas e Insights",
+        "description": "Comprende el comportamiento del usuario y el rendimiento de la aplicación"
+      }
+    },
+    "comparison": {
+      "title": "Reemplaza Múltiples Herramientas",
+      "subtitle": "NivoStack reemplaza herramientas SaaS costosas con una plataforma unificada",
+      "whatYouGet": "Lo que Obtienes",
+      "whatYouSave": "Lo que Ahorras"
+    }
+  },
+  "pricing": {
+    "hero": {
+      "title": "Precios",
+      "titleHighlight": "Simples y Transparentes",
+      "subtitle": "Comienza gratis para siempre. Actualiza cuando necesites más. No se requiere tarjeta de crédito."
+    },
+    "plans": {
+      "free": {
+        "name": "Gratis para Siempre",
+        "description": "Perfecto para comenzar"
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Para equipos en crecimiento",
+        "popular": "MÁS POPULAR"
+      },
+      "team": {
+        "name": "Equipo",
+        "description": "Para equipos y agencias"
+      },
+      "enterprise": {
+        "name": "Empresarial",
+        "description": "Soluciones personalizadas para grandes organizaciones"
+      }
+    },
+    "faq": {
+      "title": "Preguntas Frecuentes"
+    },
+    "enterprise": {
+      "title": "¿Necesitas Soluciones Personalizadas?",
+      "subtitle": "Los planes empresariales incluyen soporte dedicado, integraciones personalizadas, garantías SLA y opciones on-premise."
+    }
+  },
+  "about": {
+    "hero": {
+      "title": "Construyendo Herramientas para",
+      "titleHighlight": "Desarrolladores Modernos",
+      "subtitle": "Estamos en una misión para simplificar el monitoreo y configuración de aplicaciones móviles."
+    },
+    "mission": {
+      "title": "Nuestra Misión",
+      "content": "Empoderar a los desarrolladores de aplicaciones móviles con herramientas poderosas y asequibles que simplifiquen el monitoreo, depuración y gestión de configuración. Creemos que cada desarrollador debería tener acceso a herramientas de nivel empresarial sin el precio empresarial."
+    },
+    "vision": {
+      "title": "Nuestra Visión",
+      "content": "Convertirnos en la plataforma principal para equipos de aplicaciones móviles, reemplazando múltiples herramientas SaaS costosas con una solución unificada y asequible. Visualizamos un futuro donde los desarrolladores pasen menos tiempo configurando herramientas y más tiempo construyendo productos increíbles."
+    },
+    "values": {
+      "title": "Nuestros Valores"
+    },
+    "story": {
+      "title": "Nuestra Historia"
+    }
+  },
+  "contact": {
+    "hero": {
+      "title": "Contáctanos",
+      "subtitle": "¿Tienes preguntas? Nos encantaría saber de ti. Envíanos un mensaje y responderemos lo antes posible."
+    },
+    "form": {
+      "title": "Envíanos un mensaje",
+      "name": "Nombre",
+      "email": "Correo Electrónico",
+      "subject": "Asunto",
+      "message": "Mensaje",
+      "selectSubject": "Selecciona un asunto",
+      "sales": "Consulta de Ventas",
+      "support": "Soporte Técnico",
+      "partnership": "Asociación",
+      "other": "Otro",
+      "placeholder": "Cuéntanos cómo podemos ayudar...",
+      "send": "Enviar Mensaje",
+      "sending": "Enviando...",
+      "success": "¡Gracias! Te responderemos pronto.",
+      "error": "Algo salió mal. Por favor intenta de nuevo o envíanos un correo directamente."
+    },
+    "info": {
+      "title": "Información de Contacto",
+      "general": "Consultas Generales",
+      "support": "Soporte",
+      "sales": "Ventas",
+      "responseTime": "Tiempo de respuesta: Dentro de 24 horas",
+      "enterprise": "Para consultas empresariales",
+      "hours": "Horario de Oficina",
+      "hoursContent": "Lunes - Viernes: 9:00 AM - 6:00 PM EST\nSábado - Domingo: Cerrado",
+      "follow": "Síguenos"
+    }
+  }
+}
+

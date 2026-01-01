@@ -1,0 +1,180 @@
+{
+  "common": {
+    "brand": {
+      "name": "NivoStack",
+      "tagline": "Mobile App Monitoring & Configuration Platform",
+      "description": "Complete mobile app monitoring and configuration platform. Track API calls, monitor logs, catch crashes, manage configurations, and mock APIs—all from one dashboard."
+    },
+    "nav": {
+      "features": "Features",
+      "pricing": "Pricing",
+      "about": "About",
+      "contact": "Contact",
+      "signIn": "Sign In",
+      "startFree": "Start Free"
+    },
+    "cta": {
+      "startFree": "Start Free Forever",
+      "learnMore": "Learn More",
+      "contactSales": "Contact Sales",
+      "getStarted": "Get Started"
+    },
+    "footer": {
+      "product": "Product",
+      "company": "Company",
+      "legal": "Legal",
+      "resources": "Resources",
+      "rights": "All rights reserved"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Debug Mobile Apps",
+      "titleHighlight": "Remotely",
+      "subtitle": "Complete mobile app monitoring and configuration platform. Track API calls, monitor logs, catch crashes, manage configurations, and mock APIs—all from one dashboard.",
+      "noCreditCard": "No credit card required • Setup in 2 minutes"
+    },
+    "stats": {
+      "faster": "Faster SDK Init",
+      "initTime": "Average Init Time",
+      "uptime": "Uptime",
+      "support": "Support",
+      "performance": "Performance improvement",
+      "fromTo": "From 4.3s to 290ms",
+      "reliable": "Reliable infrastructure",
+      "alwaysHere": "Always here to help"
+    },
+    "features": {
+      "title": "Everything You Need in One Platform",
+      "subtitle": "Replace multiple expensive tools with one unified, affordable solution"
+    },
+    "platforms": {
+      "title": "Works with Your Stack",
+      "subtitle": "Native SDKs for all major mobile platforms"
+    },
+    "testimonials": {
+      "title": "Loved by Developers",
+      "subtitle": "See what teams are saying about NivoStack"
+    }
+  },
+  "features": {
+    "hero": {
+      "title": "Powerful Features for",
+      "titleHighlight": "Modern Mobile Apps",
+      "subtitle": "Everything you need to monitor, debug, and configure your mobile applications—all in one unified platform."
+    },
+    "categories": {
+      "monitoring": {
+        "name": "Monitoring & Observability",
+        "description": "Real-time visibility into your app performance"
+      },
+      "debugging": {
+        "name": "Debugging & Troubleshooting",
+        "description": "Debug issues faster with comprehensive tools"
+      },
+      "configuration": {
+        "name": "Remote Configuration",
+        "description": "Control your app without deployments"
+      },
+      "analytics": {
+        "name": "Analytics & Insights",
+        "description": "Understand user behavior and app performance"
+      }
+    },
+    "comparison": {
+      "title": "Replace Multiple Tools",
+      "subtitle": "NivoStack replaces expensive SaaS tools with one unified platform",
+      "whatYouGet": "What You Get",
+      "whatYouSave": "What You Save"
+    }
+  },
+  "pricing": {
+    "hero": {
+      "title": "Simple, Transparent",
+      "titleHighlight": "Pricing",
+      "subtitle": "Start free forever. Upgrade when you need more. No credit card required."
+    },
+    "plans": {
+      "free": {
+        "name": "Free Forever",
+        "description": "Perfect for getting started"
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "For growing teams",
+        "popular": "MOST POPULAR"
+      },
+      "team": {
+        "name": "Team",
+        "description": "For teams and agencies"
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "description": "Custom solutions for large organizations"
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions"
+    },
+    "enterprise": {
+      "title": "Need Custom Solutions?",
+      "subtitle": "Enterprise plans include dedicated support, custom integrations, SLA guarantees, and on-premise options."
+    }
+  },
+  "about": {
+    "hero": {
+      "title": "Building Tools for",
+      "titleHighlight": "Modern Developers",
+      "subtitle": "We're on a mission to simplify mobile app monitoring and configuration."
+    },
+    "mission": {
+      "title": "Our Mission",
+      "content": "To empower mobile app developers with powerful, affordable tools that simplify monitoring, debugging, and configuration management. We believe that every developer should have access to enterprise-grade tools without the enterprise price tag."
+    },
+    "vision": {
+      "title": "Our Vision",
+      "content": "To become the go-to platform for mobile app teams, replacing multiple expensive SaaS tools with one unified, affordable solution. We envision a future where developers spend less time configuring tools and more time building amazing products."
+    },
+    "values": {
+      "title": "Our Values"
+    },
+    "story": {
+      "title": "Our Story"
+    }
+  },
+  "contact": {
+    "hero": {
+      "title": "Get in Touch",
+      "subtitle": "Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible."
+    },
+    "form": {
+      "title": "Send us a message",
+      "name": "Name",
+      "email": "Email",
+      "subject": "Subject",
+      "message": "Message",
+      "selectSubject": "Select a subject",
+      "sales": "Sales Inquiry",
+      "support": "Technical Support",
+      "partnership": "Partnership",
+      "other": "Other",
+      "placeholder": "Tell us how we can help...",
+      "send": "Send Message",
+      "sending": "Sending...",
+      "success": "Thank you! We'll get back to you soon.",
+      "error": "Something went wrong. Please try again or email us directly."
+    },
+    "info": {
+      "title": "Contact Information",
+      "general": "General Inquiries",
+      "support": "Support",
+      "sales": "Sales",
+      "responseTime": "Response time: Within 24 hours",
+      "enterprise": "For enterprise inquiries",
+      "hours": "Office Hours",
+      "hoursContent": "Monday - Friday: 9:00 AM - 6:00 PM EST\nSaturday - Sunday: Closed",
+      "follow": "Follow Us"
+    }
+  }
+}
+

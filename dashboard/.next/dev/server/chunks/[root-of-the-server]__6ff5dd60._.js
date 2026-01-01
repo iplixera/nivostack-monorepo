@@ -69,7 +69,13 @@ const prisma = globalForPrisma.prisma ?? new __TURBOPACK__imported__module__$5b$
         'warn'
     ] : "TURBOPACK unreachable"
 });
-if ("TURBOPACK compile-time truthy", 1) globalForPrisma.prisma = prisma;
+if ("TURBOPACK compile-time truthy", 1) {
+    globalForPrisma.prisma = prisma;
+    // In development, ensure Prisma client is properly initialized
+    if (typeof prisma.user === 'undefined') {
+        console.warn('⚠️  Prisma client models not available. Restart dev server after running: pnpm prisma generate');
+    }
+}
 }),
 "[externals]/buffer [external] (buffer, cjs)", ((__turbopack_context__, module, exports) => {
 
@@ -405,11 +411,12 @@ async function getUsageStats(userId) {
     const maxBusinessConfigKeys = getLimit(subscription.quotaMaxBusinessConfigKeys, plan.maxBusinessConfigKeys);
     const maxLocalizationLanguages = getLimit(subscription.quotaMaxLocalizationLanguages, plan.maxLocalizationLanguages);
     const maxLocalizationKeys = getLimit(subscription.quotaMaxLocalizationKeys, plan.maxLocalizationKeys);
+    const maxTeamMembers = getLimit(subscription.quotaMaxTeamMembers, plan.maxTeamMembers ?? plan.maxSeats);
     // FIXED: Use currentPeriodStart/currentPeriodEnd instead of trialStartDate/trialEndDate
     const periodStart = subscription.currentPeriodStart;
     const periodEnd = subscription.currentPeriodEnd;
     // Count usage for current billing period
-    const [mockEndpoints, logs, sessions, crashes, devices, projects, apiEndpoints, apiRequests, businessConfigKeys, localizationLanguages, localizationKeys] = await Promise.all([
+    const [mockEndpoints, logs, sessions, crashes, devices, projects, apiEndpoints, apiRequests, businessConfigKeys, localizationLanguages, localizationKeys, teamMembers] = await Promise.all([
         // Mock Endpoints: Lifetime meter (never reset)
         __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].mockEndpoint.count({
             where: {
@@ -521,7 +528,39 @@ async function getUsageStats(userId) {
                     userId
                 }
             }
-        })
+        }),
+        // Team Members: Count all unique team members across all projects owned by user
+        // This counts all ProjectMember entries for projects owned by the user
+        // Note: The owner themselves are counted if they have ProjectMember entries
+        (async ()=>{
+            const ownedProjects = await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].project.findMany({
+                where: {
+                    userId
+                },
+                select: {
+                    id: true
+                }
+            });
+            const projectIds = ownedProjects.map((p)=>p.id);
+            if (projectIds.length === 0) return 0;
+            // Count unique users who are members of any owned project
+            // This includes all invited members (admin, member, viewer roles)
+            const uniqueMembers = await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].projectMember.findMany({
+                where: {
+                    projectId: {
+                        in: projectIds
+                    }
+                },
+                select: {
+                    userId: true
+                }
+            });
+            // Get unique user IDs (using Set to deduplicate)
+            const uniqueUserIds = new Set(uniqueMembers.map((m)=>m.userId));
+            // Return count of unique team members
+            // Note: This counts all members, not including the owner unless they have a ProjectMember entry
+            return uniqueUserIds.size;
+        })()
     ]);
     return {
         mockEndpoints: {
@@ -578,6 +617,11 @@ async function getUsageStats(userId) {
             used: localizationKeys,
             limit: maxLocalizationKeys,
             percentage: maxLocalizationKeys ? localizationKeys / maxLocalizationKeys * 100 : 0
+        },
+        teamMembers: {
+            used: teamMembers,
+            limit: maxTeamMembers,
+            percentage: maxTeamMembers ? teamMembers / maxTeamMembers * 100 : 0
         },
         trialActive: await isTrialActive(subscription),
         trialEndDate: subscription.trialEndDate,
@@ -693,7 +737,7 @@ async function evaluateEnforcementState(userId) {
     const triggeredMetrics = [];
     const meters = [
         'devices',
-        'apiTraces',
+        'apiRequests',
         'logs',
         'sessions',
         'crashes',
@@ -709,14 +753,14 @@ async function evaluateEnforcementState(userId) {
             hasHardThreshold = true;
             triggeredMetrics.push({
                 metric: meterKey,
-                usage: meter.used,
+                usage: meter.usage || meter.used || 0,
                 limit: meter.limit,
                 percentage
             });
         } else if (percentage >= config.warnThreshold) {
             triggeredMetrics.push({
                 metric: meterKey,
-                usage: meter.used,
+                usage: meter.usage || meter.used || 0,
                 limit: meter.limit,
                 percentage
             });
@@ -1169,7 +1213,8 @@ async function GET(request) {
                 status: 401
             });
         }
-        const projects = await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].project.findMany({
+        // Get projects where user is owner (legacy)
+        const ownedProjects = await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].project.findMany({
             where: {
                 userId: user.id
             },
@@ -1187,6 +1232,84 @@ async function GET(request) {
                 createdAt: 'desc'
             }
         });
+        // Get projects where user is a member
+        let memberProjects = [];
+        try {
+            memberProjects = await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].projectMember.findMany({
+                where: {
+                    userId: user.id
+                },
+                include: {
+                    project: {
+                        include: {
+                            _count: {
+                                select: {
+                                    devices: true,
+                                    logs: true,
+                                    crashes: true,
+                                    apiTraces: true
+                                }
+                            }
+                        }
+                    }
+                },
+                orderBy: {
+                    joinedAt: 'desc'
+                }
+            });
+            // Fetch inviter details for each member project
+            for (const member of memberProjects){
+                if (member.invitedBy) {
+                    try {
+                        const inviter = await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findUnique({
+                            where: {
+                                id: member.invitedBy
+                            },
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true
+                            }
+                        });
+                        member.inviter = inviter;
+                    } catch (err) {
+                        console.warn('Could not fetch inviter:', err);
+                        member.inviter = null;
+                    }
+                } else {
+                    member.inviter = null;
+                }
+            }
+        } catch (err) {
+            // If ProjectMember model doesn't exist yet, skip member projects
+            console.warn('Could not fetch member projects:', err.message);
+            memberProjects = [];
+        }
+        // Combine and deduplicate (user might be both owner and member)
+        const projectMap = new Map();
+        // Add owned projects
+        ownedProjects.forEach((project)=>{
+            projectMap.set(project.id, {
+                ...project,
+                role: 'owner',
+                invitedBy: null
+            });
+        });
+        // Add member projects (don't override if already owner)
+        memberProjects.forEach((member)=>{
+            if (!projectMap.has(member.project.id)) {
+                projectMap.set(member.project.id, {
+                    ...member.project,
+                    role: member.role,
+                    invitedBy: member.inviter ? {
+                        name: member.inviter.name,
+                        email: member.inviter.email
+                    } : null,
+                    joinedAt: member.joinedAt
+                });
+            }
+        });
+        const projects = Array.from(projectMap.values());
         return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$8_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$1_react$40$19$2e$2$2e$1_$5f$react$40$19$2e$2$2e$1$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
             projects
         });
@@ -1258,8 +1381,21 @@ async function POST(request) {
                 userId: user.id
             }
         });
+        // Create ProjectMember entry for owner
+        await __TURBOPACK__imported__module__$5b$project$5d2f$dashboard$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].projectMember.create({
+            data: {
+                projectId: project.id,
+                userId: user.id,
+                role: 'owner',
+                invitedAt: new Date(),
+                joinedAt: new Date()
+            }
+        });
         return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$8_$40$babel$2b$core$40$7$2e$28$2e$5_react$2d$dom$40$19$2e$2$2e$1_react$40$19$2e$2$2e$1_$5f$react$40$19$2e$2$2e$1$2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
-            project
+            project: {
+                ...project,
+                role: 'owner'
+            }
         });
     } catch (error) {
         console.error('Create project error:', error);

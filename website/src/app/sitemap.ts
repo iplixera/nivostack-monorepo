@@ -1,51 +1,38 @@
 import { MetadataRoute } from 'next'
+import { locales } from '@/i18n'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://nivostack.com'
+  const baseUrl = process.env.NEXT_PUBLIC_MARKETING_URL || 'https://nivostack.com'
+  const pages = ['', 'features', 'pricing', 'about', 'contact', 'privacy', 'terms']
   
-  return [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/features`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/pricing`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/about`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/contact`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/privacy`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/terms`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-  ]
+  const sitemapEntries: MetadataRoute.Sitemap = []
+  
+  // Generate entries for each locale
+  locales.forEach((locale) => {
+    pages.forEach((page) => {
+      const url = locale === 'en' 
+        ? `${baseUrl}/${page || ''}`
+        : `${baseUrl}/${locale}/${page || ''}`
+      
+      sitemapEntries.push({
+        url: url.replace(/\/$/, '') || baseUrl,
+        lastModified: new Date(),
+        changeFrequency: page === '' ? 'weekly' : page === 'privacy' || page === 'terms' ? 'yearly' : 'monthly',
+        priority: page === '' ? 1 : page === 'features' || page === 'pricing' ? 0.9 : page === 'about' || page === 'contact' ? 0.7 : 0.5,
+        alternates: {
+          languages: Object.fromEntries(
+            locales.map((loc) => [
+              loc,
+              loc === 'en' 
+                ? `${baseUrl}/${page || ''}`
+                : `${baseUrl}/${loc}/${page || ''}`
+            ])
+          ),
+        },
+      })
+    })
+  })
+  
+  return sitemapEntries
 }
 

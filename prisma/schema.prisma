@@ -9,15 +9,19 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(cuid())
-  email        String        @unique
-  password     String
-  name         String?
-  isAdmin      Boolean       @default(false) // Admin flag for platform management
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  projects     Project[]
-  subscription Subscription?
+  id                    String                     @id @default(cuid())
+  email                 String                     @unique
+  password              String
+  name                  String?
+  isAdmin               Boolean                    @default(false) // Admin flag for platform management
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+  projects              Project[]                  // Projects owned by this user
+  subscription          Subscription?
+  projectMemberships    ProjectMember[]            // Projects user is a member of
+  invitations           ProjectInvitation[]        // Invitations sent by this user
+  notifications         UserNotification[]         // In-app notifications
+  notificationPreferences UserNotificationPreferences?
 
   @@index([isAdmin])
 }
@@ -26,7 +30,7 @@ model Project {
   id                   String                @id @default(cuid())
   name                 String
   apiKey               String                @unique @default(cuid())
-  userId               String
+  userId               String                // Owner user ID (backward compatibility)
   user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
@@ -49,6 +53,8 @@ model Project {
   featureFlags         FeatureFlags?
   sdkSettings          SdkSettings?
   configCategories     ConfigCategory[]
+  members              ProjectMember[]       // Team members
+  invitations          ProjectInvitation[]   // Pending invitations
 
   @@index([userId])
 }
@@ -573,6 +579,8 @@ model Plan {
   maxBusinessConfigKeys  Int? // Business config keys, null = unlimited
   maxLocalizationLanguages Int? // Localization languages, null = unlimited
   maxLocalizationKeys    Int? // Localization keys, null = unlimited
+  maxTeamMembers         Int? // Maximum team members (null = unlimited)
+  maxSeats               Int? // Alias for maxTeamMembers (for clarity)
   retentionDays          Int? // Data retention period, null = unlimited
 
   // Feature Flags
@@ -1038,4 +1046,133 @@ model SystemConfiguration {
   @@index([category])
   @@index([category, key])
   @@index([isActive])
+}
+
+// Project Member - Links users to projects with roles (Many-to-Many: User ↔ Project)
+model ProjectMember {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Role: "owner" | "admin" | "member" | "viewer"
+  role      String   @default("member")
+  
+  // Invitation tracking
+  invitedBy String?  // User ID who sent the invitation
+  invitedAt DateTime @default(now())
+  joinedAt  DateTime? // When user accepted invitation
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+  @@index([role])
+  @@index([projectId, role])
+}
+
+// Project Invitation - Pending invitations for team members
+model ProjectInvitation {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  // Invitation details
+  email     String   // Email of invited user
+  role      String   @default("member") // "admin" | "member" | "viewer"
+  
+  // Invitation token for link-based invitations
+  token     String   @unique @default(cuid()) // Unique token for invitation link
+  
+  // Invitation source
+  invitedBy String   // User ID who sent invitation
+  inviter   User     @relation(fields: [invitedBy], references: [id], onDelete: Cascade)
+  invitedAt DateTime @default(now())
+  expiresAt DateTime // Invitation expiry (configurable via SystemConfiguration, default: 7 days)
+  
+  // Status: "pending" | "accepted" | "expired" | "cancelled"
+  status    String   @default("pending")
+  
+  // Email tracking (for future SES integration)
+  emailSent      Boolean   @default(false) // Whether email was sent
+  emailSentAt    DateTime? // When email was sent
+  emailDelivered Boolean   @default(false) // Whether email was delivered (SES)
+  emailOpened    Boolean   @default(false) // Whether email was opened (SES)
+  emailClicked   Boolean   @default(false) // Whether link was clicked (SES)
+  
+  // Resend tracking
+  resendCount    Int       @default(0) // Number of times invitation was resent
+  lastResentAt   DateTime? // Last time invitation was resent
+  lastResentBy   String?   // User ID who last resent
+  
+  // Acceptance tracking
+  acceptedAt DateTime?
+  acceptedBy String? // User ID who accepted (if user existed)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([email])
+  @@index([token])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([emailSent])
+  @@index([projectId, status])
+}
+
+// User Notification - In-app notifications for users
+model UserNotification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Notification type: "invitation" | "project_update" | "alert" | etc.
+  type      String
+  
+  // Notification data
+  title     String
+  message   String   @db.Text
+  data      Json? // Additional data (e.g., invitationId, projectId)
+  
+  // Status
+  read      Boolean  @default(false)
+  readAt    DateTime?
+  
+  // Action link
+  actionUrl String? // e.g., "/projects/{id}/invitations/{invitationId}" or "/invite/{token}"
+  
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, read])
+  @@index([type])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+}
+
+// User Notification Preferences - User preferences for notifications
+model UserNotificationPreferences {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Email notification preferences
+  emailInvitations      Boolean @default(true) // Receive invitation emails
+  emailProjectUpdates   Boolean @default(true) // Receive project update emails
+  emailAlerts           Boolean @default(true) // Receive alert emails
+  emailWeeklyDigest     Boolean @default(false) // Receive weekly digest
+  
+  // In-app notification preferences
+  inAppInvitations      Boolean @default(true) // Show invitation notifications
+  inAppProjectUpdates   Boolean @default(true) // Show project update notifications
+  inAppAlerts           Boolean @default(true) // Show alert notifications
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }

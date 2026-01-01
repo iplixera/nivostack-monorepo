@@ -283,6 +283,11 @@ export async function createPlan(data: {
   maxLogs?: number | null
   maxSessions?: number | null
   maxCrashes?: number | null
+  maxBusinessConfigKeys?: number | null
+  maxLocalizationLanguages?: number | null
+  maxLocalizationKeys?: number | null
+  maxTeamMembers?: number | null
+  maxSeats?: number | null
   retentionDays?: number | null
   allowApiTracking?: boolean
   allowScreenTracking?: boolean
@@ -314,6 +319,11 @@ export async function createPlan(data: {
       maxLogs: data.maxLogs ?? null,
       maxSessions: data.maxSessions ?? null,
       maxCrashes: data.maxCrashes ?? null,
+      maxBusinessConfigKeys: data.maxBusinessConfigKeys ?? null,
+      maxLocalizationLanguages: data.maxLocalizationLanguages ?? null,
+      maxLocalizationKeys: data.maxLocalizationKeys ?? null,
+      maxTeamMembers: data.maxTeamMembers ?? null,
+      maxSeats: data.maxSeats ?? null,
       retentionDays: data.retentionDays ?? null,
       allowApiTracking: data.allowApiTracking ?? true,
       allowScreenTracking: data.allowScreenTracking ?? true,
@@ -350,6 +360,11 @@ export async function updatePlan(planId: string, data: Partial<{
   maxLogs: number | null
   maxSessions: number | null
   maxCrashes: number | null
+  maxBusinessConfigKeys: number | null
+  maxLocalizationLanguages: number | null
+  maxLocalizationKeys: number | null
+  maxTeamMembers: number | null
+  maxSeats: number | null
   retentionDays: number | null
   allowApiTracking: boolean
   allowScreenTracking: boolean

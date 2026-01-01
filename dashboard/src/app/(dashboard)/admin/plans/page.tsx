@@ -55,6 +55,8 @@ type Plan = {
   maxBusinessConfigKeys: number | null
   maxLocalizationLanguages: number | null
   maxLocalizationKeys: number | null
+  maxTeamMembers: number | null
+  maxSeats: number | null
   retentionDays: number | null
   allowApiTracking: boolean
   allowScreenTracking: boolean
@@ -333,6 +335,7 @@ export default function AdminPlansPage() {
                   <div className="text-sm text-gray-400 space-y-1">
                     <div>Sessions: {formatLimit(plan.maxSessions ?? null)}</div>
                     <div>Devices: {formatLimit(plan.maxDevices ?? null)}</div>
+                    <div>Team Members: {formatLimit(plan.maxTeamMembers ?? plan.maxSeats ?? null)}</div>
                     <div>Mock Endpoints: {formatLimit(plan.maxMockEndpoints ?? null)}</div>
                     <div>API Endpoints: {formatLimit(plan.maxApiEndpoints ?? null)}</div>
                     <div>API Requests: {formatLimit(plan.maxApiRequests ?? null)}</div>
@@ -491,6 +494,8 @@ export default function AdminPlansPage() {
                 { key: 'maxBusinessConfigKeys', label: 'Business Config Keys' },
                 { key: 'maxLocalizationLanguages', label: 'Localization Languages' },
                 { key: 'maxLocalizationKeys', label: 'Localization Keys' },
+                { key: 'maxTeamMembers', label: 'Team Members (Seats)' },
+                { key: 'maxSeats', label: 'Max Seats (Alias)' },
                 { key: 'retentionDays', label: 'Retention Days' },
               ].map(({ key, label }) => (
                 <div key={key}>

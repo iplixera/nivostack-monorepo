@@ -554,6 +554,14 @@ export default function SubscriptionPage() {
                 percentage={usage.localizationKeys.percentage}
               />
             )}
+            {usage.teamMembers && (
+              <UsageBar
+                label="Team Members"
+                used={usage.teamMembers.used}
+                limit={usage.teamMembers.limit}
+                percentage={usage.teamMembers.percentage}
+              />
+            )}
           </div>
         </div>
       )}

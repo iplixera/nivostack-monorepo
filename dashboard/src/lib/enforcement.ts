@@ -202,9 +202,22 @@ export async function evaluateEnforcementState(
   }
 
   // Get current enforcement state from database
-  const currentState = await prisma.enforcementState.findUnique({
-    where: { subscriptionId: subscription.id },
-  })
+  let currentState = null
+  try {
+    currentState = await prisma.enforcementState.findUnique({
+      where: { subscriptionId: subscription.id },
+    })
+  } catch (error: any) {
+    // If EnforcementState table doesn't exist (migration not run), continue with null
+    if (error?.message?.includes('does not exist') || 
+        error?.message?.includes('model') ||
+        error?.code === 'P2021') {
+      console.warn('EnforcementState table not found, continuing with null:', error.message)
+      currentState = null
+    } else {
+      throw error
+    }
+  }
 
   // Determine new state
   let newState: EnforcementState = 'ACTIVE'
@@ -361,12 +374,25 @@ export async function updateEnforcementState(
   subscriptionId: string,
   evaluation: EnforcementEvaluation
 ): Promise<void> {
-  const now = new Date()
-  const existing = await prisma.enforcementState.findUnique({
-    where: { subscriptionId },
-  })
+  try {
+    const now = new Date()
+    let existing = null
+    try {
+      existing = await prisma.enforcementState.findUnique({
+        where: { subscriptionId },
+      })
+    } catch (error: any) {
+      // If EnforcementState table doesn't exist (migration not run), skip update
+      if (error?.message?.includes('does not exist') || 
+          error?.message?.includes('model') ||
+          error?.code === 'P2021') {
+        console.warn('EnforcementState table not found, skipping update:', error.message)
+        return
+      }
+      throw error
+    }
 
-  await prisma.enforcementState.upsert({
+    await prisma.enforcementState.upsert({
     where: { subscriptionId },
     create: {
       subscriptionId,
@@ -401,14 +427,35 @@ export async function updateEnforcementState(
       nextEvaluationAt: evaluation.nextEvaluationAt,
     },
   })
+  } catch (error: any) {
+    // If EnforcementState table doesn't exist (migration not run), skip update
+    if (error?.message?.includes('does not exist') || 
+        error?.message?.includes('model') ||
+        error?.code === 'P2021') {
+      console.warn('EnforcementState table not found, skipping update:', error.message)
+      return
+    }
+    throw error
+  }
 }
 
 /**
  * Get current enforcement state for a subscription
  */
 export async function getEnforcementState(subscriptionId: string) {
-  return prisma.enforcementState.findUnique({
-    where: { subscriptionId },
-  })
+  try {
+    return await prisma.enforcementState.findUnique({
+      where: { subscriptionId },
+    })
+  } catch (error: any) {
+    // If EnforcementState table doesn't exist (migration not run), return null
+    if (error?.message?.includes('does not exist') || 
+        error?.message?.includes('model') ||
+        error?.code === 'P2021') {
+      console.warn('EnforcementState table not found, returning null:', error.message)
+      return null
+    }
+    throw error
+  }
 }
 

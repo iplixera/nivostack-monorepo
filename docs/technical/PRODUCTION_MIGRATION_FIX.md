@@ -1,94 +1,86 @@
-# Production Migration Fix
+# Production Migration Fix - Subscription & Notification APIs
 
 ## Issue
 
-After deploying team invitations feature, production API endpoints (e.g., `/api/sdk-settings`) were returning 500 errors because:
+Production APIs were returning 500 errors:
+- `GET /api/subscription` - 500 Internal Server Error
+- `GET /api/subscription/enforcement` - 500 Internal Server Error
+- `GET /api/subscription/usage` - 500 Internal Server Error
+- `GET /api/notifications` - 500 Internal Server Error
+- `GET /api/sdk-settings` - 500 Internal Server Error (for some users)
 
-1. The `ProjectMember` table doesn't exist in production yet (migrations haven't run)
-2. The `canPerformAction` function queries `ProjectMember` table
-3. When the table doesn't exist, Prisma throws an error causing 500 responses
+## Root Cause
+
+The Prisma schema was missing the following models that were being used in the code:
+1. `ProjectMember` - Team member relationships
+2. `ProjectInvitation` - Pending invitations
+3. `UserNotification` - In-app notifications
+4. `UserNotificationPreferences` - User notification preferences
+
+These models were defined in the team invitations feature plan but were never added to the actual Prisma schema file. When the code tried to access these models, Prisma threw errors because the tables didn't exist in the database.
 
 ## Solution
 
-### 1. Error Handling (Already Applied)
+### 1. Added Missing Models to Prisma Schema
 
-Added graceful error handling in:
-- `dashboard/src/lib/team-access.ts` - All functions that query `ProjectMember` now catch errors and fall back to legacy ownership checks
-- `dashboard/src/app/api/sdk-settings/route.ts` - Added try-catch around `canPerformAction` with fallback to legacy check
+Added the following models to `dashboard/prisma/schema.prisma`:
 
-This ensures the app works even if migrations haven't run yet.
+- **ProjectMember**: Many-to-many relationship between Users and Projects with roles
+- **ProjectInvitation**: Tracks pending invitations with tokens and expiry
+- **UserNotification**: In-app notifications for users
+- **UserNotificationPreferences**: User preferences for email/in-app notifications
 
-### 2. Run Database Migrations
+### 2. Updated Model Relations
 
-You need to run migrations to create the new tables (`ProjectMember`, `ProjectInvitation`, `UserNotification`, etc.).
+- Updated `User` model to include:
+  - `projectMemberships` (ProjectMember[])
+  - `sentInvitations` (ProjectInvitation[])
+  - `notifications` (UserNotification[])
+  - `notificationPreferences` (UserNotificationPreferences?)
+  - `invitedMembers` (ProjectMember[])
 
-#### Option A: Via Health Endpoint (Automatic)
+- Updated `Project` model to include:
+  - `members` (ProjectMember[])
+  - `invitations` (ProjectInvitation[])
 
-The `/api/health` endpoint automatically runs migrations on first call after deployment:
+### 3. Added Error Handling
 
-```bash
-curl https://studio.nivostack.com/api/health
-```
+Added graceful error handling to prevent 500 errors when tables don't exist:
 
-This will:
-- Run `prisma db push` to sync schema
-- Create missing tables
-- Return migration status
+- **`dashboard/src/lib/subscription.ts`**: Added try-catch around `prisma.projectMember.findMany()` in `getUsageStats()`
+- **`dashboard/src/lib/enforcement.ts`**: Added try-catch around `prisma.enforcementState` operations
+- **`dashboard/src/app/api/notifications/route.ts`**: Added try-catch around `prisma.userNotification.findMany()`
+- **`dashboard/src/lib/notifications.ts`**: Added try-catch in `getUnreadNotificationCount()`
 
-#### Option B: Manual Migration Script
+All error handlers check for Prisma error codes (`P2021`) and messages indicating missing tables, then return safe defaults (empty arrays, 0 counts, null values) instead of throwing errors.
 
-Run the production migration script:
+## Deployment Steps
 
-```bash
-bash scripts/migrate-production.sh
-```
+1. **Schema Changes**: The Prisma schema has been updated with the missing models
+2. **Database Migration**: Run `prisma db push` to create the tables in production
+3. **Code Deployment**: The code changes with error handling are already deployed
 
-This will:
-- Push schema to production database
-- Create all missing tables including:
-  - `ProjectMember`
-  - `ProjectInvitation`
-  - `UserNotification`
-  - `UserNotificationPreferences`
-  - `SystemConfiguration`
+## Migration Command
 
-#### Option C: Via Vercel Function
-
-You can also trigger migrations via the `/api/migrate` endpoint (requires auth):
+The build script (`scripts/vercel-build.sh`) already includes `prisma db push`, so the migration should run automatically on the next deployment. However, if needed, you can manually run:
 
 ```bash
-curl -X POST https://studio.nivostack.com/api/migrate \
-  -H "Authorization: Bearer YOUR_CRON_SECRET"
+cd dashboard
+pnpm prisma db push
 ```
 
-## Verification
+## Testing
 
-After running migrations, verify tables exist:
+After deployment, verify:
+1. ✅ `/api/subscription` returns subscription data
+2. ✅ `/api/subscription/enforcement` returns enforcement state (or defaults)
+3. ✅ `/api/subscription/usage` returns usage stats (teamMembers count may be 0 initially)
+4. ✅ `/api/notifications` returns empty array (or notifications if any exist)
+5. ✅ `/api/sdk-settings` works for all users (owners and invited members)
 
-1. Check Supabase Dashboard → Table Editor
-2. You should see:
-   - `ProjectMember`
-   - `ProjectInvitation`
-   - `UserNotification`
-   - `UserNotificationPreferences`
-   - `SystemConfiguration`
+## Notes
 
-3. Test API endpoints:
-   ```bash
-   curl https://studio.nivostack.com/api/sdk-settings?projectId=YOUR_PROJECT_ID \
-     -H "Authorization: Bearer YOUR_TOKEN"
-   ```
-
-## Status
-
-- ✅ Error handling added (prevents 500 errors)
-- ⏳ Migrations need to be run (choose one option above)
-- ✅ Backward compatibility maintained (legacy projects still work)
-
-## Next Steps
-
-1. Run migrations using one of the options above
-2. Verify tables exist in Supabase
-3. Test API endpoints
-4. Check Vercel logs for any errors
-
+- The error handling ensures backward compatibility - if tables don't exist, the APIs return safe defaults instead of crashing
+- Once migrations are applied, the error handling will still work but won't be triggered
+- Team member counts will be 0 until `ProjectMember` entries are created
+- Notifications will be empty until `UserNotification` entries are created

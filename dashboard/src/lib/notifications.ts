@@ -96,11 +96,22 @@ export async function markAllNotificationsAsRead(userId: string) {
  * Get user's unread notification count
  */
 export async function getUnreadNotificationCount(userId: string): Promise<number> {
-  return await prisma.userNotification.count({
-    where: {
-      userId,
-      read: false,
-    },
-  })
+  try {
+    return await prisma.userNotification.count({
+      where: {
+        userId,
+        read: false,
+      },
+    })
+  } catch (error: any) {
+    // If UserNotification table doesn't exist (migration not run), return 0
+    if (error?.message?.includes('does not exist') || 
+        error?.message?.includes('model') ||
+        error?.code === 'P2021') {
+      console.warn('UserNotification table not found, returning 0 for unread count:', error.message)
+      return 0
+    }
+    throw error
+  }
 }
 

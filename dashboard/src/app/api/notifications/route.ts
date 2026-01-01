@@ -26,13 +26,29 @@ export async function GET(request: NextRequest) {
       where.read = false
     }
 
-    const notifications = await prisma.userNotification.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-    })
+    let notifications = []
+    let unreadCount = 0
 
-    const unreadCount = await getUnreadNotificationCount(user.id)
+    try {
+      notifications = await prisma.userNotification.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      })
+
+      unreadCount = await getUnreadNotificationCount(user.id)
+    } catch (error: any) {
+      // If UserNotification table doesn't exist (migration not run), return empty array
+      if (error?.message?.includes('does not exist') || 
+          error?.message?.includes('model') ||
+          error?.code === 'P2021') {
+        console.warn('UserNotification table not found, returning empty notifications:', error.message)
+        notifications = []
+        unreadCount = 0
+      } else {
+        throw error
+      }
+    }
 
     return NextResponse.json({
       notifications: notifications.map((notif) => ({

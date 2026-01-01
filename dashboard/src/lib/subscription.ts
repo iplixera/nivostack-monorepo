@@ -239,26 +239,37 @@ export async function getUsageStats(userId: string) {
     // This counts all ProjectMember entries for projects owned by the user
     // Note: The owner themselves are counted if they have ProjectMember entries
     (async () => {
-      const ownedProjects = await prisma.project.findMany({
-        where: { userId },
-        select: { id: true },
-      })
-      const projectIds = ownedProjects.map(p => p.id)
-      if (projectIds.length === 0) return 0
-      
-      // Count unique users who are members of any owned project
-      // This includes all invited members (admin, member, viewer roles)
-      const uniqueMembers = await prisma.projectMember.findMany({
-        where: { projectId: { in: projectIds } },
-        select: { userId: true },
-      })
-      
-      // Get unique user IDs (using Set to deduplicate)
-      const uniqueUserIds = new Set(uniqueMembers.map(m => m.userId))
-      
-      // Return count of unique team members
-      // Note: This counts all members, not including the owner unless they have a ProjectMember entry
-      return uniqueUserIds.size
+      try {
+        const ownedProjects = await prisma.project.findMany({
+          where: { userId },
+          select: { id: true },
+        })
+        const projectIds = ownedProjects.map(p => p.id)
+        if (projectIds.length === 0) return 0
+        
+        // Count unique users who are members of any owned project
+        // This includes all invited members (admin, member, viewer roles)
+        const uniqueMembers = await prisma.projectMember.findMany({
+          where: { projectId: { in: projectIds } },
+          select: { userId: true },
+        })
+        
+        // Get unique user IDs (using Set to deduplicate)
+        const uniqueUserIds = new Set(uniqueMembers.map(m => m.userId))
+        
+        // Return count of unique team members
+        // Note: This counts all members, not including the owner unless they have a ProjectMember entry
+        return uniqueUserIds.size
+      } catch (error: any) {
+        // If ProjectMember table doesn't exist (migration not run), return 0
+        if (error?.message?.includes('does not exist') || 
+            error?.message?.includes('model') ||
+            error?.code === 'P2021') {
+          console.warn('ProjectMember table not found, returning 0 for team members:', error.message)
+          return 0
+        }
+        throw error
+      }
     })(),
   ])
 

@@ -65,6 +65,11 @@ async function backfillInvitationNotifications() {
 
     for (const invitation of pendingInvitations) {
       try {
+        console.log(`\n📧 Processing invitation for: ${invitation.email}`)
+        console.log(`   Project: ${invitation.project.name}`)
+        console.log(`   Role: ${invitation.role}`)
+        console.log(`   Invited by: ${invitation.inviter.name || invitation.inviter.email}`)
+        
         // Find user by email (case-insensitive)
         const user = await prisma.user.findFirst({
           where: {
@@ -77,9 +82,12 @@ async function backfillInvitationNotifications() {
 
         if (!user) {
           // User doesn't exist yet, skip
+          console.log(`   ⏭️  Skipped: User not found (not registered yet)`)
           skippedCount++
           continue
         }
+
+        console.log(`   ✅ Found user: ${user.email} (ID: ${user.id})`)
 
         // Check if notification already exists
         const existingNotification = await prisma.userNotification.findFirst({
@@ -95,6 +103,7 @@ async function backfillInvitationNotifications() {
 
         if (existingNotification) {
           // Notification already exists, skip
+          console.log(`   ⏭️  Skipped: Notification already exists (ID: ${existingNotification.id})`)
           skippedCount++
           continue
         }
@@ -116,7 +125,7 @@ async function backfillInvitationNotifications() {
         })
 
         createdCount++
-        console.log(`✅ Created notification for ${user.email} - invitation to ${invitation.project.name}`)
+        console.log(`   ✅ Created notification for ${user.email} - invitation to ${invitation.project.name}`)
       } catch (error: any) {
         errorCount++
         console.error(`❌ Error processing invitation ${invitation.id}:`, error.message)

@@ -108,13 +108,8 @@ export async function createHistoryRecord(
  */
 export async function getHistoryByUserId(userId: string): Promise<SubscriptionHistory[]> {
   try {
-    // Check if SubscriptionHistory model exists
-    if (!('subscriptionHistory' in prisma)) {
-      // Model doesn't exist yet, return empty array
-      console.warn('SubscriptionHistory model not found in Prisma schema')
-      return []
-    }
-    
+    // SubscriptionHistory model may not exist in schema yet
+    // Use type assertion and catch any errors
     return (prisma as any).subscriptionHistory.findMany({
       where: { userId },
       orderBy: { periodStart: 'desc' },
@@ -129,9 +124,18 @@ export async function getHistoryByUserId(userId: string): Promise<SubscriptionHi
         },
       },
     })
-  } catch (error) {
+  } catch (error: any) {
+    // If model doesn't exist, Prisma will throw an error
+    // Return empty array gracefully
+    if (error?.message?.includes('subscriptionHistory') || 
+        error?.code === 'P2001' || 
+        error?.name === 'PrismaClientKnownRequestError' ||
+        error?.message?.includes('Unknown model')) {
+      console.warn('SubscriptionHistory model not found in Prisma schema, returning empty array')
+      return []
+    }
     console.error('Error fetching subscription history:', error)
-    // Return empty array if model doesn't exist or query fails
+    // Return empty array on any error to prevent 500s
     return []
   }
 }

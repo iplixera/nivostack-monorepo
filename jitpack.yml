@@ -1,5 +1,7 @@
 jdk:
   - openjdk17
-before_install:
+install:
   - cd packages/sdk-android/nivostack-core
+  - chmod +x ./gradlew
+  - ./gradlew clean build publishToMavenLocal -x test
 

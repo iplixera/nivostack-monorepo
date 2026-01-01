@@ -63,7 +63,7 @@ export default function Footer() {
             <ul className="space-y-2">
               {FOOTER_LINKS.product.map((link) => (
                 <li key={link.href}>
-                  {link.external ? (
+                  {'external' in link && link.external ? (
                     <a
                       href={link.href}
                       target="_blank"
@@ -108,7 +108,7 @@ export default function Footer() {
             <ul className="space-y-2">
               {FOOTER_LINKS.resources.map((link) => (
                 <li key={link.href}>
-                  {link.external ? (
+                  {'external' in link && link.external ? (
                     <a
                       href={link.href}
                       target="_blank"

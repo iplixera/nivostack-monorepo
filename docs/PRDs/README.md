@@ -20,6 +20,10 @@ This directory contains Product Requirements Documents for all NivoStack feature
 ### Platform Features
 - **[API Mocking](./API_MOCKING_PRD.md)** - API mocking and testing
 - **[Admin Dashboard](./ADMIN_DASHBOARD_PRD.md)** - Admin features and management
+- **[URL Shortener & Link Management](./URL_SHORTENER_PRD.md)** - URL shortening, QR codes, and link analytics (Bitly-like features)
+- **[Bitly Feature Analysis](./BITLY_FEATURE_ANALYSIS.md)** - Comprehensive analysis of Bitly features and NivoStack implementation guide
+- **[Branch.io Deep Linking & Attribution](./BRANCH_IO_PRD.md)** - Deep linking, attribution, and mobile marketing features (Branch.io-like features)
+- **[Unified Link Management Platform](./UNIFIED_LINK_MANAGEMENT_PRD.md)** - Combined Bitly + Branch.io features with conflict resolution and unified implementation
 
 ### Subscription & Billing
 - **[Multi-Tenant Subscription](./MULTI_TENANT_SUBSCRIPTION_PRD.md)** - Subscription management

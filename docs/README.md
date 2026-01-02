@@ -1,129 +1,76 @@
-# NivoStack Documentation
+# Documentation Index
 
 Welcome to the NivoStack documentation! This directory contains all project documentation organized by category.
 
----
+## 📁 Documentation Structure
 
-## 📚 Documentation Structure
+### [Setup Documentation](./setup/)
+Installation, configuration, and initial setup guides.
 
-### 🚀 [Releases](./releases/)
-Release notes and changelogs for SDKs and Dashboard.
+- **Quick Start Guides** - Get up and running quickly
+- **Environment Setup** - Configure development environments
+- **Repository Setup** - Initial repository configuration
+- **Local Development** - Local development setup
 
-- **[SDK Releases](./releases/sdk/)** - Flutter, Android, iOS SDK release notes
-- **[Dashboard Releases](./releases/dashboard/)** - Dashboard/Studio release notes
+### [Deployment Documentation](./deployment/)
+Production deployment, releases, and deployment guides.
 
-### 📋 [Product Requirements Documents (PRDs)](./prds/)
-Product requirements and specifications for features.
+- **Deployment Guides** - How to deploy to production
+- **Release Notes** - Version release information
+- **Changelog** - Project changelog
+- **Vercel Setup** - Vercel deployment configuration
 
-- **[Feature PRDs](./prds/)** - Detailed PRDs for each feature
-- **[Main PRD](./prds/PRD.md)** - Overall product requirements
+### [Development Documentation](./development/)
+Development workflows, technical documentation, and guides.
 
-### ✨ [Best Practices](./best-practices/)
-Development best practices, guidelines, and standards.
+- **Bug Fixes** - Bug fix documentation
+- **Development Workflows** - How to work with the codebase
+- **Technical Decisions** - Architecture and technical choices
+- **Migration Guides** - Database and code migrations
 
-- **Versioning Strategy** - SDK versioning approach
-- **Publishing Guide** - How to publish SDKs
-- **Branching Strategy** - Git workflow and branching
-- **Code Standards** - Coding conventions
+### [Guides](./guides/)
+User guides, integration guides, and how-to documentation.
 
-### 🏗️ [Technical Documentation](./technical/)
-Technical architecture, performance, and implementation details.
+- **Integration Guides** - SDK integration guides
+- **User Guides** - End-user documentation
+- **How-To Guides** - Step-by-step instructions
 
-- **[Architecture](./technical/architecture/)** - System architecture and design
-- **[Performance](./technical/performance/)** - Performance optimization guides
-- **[Setup](./technical/setup/)** - Technical setup guides
+### [Features](./features/)
+Feature documentation and planning.
 
-### 📖 [Guides](./guides/)
-Developer guides and setup instructions.
+- **Feature Plans** - Planned features and roadmaps
+- **Feature Documentation** - Implemented features
 
-- **[Development Guides](./guides/development/)** - Development workflows and processes
-- **[Setup Guides](./guides/setup/)** - Environment and tool setup
+### [PRDs](./PRDs/)
+Product Requirements Documents.
 
-### 🎯 [Features](./features/)
-Feature-specific documentation, implementation plans, and changelogs.
+- **Feature PRDs** - Detailed product requirements
 
-- **Feature Implementation Plans**
-- **Feature Changelogs**
-- **Feature Testing Guides**
+### [Technical](./technical/)
+Technical documentation and architecture.
 
-### 💼 [Business](./business/)
-Business-related documentation.
+- **Architecture** - System architecture
+- **Performance** - Performance optimization guides
+- **Technical Decisions** - Technical decision records
 
-- **Pitch Decks**
-- **Business Plans**
-- **Conversion Instructions**
+## 🔍 Quick Links
 
-### 📚 [Knowledge Base](./knowledge-base/)
-Troubleshooting guides and knowledge articles.
+- **Main README**: [../README.md](../README.md)
+- **Setup Guide**: [setup/SETUP_GUIDE.md](./setup/SETUP_GUIDE.md)
+- **Developer Guide**: [development/DEVELOPER_GUIDE.md](./development/DEVELOPER_GUIDE.md)
+- **Deployment Guide**: [deployment/DEPLOYMENT_INSTRUCTIONS.md](./deployment/DEPLOYMENT_INSTRUCTIONS.md)
 
-- **Troubleshooting Guides**
-- **Common Issues**
-- **FAQ**
+## 📚 Finding Documentation
 
----
+- **New to the project?** → Start with [Setup Documentation](./setup/)
+- **Want to deploy?** → Check [Deployment Documentation](./deployment/)
+- **Developing features?** → See [Development Documentation](./development/)
+- **Integrating SDK?** → Read [Guides](./guides/)
 
-## 🗂️ Quick Navigation
+## 📝 Contributing
 
-### For SDK Developers
-- [SDK Release Notes](./releases/sdk/)
-- [SDK Publishing Guide](./best-practices/SDK_PUBLISHING_GUIDE.md)
-- [SDK Versioning Strategy](./best-practices/SDK_VERSIONING_STRATEGY.md)
-- [SDK Development Plan](./technical/SDK_DEVELOPMENT_PLAN.md)
-
-### For Dashboard Developers
-- [Dashboard Release Notes](./releases/dashboard/)
-- [Development Workflow](./guides/development/DEVELOPMENT_WORKFLOW.md)
-- [Environment Setup](./guides/setup/ENVIRONMENT_SETUP.md)
-
-### For Product Managers
-- [Product Requirements](./prds/)
-- [Feature PRDs](./prds/)
-- [Implementation Progress](./technical/IMPLEMENTATION_PROGRESS.md)
-
-### For DevOps/Infrastructure
-- [Architecture Documentation](./technical/architecture/)
-- [Performance Optimization](./technical/performance/)
-- [Setup Guides](./guides/setup/)
-
----
-
-## 📝 Documentation Standards
-
-### File Naming Convention
-- **Release Notes**: `RELEASE_NOTES_<PLATFORM>_v<VERSION>.md`
-- **PRDs**: `<FEATURE>_PRD.md`
-- **Guides**: `<TOPIC>_GUIDE.md` or `<TOPIC>_SETUP.md`
-- **Technical**: `<TOPIC>.md` (descriptive names)
-
-### Document Structure
-Each document should include:
-1. **Title** - Clear, descriptive title
-2. **Last Updated** - Date of last update
-3. **Status** - Current status (Active, Deprecated, Draft)
-4. **Overview** - Brief description
-5. **Content** - Main content
-6. **Related Docs** - Links to related documentation
-
----
-
-## 🔄 Keeping Documentation Updated
-
-- Update documentation when features are added/changed
-- Update "Last Updated" date when modifying docs
-- Mark deprecated docs with "Status: Deprecated"
-- Link related documents for easy navigation
-
----
-
-## 📞 Questions?
-
-If you can't find what you're looking for:
-1. Check the [Knowledge Base](./knowledge-base/)
-2. Search the repository
-3. Ask the team lead
-4. Create an issue for missing documentation
-
----
-
-**Last Updated**: December 29, 2024
-
+When adding new documentation:
+1. Place it in the appropriate subdirectory
+2. Update this README if adding a new category
+3. Follow existing naming conventions
+4. Link from relevant parent documents

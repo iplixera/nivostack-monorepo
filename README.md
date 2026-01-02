@@ -1259,10 +1259,24 @@ pnpm start
 
 ## Documentation
 
-- [Performance Optimization Guide](docs/PERFORMANCE_OPTIMIZATION.md) - API performance analysis and optimization tasks
-- [Developer Guide](docs/DEVELOPER_GUIDE.md) - Development setup and guidelines
-- [PRD](docs/PRD.md) - Product requirements document
-- [Changelog](CHANGELOG.md) - Version history and release notes
+All documentation is organized in the [`docs/`](./docs/) directory:
+
+### Quick Links
+- **[Setup Guide](./docs/setup/)** - Installation and environment setup
+- **[Developer Guide](./docs/development/DEVELOPER_GUIDE.md)** - Development workflows and guidelines
+- **[Deployment Guide](./docs/deployment/)** - Production deployment instructions
+- **[Integration Guides](./docs/guides/)** - SDK integration and how-to guides
+
+### Documentation Structure
+- **[Setup Documentation](./docs/setup/)** - Setup, installation, and configuration guides
+- **[Deployment Documentation](./docs/deployment/)** - Deployment, releases, and changelog
+- **[Development Documentation](./docs/development/)** - Development workflows and technical docs
+- **[Guides](./docs/guides/)** - User guides and integration instructions
+- **[Features](./docs/features/)** - Feature documentation and planning
+- **[PRDs](./docs/PRDs/)** - Product Requirements Documents
+- **[Technical](./docs/technical/)** - Technical architecture and decisions
+
+See [docs/README.md](./docs/README.md) for complete documentation index.
 
 ---
 

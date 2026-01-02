@@ -537,15 +537,15 @@ export async function GET(request: NextRequest) {
     // Optimized: Only fetch devices when groupByDevice is true
     // Get unique screen names using raw query with index (more efficient than distinct)
     const [screenNamesResult, devices] = await Promise.all([
-      groupByDevice 
-        ? Promise.resolve([])
-        : prisma.$queryRaw<Array<{ screenName: string }>>`
-            SELECT DISTINCT "screenName"
-            FROM "ApiTrace"
-            WHERE "projectId" = ${projectId}
-              AND "screenName" IS NOT NULL
-            ORDER BY "screenName"
-          `,
+      // Always fetch screen names for filter dropdown
+      prisma.$queryRaw<Array<{ screenName: string }>>`
+        SELECT DISTINCT "screenName"
+        FROM "ApiTrace"
+        WHERE "projectId" = ${projectId}
+          AND "screenName" IS NOT NULL
+        ORDER BY "screenName"
+      `,
+      // Only fetch devices when grouping is requested
       groupByDevice
         ? prisma.device.findMany({
             where: { projectId },
@@ -554,9 +554,7 @@ export async function GET(request: NextRequest) {
         : Promise.resolve([])
     ])
 
-    const screenNames = groupByDevice 
-      ? [] 
-      : screenNamesResult.map(s => s.screenName).filter(Boolean)
+    const screenNames = screenNamesResult.map(s => s.screenName).filter(Boolean)
 
     const [traces, total] = await Promise.all([
       prisma.apiTrace.findMany({

@@ -384,9 +384,29 @@ export async function GET(request: NextRequest) {
     const orderBy: Record<string, string> = {}
     orderBy[sortBy] = sortOrder
 
-    // Fetch devices with filters and pagination
-    // Note: Status filter will be added once Prisma client recognizes the status field
-    const [devices, filteredCount, totalCount, androidCount, iosCount, todayCount, thisWeekCount, thisMonthCount, debugModeCount] = await Promise.all([
+    // Optimized: Fetch devices and stats in parallel (reduced from 9 queries to 2)
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+
+    // Build WHERE clause for filtered count (for pagination)
+    const filteredWhereClause = Object.entries(where)
+      .map(([key, value]) => {
+        if (key === 'projectId') return `"projectId" = '${value}'`
+        if (key === 'platform') return `platform = '${value}'`
+        if (key === 'deviceId') return `"deviceId" ILIKE '%${value}%'`
+        if (key === 'model') return `model ILIKE '%${value}%'`
+        if (key === 'manufacturer') return `manufacturer ILIKE '%${value}%'`
+        if (key === 'userEmail') return `"userEmail" ILIKE '%${value}%'`
+        if (key === 'userName') return `"userName" ILIKE '%${value}%'`
+        return null
+      })
+      .filter(Boolean)
+      .join(' AND ')
+
+    const [devices, filteredCount, stats] = await Promise.all([
+      // Query 1: Fetch devices with pagination
       prisma.device.findMany({
         where,
         orderBy,
@@ -414,38 +434,42 @@ export async function GET(request: NextRequest) {
           updatedAt: true
         }
       }),
-      // Count filtered results for pagination
+      // Query 2: Count filtered results for pagination
       prisma.device.count({ where }),
-      // Get aggregated stats (always for the full project, not filtered)
-      // Note: Status filter temporarily removed until Prisma client recognizes the field
-      prisma.device.count({ where: { projectId } }),
-      prisma.device.count({ where: { projectId, platform: 'android' } }),
-      prisma.device.count({ where: { projectId, platform: 'ios' } }),
-      prisma.device.count({
-        where: {
-          projectId,
-          createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) }
-        }
-      }),
-      prisma.device.count({
-        where: {
-          projectId,
-          createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
-        }
-      }),
-      prisma.device.count({
-        where: {
-          projectId,
-          createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
-        }
-      }),
-      prisma.device.count({
-        where: {
-          projectId,
-          debugModeEnabled: true
-        }
-      })
+      // Query 3: Single aggregated query for all statistics (replaces 7 count queries)
+      prisma.$queryRaw<Array<{
+        total: bigint
+        android: bigint
+        ios: bigint
+        today: bigint
+        thisWeek: bigint
+        thisMonth: bigint
+        debugMode: bigint
+      }>>`
+        SELECT
+          COUNT(*) FILTER (WHERE "projectId" = ${projectId})::bigint as total,
+          COUNT(*) FILTER (WHERE "projectId" = ${projectId} AND platform = 'android')::bigint as android,
+          COUNT(*) FILTER (WHERE "projectId" = ${projectId} AND platform = 'ios')::bigint as ios,
+          COUNT(*) FILTER (WHERE "projectId" = ${projectId} AND "createdAt" >= ${todayStart})::bigint as today,
+          COUNT(*) FILTER (WHERE "projectId" = ${projectId} AND "createdAt" >= ${weekAgo})::bigint as "thisWeek",
+          COUNT(*) FILTER (WHERE "projectId" = ${projectId} AND "createdAt" >= ${monthAgo})::bigint as "thisMonth",
+          COUNT(*) FILTER (WHERE "projectId" = ${projectId} AND "debugModeEnabled" = true)::bigint as "debugMode"
+        FROM "Device"
+        WHERE "projectId" = ${projectId}
+      `
     ])
+
+    const [totalCount, androidCount, iosCount, todayCount, thisWeekCount, thisMonthCount, debugModeCount] = stats[0] 
+      ? [
+          Number(stats[0].total),
+          Number(stats[0].android),
+          Number(stats[0].ios),
+          Number(stats[0].today),
+          Number(stats[0].thisWeek),
+          Number(stats[0].thisMonth),
+          Number(stats[0].debugMode)
+        ]
+      : [0, 0, 0, 0, 0, 0, 0]
 
     const totalPages = Math.ceil(filteredCount / limit)
 

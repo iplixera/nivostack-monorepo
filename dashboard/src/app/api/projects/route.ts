@@ -49,26 +49,31 @@ export async function GET(request: NextRequest) {
         orderBy: { joinedAt: 'desc' }
       })
       
-      // Fetch inviter details for each member project
-      for (const member of memberProjects) {
-        if (member.invitedBy) {
-          try {
-            const inviter = await prisma.user.findUnique({
-              where: { id: member.invitedBy },
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            })
-            member.inviter = inviter
-          } catch (err) {
-            console.warn('Could not fetch inviter:', err)
-            member.inviter = null
-          }
-        } else {
-          member.inviter = null
+      // Batch fetch inviter details (fixes N+1 query problem)
+      const inviterIds = memberProjects
+        .map(m => m.invitedBy)
+        .filter((id): id is string => Boolean(id))
+      
+      let inviterMap = new Map()
+      if (inviterIds.length > 0) {
+        try {
+          const inviters = await prisma.user.findMany({
+            where: { id: { in: inviterIds } },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          })
+          inviterMap = new Map(inviters.map(i => [i.id, i]))
+        } catch (err) {
+          console.warn('Could not fetch inviters:', err)
         }
+      }
+      
+      // Associate inviters with members
+      for (const member of memberProjects) {
+        member.inviter = member.invitedBy ? inviterMap.get(member.invitedBy) || null : null
       }
     } catch (err: any) {
       // If ProjectMember model doesn't exist yet, skip member projects

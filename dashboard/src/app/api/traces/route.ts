@@ -534,18 +534,29 @@ export async function GET(request: NextRequest) {
     if (statusCode) where.statusCode = parseInt(statusCode)
     if (screenName) where.screenName = screenName
 
-    // Get unique screen names for filter dropdown
-    const screenNames = await prisma.apiTrace.findMany({
-      where: { projectId },
-      select: { screenName: true },
-      distinct: ['screenName']
-    })
+    // Optimized: Only fetch devices when groupByDevice is true
+    // Get unique screen names using raw query with index (more efficient than distinct)
+    const [screenNamesResult, devices] = await Promise.all([
+      groupByDevice 
+        ? Promise.resolve([])
+        : prisma.$queryRaw<Array<{ screenName: string }>>`
+            SELECT DISTINCT "screenName"
+            FROM "ApiTrace"
+            WHERE "projectId" = ${projectId}
+              AND "screenName" IS NOT NULL
+            ORDER BY "screenName"
+          `,
+      groupByDevice
+        ? prisma.device.findMany({
+            where: { projectId },
+            select: { id: true, deviceId: true, platform: true, model: true }
+          })
+        : Promise.resolve([])
+    ])
 
-    // Get unique devices for grouping
-    const devices = await prisma.device.findMany({
-      where: { projectId },
-      select: { id: true, deviceId: true, platform: true, model: true }
-    })
+    const screenNames = groupByDevice 
+      ? [] 
+      : screenNamesResult.map(s => s.screenName).filter(Boolean)
 
     const [traces, total] = await Promise.all([
       prisma.apiTrace.findMany({

@@ -21,8 +21,9 @@ This document tracks all performance optimizations for database and dashboard pe
 - [x] Add indexes to Device table
 - [x] Add indexes to ApiTrace table
 - [x] Add indexes to ProjectMember table
+- [x] Create migration file
+- [x] Deploy to local database
 - [ ] Verify index usage with EXPLAIN ANALYZE
-- [ ] Create migration file
 - [ ] Deploy to staging
 - [ ] Deploy to production
 

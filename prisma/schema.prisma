@@ -108,6 +108,10 @@ model Device {
   @@index([projectId, debugModeEnabled])
   @@index([status])
   @@index([projectId, status])
+  // Performance optimization indexes
+  @@index([projectId, platform]) // For platform filtering
+  @@index([projectId, createdAt]) // For date range queries
+  @@index([projectId, lastSeenAt]) // For recent devices
 }
 
 model Log {
@@ -193,6 +197,11 @@ model ApiTrace {
   @@index([sessionId])
   @@index([timestamp])
   @@index([screenName])
+  // Performance optimization indexes
+  @@index([projectId, timestamp]) // For time-based queries with project filter
+  @@index([projectId, screenName]) // For distinct screen names per project
+  @@index([projectId, deviceId]) // For device-specific traces
+  @@index([projectId, method, statusCode]) // For filtering by method/status
 }
 
 // Remote API Configuration - define cost per endpoint
@@ -1072,6 +1081,8 @@ model ProjectMember {
   @@index([userId])
   @@index([role])
   @@index([projectId, role])
+  // Performance optimization index
+  @@index([userId, projectId]) // For efficient user-project lookup (unique constraint covers this but index helps)
 }
 
 // Project Invitation - Pending invitations for team members

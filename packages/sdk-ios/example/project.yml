@@ -1,0 +1,27 @@
+name: NivoStackExample
+options:
+  bundleIdPrefix: com.nivostack
+  deploymentTarget:
+    iOS: "13.0"
+  developmentLanguage: en
+  xcodeVersion: "14.0"
+targets:
+  NivoStackExample:
+    type: application
+    platform: iOS
+    sources:
+      - path: NivoStackExample
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.nivostack.example
+      IPHONEOS_DEPLOYMENT_TARGET: "13.0"
+      SWIFT_VERSION: "5.5"
+      DEVELOPMENT_TEAM: ""
+    dependencies:
+      - package:
+          path: ../  # NivoStack SDK
+          product: NivoStack
+          linking: dynamic
+packages:
+  NivoStack:
+    path: ../
+

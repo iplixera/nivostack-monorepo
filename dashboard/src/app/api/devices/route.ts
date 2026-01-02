@@ -384,26 +384,11 @@ export async function GET(request: NextRequest) {
     const orderBy: Record<string, string> = {}
     orderBy[sortBy] = sortOrder
 
-    // Optimized: Fetch devices and stats in parallel (reduced from 9 queries to 2)
+    // Optimized: Fetch devices and stats in parallel (reduced from 9 queries to 3)
     const todayStart = new Date()
     todayStart.setHours(0, 0, 0, 0)
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
     const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-
-    // Build WHERE clause for filtered count (for pagination)
-    const filteredWhereClause = Object.entries(where)
-      .map(([key, value]) => {
-        if (key === 'projectId') return `"projectId" = '${value}'`
-        if (key === 'platform') return `platform = '${value}'`
-        if (key === 'deviceId') return `"deviceId" ILIKE '%${value}%'`
-        if (key === 'model') return `model ILIKE '%${value}%'`
-        if (key === 'manufacturer') return `manufacturer ILIKE '%${value}%'`
-        if (key === 'userEmail') return `"userEmail" ILIKE '%${value}%'`
-        if (key === 'userName') return `"userName" ILIKE '%${value}%'`
-        return null
-      })
-      .filter(Boolean)
-      .join(' AND ')
 
     const [devices, filteredCount, stats] = await Promise.all([
       // Query 1: Fetch devices with pagination

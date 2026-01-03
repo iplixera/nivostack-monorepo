@@ -390,7 +390,7 @@ export async function GET(request: NextRequest) {
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
     const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 
-    const [devices, filteredCount, stats] = await Promise.all([
+    const [devices, filteredCount, statsResult] = await Promise.all([
       // Query 1: Fetch devices with pagination
       prisma.device.findMany({
         where,
@@ -444,15 +444,15 @@ export async function GET(request: NextRequest) {
       `
     ])
 
-    const [totalCount, androidCount, iosCount, todayCount, thisWeekCount, thisMonthCount, debugModeCount] = stats[0] 
+    const [totalCount, androidCount, iosCount, todayCount, thisWeekCount, thisMonthCount, debugModeCount] = statsResult[0] 
       ? [
-          Number(stats[0].total),
-          Number(stats[0].android),
-          Number(stats[0].ios),
-          Number(stats[0].today),
-          Number(stats[0].thisWeek),
-          Number(stats[0].thisMonth),
-          Number(stats[0].debugMode)
+          Number(statsResult[0].total),
+          Number(statsResult[0].android),
+          Number(statsResult[0].ios),
+          Number(statsResult[0].today),
+          Number(statsResult[0].thisWeek),
+          Number(statsResult[0].thisMonth),
+          Number(statsResult[0].debugMode)
         ]
       : [0, 0, 0, 0, 0, 0, 0]
 

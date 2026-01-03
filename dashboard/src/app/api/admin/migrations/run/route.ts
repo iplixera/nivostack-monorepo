@@ -179,9 +179,31 @@ export async function POST(request: NextRequest) {
           CREATE INDEX IF NOT EXISTS "UserNotification_type_idx" ON "UserNotification"("type");
           CREATE INDEX IF NOT EXISTS "UserNotificationPreferences_userId_idx" ON "UserNotificationPreferences"("userId");
         `)
-                results.push('Created indexes')
+                results.push('Created team collaboration indexes')
             } catch (e: any) {
-                warnings.push('Some indexes may already exist')
+                warnings.push('Some team collaboration indexes may already exist')
+            }
+
+            // Create performance optimization indexes
+            try {
+                await prisma.$executeRawUnsafe(`
+          -- Device table indexes
+          CREATE INDEX IF NOT EXISTS "Device_projectId_platform_idx" ON "Device"("projectId", "platform");
+          CREATE INDEX IF NOT EXISTS "Device_projectId_createdAt_idx" ON "Device"("projectId", "createdAt");
+          CREATE INDEX IF NOT EXISTS "Device_projectId_lastSeenAt_idx" ON "Device"("projectId", "lastSeenAt");
+          
+          -- ApiTrace table indexes
+          CREATE INDEX IF NOT EXISTS "ApiTrace_projectId_timestamp_idx" ON "ApiTrace"("projectId", "timestamp");
+          CREATE INDEX IF NOT EXISTS "ApiTrace_projectId_screenName_idx" ON "ApiTrace"("projectId", "screenName");
+          CREATE INDEX IF NOT EXISTS "ApiTrace_projectId_deviceId_idx" ON "ApiTrace"("projectId", "deviceId");
+          CREATE INDEX IF NOT EXISTS "ApiTrace_projectId_method_statusCode_idx" ON "ApiTrace"("projectId", "method", "statusCode");
+          
+          -- ProjectMember table indexes
+          CREATE INDEX IF NOT EXISTS "ProjectMember_userId_projectId_idx" ON "ProjectMember"("userId", "projectId");
+        `)
+                results.push('Created performance optimization indexes')
+            } catch (e: any) {
+                warnings.push('Some performance indexes may already exist')
             }
 
             await prisma.$disconnect()
@@ -232,7 +254,7 @@ export async function GET(request: NextRequest) {
 
         const { prisma } = await import('@/lib/prisma')
 
-        // Check which tables/columns exist
+        // Check which tables/columns/indexes exist
         const checks = {
             projectMember: false,
             projectInvitation: false,
@@ -240,6 +262,7 @@ export async function GET(request: NextRequest) {
             userNotificationPreferences: false,
             planMaxTeamMembers: false,
             planMaxSeats: false,
+            performanceIndexes: false,
         }
 
         try {
@@ -294,6 +317,29 @@ export async function GET(request: NextRequest) {
         } catch (e: any) {
             if (!e.message?.includes('does not exist') && !e.message?.includes('column')) {
                 console.warn('Error checking Plan.maxSeats:', e.message)
+            }
+        }
+
+        // Check performance indexes
+        try {
+            const indexCheck = await prisma.$queryRaw<Array<{ indexname: string }>>`
+                SELECT indexname FROM pg_indexes 
+                WHERE indexname IN (
+                    'Device_projectId_platform_idx',
+                    'Device_projectId_createdAt_idx',
+                    'Device_projectId_lastSeenAt_idx',
+                    'ApiTrace_projectId_timestamp_idx',
+                    'ApiTrace_projectId_screenName_idx',
+                    'ApiTrace_projectId_deviceId_idx',
+                    'ApiTrace_projectId_method_statusCode_idx',
+                    'ProjectMember_userId_projectId_idx'
+                )
+                LIMIT 1
+            `
+            checks.performanceIndexes = indexCheck.length > 0
+        } catch (e: any) {
+            if (!e.message?.includes('does not exist')) {
+                console.warn('Error checking performance indexes:', e.message)
             }
         }
 

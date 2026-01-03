@@ -46,9 +46,16 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
 
-      // Verify project ownership
-      const project = await prisma.project.findFirst({
-        where: { id: projectId, userId: payload.userId }
+      // Check if user has access to project (owner or member)
+      const { canPerformAction } = await import('@/lib/team-access')
+      const hasAccess = await canPerformAction(payload.userId, projectId, 'view')
+      if (!hasAccess) {
+        return NextResponse.json({ error: 'Project not found or access denied' }, { status: 404 })
+      }
+
+      // Verify project exists
+      const project = await prisma.project.findUnique({
+        where: { id: projectId }
       })
 
       if (!project) {
@@ -94,9 +101,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Verify project ownership
-    const project = await prisma.project.findFirst({
-      where: { id: projectId, userId: payload.userId }
+    // Check if user has access to project (owner or member)
+    const { canPerformAction } = await import('@/lib/team-access')
+    const hasAccess = await canPerformAction(payload.userId, projectId, 'view')
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'Project not found or access denied' }, { status: 404 })
+    }
+
+    // Verify project exists
+    const project = await prisma.project.findUnique({
+      where: { id: projectId }
     })
 
     if (!project) {

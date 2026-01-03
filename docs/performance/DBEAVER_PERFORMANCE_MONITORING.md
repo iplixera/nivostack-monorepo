@@ -13,25 +13,114 @@ Shows how PostgreSQL executes a query, including:
 - Rows scanned vs returned
 - Join methods
 
-### How to Use
+### Step-by-Step: How to View Execution Plan in DBeaver
 
-1. **Open Query Editor**
-   - Right-click on `devbridge` database
+#### Method 1: Using EXPLAIN ANALYZE in SQL Editor (Recommended)
+
+1. **Open SQL Editor**
+   - Right-click on `devbridge` database in the Database Navigator (left panel)
    - Select **"SQL Editor"** → **"New SQL Script"**
+   - OR press `Ctrl+Alt+S` (Windows/Linux) or `Cmd+Option+S` (Mac)
 
-2. **Run EXPLAIN ANALYZE**
+2. **Write Your Query with EXPLAIN ANALYZE**
    ```sql
    EXPLAIN ANALYZE
    SELECT * FROM "Device" 
    WHERE "projectId" = 'your-project-id' AND platform = 'android';
    ```
 
-3. **View Results**
-   - DBeaver shows execution plan in a tree view
-   - Look for:
-     - ✅ **Index Scan** (good - using index)
-     - ❌ **Seq Scan** (bad - full table scan)
+3. **Execute the Query**
+   - Click the **"Execute SQL Script"** button (▶️) in the toolbar
+   - OR press `Ctrl+Enter` (Windows/Linux) or `Cmd+Enter` (Mac)
+
+4. **View Execution Plan Results**
+   - DBeaver displays the execution plan in the **"Data"** tab (bottom panel)
+   - The plan shows as a text output with indentation showing the query tree
+   - Look for these key indicators:
+     - ✅ **Index Scan using Device_projectId_platform_idx** (good - using index)
+     - ❌ **Seq Scan on Device** (bad - full table scan, no index)
      - **Execution Time**: Should be < 100ms for optimized queries
+
+5. **Interpret the Results**
+   ```
+   QUERY PLAN
+   └── Index Scan using Device_projectId_platform_idx on Device
+       Index Cond: (("projectId" = 'your-project-id'::text) AND (platform = 'android'::text))
+       Planning Time: 0.123 ms
+       Execution Time: 2.456 ms  ← This is what you want to optimize!
+   ```
+
+#### Method 2: Visual Explain Plan (DBeaver Pro Feature)
+
+If you have DBeaver Pro or Enterprise:
+
+1. **Write your query** (without EXPLAIN ANALYZE)
+   ```sql
+   SELECT * FROM "Device" 
+   WHERE "projectId" = 'your-project-id' AND platform = 'android';
+   ```
+
+2. **Right-click in the SQL Editor**
+   - Select **"Explain Plan"** or **"Visual Explain"**
+   - DBeaver shows a visual diagram of the execution plan
+
+#### Method 3: Using DBeaver's Explain Button
+
+1. **Write your query** in the SQL Editor
+2. **Click the "Explain" button** in the toolbar (looks like a diagram/chart icon)
+3. **View the visual plan** in a new tab
+
+### Understanding Execution Plan Output
+
+When you run `EXPLAIN ANALYZE`, you'll see output like this:
+
+```
+QUERY PLAN
+─────────────────────────────────────────────────────────────────────────────
+ Limit  (cost=0.42..8.44 rows=50 width=...) (actual time=0.123..2.456 rows=50 loops=1)
+   ->  Index Scan using Device_projectId_platform_idx on Device
+         (cost=0.42..8.44 rows=50 width=...) (actual time=0.123..2.456 rows=50 loops=1)
+         Index Cond: (("projectId" = 'test-id'::text) AND (platform = 'android'::text))
+ Planning Time: 0.123 ms
+ Execution Time: 2.456 ms
+```
+
+**Key Terms to Understand**:
+- **Index Scan**: ✅ Using an index (fast)
+- **Seq Scan**: ❌ Sequential scan (slow, scans entire table)
+- **Index Cond**: Conditions used for index lookup
+- **cost**: Estimated cost (lower is better)
+- **actual time**: Real execution time (what matters!)
+- **rows**: Number of rows processed
+- **Planning Time**: Time to plan the query
+- **Execution Time**: Time to execute the query (optimize this!)
+
+### Quick Test: Verify Index Usage
+
+Run this to check if your indexes are being used:
+
+```sql
+-- Test 1: Should use Device_projectId_platform_idx
+EXPLAIN ANALYZE
+SELECT * FROM "Device" 
+WHERE "projectId" = 'your-project-id' AND platform = 'android';
+-- Look for: "Index Scan using Device_projectId_platform_idx"
+
+-- Test 2: Should use ApiTrace_projectId_screenName_idx
+EXPLAIN ANALYZE
+SELECT DISTINCT "screenName"
+FROM "ApiTrace"
+WHERE "projectId" = 'your-project-id' AND "screenName" IS NOT NULL;
+-- Look for: "Index Scan using ApiTrace_projectId_screenName_idx"
+```
+
+### Tips for Reading Execution Plans
+
+1. **Read from bottom to top**: The innermost operations are at the bottom
+2. **Look for Seq Scan**: If you see this, the query isn't using an index
+3. **Check Execution Time**: Should be < 100ms for simple queries
+4. **Compare before/after**: Run the same query before and after adding indexes
+5. **Use EXPLAIN ANALYZE**: Not just EXPLAIN - ANALYZE shows actual execution time
 
 ### Example: Check Device Query Performance
 

@@ -1575,27 +1575,27 @@ export default function ProjectDetailPage() {
     }
   }, [logsPagination.limit])
 
-  // OPTION 1: Lazy loading - fetch crashes only when crashes tab is active and data is empty
+  // Fetch crashes when crashes tab is selected (only once when tab becomes active)
   useEffect(() => {
     if (!token || !projectId || loading) return
-    if (activeTab === 'crashes' && crashes.length === 0 && !crashesLoading) {
+    if (activeTab === 'crashes' && !crashesLoading) {
       fetchCrashes(1)
     }
-  }, [activeTab, crashes.length, crashesLoading, token, projectId, loading, fetchCrashes])
+  }, [activeTab, token, projectId, loading, fetchCrashes])
 
-  // Fetch crashes when crashes tab is selected or filters change (if data already exists)
+  // Refetch crashes when filters change (only if tab is active)
   useEffect(() => {
-    if (activeTab === 'crashes' && !loading && crashes.length > 0) {
+    if (activeTab === 'crashes' && !loading && !crashesLoading) {
       fetchCrashes(1) // Reset to page 1 when filters change
     }
-  }, [activeTab, loading, crashPlatformFilter, crashDeviceFilter, crashStartDate, crashEndDate, debouncedCrashSearch, crashes.length, fetchCrashes])
+  }, [activeTab, loading, crashPlatformFilter, crashDeviceFilter, crashStartDate, crashEndDate, debouncedCrashSearch, fetchCrashes])
 
   // Refetch crashes when limit changes
   useEffect(() => {
-    if (!loading && activeTab === 'crashes') {
+    if (activeTab === 'crashes' && !loading && !crashesLoading) {
       fetchCrashes(1)
     }
-  }, [crashesPagination.limit])
+  }, [activeTab, loading, crashesPagination.limit, fetchCrashes])
 
   // Handle crashes page change
   const handleCrashesPageChange = useCallback((page: number) => {

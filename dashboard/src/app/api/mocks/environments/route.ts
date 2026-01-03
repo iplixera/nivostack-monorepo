@@ -23,14 +23,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify project ownership
-    const project = await prisma.project.findFirst({
-      where: {
-        id: projectId,
-        userId: user.id,
-      },
-    })
+    // Check if user has access to project (owner or member)
+    const { canPerformAction } = await import('@/lib/team-access')
+    const hasAccess = await canPerformAction(user.id, projectId, 'view')
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    }
 
+    // Verify project exists
+    const project = await prisma.project.findUnique({
+      where: { id: projectId }
+    })
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
@@ -72,14 +75,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'projectId is required' }, { status: 400 })
     }
 
-    // Verify project ownership
-    const project = await prisma.project.findFirst({
-      where: {
-        id: projectId,
-        userId: user.id,
-      },
-    })
+    // Check if user has access to project (owner or member)
+    const { canPerformAction } = await import('@/lib/team-access')
+    const hasAccess = await canPerformAction(user.id, projectId, 'view')
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    }
 
+    // Verify project exists
+    const project = await prisma.project.findUnique({
+      where: { id: projectId }
+    })
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }

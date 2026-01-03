@@ -48,7 +48,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 })
     }
 
-    if (endpoint.environment.project.userId !== user.id) {
+    // Check if user has access to project (owner or member)
+    const { canPerformAction } = await import('@/lib/team-access')
+    const hasAccess = await canPerformAction(user.id, endpoint.environment.projectId, 'view')
+    if (!hasAccess) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 

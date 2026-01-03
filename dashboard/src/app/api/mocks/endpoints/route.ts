@@ -32,11 +32,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Environment not found' }, { status: 404 })
     }
 
-    if (environment.project.userId !== user.id) {
+    // Check if user has access to project (owner or member)
+    const { canPerformAction } = await import('@/lib/team-access')
+    const hasAccess = await canPerformAction(user.id, environment.projectId, 'view')
+    if (!hasAccess) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    // Check mock endpoints quota
+    // Check mock endpoints quota (use project owner's userId for throttling)
     const { checkThrottling } = await import('@/lib/throttling')
     const throttling = await checkThrottling(environment.project.userId, 'mockEndpoints')
     if (throttling.throttled || (throttling.usage && throttling.usage.limit !== null && throttling.usage.used >= throttling.usage.limit)) {
@@ -101,7 +104,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Environment not found' }, { status: 404 })
     }
 
-    if (environment.project.userId !== user.id) {
+    // Check if user has access to project (owner or member)
+    const { canPerformAction } = await import('@/lib/team-access')
+    const hasAccess = await canPerformAction(user.id, environment.projectId, 'view')
+    if (!hasAccess) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 

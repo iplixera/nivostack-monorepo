@@ -51,11 +51,18 @@ export async function PATCH(
       return NextResponse.json({ error: 'Condition not found' }, { status: 404 })
     }
 
-    const project = condition.response
-      ? condition.response.endpoint.environment.project
-      : condition.endpoint?.environment.project
+    const projectId = condition.response
+      ? condition.response.endpoint.environment.projectId
+      : condition.endpoint?.environment.projectId
 
-    if (!project || project.userId !== user.id) {
+    if (!projectId) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    }
+
+    // Check if user has access to project (owner or member)
+    const { canPerformAction } = await import('@/lib/team-access')
+    const hasAccess = await canPerformAction(user.id, projectId, 'view')
+    if (!hasAccess) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
@@ -129,11 +136,18 @@ export async function DELETE(
       return NextResponse.json({ error: 'Condition not found' }, { status: 404 })
     }
 
-    const project = condition.response
-      ? condition.response.endpoint.environment.project
-      : condition.endpoint?.environment.project
+    const projectId = condition.response
+      ? condition.response.endpoint.environment.projectId
+      : condition.endpoint?.environment.projectId
 
-    if (!project || project.userId !== user.id) {
+    if (!projectId) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    }
+
+    // Check if user has access to project (owner or member)
+    const { canPerformAction } = await import('@/lib/team-access')
+    const hasAccess = await canPerformAction(user.id, projectId, 'view')
+    if (!hasAccess) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 

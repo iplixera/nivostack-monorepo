@@ -29,8 +29,16 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
 
-      project = await prisma.project.findFirst({
-        where: { id: projectId, userId: payload.userId },
+      // Check if user has access to project (owner or member)
+      const { canPerformAction } = await import('@/lib/team-access')
+      const hasAccess = await canPerformAction(payload.userId, projectId, 'view')
+      if (!hasAccess) {
+        return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+      }
+
+      // Verify project exists
+      project = await prisma.project.findUnique({
+        where: { id: projectId },
         select: { id: true }
       })
       if (!project) {
@@ -73,9 +81,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Project ID and name required' }, { status: 400 })
     }
 
-    // Verify project ownership
-    const project = await prisma.project.findFirst({
-      where: { id: projectId, userId: payload.userId }
+    // Check if user has access to project (owner or member)
+    const { canPerformAction } = await import('@/lib/team-access')
+    const hasAccess = await canPerformAction(payload.userId, projectId, 'view')
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    }
+
+    // Verify project exists
+    const project = await prisma.project.findUnique({
+      where: { id: projectId }
     })
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
@@ -126,13 +141,19 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Category ID required' }, { status: 400 })
     }
 
-    // Verify category ownership via project
+    // Find category and verify access
     const existingCategory = await prisma.configCategory.findUnique({
-      where: { id },
-      include: { project: { select: { userId: true } } }
+      where: { id }
     })
 
-    if (!existingCategory || existingCategory.project.userId !== payload.userId) {
+    if (!existingCategory) {
+      return NextResponse.json({ error: 'Category not found' }, { status: 404 })
+    }
+
+    // Check if user has access to project (owner or member)
+    const { canPerformAction } = await import('@/lib/team-access')
+    const hasAccess = await canPerformAction(payload.userId, existingCategory.projectId, 'view')
+    if (!hasAccess) {
       return NextResponse.json({ error: 'Category not found' }, { status: 404 })
     }
 
@@ -174,13 +195,19 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Category ID required' }, { status: 400 })
     }
 
-    // Verify category ownership via project
+    // Find category and verify access
     const category = await prisma.configCategory.findUnique({
-      where: { id: categoryId },
-      include: { project: { select: { userId: true } } }
+      where: { id: categoryId }
     })
 
-    if (!category || category.project.userId !== payload.userId) {
+    if (!category) {
+      return NextResponse.json({ error: 'Category not found' }, { status: 404 })
+    }
+
+    // Check if user has access to project (owner or member)
+    const { canPerformAction } = await import('@/lib/team-access')
+    const hasAccess = await canPerformAction(payload.userId, category.projectId, 'view')
+    if (!hasAccess) {
       return NextResponse.json({ error: 'Category not found' }, { status: 404 })
     }
 

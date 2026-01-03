@@ -47,7 +47,13 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      if (!response || response.endpoint.environment.project.userId !== user.id) {
+      if (!response) {
+        return NextResponse.json({ error: 'Response not found' }, { status: 404 })
+      }
+      // Check if user has access to project (owner or member)
+      const { canPerformAction: canPerformAction1 } = await import('@/lib/team-access')
+      const hasAccess1 = await canPerformAction1(user.id, response.endpoint.environment.projectId, 'view')
+      if (!hasAccess1) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
       }
     } else if (endpointId) {
@@ -62,7 +68,13 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      if (!endpoint || endpoint.environment.project.userId !== user.id) {
+      if (!endpoint) {
+        return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 })
+      }
+      // Check if user has access to project (owner or member)
+      const { canPerformAction: canPerformAction2 } = await import('@/lib/team-access')
+      const hasAccess2 = await canPerformAction2(user.id, endpoint.environment.projectId, 'view')
+      if (!hasAccess2) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
       }
     }

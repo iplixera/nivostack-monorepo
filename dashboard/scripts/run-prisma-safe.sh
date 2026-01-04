@@ -11,6 +11,19 @@ COMMAND=${1:-generate}
 
 echo "Running Prisma $COMMAND..."
 
+# Load environment variables from .env.local if it exists
+if [ -f "../.env.local" ]; then
+  echo "Loading environment variables from ../.env.local..."
+  set -a
+  source ../.env.local
+  set +a
+elif [ -f ".env.local" ]; then
+  echo "Loading environment variables from .env.local..."
+  set -a
+  source .env.local
+  set +a
+fi
+
 # Set environment variables
 export PRISMA_SKIP_POSTINSTALL_GENERATE=true
 export SKIP_ENV_VALIDATION=true

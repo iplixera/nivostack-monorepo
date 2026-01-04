@@ -22,7 +22,11 @@
     "test:plans": "tsx ../tests/admin-plans.test.ts",
     "test:subscriptions": "tsx ../tests/admin-subscriptions.test.ts",
     "test:generate-data": "tsx ../tests/data-generator.ts",
-    "backfill:invitations": "tsx ../scripts/backfill-invitation-notifications.ts"
+    "backfill:invitations": "tsx ../scripts/backfill-invitation-notifications.ts",
+    "worker:aggregation": "tsx scripts/workers/aggregation-worker.ts",
+    "cron:scheduler": "tsx scripts/cron/scheduler.ts",
+    "test:enqueue": "tsx scripts/test-enqueue.ts",
+    "check:queue": "tsx scripts/check-queue.ts"
   },
   "prisma": {
     "schema": "../prisma/schema.prisma",
@@ -34,8 +38,11 @@
     "@vercel/postgres": "^0.10.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
+    "bullmq": "^5.66.4",
+    "ioredis": "^5.8.2",
     "jsonwebtoken": "^9.0.3",
     "next": "16.0.8",
+    "node-cron": "^4.2.1",
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "stripe": "^20.1.0"
@@ -46,6 +53,7 @@
     "@types/bcryptjs": "^3.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
+    "@types/node-cron": "^3.0.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^17.2.3",

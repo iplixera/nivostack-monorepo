@@ -55,6 +55,11 @@ model Project {
   configCategories     ConfigCategory[]
   members              ProjectMember[] // Team members
   invitations          ProjectInvitation[] // Pending invitations
+  aggregationState     ProjectAggregationState? // Aggregation tracking
+  apiTraceAggregates   ApiTraceAggregate[] // API trace aggregates
+  logAggregates        LogAggregate[] // Log aggregates
+  crashAggregates      CrashAggregate[] // Crash aggregates
+  sessionAggregates    SessionAggregate[] // Session aggregates
 
   @@index([userId])
 }
@@ -1186,4 +1191,181 @@ model UserNotificationPreferences {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+// ============================================================================
+// AGGREGATION TABLES - Pre-computed aggregates for dashboard performance
+// ============================================================================
+
+// Aggregate table for API Traces
+model ApiTraceAggregate {
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // Time period
+  period          DateTime // Start of hour/day (truncated)
+  granularity     String   // "hourly" | "daily"
+  
+  // Dimensions (grouping keys)
+  endpoint        String?  // Extracted from url (e.g., "/api/users/:id" → "/api/users")
+  method          String?  // GET, POST, PUT, DELETE, PATCH
+  statusClass     String?  // "2xx", "4xx", "5xx" (derived from statusCode)
+  screenName      String?
+  buildVersion    String?  // From device relation
+  country         String?
+  platform        String?  // From device relation
+  
+  // Metrics (aggregated values)
+  count           Int      @default(0) // Total number of traces
+  errorCount      Int      @default(0) // Count where statusCode >= 400
+  errorRate       Float    @default(0) // errorCount / count
+  
+  // Duration metrics (in milliseconds)
+  durationSum     BigInt   @default(0) // Sum of all durations
+  durationAvg     Float    @default(0) // Average duration
+  durationMax     Int      @default(0) // Maximum duration
+  durationP50     Int?     // 50th percentile (median)
+  durationP95     Int?     // 95th percentile
+  
+  // Cost metrics
+  costSum         Float    @default(0) // Total cost
+  
+  // Status code distribution
+  status2xx       Int      @default(0) // Count of 2xx responses
+  status4xx       Int      @default(0) // Count of 4xx responses
+  status5xx       Int      @default(0) // Count of 5xx responses
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([projectId, period, granularity, endpoint, method, statusClass, screenName, buildVersion, country, platform])
+  @@index([projectId, period, granularity])
+  @@index([projectId, granularity, period])
+  @@index([projectId, endpoint])
+  @@index([projectId, method])
+  @@index([projectId, statusClass])
+  @@index([projectId, screenName])
+  @@index([projectId, platform])
+}
+
+// Aggregate table for Logs
+model LogAggregate {
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // Time period
+  period          DateTime
+  granularity     String   // "hourly" | "daily"
+  
+  // Dimensions
+  level           String?  // verbose, debug, info, warn, error
+  screenName      String?
+  buildVersion    String?
+  platform        String?
+  
+  // Metrics
+  count           Int      @default(0) // Total logs
+  errorCount      Int      @default(0) // Count where level = 'error'
+  errorRate       Float    @default(0) // errorCount / count
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([projectId, period, granularity, level, screenName, buildVersion, platform])
+  @@index([projectId, period, granularity])
+  @@index([projectId, level])
+  @@index([projectId, screenName])
+}
+
+// Aggregate table for Crashes
+model CrashAggregate {
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // Time period
+  period          DateTime
+  granularity     String   // "hourly" | "daily"
+  
+  // Dimensions
+  buildVersion    String?
+  platform        String?
+  country         String?
+  
+  // Metrics
+  count           Int      @default(0) // Total crashes
+  uniqueMessages  Int      @default(0) // Count of distinct crash messages
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([projectId, period, granularity, buildVersion, platform, country])
+  @@index([projectId, period, granularity])
+  @@index([projectId, platform])
+}
+
+// Aggregate table for Sessions
+model SessionAggregate {
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // Time period
+  period          DateTime
+  granularity     String   // "hourly" | "daily"
+  
+  // Dimensions
+  entryScreen     String?
+  exitScreen      String?
+  buildVersion    String?
+  platform        String?
+  country         String?
+  
+  // Metrics
+  count           Int      @default(0) // Total sessions
+  
+  // Duration metrics (in seconds)
+  durationSum     BigInt   @default(0)
+  durationAvg     Float    @default(0)
+  durationMax     Int      @default(0)
+  durationP50     Int?
+  durationP95     Int?
+  
+  // Screen metrics
+  screenCountSum  BigInt   @default(0) // Sum of screenCount
+  screenCountAvg  Float    @default(0) // Average screens per session
+  screenCountMax  Int      @default(0)
+  
+  // Event metrics
+  eventCountSum   BigInt   @default(0)
+  eventCountAvg   Float    @default(0) // Average events per session
+  eventCountMax   Int      @default(0)
+  
+  // Error metrics
+  errorCountSum   BigInt   @default(0)
+  errorCountAvg   Float    @default(0) // Average errors per session
+  errorRate       Float    @default(0) // Sessions with errors / total sessions
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([projectId, period, granularity, entryScreen, exitScreen, buildVersion, platform, country])
+  @@index([projectId, period, granularity])
+  @@index([projectId, entryScreen])
+  @@index([projectId, exitScreen])
+  @@index([projectId, platform])
+}
+
+// Track last aggregation time per project (for incremental updates)
+model ProjectAggregationState {
+  id                String   @id @default(cuid())
+  projectId         String   @unique
+  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  // Last processed timestamps
+  lastHourlyAgg     DateTime? // Last time hourly aggregation ran
+  lastDailyAgg      DateTime? // Last time daily aggregation ran
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([projectId])
 }

@@ -23,27 +23,75 @@ export default function DashboardPage() {
     errorRate: 0,
     p95Latency: 0,
     costEstimate: 0,
+    logs: 0,
+    crashes: 0,
+    status2xx: 0,
+    status4xx: 0,
+    status5xx: 0,
+    avgSessionDuration: 0,
+    avgScreensPerSession: 0,
+    avgEventsPerSession: 0,
+    sessionErrorRate: 0,
+    uniqueCrashMessages: 0,
+    logErrorCount: 0,
   })
 
   const fetchProject = useCallback(async () => {
     if (!token || !projectId) return
     try {
-      const data = await api.projects.list(token)
-      const project = data.projects?.find(p => p.id === projectId)
+      // Fetch project info and stats in parallel
+      const [projectData, statsData] = await Promise.all([
+        api.projects.list(token),
+        fetch(`/api/projects/${projectId}/stats?mode=aggregated&timeRange=24h`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }).then(res => res.json())
+      ])
+
+      const project = projectData.projects?.find(p => p.id === projectId)
       setProjectName(project?.name || 'Project')
-      // Use project data for stats to avoid duplicate API call
-      if (project) {
+
+      // Use aggregated stats from the new endpoint
+      if (statsData && statsData.stats) {
         setStats({
-          activeDevices: project._count?.devices || 0,
-          sessions: project._count?.sessions || 0,
-          apiRequests: project._count?.apiTraces || 0,
-          errorRate: 0.9,
-          p95Latency: 190,
-          costEstimate: 182,
+          activeDevices: statsData.stats.activeDevices || 0,
+          sessions: statsData.stats.sessions || 0,
+          apiRequests: statsData.stats.apiRequests || 0,
+          errorRate: statsData.stats.errorRate || 0,
+          p95Latency: Math.round(statsData.stats.p95Latency || 0),
+          costEstimate: Math.round(statsData.stats.costEstimate || 0),
+          logs: statsData.stats.logs || 0,
+          crashes: statsData.stats.crashes || 0,
+          status2xx: statsData.stats.status2xx || 0,
+          status4xx: statsData.stats.status4xx || 0,
+          status5xx: statsData.stats.status5xx || 0,
+          avgSessionDuration: Math.round(statsData.stats.avgSessionDuration || 0),
+          avgScreensPerSession: Math.round(statsData.stats.avgScreensPerSession || 0),
+          avgEventsPerSession: Math.round(statsData.stats.avgEventsPerSession || 0),
+          sessionErrorRate: statsData.stats.sessionErrorRate || 0,
+          uniqueCrashMessages: statsData.stats.uniqueCrashMessages || 0,
+          logErrorCount: statsData.stats.logErrorCount || 0,
         })
       }
     } catch (error) {
-      console.error('Failed to fetch project:', error)
+      console.error('Failed to fetch project data:', error)
+      // Fallback to basic project data
+      try {
+        const data = await api.projects.list(token)
+        const project = data.projects?.find(p => p.id === projectId)
+        setProjectName(project?.name || 'Project')
+        if (project) {
+          setStats(prev => ({
+            ...prev,
+            activeDevices: project._count?.devices || 0,
+            sessions: project._count?.sessions || 0,
+            apiRequests: project._count?.apiTraces || 0,
+          }))
+        }
+      } catch (fallbackError) {
+        console.error('Fallback fetch also failed:', fallbackError)
+      }
     }
   }, [token, projectId])
 

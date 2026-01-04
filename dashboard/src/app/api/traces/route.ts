@@ -504,6 +504,7 @@ export async function GET(request: NextRequest) {
     const statusCode = searchParams.get('statusCode')
     const screenName = searchParams.get('screenName')
     const groupByDevice = searchParams.get('groupByDevice') === 'true'
+    const mode = searchParams.get('mode') || 'raw' // 'aggregated' | 'raw' - default to raw for detail views
     // Pagination parameters (support both page/limit and offset/limit for backwards compatibility)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')

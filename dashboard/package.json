@@ -24,6 +24,7 @@
     "test:generate-data": "tsx ../tests/data-generator.ts",
     "backfill:invitations": "tsx ../scripts/backfill-invitation-notifications.ts",
     "worker:aggregation": "tsx scripts/workers/aggregation-worker.ts",
+    "worker:data-seeder": "tsx scripts/workers/data-seeder-worker.ts",
     "cron:scheduler": "tsx scripts/cron/scheduler.ts",
     "test:enqueue": "tsx scripts/test-enqueue.ts",
     "check:queue": "tsx scripts/check-queue.ts",

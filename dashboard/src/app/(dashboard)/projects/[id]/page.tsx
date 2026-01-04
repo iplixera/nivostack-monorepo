@@ -8,6 +8,9 @@ import AppShell from '@/components/layout/AppShell'
 import PageHeader from '@/components/layout/PageHeader'
 import ThemeToggle from '@/components/ThemeToggle'
 import FilterBar, { FilterItem } from '@/components/FilterBar'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Database, Activity, BarChart3 } from 'lucide-react'
 import Link from 'next/link'
 
 export default function DashboardPage() {
@@ -16,6 +19,7 @@ export default function DashboardPage() {
   const projectId = params?.id as string
 
   const [projectName, setProjectName] = useState('')
+  const [dataMode, setDataMode] = useState<'aggregated' | 'raw'>('aggregated')
   const [stats, setStats] = useState({
     activeDevices: 0,
     sessions: 0,
@@ -42,7 +46,7 @@ export default function DashboardPage() {
       // Fetch project info and stats in parallel
       const [projectData, statsData] = await Promise.all([
         api.projects.list(token),
-        fetch(`/api/projects/${projectId}/stats?mode=aggregated&timeRange=24h`, {
+        fetch(`/api/projects/${projectId}/stats?mode=${dataMode}&timeRange=24h`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -132,15 +136,36 @@ export default function DashboardPage() {
     <AppShell projectId={projectId} projectName={projectName}>
       <PageHeader
         title="Dashboard"
-        subtitle="Aggregated health snapshot with drilldowns to raw pages (devices/traces/logs/crashes)."
-        dataMode="Aggregated"
+        subtitle={`Health snapshot with drilldowns to raw pages (devices/traces/logs/crashes).`}
+        dataMode={dataMode === 'aggregated' ? 'Aggregated' : 'Raw'}
         actions={
-          <>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <Button
+                variant={dataMode === 'aggregated' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setDataMode('aggregated')}
+                className="flex items-center gap-2"
+              >
+                <BarChart3 className="w-4 h-4" />
+                Aggregated
+              </Button>
+              <Button
+                variant={dataMode === 'raw' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setDataMode('raw')}
+                className="flex items-center gap-2"
+              >
+                <Database className="w-4 h-4" />
+                Raw
+              </Button>
+              <Badge variant="secondary" className="ml-2">
+                <Activity className="w-3 h-3 mr-1" />
+                {dataMode === 'aggregated' ? 'Pre-computed' : 'Live Query'}
+              </Badge>
+            </div>
             <ThemeToggle />
-            <button className="btn" onClick={() => {}}>
-              Primary Action
-            </button>
-          </>
+          </div>
         }
       />
 

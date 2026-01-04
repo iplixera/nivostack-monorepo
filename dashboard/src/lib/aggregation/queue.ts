@@ -9,11 +9,13 @@ import { Queue } from 'bullmq';
 import Redis from 'ioredis';
 
 // Redis connection configuration
+// Note: maxRetriesPerRequest can be a number for Queue (non-blocking), 
+// but must be null for Worker (blocking operations)
 const redisConfig = {
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
   password: process.env.REDIS_PASSWORD || undefined,
-  maxRetriesPerRequest: 3,
+  maxRetriesPerRequest: 3, // OK for Queue (non-blocking)
   retryStrategy: (times: number) => {
     const delay = Math.min(times * 50, 2000);
     return delay;

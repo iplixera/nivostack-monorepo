@@ -20,11 +20,12 @@ import Redis from 'ioredis';
 import { aggregateAll } from '../../src/lib/aggregation/aggregate';
 
 // Redis connection configuration
+// Note: maxRetriesPerRequest must be null for BullMQ workers (blocking operations)
 const redisConfig = {
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
   password: process.env.REDIS_PASSWORD || undefined,
-  maxRetriesPerRequest: 3,
+  maxRetriesPerRequest: null, // Required for BullMQ blocking operations
   retryStrategy: (times: number) => {
     const delay = Math.min(times * 50, 2000);
     return delay;

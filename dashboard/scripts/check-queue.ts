@@ -21,12 +21,16 @@ async function main() {
 
   try {
     const waiting = await aggregationQueue.getWaiting();
+    const delayed = await aggregationQueue.getDelayed();
+    const prioritized = await aggregationQueue.getPrioritized();
     const active = await aggregationQueue.getActive();
     const completed = await aggregationQueue.getCompleted(0, 10); // Last 10 completed
     const failed = await aggregationQueue.getFailed(0, 10); // Last 10 failed
 
     console.log('Queue Status:');
     console.log(`  ⏳ Waiting: ${waiting.length}`);
+    console.log(`  ⏰ Delayed: ${delayed.length}`);
+    console.log(`  ⚡ Prioritized: ${prioritized.length}`);
     console.log(`  🔄 Active: ${active.length}`);
     console.log(`  ✅ Completed: ${completed.length} (showing last 10)`);
     console.log(`  ❌ Failed: ${failed.length} (showing last 10)`);
@@ -34,6 +38,20 @@ async function main() {
     if (waiting.length > 0) {
       console.log('\n⏳ Waiting Jobs:');
       waiting.forEach((job) => {
+        console.log(`  - Job ${job.id}: ${job.name} (Project: ${job.data.projectId})`);
+      });
+    }
+
+    if (delayed.length > 0) {
+      console.log('\n⏰ Delayed Jobs:');
+      delayed.forEach((job) => {
+        console.log(`  - Job ${job.id}: ${job.name} (Project: ${job.data.projectId})`);
+      });
+    }
+
+    if (prioritized.length > 0) {
+      console.log('\n⚡ Prioritized Jobs:');
+      prioritized.forEach((job) => {
         console.log(`  - Job ${job.id}: ${job.name} (Project: ${job.data.projectId})`);
       });
     }

@@ -49,7 +49,7 @@ export async function enqueueHourlyAggregation(): Promise<{ enqueued: number }> 
       };
 
       const job = await aggregationQueue.add('hourly-aggregate', jobData, {
-        jobId: `hourly-${project.id}-${now.getTime()}`,
+        jobId: `hourly-${project.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         priority: 1,
       });
 
@@ -104,7 +104,7 @@ export async function enqueueDailyAggregation(): Promise<{ enqueued: number }> {
       };
 
       const job = await aggregationQueue.add('daily-aggregate', jobData, {
-        jobId: `daily-${project.id}-${endOfDay.getTime()}`,
+        jobId: `daily-${project.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         priority: 2, // Lower priority than hourly
       });
 

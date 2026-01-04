@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
+import AppShell from '@/components/layout/AppShell'
+import PageHeader from '@/components/layout/PageHeader'
+import ThemeToggle from '@/components/ThemeToggle'
 
 type Plan = {
   id: string
@@ -132,219 +135,188 @@ export default function CreateSubscriptionPage() {
       (u.name && u.name.toLowerCase().includes(searchUser.toLowerCase()))
   )
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">Loading...</div>
-      </div>
-    )
-  }
-
   return (
-    <div className="space-y-6">
-      <div>
-        <button
-          onClick={() => router.back()}
-          className="text-gray-400 hover:text-white mb-4 flex items-center gap-2"
-        >
-          ← Back
-        </button>
-        <h1 className="text-3xl font-bold text-white mb-2">Create New Subscription</h1>
-        <p className="text-gray-400">Assign a plan to a user and apply optional discounts</p>
-        <p className="text-sm text-gray-500 mt-1">
-          💡 Need to create or edit a plan?{' '}
-          <Link href="/admin/plans" className="text-blue-400 hover:text-blue-300 underline">
+    <AppShell>
+      <PageHeader
+        title="Create New Subscription"
+        subtitle="Assign a plan to a user and apply optional discounts"
+        dataMode="Admin"
+        actions={
+          <>
+            <ThemeToggle />
+            <button
+              onClick={() => router.back()}
+              className="btn secondary"
+            >
+              Back
+            </button>
+          </>
+        }
+      />
+
+      {/* Note Section */}
+      <div className="note" style={{ marginTop: '18px' }}>
+        <b>Workflow</b>
+        <div className="muted" style={{ marginTop: '6px' }}>
+          Need to create or edit a plan?{' '}
+          <Link href="/admin/plans" style={{ color: 'var(--p)', textDecoration: 'underline' }}>
             Manage Plans
           </Link>
-        </p>
+        </div>
       </div>
 
-      <div className="bg-gray-900 rounded-lg p-6 space-y-6">
-        {/* User Selection */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Select User</label>
-          <input
-            type="text"
-            placeholder="Search by email or name..."
-            value={searchUser}
-            onChange={(e) => setSearchUser(e.target.value)}
-            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white mb-2"
-          />
-          <select
-            value={selectedUserId}
-            onChange={(e) => setSelectedUserId(e.target.value)}
-            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
-            required
-          >
-            <option value="">-- Select User --</option>
-            {filteredUsers.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.email} {user.name && `(${user.name})`}
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* Form */}
+      <div className="card" style={{ marginTop: '14px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          {/* User Selection */}
+          <div>
+            <label className="muted" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>Select User *</label>
+            <input
+              type="text"
+              className="input"
+              placeholder="Search by email or name..."
+              value={searchUser}
+              onChange={(e) => setSearchUser(e.target.value)}
+              style={{ marginBottom: '8px' }}
+            />
+            <select
+              className="select"
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+              required
+            >
+              <option value="">-- Select User --</option>
+              {filteredUsers.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.email} {user.name && `(${user.name})`}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* Plan Selection */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Select Plan</label>
-          <select
-            value={selectedPlanId}
-            onChange={(e) => setSelectedPlanId(e.target.value)}
-            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
-            required
-          >
-            <option value="">-- Select Plan --</option>
-            {plans.map((plan) => (
-              <option key={plan.id} value={plan.id}>
-                {plan.displayName} - ${plan.price.toFixed(2)}/month
-              </option>
-            ))}
-          </select>
-        </div>
+          {/* Plan Selection */}
+          <div>
+            <label className="muted" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>Select Plan *</label>
+            <select
+              className="select"
+              value={selectedPlanId}
+              onChange={(e) => setSelectedPlanId(e.target.value)}
+              required
+            >
+              <option value="">-- Select Plan --</option>
+              {plans.map((plan) => (
+                <option key={plan.id} value={plan.id}>
+                  {plan.displayName} - ${plan.price.toFixed(2)}/month
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* Discount Options */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Discount</label>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="discountType"
-                  value="none"
-                  checked={discountType === 'none'}
-                  onChange={() => setDiscountType('none')}
-                  className="mr-2"
-                />
-                <span className="text-gray-300">No Discount</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="discountType"
-                  value="promo"
-                  checked={discountType === 'promo'}
-                  onChange={() => setDiscountType('promo')}
-                  className="mr-2"
-                />
-                <span className="text-gray-300">Promo Code</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="discountType"
-                  value="direct"
-                  checked={discountType === 'direct'}
-                  onChange={() => setDiscountType('direct')}
-                  className="mr-2"
-                />
-                <span className="text-gray-300">Direct Discount</span>
-              </label>
+          {/* Discount Type */}
+          <div>
+            <label className="muted" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>Discount Type</label>
+            <select
+              className="select"
+              value={discountType}
+              onChange={(e) => setDiscountType(e.target.value as 'none' | 'promo' | 'direct')}
+            >
+              <option value="none">No Discount</option>
+              <option value="promo">Promo Code</option>
+              <option value="direct">Direct Discount</option>
+            </select>
+          </div>
+
+          {/* Promo Code Selection */}
+          {discountType === 'promo' && (
+            <div>
+              <label className="muted" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>Select Promo Code</label>
+              <select
+                className="select"
+                value={selectedPromoCodeId}
+                onChange={(e) => setSelectedPromoCodeId(e.target.value)}
+              >
+                <option value="">-- Select Promo Code --</option>
+                {promoCodes.map((pc) => (
+                  <option key={pc.id} value={pc.id}>
+                    {pc.code} ({pc.discountType === 'percent' ? `${pc.discountValue}%` : `$${pc.discountValue}`})
+                  </option>
+                ))}
+              </select>
             </div>
+          )}
 
-            {/* Promo Code Selection */}
-            {discountType === 'promo' && (
+          {/* Direct Discount */}
+          {discountType === 'direct' && (
+            <div className="grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px' }}>
               <div>
-                <select
-                  value={selectedPromoCodeId}
-                  onChange={(e) => setSelectedPromoCodeId(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
-                >
-                  <option value="">-- Select Promo Code --</option>
-                  {promoCodes.map((pc) => (
-                    <option key={pc.id} value={pc.id}>
-                      {pc.code} - {pc.discountType === 'percent' ? `${pc.discountValue}%` : `$${pc.discountValue}`} off
-                      {pc.description && ` (${pc.description})`}
-                    </option>
-                  ))}
-                </select>
-                {selectedPromoCode && (
-                  <div className="mt-2 p-3 bg-blue-900/20 border border-blue-600 rounded text-sm text-blue-300">
-                    <div>Code: <strong>{selectedPromoCode.code}</strong></div>
-                    <div>Discount: {selectedPromoCode.discountType === 'percent' ? `${selectedPromoCode.discountValue}%` : `$${selectedPromoCode.discountValue}`}</div>
-                    {selectedPromoCode.maxUses && (
-                      <div>Uses: {selectedPromoCode.currentUses} / {selectedPromoCode.maxUses}</div>
-                    )}
-                    {selectedPromoCode.validUntil && (
-                      <div>Valid until: {new Date(selectedPromoCode.validUntil).toLocaleDateString()}</div>
-                    )}
+                <label className="muted" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>Discount Percent (%)</label>
+                <input
+                  type="number"
+                  className="input"
+                  min="0"
+                  max="100"
+                  value={directDiscountPercent}
+                  onChange={(e) => setDirectDiscountPercent(parseFloat(e.target.value) || 0)}
+                />
+              </div>
+              <div>
+                <label className="muted" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>Discount Amount ($)</label>
+                <input
+                  type="number"
+                  className="input"
+                  min="0"
+                  step="0.01"
+                  value={directDiscountAmount}
+                  onChange={(e) => setDirectDiscountAmount(parseFloat(e.target.value) || 0)}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Price Summary */}
+          {selectedPlan && (
+            <div className="card" style={{ background: 'var(--s2)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div className="muted" style={{ fontSize: '12px' }}>Base Price</div>
+                  <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--t)' }}>
+                    ${selectedPlan.price.toFixed(2)}/month
                   </div>
+                </div>
+                {finalPrice !== selectedPlan.price && (
+                  <>
+                    <div style={{ fontSize: '20px', color: 'var(--m)' }}>→</div>
+                    <div>
+                      <div className="muted" style={{ fontSize: '12px' }}>Final Price</div>
+                      <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--a)' }}>
+                        ${finalPrice.toFixed(2)}/month
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
-            )}
-
-            {/* Direct Discount */}
-            {discountType === 'direct' && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Percentage Discount (%)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={directDiscountPercent}
-                    onChange={(e) => setDirectDiscountPercent(parseFloat(e.target.value) || 0)}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
-                    placeholder="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Fixed Amount Discount ($)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={directDiscountAmount}
-                    onChange={(e) => setDirectDiscountAmount(parseFloat(e.target.value) || 0)}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Price Summary */}
-        {selectedPlan && (
-          <div className="p-4 bg-gray-800 rounded border border-gray-700">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-gray-400">Plan Price:</span>
-              <span className="text-white">${selectedPlan.price.toFixed(2)}/month</span>
             </div>
-            {finalPrice !== selectedPlan.price && (
-              <>
-                <div className="flex justify-between items-center mb-2 text-green-400">
-                  <span>Discount Applied:</span>
-                  <span>-${(selectedPlan.price - finalPrice).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center pt-2 border-t border-gray-700">
-                  <span className="text-white font-semibold">Final Price:</span>
-                  <span className="text-white font-bold text-lg">${finalPrice.toFixed(2)}/month</span>
-                </div>
-              </>
-            )}
-          </div>
-        )}
+          )}
 
-        {/* Actions */}
-        <div className="flex gap-4 pt-4 border-t border-gray-800">
-          <button
-            onClick={handleCreate}
-            disabled={saving || !selectedUserId || !selectedPlanId}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium disabled:opacity-50"
-          >
-            {saving ? 'Creating...' : 'Create Subscription'}
-          </button>
-          <button
-            onClick={() => router.back()}
-            className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded font-medium"
-          >
-            Cancel
-          </button>
+          {/* Submit Button */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '14px', marginTop: '8px' }}>
+            <button
+              className="btn secondary"
+              onClick={() => router.back()}
+              disabled={saving}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn"
+              onClick={handleCreate}
+              disabled={saving || !selectedUserId || !selectedPlanId}
+            >
+              {saving ? 'Creating...' : 'Create Subscription'}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </AppShell>
   )
 }
-

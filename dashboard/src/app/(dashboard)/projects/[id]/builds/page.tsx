@@ -1,433 +1,214 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
+import AppShell from '@/components/layout/AppShell'
+import PageHeader from '@/components/layout/PageHeader'
+import ThemeToggle from '@/components/ThemeToggle'
+import DataTable, { Column } from '@/components/DataTable'
+import FilterBar, { FilterItem } from '@/components/FilterBar'
 
 type Build = {
   id: string
-  version: number
-  name: string | null
-  description: string | null
-  mode: string | null
-  isActive: boolean
-  configCount: number
-  translationCount: number
+  version: string
+  environment: 'preview' | 'production'
+  status: 'active' | 'promoted' | 'archived'
   createdAt: string
-  createdBy: string | null
-  creator: {
-    id: string
-    email: string
-    name: string | null
-  } | null
-  features: Array<{
-    id: string
-    featureType: string
-    itemCount: number
-  }>
-  _count?: {
-    changeLogs: number
-  }
+  promotedAt: string | null
+  changeLog: string | null
+  configChanges: number
+  localizationChanges: number
 }
-
-type FeatureType = 'business_config' | 'localization' | 'api_mocks'
-
-const FEATURE_TYPES: { value: FeatureType; label: string }[] = [
-  { value: 'business_config', label: 'Business Configuration' },
-  { value: 'localization', label: 'Localization' },
-  { value: 'api_mocks', label: 'API Mocks' },
-]
 
 export default function BuildsPage() {
   const params = useParams()
-  const projectId = params.id as string
-  const { token, user } = useAuth()
-  const [buildsByFeature, setBuildsByFeature] = useState<Record<string, Build[]>>({})
-  const [loading, setLoading] = useState(true)
-  const [creating, setCreating] = useState<Record<string, boolean>>({})
-  const [buildNames, setBuildNames] = useState<Record<string, string>>({})
-  const [buildDescriptions, setBuildDescriptions] = useState<Record<string, string>>({})
-  const [selectedBuild, setSelectedBuild] = useState<Build | null>(null)
-  const [showDiff, setShowDiff] = useState(false)
-  const [diffBuildId, setDiffBuildId] = useState<string | null>(null)
-  const [diffData, setDiffData] = useState<any>(null)
+  const { token } = useAuth()
+  const projectId = params?.id as string
 
-  useEffect(() => {
+  const [builds, setBuilds] = useState<Build[]>([])
+  const [loading, setLoading] = useState(true)
+  const [projectName, setProjectName] = useState('')
+
+  const fetchProject = useCallback(async () => {
     if (!token || !projectId) return
-    loadBuilds()
+    try {
+      const data = await api.projects.list(token)
+      const project = data.projects?.find(p => p.id === projectId)
+      setProjectName(project?.name || 'Project')
+    } catch (error) {
+      console.error('Failed to fetch project:', error)
+    }
   }, [token, projectId])
 
-  const loadBuilds = async () => {
-    if (!projectId || !token) return
+  const fetchBuilds = useCallback(async () => {
+    if (!token || !projectId) return
     try {
       setLoading(true)
-      const grouped: Record<string, Build[]> = {}
-      
-      // Load builds for each feature type
-      for (const feature of FEATURE_TYPES) {
-        const response = await api.builds.list(projectId, token, feature.value)
-        grouped[feature.value] = response.builds || []
-      }
-      
-      setBuildsByFeature(grouped)
+      // TODO: Implement builds API
+      setBuilds([])
     } catch (error) {
-      console.error('Failed to load builds:', error)
+      console.error('Failed to fetch builds:', error)
     } finally {
       setLoading(false)
     }
-  }
+  }, [token, projectId])
 
-  const handleCreateBuild = async (featureType: FeatureType) => {
-    if (!token) return
-    try {
-      setCreating({ ...creating, [featureType]: true })
-      await api.builds.create(projectId, token, {
-        featureType,
-        name: buildNames[featureType] || undefined,
-        description: buildDescriptions[featureType] || undefined,
-      })
-      setBuildNames({ ...buildNames, [featureType]: '' })
-      setBuildDescriptions({ ...buildDescriptions, [featureType]: '' })
-      await loadBuilds()
-    } catch (error) {
-      alert('Failed to create build: ' + (error instanceof Error ? error.message : 'Unknown error'))
-    } finally {
-      setCreating({ ...creating, [featureType]: false })
-    }
-  }
-
-  const handleSetMode = async (buildId: string, mode: 'preview' | 'production') => {
-    if (!token) return
-    try {
-      await api.builds.setMode(buildId, mode, token)
-      await loadBuilds()
-      if (selectedBuild?.id === buildId) {
-        const updated = await api.builds.get(buildId, token)
-        setSelectedBuild(updated.build)
+  useEffect(() => {
+    if (token && projectId) {
+      // Only fetch project name once on mount
+      if (!projectName) {
+        fetchProject()
       }
-    } catch (error) {
-      alert('Failed to set build mode: ' + (error instanceof Error ? error.message : 'Unknown error'))
+      fetchBuilds()
     }
-  }
+  }, [token, projectId, fetchProject, fetchBuilds, projectName])
 
-  const handleDeleteBuild = async (buildId: string) => {
-    if (!token) return
-    if (!confirm('Are you sure you want to delete this build? This action cannot be undone.')) {
-      return
-    }
-    try {
-      await api.builds.delete(buildId, token)
-      if (selectedBuild?.id === buildId) {
-        setSelectedBuild(null)
-      }
-      await loadBuilds()
-    } catch (error) {
-      alert('Failed to delete build: ' + (error instanceof Error ? error.message : 'Unknown error'))
-    }
-  }
+  // Style constants
+  const ACTION_BUTTON_STYLE: React.CSSProperties = { padding: '7px 10px', fontSize: '11px' }
+  const ACTION_CONTAINER_STYLE: React.CSSProperties = { display: 'flex', gap: '8px', flexWrap: 'wrap' }
 
-  const handleShowDiff = async (buildId: string, compareWithId: string) => {
-    if (!token) return
-    try {
-      const response = await api.builds.getDiff(compareWithId, buildId, token)
-      setDiffData(response.diff)
-      setDiffBuildId(buildId)
-      setShowDiff(true)
-    } catch (error) {
-      alert('Failed to load diff: ' + (error instanceof Error ? error.message : 'Unknown error'))
-    }
-  }
+  // Memoize filter array
+  const filterItems = useMemo<FilterItem[]>(() => [
+    {
+      type: 'select',
+      options: [
+        { value: 'all', label: 'Environment: All' },
+        { value: 'preview', label: 'Preview' },
+        { value: 'production', label: 'Production' },
+      ],
+    },
+    {
+      type: 'select',
+      options: [
+        { value: 'all', label: 'Status: All' },
+        { value: 'active', label: 'Active' },
+        { value: 'promoted', label: 'Promoted' },
+      ],
+    },
+    { type: 'button', label: 'More Filters', className: 'secondary' },
+  ], [])
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">Loading builds...</div>
-      </div>
-    )
-  }
+  // Memoize stats array
+  const statsItems = useMemo(() => [
+    { label: 'Preview builds', value: '3' },
+    { label: 'Production builds', value: '12' },
+    { label: 'Pending promotion', value: '1', dot: 'warn' as const },
+  ], [])
+
+  // Memoize column definitions
+  const buildColumns = useMemo<Column<Build>[]>(() => [
+    { key: 'version', label: 'Version', render: (build) => <b>{build.version}</b> },
+    {
+      key: 'environment',
+      label: 'Environment',
+      render: (build) => (
+        <span className="chip">
+          {build.environment === 'production' ? 'Production' : 'Preview'}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (build) => (
+        <span className="chip">
+          <span className="dot" />
+          {build.status}
+        </span>
+      ),
+    },
+    {
+      key: 'changes',
+      label: 'Changes',
+      render: (build) => (
+        <span className="muted">
+          {build.configChanges} config, {build.localizationChanges} l10n
+        </span>
+      ),
+    },
+    {
+      key: 'createdAt',
+      label: 'Created',
+      render: (build) => (
+        <span className="muted">{new Date(build.createdAt).toLocaleDateString()}</span>
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (build) => (
+        <div style={ACTION_CONTAINER_STYLE}>
+          {build.environment === 'preview' && (
+            <button
+              className="btn secondary"
+              style={ACTION_BUTTON_STYLE}
+              onClick={(e) => {
+                e.stopPropagation()
+                // TODO: Promote build
+              }}
+            >
+              Promote
+            </button>
+          )}
+          <button
+            className="btn secondary"
+            style={ACTION_BUTTON_STYLE}
+            onClick={(e) => {
+              e.stopPropagation()
+              // TODO: View build details
+            }}
+          >
+            View
+          </button>
+        </div>
+      ),
+    },
+  ], [])
+
+  // Memoize handlers
+  const handleRowClick = useCallback((build: Build) => {
+    // TODO: Open build detail drawer
+    console.log('Open build:', build.id)
+  }, [])
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Build Versioning</h1>
-        <p className="text-gray-400">Create and manage version builds for each feature</p>
+    <AppShell projectId={projectId} projectName={projectName}>
+      <PageHeader
+        title="Builds"
+        subtitle="Versioning snapshots for Config + Localization. Promote Preview → Production with change log and rollback."
+        dataMode="Rel"
+        actions={
+          <>
+            <ThemeToggle />
+            <button className="btn" onClick={() => {}}>
+              Create Build
+            </button>
+          </>
+        }
+      />
+
+      {/* Note Section */}
+      <div className="note" style={{ marginTop: '18px' }}>
+        <b>Build Mode</b>
+        <div className="muted" style={{ marginTop: '6px' }}>
+          Preview build can be different from Production build. Promote when ready.
+        </div>
       </div>
 
-      {/* Builds grouped by feature type */}
-      {FEATURE_TYPES.map((feature) => {
-        const builds = buildsByFeature[feature.value] || []
-        const featureBuilds = builds.filter(b => 
-          b.features.some(f => f.featureType === feature.value)
-        )
+      {/* Filter Bar */}
+      <FilterBar filters={filterItems} stats={statsItems} />
 
-        return (
-          <div key={feature.value} className="bg-gray-900 rounded-lg border border-gray-800">
-            <div className="p-6 border-b border-gray-800">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-white">{feature.label}</h2>
-                  <p className="text-sm text-gray-400 mt-1">
-                    {featureBuilds.length} build{featureBuilds.length !== 1 ? 's' : ''}
-                  </p>
-                </div>
-                <div className="flex gap-3">
-                  <input
-                    type="text"
-                    placeholder="Build name (optional)"
-                    value={buildNames[feature.value] || ''}
-                    onChange={(e) => setBuildNames({ ...buildNames, [feature.value]: e.target.value })}
-                    className="px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500 text-sm"
-                  />
-                  <button
-                    onClick={() => handleCreateBuild(feature.value)}
-                    disabled={creating[feature.value]}
-                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium disabled:opacity-50 text-sm"
-                  >
-                    {creating[feature.value] ? 'Creating...' : 'Create Build'}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Builds Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-800">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Version</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Items</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Created By</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Created</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Mode</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-800">
-                  {featureBuilds.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="px-6 py-8 text-center text-gray-400">
-                        No builds yet. Create your first build for {feature.label}!
-                      </td>
-                    </tr>
-                  ) : (
-                    featureBuilds.map((build) => {
-                      const featureData = build.features.find(f => f.featureType === feature.value)
-                      const itemCount = featureData?.itemCount || 0
-
-                      return (
-                        <tr
-                          key={build.id}
-                          className={`hover:bg-gray-800/50 cursor-pointer ${
-                            selectedBuild?.id === build.id ? 'bg-blue-900/20' : ''
-                          }`}
-                          onClick={() => setSelectedBuild(build)}
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-white">v{build.version}</div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm text-white">{build.name || `v${build.version}`}</div>
-                            {build.description && (
-                              <div className="text-xs text-gray-400 mt-1">{build.description}</div>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            {itemCount} item{itemCount !== 1 ? 's' : ''}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {build.creator ? (
-                              <div>
-                                <div className="text-sm text-white">{build.creator.name || build.creator.email}</div>
-                                <div className="text-xs text-gray-400">{build.creator.email}</div>
-                              </div>
-                            ) : (
-                              <span className="text-sm text-gray-500">Unknown</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            {new Date(build.createdAt).toLocaleDateString()}
-                            <div className="text-xs text-gray-500">
-                              {new Date(build.createdAt).toLocaleTimeString()}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {build.mode ? (
-                              <span className={`px-2 py-1 text-xs rounded ${
-                                build.mode === 'production'
-                                  ? 'bg-green-900/30 text-green-400'
-                                  : 'bg-blue-900/30 text-blue-400'
-                              }`}>
-                                {build.mode === 'production' ? 'Production' : 'Preview'}
-                                {build.isActive && ' ✓'}
-                              </span>
-                            ) : (
-                              <span className="text-xs text-gray-500">Not assigned</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                              <button
-                                onClick={() => handleSetMode(build.id, 'preview')}
-                                disabled={build.mode === 'preview' && build.isActive}
-                                className={`px-3 py-1 rounded text-xs ${
-                                  build.mode === 'preview' && build.isActive
-                                    ? 'bg-blue-600 text-white cursor-not-allowed'
-                                    : 'bg-gray-700 hover:bg-gray-600 text-white'
-                                }`}
-                                title="Set as Preview"
-                              >
-                                Preview
-                              </button>
-                              <button
-                                onClick={() => handleSetMode(build.id, 'production')}
-                                disabled={build.mode === 'production' && build.isActive}
-                                className={`px-3 py-1 rounded text-xs ${
-                                  build.mode === 'production' && build.isActive
-                                    ? 'bg-green-600 text-white cursor-not-allowed'
-                                    : 'bg-gray-700 hover:bg-gray-600 text-white'
-                                }`}
-                                title="Set as Production"
-                              >
-                                Production
-                              </button>
-                              {featureBuilds.length > 1 && (
-                                <select
-                                  onChange={(e) => {
-                                    if (e.target.value) {
-                                      // Compare: from selected build (old) to current build (new)
-                                      handleShowDiff(e.target.value, build.id)
-                                    }
-                                  }}
-                                  className="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs"
-                                  onClick={(e) => e.stopPropagation()}
-                                  title="Compare with"
-                                  defaultValue=""
-                                >
-                                  <option value="">Compare</option>
-                                  {featureBuilds
-                                    .filter(b => b.id !== build.id)
-                                    .map((b) => (
-                                      <option key={b.id} value={b.id}>
-                                        {b.name || `v${b.version}`}
-                                      </option>
-                                    ))}
-                                </select>
-                              )}
-                              <button
-                                onClick={() => handleDeleteBuild(build.id)}
-                                disabled={build.isActive}
-                                className="px-3 py-1 bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-                                title="Delete Build"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )
-      })}
-
-      {/* Diff View Modal */}
-      {showDiff && diffData && selectedBuild && diffBuildId && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto border border-gray-800">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-white">Build Comparison</h2>
-              <button
-                onClick={() => {
-                  setShowDiff(false)
-                  setDiffData(null)
-                  setDiffBuildId(null)
-                }}
-                className="text-gray-400 hover:text-white text-2xl"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              {Object.entries(diffData.diff || {}).map(([featureType, changes]: [string, any]) => (
-                <div key={featureType} className="border border-gray-700 rounded p-4">
-                  <h3 className="text-lg font-semibold text-white mb-3 capitalize">
-                    {featureType.replace('_', ' ')}
-                  </h3>
-                  <div className="space-y-2">
-                    {changes.map((change: any, idx: number) => (
-                      <div
-                        key={idx}
-                        className={`p-3 rounded ${
-                          change.changeType === 'added'
-                            ? 'bg-green-900/20 border border-green-600'
-                            : change.changeType === 'deleted'
-                            ? 'bg-red-900/20 border border-red-600'
-                            : 'bg-yellow-900/20 border border-yellow-600'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className={`px-2 py-1 text-xs rounded ${
-                            change.changeType === 'added'
-                              ? 'bg-green-600 text-white'
-                              : change.changeType === 'deleted'
-                              ? 'bg-red-600 text-white'
-                              : 'bg-yellow-600 text-white'
-                          }`}>
-                            {change.changeType.toUpperCase()}
-                          </span>
-                          <span className="text-white font-medium">{change.itemLabel || change.itemKey}</span>
-                        </div>
-                        {change.changeType === 'changed' && (
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <div className="text-gray-400 mb-1">Old Value</div>
-                              <div className="text-red-300 break-all font-mono text-xs">
-                                {JSON.stringify(change.oldValue, null, 2)}
-                              </div>
-                            </div>
-                            <div>
-                              <div className="text-gray-400 mb-1">New Value</div>
-                              <div className="text-green-300 break-all font-mono text-xs">
-                                {JSON.stringify(change.newValue, null, 2)}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        {change.changeType === 'added' && (
-                          <div className="text-sm">
-                            <div className="text-gray-400 mb-1">Value</div>
-                            <div className="text-green-300 break-all font-mono text-xs">
-                              {JSON.stringify(change.newValue, null, 2)}
-                            </div>
-                          </div>
-                        )}
-                        {change.changeType === 'deleted' && (
-                          <div className="text-sm">
-                            <div className="text-gray-400 mb-1">Value</div>
-                            <div className="text-red-300 break-all font-mono text-xs">
-                              {JSON.stringify(change.oldValue, null, 2)}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                    {changes.length === 0 && (
-                      <div className="text-gray-400 text-sm">No changes</div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      {/* Builds Table */}
+      <DataTable
+        data={builds}
+        columns={buildColumns}
+        loading={loading}
+        emptyMessage="No builds found"
+        onRowClick={handleRowClick}
+        footerNote="Implementation: Builds version Config and Localization. Promote Preview → Production with change log and rollback support."
+      />
+    </AppShell>
   )
 }

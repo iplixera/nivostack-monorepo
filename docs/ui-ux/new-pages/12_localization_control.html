@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Localization · NivoStack UI Spec</title>
+  
+<style>
+  :root{
+    --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    --r: 16px; --r2: 12px;
+    --shadow: 0 16px 48px rgba(0,0,0,.28);
+    --shadow2: 0 10px 28px rgba(0,0,0,.18);
+  }
+  [data-theme="light"]{
+    --bg:#F7F8FA; --sb:#FFFFFF; --top:#FFFFFF; --s:#FFFFFF; --s2:#F0F3F7;
+    --b:#E2E7EF; --t:#101828; --m:#667085;
+    --p:#2563EB; --a:#16A34A; --w:#D97706; --d:#DC2626;
+    --chip:#EEF2FF; --code:#0B1220;
+  }
+  [data-theme="dark"]{
+    --bg:#0B1220; --sb:#0F172A; --top:#0F172A; --s:#121B2E; --s2:#0B1326;
+    --b:rgba(148,163,184,.18); --t:#E5E7EB; --m:rgba(229,231,235,.72);
+    --p:#38BDF8; --a:#22C55E; --w:#F59E0B; --d:#EF4444;
+    --chip: rgba(56,189,248,.14); --code:#0B1220;
+  }
+  html,body{height:100%}
+  body{margin:0;font-family:var(--font);background:var(--bg);color:var(--t);}
+  a{color:inherit;text-decoration:none}
+  .app{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
+  .sidebar{background:var(--sb);border-right:1px solid var(--b);padding:16px;position:sticky;top:0;height:100vh;overflow:auto}
+  .main{min-width:0;display:flex;flex-direction:column}
+  .topbar{position:sticky;top:0;z-index:10;background:var(--top);border-bottom:1px solid var(--b);padding:14px 18px;display:flex;justify-content:space-between;gap:12px;align-items:center}
+  .content{padding:18px;max-width:1320px}
+  .brand{display:flex;gap:10px;align-items:center;padding:10px;border-radius:14px;background:linear-gradient(180deg,var(--s),var(--s2));border:1px solid var(--b);box-shadow:var(--shadow2)}
+  .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--p),var(--a));}
+  .brand b{font-size:14px}
+  .brand small{color:var(--m)}
+  .project{margin-top:12px;padding:10px;border-radius:14px;border:1px solid var(--b);background:var(--s)}
+  .project .row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+  .navTitle{margin:16px 10px 8px;font-size:11px;color:var(--m);letter-spacing:.08em;text-transform:uppercase}
+  .nav a{display:flex;justify-content:space-between;gap:10px;padding:10px 10px;border-radius:12px;color:var(--m);align-items:center}
+  .nav a:hover{background:var(--s2);color:var(--t)}
+  .nav a.active{background:var(--chip);border:1px solid var(--b);color:var(--t)}
+  .badge{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--b);color:var(--m)}
+  .title b{font-size:16px;display:block}
+  .title span{font-size:12px;color:var(--m)}
+  .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .pill{padding:8px 10px;border:1px solid var(--b);border-radius:999px;background:var(--s);font-size:12px;color:var(--m)}
+  .btn{padding:10px 12px;border-radius:12px;border:1px solid transparent;background:var(--p);color:white;font-weight:800;cursor:pointer}
+  .btn.secondary{background:transparent;border-color:var(--b);color:var(--t);font-weight:700}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--m);font-weight:700}
+  .card{background:var(--s);border:1px solid var(--b);border-radius:var(--r);box-shadow:var(--shadow2);padding:16px}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .input,.select,textarea{padding:10px 12px;border-radius:12px;border:1px solid var(--b);background:var(--s);color:var(--t)}
+  .input{min-width:260px}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid var(--b);background:var(--chip);font-size:11px;color:var(--m)}
+  .dot{width:8px;height:8px;border-radius:999px;background:var(--a)}
+  .dot.warn{background:var(--w)} .dot.bad{background:var(--d)}
+  .muted{color:var(--m)}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .tab{padding:8px 10px;border-radius:999px;border:1px solid var(--b);background:transparent;color:var(--m);cursor:pointer;font-size:12px}
+  .tab.active{background:var(--chip);color:var(--t)}
+  .hr{height:1px;background:var(--b);margin:12px 0}
+  .note{border-left:4px solid var(--p);padding:10px 12px;border-radius:12px;background:linear-gradient(180deg,var(--s),var(--s2));border:1px solid var(--b)}
+  .warnBox{border-left:4px solid var(--w);padding:10px 12px;border-radius:12px;background:linear-gradient(180deg,var(--s),var(--s2));border:1px solid var(--b)}
+  .dangerBox{border-left:4px solid var(--d);padding:10px 12px;border-radius:12px;background:linear-gradient(180deg,var(--s),var(--s2));border:1px solid var(--b)}
+  table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--b);border-radius:14px;overflow:hidden}
+  th,td{padding:10px 12px;font-size:12px;border-bottom:1px solid var(--b);vertical-align:top}
+  th{background:var(--s2);color:var(--m);text-align:left}
+  tr:last-child td{border-bottom:0}
+  .progress{height:8px;background:rgba(148,163,184,.2);border-radius:999px;overflow:hidden;border:1px solid var(--b)}
+  .bar{height:100%;background:var(--a)}
+  .bar.warn{background:var(--w)}
+  .bar.bad{background:var(--d)}
+  .split{display:grid;grid-template-columns: 1.2fr .8fr;gap:14px}
+  .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+  .kbd{font-size:11px;padding:2px 6px;border:1px solid var(--b);border-radius:8px;background:var(--s2);color:var(--m)}
+</style>
+
+</head>
+<body>
+  <div class="app">
+    
+<aside class="sidebar">
+  <div class="brand">
+    <div class="logo"></div>
+    <div>
+      <b>NivoStack Console</b><br/>
+      <small>UI Spec · Functional Mock (file-by-file)</small>
+    </div>
+  </div>
+
+  <div class="project">
+    <div class="row">
+      <div>
+        <div style="font-weight:800">Performance Test Project</div>
+        <div class="muted" style="font-size:12px">prod · GCC</div>
+      </div>
+      <span class="badge">Switch ▼</span>
+    </div>
+  </div>
+
+  <div class="navTitle">Overview</div>
+  <div class="nav">
+    <a href="00_app_shell_v2.html" data-slug="shell2"><span>App Shell v2</span><span class="badge">Spec</span></a>
+    <a href="01_dashboard_aggregated.html" data-slug="dash"><span>Dashboard</span><span class="badge">Agg</span></a>
+  </div>
+
+  <div class="navTitle">Observe</div>
+  <div class="nav">
+    <a href="02_devices_raw.html" data-slug="devices"><span>Devices</span><span class="badge">Raw</span></a>
+    <a href="05_sessions_raw.html" data-slug="sessions"><span>Sessions</span><span class="badge">Raw</span></a>
+    <a href="03_api_traces_raw.html" data-slug="traces"><span>API Traces</span><span class="badge">Raw</span></a>
+    <a href="06_logs_raw.html" data-slug="logs"><span>Logs</span><span class="badge">Raw</span></a>
+    <a href="07_crashes_agg.html" data-slug="crashes"><span>Crashes</span><span class="badge">Agg→Raw</span></a>
+    <a href="08_screenflow_agg.html" data-slug="screenflow"><span>Screen Flow</span><span class="badge">Agg→Raw</span></a>
+    <a href="04_live_debug_live.html" data-slug="live"><span>Live Debug</span><span class="badge">Live</span></a>
+  </div>
+
+  <div class="navTitle">Control Plane</div>
+  <div class="nav">
+    <a href="11_business_config_control.html" data-slug="bconfig"><span>Business Config</span><span class="badge">CP</span></a>
+    <a href="12_localization_control.html" data-slug="l10n"><span>Localization</span><span class="badge">CP</span></a>
+    <a href="13_builds_release.html" data-slug="builds"><span>Builds</span><span class="badge">Rel</span></a>
+    <a href="15_api_config_control.html" data-slug="apiconfig"><span>API Config</span><span class="badge">CP</span></a>
+    <a href="16_mocking_dev.html" data-slug="mocking"><span>API Mocking</span><span class="badge">Dev</span></a>
+  </div>
+
+  <div class="navTitle">Operate</div>
+  <div class="nav">
+    <a href="09_alerts_ops.html" data-slug="alerts"><span>Alerts</span><span class="badge">Ops</span></a>
+  </div>
+
+  <div class="navTitle">Developer</div>
+  <div class="nav">
+    <a href="14_sdk_settings_dev.html" data-slug="sdk"><span>SDK Settings</span><span class="badge">Dev</span></a>
+    <a href="20_files_uploads.html" data-slug="files"><span>Files</span><span class="badge">Dev</span></a>
+  </div>
+
+  <div class="navTitle">Organization</div>
+  <div class="nav">
+    <a href="17_team_access_org.html" data-slug="team"><span>Team & Access</span><span class="badge">Org</span></a>
+    <a href="10_billing_org.html" data-slug="billing"><span>Billing & Quotas</span><span class="badge">Org</span></a>
+    <a href="18_project_settings_org.html" data-slug="settings"><span>Project Settings</span><span class="badge">Org</span></a>
+    <a href="19_notifications_org.html" data-slug="notifs"><span>Notifications</span><span class="badge">Org</span></a>
+  </div>
+
+  <div class="navTitle">Legend</div>
+  <div class="footerNote muted" style="margin-top:10px;font-size:11px">
+    Aggregated = rollups/materialized views<br/>
+    Raw = row-level tables (paged + filtered)<br/>
+    Live = recent raw deltas (poll/stream)
+  </div>
+</aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="title">
+          <b>Localization</b>
+          <span>Control Plane. Manage languages, keys, translations, review workflow, and export formats.</span>
+        </div>
+        <div class="actions">
+          <span class="pill">Mode: <b style="color:var(--t)">Control Plane</b></span>
+          <span class="pill">Env: Production</span>
+          <button class="btn secondary" onclick="toggleTheme()">Light/Dark</button>
+          <button class="btn" onclick="alert('Mock CTA')">Primary Action</button>
+        </div>
+      </div>
+      
+      <div class="content">
+        
+<div class="dangerBox">
+  <b>Quota critical: Localization Keys 93%</b>
+  <div class="muted" style="margin-top:6px">Keys: <b>9,300 / 10,000</b>. Consider archiving unused keys or upgrading retention/quota.</div>
+  <div class="row" style="margin-top:10px">
+    <a class="btn secondary" href="10_billing_org.html">Billing & usage</a>
+    <button class="btn" onclick="alert('Mock: upgrade')">Upgrade</button>
+  </div>
+  <div style="margin-top:10px" class="progress"><div class="bar bad" style="width:93%"></div></div>
+</div>
+
+<div class="card" style="margin-top:14px">
+  <div class="row">
+    <input class="input" placeholder="Search key / value / category"/>
+    <select class="select"><option>Language: All</option><option>en</option><option>ar</option><option>fr</option></select>
+    <select class="select"><option>Status: All</option><option>Missing</option><option>Reviewed</option><option>Unreviewed</option></select>
+    <select class="select"><option>Platform: All</option><option>iOS</option><option>Android</option><option>Web</option></select>
+    <button class="btn secondary" onclick="alert('Mock: Import (CSV/JSON)')">Import</button>
+    <button class="btn secondary" onclick="alert('Mock: Export (ARB/JSON/Strings)')">Export</button>
+    <button class="btn" onclick="alert('Mock: New key')">New Key</button>
+  </div>
+</div>
+
+<div class="grid" style="margin-top:14px">
+  <div class="card" style="grid-column:span 4">
+    <b>Languages</b>
+    <div class="hr"></div>
+    <div class="row"><span class="chip"><span class="dot"></span> en (default)</span></div>
+    <div class="row" style="margin-top:8px"><span class="chip"><span class="dot"></span> ar (RTL)</span></div>
+    <div class="row" style="margin-top:8px"><span class="chip"><span class="dot warn"></span> fr (missing 120)</span></div>
+    <div class="hr"></div>
+    <button class="btn secondary" onclick="alert('Mock: add language')">Add language</button>
+  </div>
+  <div class="card" style="grid-column:span 8">
+    <b>Keys & Translations</b>
+    <table style="margin-top:12px">
+      <thead><tr><th>Key</th><th>Category</th><th>en</th><th>ar</th><th>Review</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mono"><b>checkout_pay</b><div class="muted">CTA button</div></td>
+          <td>checkout</td>
+          <td>Pay now</td>
+          <td>ادفع الآن</td>
+          <td><span class="chip"><span class="dot"></span>Reviewed</span></td>
+          <td><button class="btn secondary" style="padding:7px 10px" onclick="alert('Mock: open key drawer (history + screenshot + max length)')">Open</button></td>
+        </tr>
+        <tr>
+          <td class="mono"><b>login_error_401</b><div class="muted">error label</div></td>
+          <td>auth</td>
+          <td>Invalid credentials</td>
+          <td class="muted">—</td>
+          <td><span class="chip"><span class="dot warn"></span>Missing</span></td>
+          <td><button class="btn secondary" style="padding:7px 10px" onclick="alert('Mock: edit translations inline')">Fix</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="muted" style="margin-top:10px;font-size:11px">Implementation: keep current tables; add UI for bulk edit, review flow, and per-key audit trail.</div>
+  </div>
+</div>
+
+      </div>
+    </main>
+  </div>
+  
+<script>
+  function toggleTheme(){
+    const html = document.documentElement;
+    const next = html.dataset.theme === "dark" ? "light" : "dark";
+    html.dataset.theme = next;
+    localStorage.setItem("nivostack_theme", next);
+  }
+  (function initTheme(){
+    const saved = localStorage.getItem("nivostack_theme");
+    if (saved) document.documentElement.dataset.theme = saved;
+  })();
+</script>
+
+  
+    <script>
+      (function(){ 
+        document.querySelectorAll('a[data-slug]').forEach(a=>a.classList.toggle('active', a.dataset.slug==="l10n"));
+      })();
+    </script>
+    
+</body>
+</html>

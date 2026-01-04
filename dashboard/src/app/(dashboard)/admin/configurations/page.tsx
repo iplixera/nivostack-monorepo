@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
+import AppShell from '@/components/layout/AppShell'
+import PageHeader from '@/components/layout/PageHeader'
+import ThemeToggle from '@/components/ThemeToggle'
 
 type ConfigurationCategory =
   | 'notifications'
@@ -136,7 +139,6 @@ export default function AdminConfigurationsPage() {
       const data = await api.admin.getConfigurations(token, activeCategory)
       setConfigurations(data.configurations)
 
-      // Initialize form data with existing values
       const formDataInit: Record<string, string> = {}
       data.configurations.forEach(config => {
         formDataInit[config.key] = config.encrypted ? '' : (config.value || '')
@@ -149,24 +151,14 @@ export default function AdminConfigurationsPage() {
     }
   }
 
-  const handleSave = async (key: string, value: string, encrypted: boolean) => {
+  const handleSave = async (key: string) => {
     if (!token) return
+    setSaving(true)
     try {
-      setSaving(true)
-      const configDef = CATEGORY_CONFIGS[activeCategory].defaultConfigs.find(c => c.key === key)
-
-      await api.admin.saveConfiguration({
-        category: activeCategory,
-        key,
-        value: encrypted && !value ? undefined : value, // Don't update if encrypted and empty
-        encrypted: encrypted || configDef?.encrypted || false,
-        description: configDef?.description,
-        isActive: true
-      }, token)
-
+      const value = formData[key] || ''
+      await api.admin.updateConfiguration(token, activeCategory, key, value)
+      alert('Configuration saved successfully!')
       await loadConfigurations()
-      setEditingConfig(null)
-      setTestResult(null)
     } catch (error) {
       alert('Failed to save configuration: ' + (error instanceof Error ? error.message : 'Unknown error'))
     } finally {
@@ -174,232 +166,146 @@ export default function AdminConfigurationsPage() {
     }
   }
 
-  const handleTest = async (key: string, testType: string) => {
+  const handleTest = async (key: string) => {
     if (!token) return
+    setTesting(key)
+    setTestResult(null)
     try {
-      setTesting(key)
-      setTestResult(null)
-
-      let testData: any = {}
-
-      // Prepare test data based on category and key
-      if (activeCategory === 'machine_translation') {
-        testData = {
-          provider: key.includes('google') ? 'google' : key.includes('deepl') ? 'deepl' : 'azure',
-          sourceText: 'Hello, world!',
-          sourceLang: 'en',
-          targetLang: 'es'
-        }
-      } else if (activeCategory === 'webhooks' && key === 'default_url') {
-        testData = {}
-      } else if (activeCategory === 'payment' && key === 'stripe_secret_key') {
-        testData = {}
-      }
-
-      const result = await api.admin.testConfiguration(activeCategory, key, testType, testData, token)
-      setTestResult({ key, ...result.testResult })
+      const result = await api.admin.testConfiguration(token, activeCategory, key)
+      setTestResult({ success: true, message: result.message || 'Test successful' })
     } catch (error) {
-      setTestResult({
-        key,
-        success: false,
-        message: error instanceof Error ? error.message : 'Test failed'
-      })
+      setTestResult({ success: false, message: error instanceof Error ? error.message : 'Test failed' })
     } finally {
       setTesting(null)
     }
   }
 
-  const getTestType = (category: ConfigurationCategory, key: string): string => {
-    if (category === 'payment' && key.includes('stripe')) return 'payment'
-    if (category === 'machine_translation') return 'machine_translation'
-    if (category === 'email') return 'email'
-    if (category === 'sms') return 'sms'
-    if (category === 'webhooks') return 'webhook'
-    return 'general'
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">Loading configurations...</div>
-      </div>
-    )
-  }
-
   const categoryConfig = CATEGORY_CONFIGS[activeCategory]
-  const categoryConfigs = configurations.filter(c => c.category === activeCategory)
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">System Configuration</h1>
-          <p className="text-gray-400 mt-1">Manage system-wide settings and integrations</p>
+    <AppShell>
+      <PageHeader
+        title="System Configurations"
+        subtitle="Manage system-wide configuration settings"
+        dataMode="Admin"
+        actions={<ThemeToggle />}
+      />
+
+      {/* Category Tabs */}
+      <div className="card" style={{ marginTop: '18px' }}>
+        <div className="tabs">
+          {(Object.keys(CATEGORY_CONFIGS) as ConfigurationCategory[]).map((category) => (
+            <button
+              key={category}
+              onClick={() => setActiveCategory(category)}
+              className={`tab ${activeCategory === category ? 'active' : ''}`}
+            >
+              {CATEGORY_CONFIGS[category].label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Category Tabs */}
-      <div className="flex flex-wrap gap-2 border-b border-gray-800 pb-4">
-        {(Object.keys(CATEGORY_CONFIGS) as ConfigurationCategory[]).map(category => (
-          <button
-            key={category}
-            onClick={() => {
-              setActiveCategory(category)
-              setEditingConfig(null)
-              setTestResult(null)
-            }}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeCategory === category
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-750'
-              }`}
-          >
-            {CATEGORY_CONFIGS[category].label}
-          </button>
-        ))}
-      </div>
-
       {/* Category Description */}
-      <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-        <h2 className="text-lg font-semibold text-white mb-1">{categoryConfig.label}</h2>
-        <p className="text-gray-400 text-sm">{categoryConfig.description}</p>
+      <div className="note" style={{ marginTop: '14px' }}>
+        <b>{categoryConfig.label}</b>
+        <div className="muted" style={{ marginTop: '6px' }}>
+          {categoryConfig.description}
+        </div>
       </div>
 
-      {/* Configurations List */}
-      <div className="space-y-4">
-        {categoryConfig.defaultConfigs.map(configDef => {
-          const existingConfig = categoryConfigs.find(c => c.key === configDef.key)
-          const isEditing = editingConfig?.key === configDef.key
-          const value = isEditing
-            ? editingConfig.value
-            : existingConfig
-              ? (existingConfig.encrypted ? '[ENCRYPTED]' : existingConfig.value || '')
-              : ''
-          const isEncrypted = configDef.encrypted || existingConfig?.encrypted || false
+      {/* Configuration Form */}
+      <div className="card" style={{ marginTop: '14px' }}>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--m)' }}>
+            Loading configurations...
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            {categoryConfig.defaultConfigs.map((configDef) => {
+              const existingConfig = configurations.find(c => c.key === configDef.key)
+              const value = formData[configDef.key] || (existingConfig && !existingConfig.encrypted ? existingConfig.value : '')
+              const isEncrypted = configDef.encrypted || existingConfig?.encrypted
 
-          return (
-            <div key={configDef.key} className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-white font-medium">{configDef.label}</h3>
-                    {isEncrypted && (
-                      <span className="px-2 py-0.5 bg-yellow-600/20 text-yellow-400 text-xs rounded">Encrypted</span>
-                    )}
-                    {existingConfig && !existingConfig.isActive && (
-                      <span className="px-2 py-0.5 bg-gray-600/20 text-gray-400 text-xs rounded">Inactive</span>
+              return (
+                <div key={configDef.key}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <div>
+                      <label className="muted" style={{ fontSize: '12px', display: 'block' }}>
+                        {configDef.label}
+                        {configDef.required && <span style={{ color: 'var(--d)' }}> *</span>}
+                      </label>
+                      <div className="muted" style={{ fontSize: '11px', marginTop: '4px' }}>
+                        {configDef.description}
+                      </div>
+                    </div>
+                    {existingConfig && (
+                      <span className="chip">
+                        <span className={`dot ${existingConfig.isActive ? 'good' : ''}`} />
+                        {existingConfig.isActive ? 'Active' : 'Inactive'}
+                      </span>
                     )}
                   </div>
-                  <p className="text-gray-400 text-sm">{configDef.description}</p>
-                  {existingConfig && (
-                    <p className="text-gray-500 text-xs mt-1">
-                      Last updated: {new Date(existingConfig.updatedAt).toLocaleString()}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {getTestType(activeCategory, configDef.key) !== 'general' && (
-                    <button
-                      onClick={() => handleTest(configDef.key, getTestType(activeCategory, configDef.key))}
-                      disabled={testing === configDef.key || !existingConfig}
-                      className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {testing === configDef.key ? 'Testing...' : 'Test'}
-                    </button>
-                  )}
-                  <button
-                    onClick={() => {
-                      setEditingConfig({
-                        category: activeCategory,
-                        key: configDef.key,
-                        value: existingConfig && !existingConfig.encrypted ? existingConfig.value || '' : '',
-                        encrypted: isEncrypted
-                      })
-                      setTestResult(null)
-                    }}
-                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
-                  >
-                    {existingConfig ? 'Edit' : 'Add'}
-                  </button>
-                </div>
-              </div>
 
-              {/* Test Result */}
-              {testResult && testResult.key === configDef.key && (
-                <div className={`mb-3 p-3 rounded-lg border ${testResult.success
-                  ? 'bg-green-900/20 border-green-600 text-green-300'
-                  : 'bg-red-900/20 border-red-600 text-red-300'
-                  }`}>
-                  <p className="text-sm font-medium">{testResult.success ? '✓ Test Passed' : '✗ Test Failed'}</p>
-                  <p className="text-xs mt-1">{testResult.message}</p>
-                  {testResult.result && (
-                    <pre className="text-xs mt-2 bg-gray-800 p-2 rounded overflow-auto">
-                      {JSON.stringify(testResult.result, null, 2)}
-                    </pre>
-                  )}
-                </div>
-              )}
-
-              {/* Edit Form */}
-              {isEditing && (
-                <div className="mt-4 pt-4 border-t border-gray-800">
-                  <div className="space-y-3">
-                    {configDef.type === 'boolean' ? (
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={editingConfig.value === 'true'}
-                          onChange={(e) => setEditingConfig({ ...editingConfig, value: e.target.checked ? 'true' : 'false' })}
-                          className="rounded bg-gray-800 border-gray-700"
-                        />
-                        <span className="text-gray-300 text-sm">Enabled</span>
-                      </label>
-                    ) : (
+                  {configDef.type === 'boolean' ? (
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={value === 'true' || value === '1'}
+                        onChange={(e) => setFormData({ ...formData, [configDef.key]: e.target.checked ? 'true' : 'false' })}
+                        style={{ borderRadius: '4px' }}
+                      />
+                      <span className="muted" style={{ fontSize: '12px' }}>Enabled</span>
+                    </label>
+                  ) : (
+                    <div style={{ display: 'flex', gap: '8px' }}>
                       <input
                         type={configDef.type === 'password' || isEncrypted ? 'password' : configDef.type === 'number' ? 'number' : 'text'}
-                        value={editingConfig.value}
-                        onChange={(e) => setEditingConfig({ ...editingConfig, value: e.target.value })}
-                        placeholder={isEncrypted && !existingConfig ? 'Enter new value' : `Enter ${configDef.label.toLowerCase()}`}
-                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                        className="input"
+                        value={isEncrypted && !formData[configDef.key] ? '••••••••' : value}
+                        onChange={(e) => setFormData({ ...formData, [configDef.key]: e.target.value })}
+                        placeholder={isEncrypted ? 'Enter new value to update' : configDef.description}
+                        disabled={isEncrypted && !formData[configDef.key]}
                       />
-                    )}
-                    <div className="flex justify-end gap-2">
+                      {existingConfig && (
+                        <button
+                          className="btn secondary"
+                          onClick={() => handleTest(configDef.key)}
+                          disabled={testing === configDef.key}
+                        >
+                          {testing === configDef.key ? 'Testing...' : 'Test'}
+                        </button>
+                      )}
                       <button
-                        onClick={() => {
-                          setEditingConfig(null)
-                          setTestResult(null)
-                        }}
-                        className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
-                        disabled={saving}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => handleSave(editingConfig.key, editingConfig.value, editingConfig.encrypted)}
-                        disabled={saving || (configDef.required && !editingConfig.value)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="btn"
+                        onClick={() => handleSave(configDef.key)}
+                        disabled={saving || (isEncrypted && !formData[configDef.key])}
                       >
                         {saving ? 'Saving...' : 'Save'}
                       </button>
                     </div>
-                  </div>
-                </div>
-              )}
+                  )}
 
-              {/* Display Value (when not editing) */}
-              {!isEditing && (
-                <div className="mt-2">
-                  <div className="bg-gray-800 rounded-lg px-3 py-2">
-                    <code className="text-sm text-gray-300 break-all">
-                      {value || <span className="text-gray-500 italic">Not configured</span>}
-                    </code>
-                  </div>
+                  {testResult && testResult.key === configDef.key && (
+                    <div
+                      className="card"
+                      style={{
+                        marginTop: '8px',
+                        borderColor: testResult.success ? 'var(--a)' : 'var(--d)',
+                        background: testResult.success ? 'rgba(34, 197, 94, 0.1)' : 'rgba(220, 38, 38, 0.1)',
+                      }}
+                    >
+                      <div style={{ color: testResult.success ? 'var(--a)' : 'var(--d)', fontSize: '12px' }}>
+                        {testResult.message}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          )
-        })}
+              )
+            })}
+          </div>
+        )}
       </div>
-    </div>
+    </AppShell>
   )
 }
-

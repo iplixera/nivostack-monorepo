@@ -1,0 +1,455 @@
+Title,Body,Labels
+[DATA] Local: Step 1 - Add Redis to docker-compose.yml,"**Environment**: Local Development
+**Priority**: P1
+**Sequence**: AGG-LOCAL-01
+
+**Objective**:
+Add Redis service to existing docker-compose.yml for local queue-based aggregation.
+
+**Tasks**:
+- Add Redis service to docker-compose.yml
+- Configure Redis port (6379)
+- Add volume for Redis data persistence
+- Update docker-compose documentation
+
+**Acceptance Criteria**:
+- Redis container starts successfully with `docker-compose up -d redis`
+- Redis accessible on localhost:6379
+- Redis data persists across container restarts
+- Documentation updated","data,aggregation,local,p1,seq-agg-local-01,infrastructure"
+[DATA] Local: Step 2 - Install aggregation dependencies,"**Environment**: Local Development
+**Priority**: P1
+**Sequence**: AGG-LOCAL-02
+
+**Objective**:
+Install required packages for queue-based aggregation (BullMQ, Redis client, Node-cron).
+
+**Tasks**:
+- Install `bullmq` package
+- Install `ioredis` package
+- Install `node-cron` package
+- Install `@types/node-cron` dev dependency
+
+**Acceptance Criteria**:
+- All packages installed in dashboard/package.json
+- No dependency conflicts
+- TypeScript types available","data,aggregation,local,p1,seq-agg-local-02,dependencies"
+[DATA] Local: Step 3 - Create aggregation directory structure,"**Environment**: Local Development
+**Priority**: P1
+**Sequence**: AGG-LOCAL-03
+
+**Objective**:
+Create folder structure for aggregation code organization.
+
+**Tasks**:
+- Create `dashboard/src/lib/aggregation/` directory
+- Create `dashboard/scripts/workers/` directory
+- Create `dashboard/scripts/cron/` directory
+- Add README.md explaining structure
+
+**Acceptance Criteria**:
+- Directory structure exists
+- README documents purpose of each directory","data,aggregation,local,p1,seq-agg-local-03,foundation"
+[DATA] Local: Step 4 - Create queue setup (Redis connection + BullMQ queue),"**Environment**: Local Development
+**Priority**: P1
+**Sequence**: AGG-LOCAL-04
+
+**Objective**:
+Create queue setup file with Redis connection and BullMQ queue initialization.
+
+**Tasks**:
+- Create `lib/aggregation/queue.ts`
+- Configure Redis connection (localhost:6379)
+- Create aggregation queue with BullMQ
+- Add default job options (retries, backoff)
+- Add error handling
+
+**Acceptance Criteria**:
+- Queue connects to Redis successfully
+- Queue can be imported and used in other files
+- Default job options configured (3 attempts, exponential backoff)","data,aggregation,local,p1,seq-agg-local-04,queue"
+[DATA] Local: Step 5 - Create enqueue function,"**Environment**: Local Development
+**Priority**: P1
+**Sequence**: AGG-LOCAL-05
+
+**Objective**:
+Create function to enqueue aggregation jobs for projects.
+
+**Tasks**:
+- Create `lib/aggregation/enqueue.ts`
+- Implement `enqueueHourlyAggregation()` function
+- Query all projects from database
+- Create jobs with projectId, startTime, endTime, granularity
+- Add error handling and logging
+
+**Acceptance Criteria**:
+- Function successfully enqueues jobs for all projects
+- Jobs contain correct data structure
+- Error handling for database queries
+- Logging shows number of jobs enqueued","data,aggregation,local,p1,seq-agg-local-05,queue"
+[DATA] Local: Step 6 - Create aggregation utility functions,"**Environment**: Local Development
+**Priority**: P1
+**Sequence**: AGG-LOCAL-06
+
+**Objective**:
+Create utility functions for aggregating raw data (ApiTrace, Log, Crash, Session).
+
+**Tasks**:
+- Create `lib/aggregation/utils.ts`
+- Implement `aggregateTraces()` function
+- Implement `aggregateLogs()` function
+- Implement `aggregateCrashes()` function
+- Implement `aggregateSessions()` function
+- Add helper functions for grouping and calculations
+
+**Acceptance Criteria**:
+- Functions process raw data and return aggregated results
+- Supports hourly and daily granularity
+- Handles edge cases (nulls, missing data)
+- Unit tests for aggregation logic","data,aggregation,local,p1,seq-agg-local-06,utilities"
+[DATA] Local: Step 7 - Create worker process,"**Environment**: Local Development
+**Priority**: P1
+**Sequence**: AGG-LOCAL-07
+
+**Objective**:
+Create worker process that consumes jobs from queue and processes aggregations.
+
+**Tasks**:
+- Create `scripts/workers/aggregation-worker.ts`
+- Connect to Redis and Database
+- Implement job processing logic
+- Fetch raw data in batches (10K rows)
+- Call aggregation utilities
+- Insert aggregates into database
+- Update last processed time
+- Add error handling and retry logic
+- Add progress tracking
+
+**Acceptance Criteria**:
+- Worker runs continuously
+- Processes jobs from queue
+- Handles batch processing correctly
+- Updates database with aggregates
+- Logs progress and errors
+- Handles job failures gracefully","data,aggregation,local,p1,seq-agg-local-07,worker"
+[DATA] Local: Step 8 - Create cron scheduler,"**Environment**: Local Development
+**Priority**: P1
+**Sequence**: AGG-LOCAL-08
+
+**Objective**:
+Create cron scheduler using node-cron to trigger enqueue function hourly.
+
+**Tasks**:
+- Create `scripts/cron/scheduler.ts`
+- Configure node-cron for hourly schedule (every hour at :00)
+- Call `enqueueHourlyAggregation()` function
+- Add error handling and logging
+- Support graceful shutdown
+
+**Acceptance Criteria**:
+- Scheduler runs every hour
+- Successfully calls enqueue function
+- Logs execution times
+- Handles errors without crashing","data,aggregation,local,p1,seq-agg-local-08,scheduler"
+[DATA] Local: Step 9 - Add npm scripts for worker and cron,"**Environment**: Local Development
+**Priority**: P1
+**Sequence**: AGG-LOCAL-09
+
+**Objective**:
+Add npm scripts to package.json for easy execution of worker and cron.
+
+**Tasks**:
+- Add `worker:aggregation` script
+- Add `cron:scheduler` script
+- Add `worker:dev` script (with watch mode if needed)
+- Update package.json documentation
+
+**Acceptance Criteria**:
+- Scripts run successfully with `pnpm worker:aggregation` and `pnpm cron:scheduler`
+- Scripts use tsx for TypeScript execution
+- Documentation updated","data,aggregation,local,p1,seq-agg-local-09,scripts"
+[DATA] Local: Step 10 - Create test scripts (enqueue + queue status),"**Environment**: Local Development
+**Priority**: P2
+**Sequence**: AGG-LOCAL-10
+
+**Objective**:
+Create test scripts for manual testing of enqueue and queue status checking.
+
+**Tasks**:
+- Create `scripts/test-enqueue.ts` - manually trigger enqueue
+- Create `scripts/check-queue.ts` - check queue status (waiting/active/completed/failed)
+- Add helpful output formatting
+
+**Acceptance Criteria**:
+- Test scripts run successfully
+- Enqueue test creates jobs in queue
+- Queue status shows accurate counts","data,aggregation,local,p2,seq-agg-local-10,testing"
+[DATA] Local: Step 11 - Test Redis connection and worker,"**Environment**: Local Development
+**Priority**: P1
+**Sequence**: AGG-LOCAL-11
+
+**Objective**:
+Test complete local setup: Redis → Worker → Database.
+
+**Tasks**:
+- Start Redis container
+- Verify Redis connection
+- Start worker process
+- Manually enqueue test job
+- Verify worker processes job
+- Verify aggregates inserted into database
+- Test error scenarios
+
+**Acceptance Criteria**:
+- Redis accessible
+- Worker connects to Redis and Database
+- Worker processes jobs successfully
+- Aggregates appear in database
+- Error handling works","data,aggregation,local,p1,seq-agg-local-11,testing"
+[DATA] Local: Step 12 - Test cron scheduler end-to-end,"**Environment**: Local Development
+**Priority**: P1
+**Sequence**: AGG-LOCAL-12
+
+**Objective**:
+Test complete flow: Cron → Enqueue → Queue → Worker → Database.
+
+**Tasks**:
+- Start Redis container
+- Start worker process
+- Start cron scheduler
+- Wait for scheduled execution (or trigger manually)
+- Verify jobs enqueued
+- Verify jobs processed
+- Verify aggregates created
+- Test with multiple projects
+
+**Acceptance Criteria**:
+- Complete flow works end-to-end
+- Jobs enqueued automatically
+- Jobs processed by worker
+- Aggregates created correctly
+- Multiple projects handled correctly","data,aggregation,local,p1,seq-agg-local-12,testing"
+[DATA] Production: Step 1 - Set up Upstash Redis (serverless queue),"**Environment**: Production (Vercel)
+**Priority**: P1
+**Sequence**: AGG-PROD-01
+
+**Objective**:
+Set up Upstash Redis for serverless queue in production.
+
+**Tasks**:
+- Create Upstash Redis instance
+- Get connection credentials (URL, token)
+- Add environment variables to Vercel
+- Test connection from Vercel functions
+- Document connection setup
+
+**Acceptance Criteria**:
+- Upstash Redis instance created
+- Environment variables configured in Vercel
+- Connection test successful
+- Documentation updated","data,aggregation,production,p1,seq-agg-prod-01,infrastructure,vercel"
+[DATA] Production: Step 2 - Create Vercel Cron job (enqueue),"**Environment**: Production (Vercel)
+**Priority**: P1
+**Sequence**: AGG-PROD-02
+
+**Objective**:
+Create Vercel Cron job that enqueues aggregation jobs hourly.
+
+**Tasks**:
+- Create `api/cron/aggregate-hourly/route.ts`
+- Configure vercel.json cron schedule (every hour)
+- Implement enqueue logic using Upstash Queue
+- Add error handling and logging
+- Add authentication/authorization check
+
+**Acceptance Criteria**:
+- Cron job runs every hour
+- Successfully enqueues jobs to Upstash
+- Logs execution in Vercel logs
+- Handles errors gracefully
+- Only runs for authorized requests","data,aggregation,production,p1,seq-agg-prod-02,vercel,cron"
+[DATA] Production: Step 3 - Set up external worker service (Railway/Render),"**Environment**: Production (External Service)
+**Priority**: P1
+**Sequence**: AGG-PROD-03
+
+**Objective**:
+Deploy worker process to external service (Railway or Render) to process jobs.
+
+**Tasks**:
+- Choose service (Railway or Render)
+- Create new service/project
+- Configure environment variables (DATABASE_URL, REDIS_URL)
+- Deploy worker code
+- Set up health checks
+- Configure auto-restart on failure
+- Set up monitoring/logging
+
+**Acceptance Criteria**:
+- Worker deployed and running
+- Connects to Upstash Redis
+- Connects to production database
+- Processes jobs successfully
+- Health checks configured
+- Logs visible in service dashboard","data,aggregation,production,p1,seq-agg-prod-03,infrastructure,worker"
+[DATA] Production: Step 4 - Create production queue setup (Upstash),"**Environment**: Production (Vercel + External Worker)
+**Priority**: P1
+**Sequence**: AGG-PROD-04
+
+**Objective**:
+Create queue setup that works with Upstash Redis in production.
+
+**Tasks**:
+- Update `lib/aggregation/queue.ts` to support Upstash
+- Use `@upstash/redis` or `ioredis` with Upstash URL
+- Handle both local (Docker) and production (Upstash) environments
+- Add connection retry logic
+- Test with Upstash
+
+**Acceptance Criteria**:
+- Queue works with Upstash Redis
+- Environment detection (local vs production)
+- Connection retry on failure
+- Works in both Vercel functions and external worker","data,aggregation,production,p1,seq-agg-prod-04,queue,upstash"
+[DATA] Production: Step 5 - Update worker for production (Upstash + Production DB),"**Environment**: Production (External Worker)
+**Priority**: P1
+**Sequence**: AGG-PROD-05
+
+**Objective**:
+Update worker process to work with Upstash Redis and production database.
+
+**Tasks**:
+- Update worker to use Upstash Redis connection
+- Update worker to use production DATABASE_URL
+- Add production-specific error handling
+- Add monitoring/metrics (optional)
+- Test with production environment
+
+**Acceptance Criteria**:
+- Worker connects to Upstash Redis
+- Worker connects to production database
+- Processes jobs correctly
+- Error handling works
+- Logs properly formatted","data,aggregation,production,p1,seq-agg-prod-05,worker"
+[DATA] Production: Step 6 - Test production aggregation end-to-end,"**Environment**: Production
+**Priority**: P1
+**Sequence**: AGG-PROD-06
+
+**Objective**:
+Test complete production flow: Vercel Cron → Upstash Queue → External Worker → Production DB.
+
+**Tasks**:
+- Trigger Vercel Cron manually (or wait for schedule)
+- Verify jobs enqueued in Upstash
+- Verify worker picks up jobs
+- Verify worker processes jobs
+- Verify aggregates created in production DB
+- Monitor for errors
+- Test with real production data
+
+**Acceptance Criteria**:
+- Complete production flow works
+- Jobs enqueued by Vercel Cron
+- Worker processes jobs successfully
+- Aggregates created in production database
+- No errors in logs
+- Performance acceptable","data,aggregation,production,p1,seq-agg-prod-06,testing"
+[DATA] Database: Create aggregate table schemas (Prisma models),"**Environment**: All
+**Priority**: P0
+**Sequence**: AGG-DB-01
+
+**Objective**:
+Create Prisma schema for aggregate tables based on UI requirements.
+
+**Tasks**:
+- Review UI design requirements
+- Design aggregate table schemas (ApiTraceAggregate, LogAggregate, etc.)
+- Create Prisma models
+- Add indexes for performance
+- Add relationships to Project
+- Create migration file
+
+**Acceptance Criteria**:
+- Prisma models created
+- Indexes defined
+- Relationships correct
+- Migration file created
+- Schema matches UI requirements","data,aggregation,database,p0,seq-agg-db-01,schema,prisma"
+[DATA] Database: Create ProjectAggregationState table,"**Environment**: All
+**Priority**: P1
+**Sequence**: AGG-DB-02
+
+**Objective**:
+Create table to track last processed time for each project (incremental aggregation).
+
+**Tasks**:
+- Create Prisma model for ProjectAggregationState
+- Fields: projectId, lastHourlyAgg, lastDailyAgg, updatedAt
+- Add unique constraint on projectId
+- Create migration
+
+**Acceptance Criteria**:
+- Model created
+- Migration applied
+- Unique constraint works
+- Can track last processed times","data,aggregation,database,p1,seq-agg-db-02,schema,prisma"
+[DATA] Database: Apply migrations to local and production,"**Environment**: All
+**Priority**: P1
+**Sequence**: AGG-DB-03
+
+**Objective**:
+Apply aggregate table migrations to both local and production databases.
+
+**Tasks**:
+- Test migration locally
+- Apply migration to local database
+- Create production migration script
+- Apply migration to production database
+- Verify tables created correctly
+- Verify indexes created
+
+**Acceptance Criteria**:
+- Migrations applied successfully
+- Tables exist in both environments
+- Indexes created
+- No data loss
+- Rollback tested","data,aggregation,database,p1,seq-agg-db-03,migration"
+[DATA] Performance: Add indexes for raw table queries (Live Debug optimization),"**Environment**: All
+**Priority**: P1
+**Sequence**: AGG-PERF-01
+
+**Objective**:
+Add indexes to raw tables for fast Live Debug queries (projectId + deviceId + timestamp).
+
+**Tasks**:
+- Add composite index on ApiTrace(projectId, deviceId, timestamp DESC)
+- Add composite index on Log(projectId, deviceId, timestamp DESC)
+- Add composite index on Crash(projectId, deviceId, timestamp DESC)
+- Create migration
+- Test query performance
+
+**Acceptance Criteria**:
+- Indexes created
+- Live Debug queries use indexes
+- Query performance improved
+- No negative impact on writes","data,aggregation,performance,p1,seq-agg-perf-01,indexes,database"
+[DATA] Performance: Monitor aggregation performance and optimize,"**Environment**: Production
+**Priority**: P2
+**Sequence**: AGG-PERF-02
+
+**Objective**:
+Monitor aggregation job performance and optimize as needed.
+
+**Tasks**:
+- Add performance logging to worker
+- Track job processing times
+- Track batch processing times
+- Identify bottlenecks
+- Optimize slow queries
+- Add monitoring dashboards (optional)
+
+**Acceptance Criteria**:
+- Performance metrics logged
+- Bottlenecks identified
+- Optimizations applied
+- Performance acceptable for scale","data,aggregation,performance,p2,seq-agg-perf-02,monitoring,optimization"
+

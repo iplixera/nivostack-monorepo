@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
 
@@ -22,7 +22,7 @@ export default function ProfilePage() {
     }
   }, [user])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     if (!token) return
 
@@ -40,7 +40,11 @@ export default function ProfilePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [token, formData])
+
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, name: e.target.value }))
+  }, [])
 
   return (
     <div className="space-y-6">
@@ -58,7 +62,7 @@ export default function ProfilePage() {
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={handleNameChange}
               className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
               placeholder="Enter your name"
             />

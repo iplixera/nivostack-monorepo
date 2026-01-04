@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
@@ -122,62 +122,77 @@ export default function SubscriptionPage() {
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState<'overview' | 'usage' | 'plans' | 'history' | 'profile'>('overview')
 
-  useEffect(() => {
+  const loadSubscriptionData = useCallback(async () => {
     if (!token) return
 
-    Promise.all([
-      api.subscription.get(token).catch(() => null),
-      api.subscription.getUsage(token).catch(() => null),
-      api.subscription.getHistory(token).catch(() => null),
-      api.plans.list().catch(() => ({ plans: [] })),
-    ])
-      .then(async ([subData, usageData, historyData, plansData]) => {
-        if (subData && subData.subscription) {
-          setSubscription(subData.subscription)
-        } else {
-          setError('No subscription found. Please contact support.')
-        }
-        if (usageData) setUsage(usageData.usage)
-        if (historyData) setHistory(historyData.history || [])
-        
-        // Load available upgrade plans (excluding current plan)
-        const allPlans: Plan[] = plansData.plans.map(plan => ({
-          id: plan.id,
-          name: plan.name,
-          displayName: plan.displayName,
-          description: plan.description || '',
-          price: plan.price,
-          currency: plan.currency,
-          interval: plan.interval,
-          maxProjects: plan.maxProjects,
-          maxDevices: plan.maxDevices,
-          maxApiTraces: plan.maxApiTraces,
-          maxApiEndpoints: plan.maxApiEndpoints,
-          maxApiRequests: plan.maxApiRequests,
-          maxLogs: plan.maxLogs,
-          maxSessions: plan.maxSessions,
-          maxCrashes: plan.maxCrashes,
-          maxBusinessConfigKeys: plan.maxBusinessConfigKeys,
-          maxLocalizationLanguages: plan.maxLocalizationLanguages,
-          maxLocalizationKeys: plan.maxLocalizationKeys,
-          maxTeamMembers: plan.maxTeamMembers ?? plan.maxSeats,
-          maxSeats: plan.maxSeats ?? plan.maxTeamMembers,
-          retentionDays: plan.retentionDays,
-          allowCustomDomains: plan.allowCustomDomains,
-          allowWebhooks: plan.allowWebhooks,
-          allowTeamMembers: plan.allowTeamMembers,
-          allowPrioritySupport: plan.allowPrioritySupport,
-        }))
-        // Filter out current plan and inactive plans - show all upgrade options
-        const planName = subData?.subscription?.plan?.name || 'free'
-        setAvailablePlans(allPlans.filter(p => p.name !== planName && p.name !== 'free'))
-        setLoading(false)
-      })
-      .catch((err) => {
-        setError(err.message || 'Failed to load subscription data')
-        setLoading(false)
-      })
+    try {
+      const [subData, usageData, historyData, plansData] = await Promise.all([
+        api.subscription.get(token).catch(() => null),
+        api.subscription.getUsage(token).catch(() => null),
+        api.subscription.getHistory(token).catch(() => null),
+        api.plans.list().catch(() => ({ plans: [] })),
+      ])
+
+      if (subData && subData.subscription) {
+        setSubscription(subData.subscription)
+      } else {
+        setError('No subscription found. Please contact support.')
+      }
+      if (usageData) setUsage(usageData.usage)
+      if (historyData) setHistory(historyData.history || [])
+      
+      // Load available upgrade plans (excluding current plan)
+      const allPlans: Plan[] = plansData.plans.map(plan => ({
+        id: plan.id,
+        name: plan.name,
+        displayName: plan.displayName,
+        description: plan.description || '',
+        price: plan.price,
+        currency: plan.currency,
+        interval: plan.interval,
+        maxProjects: plan.maxProjects,
+        maxDevices: plan.maxDevices,
+        maxApiTraces: plan.maxApiTraces,
+        maxApiEndpoints: plan.maxApiEndpoints,
+        maxApiRequests: plan.maxApiRequests,
+        maxLogs: plan.maxLogs,
+        maxSessions: plan.maxSessions,
+        maxCrashes: plan.maxCrashes,
+        maxBusinessConfigKeys: plan.maxBusinessConfigKeys,
+        maxLocalizationLanguages: plan.maxLocalizationLanguages,
+        maxLocalizationKeys: plan.maxLocalizationKeys,
+        maxTeamMembers: plan.maxTeamMembers ?? plan.maxSeats,
+        maxSeats: plan.maxSeats ?? plan.maxTeamMembers,
+        retentionDays: plan.retentionDays,
+        allowCustomDomains: plan.allowCustomDomains,
+        allowWebhooks: plan.allowWebhooks,
+        allowTeamMembers: plan.allowTeamMembers,
+        allowPrioritySupport: plan.allowPrioritySupport,
+      }))
+      // Filter out current plan and inactive plans - show all upgrade options
+      const planName = subData?.subscription?.plan?.name || 'free'
+      setAvailablePlans(allPlans.filter(p => p.name !== planName && p.name !== 'free'))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load subscription data')
+    } finally {
+      setLoading(false)
+    }
   }, [token])
+
+  useEffect(() => {
+    loadSubscriptionData()
+  }, [loadSubscriptionData])
+
+  const handleTabChange = useCallback((tab: 'overview' | 'usage' | 'plans' | 'history' | 'profile') => {
+    setActiveTab(tab)
+  }, [])
+
+  // Memoize computed values
+  const daysRemaining = useMemo(() => usage?.daysRemaining || 0, [usage])
+  const isExpired = useMemo(() => subscription?.status === 'expired', [subscription])
+  const isExpiringSoon = useMemo(() => daysRemaining > 0 && daysRemaining <= 7, [daysRemaining])
+  const currentPlanName = useMemo(() => subscription?.plan.name || 'free', [subscription])
+  const paidPlans = useMemo(() => availablePlans.filter(p => p.price > 0 && p.name !== currentPlanName), [availablePlans, currentPlanName])
 
   if (loading) {
     return (
@@ -214,12 +229,6 @@ export default function SubscriptionPage() {
     return null
   }
 
-  const daysRemaining = usage?.daysRemaining || 0
-  const isExpired = subscription.status === 'expired'
-  const isExpiringSoon = daysRemaining > 0 && daysRemaining <= 7
-  const currentPlanName = subscription.plan.name
-  const paidPlans = availablePlans.filter(p => p.price > 0 && p.name !== currentPlanName)
-
   return (
     <div className="space-y-6">
       <div>
@@ -231,7 +240,7 @@ export default function SubscriptionPage() {
       <div className="border-b border-gray-800">
         <nav className="flex space-x-8">
           <button
-            onClick={() => setActiveTab('overview')}
+            onClick={() => handleTabChange('overview')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeTab === 'overview'
                 ? 'border-blue-500 text-blue-400'
@@ -241,7 +250,7 @@ export default function SubscriptionPage() {
             Overview
           </button>
           <button
-            onClick={() => setActiveTab('usage')}
+            onClick={() => handleTabChange('usage')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeTab === 'usage'
                 ? 'border-blue-500 text-blue-400'
@@ -251,7 +260,7 @@ export default function SubscriptionPage() {
             Usage
           </button>
           <button
-            onClick={() => setActiveTab('plans')}
+            onClick={() => handleTabChange('plans')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeTab === 'plans'
                 ? 'border-blue-500 text-blue-400'
@@ -261,7 +270,7 @@ export default function SubscriptionPage() {
             Upgrade Plan
           </button>
           <button
-            onClick={() => setActiveTab('history')}
+            onClick={() => handleTabChange('history')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeTab === 'history'
                 ? 'border-blue-500 text-blue-400'
@@ -271,7 +280,7 @@ export default function SubscriptionPage() {
             History ({history.length})
           </button>
           <button
-            onClick={() => setActiveTab('profile')}
+            onClick={() => handleTabChange('profile')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeTab === 'profile'
                 ? 'border-blue-500 text-blue-400'
@@ -288,7 +297,7 @@ export default function SubscriptionPage() {
         <div className="space-y-6">
           {/* Enforcement State Banner */}
           {enforcement && enforcement.state !== 'ACTIVE' && (
-            <EnforcementBanner enforcement={enforcement} onUpgrade={() => setActiveTab('plans')} />
+            <EnforcementBanner enforcement={enforcement} onUpgrade={() => handleTabChange('plans')} />
           )}
 
           {/* Status Banner */}
@@ -302,7 +311,7 @@ export default function SubscriptionPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setActiveTab('plans')}
+                  onClick={() => handleTabChange('plans')}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
                 >
                   Upgrade Now
@@ -321,7 +330,7 @@ export default function SubscriptionPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setActiveTab('plans')}
+                  onClick={() => handleTabChange('plans')}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
                 >
                   Upgrade Now
@@ -596,7 +605,7 @@ export default function SubscriptionPage() {
                         setSubscription(subData.subscription)
                       }
                       if (usageData) setUsage(usageData.usage)
-                      setActiveTab('overview')
+                      handleTabChange('overview')
                     })
                   }}
                 />

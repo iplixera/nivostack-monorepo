@@ -1,12 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
 import Link from 'next/link'
+import AppShell from '@/components/layout/AppShell'
+import PageHeader from '@/components/layout/PageHeader'
+import ThemeToggle from '@/components/ThemeToggle'
 import BarChart from '@/components/charts/BarChart'
 import PieChart from '@/components/charts/PieChart'
-import LineChart from '@/components/charts/LineChart'
 
 // Migration Manager Component
 function MigrationManager({ token }: { token: string | null }) {
@@ -15,12 +17,7 @@ function MigrationManager({ token }: { token: string | null }) {
   const [running, setRunning] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!token) return
-    loadStatus()
-  }, [token])
-
-  const loadStatus = async () => {
+  const loadStatus = useCallback(async () => {
     if (!token) return
     try {
       setLoading(true)
@@ -33,9 +30,14 @@ function MigrationManager({ token }: { token: string | null }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [token])
 
-  const runMigrations = async () => {
+  useEffect(() => {
+    if (!token) return
+    loadStatus()
+  }, [token, loadStatus])
+
+  const runMigrations = useCallback(async () => {
     if (!token) return
     if (!confirm('Are you sure you want to run database migrations? This will create missing tables and columns.')) {
       return
@@ -61,14 +63,15 @@ function MigrationManager({ token }: { token: string | null }) {
     } finally {
       setRunning(false)
     }
-  }
+  }, [token, loadStatus])
 
   if (!status) {
     return (
       <button
         onClick={loadStatus}
         disabled={loading}
-        className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-sm disabled:opacity-50"
+        className="btn secondary"
+        style={{ fontSize: '12px' }}
       >
         {loading ? 'Loading...' : 'Check Migrations'}
       </button>
@@ -78,29 +81,32 @@ function MigrationManager({ token }: { token: string | null }) {
   const needsMigration = status.status === 'pending'
 
   return (
-    <div className="relative">
+    <div style={{ position: 'relative' }}>
       <button
         onClick={needsMigration ? runMigrations : loadStatus}
         disabled={running || loading}
-        className={`px-4 py-2 rounded-lg transition-colors text-sm disabled:opacity-50 ${needsMigration
-            ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
-            : 'bg-gray-800 hover:bg-gray-700 text-white'
-          }`}
+        className="btn secondary"
+        style={{
+          fontSize: '12px',
+          background: needsMigration ? 'var(--w)' : undefined,
+          borderColor: needsMigration ? 'var(--w)' : undefined,
+        }}
       >
         {running ? 'Running...' : needsMigration ? 'Run Migrations' : '✓ Migrations OK'}
       </button>
 
       {message && (
-        <div className="absolute top-full left-0 mt-2 w-96 bg-gray-900 border border-gray-700 rounded-lg p-4 shadow-xl z-50">
-          <div className="text-sm text-white whitespace-pre-wrap">{message}</div>
+        <div className="card" style={{ position: 'absolute', top: '100%', left: 0, marginTop: '8px', width: '384px', zIndex: 50 }}>
+          <div style={{ fontSize: '12px', whiteSpace: 'pre-wrap', color: 'var(--t)' }}>{message}</div>
           {status.missingItems && status.missingItems.length > 0 && (
-            <div className="mt-2 text-xs text-gray-400">
+            <div className="muted" style={{ marginTop: '8px', fontSize: '11px' }}>
               Missing: {status.missingItems.join(', ')}
             </div>
           )}
           <button
             onClick={() => setMessage(null)}
-            className="mt-2 text-xs text-gray-400 hover:text-white"
+            className="btn secondary"
+            style={{ marginTop: '8px', fontSize: '11px', padding: '4px 8px' }}
           >
             Close
           </button>
@@ -147,9 +153,17 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">Loading admin dashboard...</div>
-      </div>
+      <AppShell>
+        <PageHeader
+          title="Admin Dashboard"
+          subtitle="Platform analytics, forecasting, and user management"
+          dataMode="Admin"
+          actions={<ThemeToggle />}
+        />
+        <div style={{ textAlign: 'center', padding: '100px 0', color: 'var(--m)' }}>
+          Loading admin dashboard...
+        </div>
+      </AppShell>
     )
   }
 
@@ -193,62 +207,54 @@ export default function AdminDashboardPage() {
   )
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h1>
-          <p className="text-gray-400">Platform analytics, forecasting, and user management</p>
-        </div>
-        <div className="flex gap-2">
-          <MigrationManager token={token} />
-          <Link
-            href="/admin/offers"
-            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-sm"
-          >
-            Manage Offers
-          </Link>
-        </div>
-      </div>
+    <AppShell>
+      <PageHeader
+        title="Admin Dashboard"
+        subtitle="Platform analytics, forecasting, and user management"
+        dataMode="Admin"
+        actions={
+          <>
+            <ThemeToggle />
+            <MigrationManager token={token} />
+            <Link
+              href="/admin/offers"
+              className="btn secondary"
+            >
+              Manage Offers
+            </Link>
+          </>
+        }
+      />
 
       {/* Tabs */}
-      <div className="border-b border-gray-800">
-        <nav className="flex space-x-8">
+      <div className="card" style={{ marginTop: '18px' }}>
+        <div className="tabs">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'overview'
-                ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
-              }`}
+            className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
           >
             Overview
           </button>
           <button
             onClick={() => setActiveTab('analytics')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'analytics'
-                ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
-              }`}
+            className={`tab ${activeTab === 'analytics' ? 'active' : ''}`}
           >
             Analytics
           </button>
           <button
             onClick={() => setActiveTab('forecast')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'forecast'
-                ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
-              }`}
+            className={`tab ${activeTab === 'forecast' ? 'active' : ''}`}
           >
             Forecasting
           </button>
-        </nav>
+        </div>
       </div>
 
       {/* Overview Tab */}
       {activeTab === 'overview' && (
-        <div className="space-y-6">
+        <div style={{ marginTop: '14px' }}>
           {/* Key Metrics - Clean Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
             <MetricCard
               title="Total Users"
               value={stats?.users?.total || 0}
@@ -274,10 +280,10 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Charts Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px', marginTop: '14px' }}>
             {/* Plan Distribution Chart */}
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-              <h3 className="text-lg font-semibold text-white mb-4">Plan Distribution</h3>
+            <div className="card">
+              <b style={{ fontSize: '16px', marginBottom: '14px', display: 'block' }}>Plan Distribution</b>
               {analytics?.planDistribution && analytics.planDistribution.length > 0 ? (
                 <BarChart
                   data={analytics.planDistribution.map((plan: any) => ({
@@ -288,15 +294,15 @@ export default function AdminDashboardPage() {
                   height={200}
                 />
               ) : (
-                <div className="flex items-center justify-center h-[200px] text-gray-400">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px', color: 'var(--m)' }}>
                   No plan distribution data available
                 </div>
               )}
             </div>
 
             {/* Usage Segmentation */}
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-              <h3 className="text-lg font-semibold text-white mb-4">Devices Usage Segmentation</h3>
+            <div className="card">
+              <b style={{ fontSize: '14px', marginBottom: '12px', display: 'block' }}>Devices Usage Segmentation</b>
               {analytics?.usageSegmentation?.devices && analytics.usageSegmentation.devices.length > 0 ? (
                 <PieChart
                   data={analytics.usageSegmentation.devices.map((seg: any) => ({
@@ -307,7 +313,7 @@ export default function AdminDashboardPage() {
                   size={200}
                 />
               ) : (
-                <div className="flex items-center justify-center h-[200px] text-gray-400">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px', color: 'var(--m)' }}>
                   No usage segmentation data available
                 </div>
               )}
@@ -315,55 +321,36 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            <Link
-              href="/admin/users"
-              className="bg-gray-900 rounded-lg p-4 hover:bg-gray-800 transition-colors border border-gray-800"
-            >
-              <div className="text-sm font-medium text-white">Users</div>
-              <div className="text-xs text-gray-400 mt-1">Manage</div>
+          <div className="grid" style={{ gridTemplateColumns: 'repeat(6, 1fr)', gap: '14px', marginTop: '14px' }}>
+            <Link href="/admin/users" className="card" style={{ textDecoration: 'none' }}>
+              <div style={{ fontWeight: 700, color: 'var(--t)' }}>Users</div>
+              <div className="muted" style={{ fontSize: '11px', marginTop: '4px' }}>Manage</div>
             </Link>
-            <Link
-              href="/admin/subscriptions"
-              className="bg-gray-900 rounded-lg p-4 hover:bg-gray-800 transition-colors border border-gray-800"
-            >
-              <div className="text-sm font-medium text-white">Subscriptions</div>
-              <div className="text-xs text-gray-400 mt-1">Manage</div>
+            <Link href="/admin/subscriptions" className="card" style={{ textDecoration: 'none' }}>
+              <div style={{ fontWeight: 700, color: 'var(--t)' }}>Subscriptions</div>
+              <div className="muted" style={{ fontSize: '11px', marginTop: '4px' }}>Manage</div>
             </Link>
-            <Link
-              href="/admin/plans"
-              className="bg-gray-900 rounded-lg p-4 hover:bg-gray-800 transition-colors border border-gray-800"
-            >
-              <div className="text-sm font-medium text-white">Plans</div>
-              <div className="text-xs text-gray-400 mt-1">Configure</div>
+            <Link href="/admin/plans" className="card" style={{ textDecoration: 'none' }}>
+              <div style={{ fontWeight: 700, color: 'var(--t)' }}>Plans</div>
+              <div className="muted" style={{ fontSize: '11px', marginTop: '4px' }}>Configure</div>
             </Link>
-            <Link
-              href="/admin/promo-codes"
-              className="bg-gray-900 rounded-lg p-4 hover:bg-gray-800 transition-colors border border-gray-800"
-            >
-              <div className="text-sm font-medium text-white">Promo Codes</div>
-              <div className="text-xs text-gray-400 mt-1">Manage</div>
+            <Link href="/admin/promo-codes" className="card" style={{ textDecoration: 'none' }}>
+              <div style={{ fontWeight: 700, color: 'var(--t)' }}>Promo Codes</div>
+              <div className="muted" style={{ fontSize: '11px', marginTop: '4px' }}>Manage</div>
             </Link>
-            <Link
-              href="/admin/offers"
-              className="bg-gray-900 rounded-lg p-4 hover:bg-gray-800 transition-colors border border-gray-800"
-            >
-              <div className="text-sm font-medium text-white">Offers</div>
-              <div className="text-xs text-gray-400 mt-1">Manage</div>
+            <Link href="/admin/offers" className="card" style={{ textDecoration: 'none' }}>
+              <div style={{ fontWeight: 700, color: 'var(--t)' }}>Offers</div>
+              <div className="muted" style={{ fontSize: '11px', marginTop: '4px' }}>Manage</div>
             </Link>
-            <Link
-              href="/admin/configurations"
-              className="bg-gray-900 rounded-lg p-4 hover:bg-gray-800 transition-colors border border-gray-800"
-            >
-              <div className="text-sm font-medium text-white">Configurations</div>
-              <div className="text-xs text-gray-400 mt-1">System Settings</div>
+            <Link href="/admin/configurations" className="card" style={{ textDecoration: 'none' }}>
+              <div style={{ fontWeight: 700, color: 'var(--t)' }}>Configurations</div>
+              <div className="muted" style={{ fontSize: '11px', marginTop: '4px' }}>System Settings</div>
             </Link>
-            <Link
-              href="/admin/revenue"
-              className="bg-gray-900 rounded-lg p-4 hover:bg-gray-800 transition-colors border border-gray-800"
-            >
-              <div className="text-sm font-medium text-white">Revenue</div>
-              <div className="text-xs text-gray-400 mt-1">View</div>
+          </div>
+          <div className="grid" style={{ gridTemplateColumns: 'repeat(6, 1fr)', gap: '14px', marginTop: '14px' }}>
+            <Link href="/admin/revenue" className="card" style={{ textDecoration: 'none' }}>
+              <div style={{ fontWeight: 700, color: 'var(--t)' }}>Revenue</div>
+              <div className="muted" style={{ fontSize: '11px', marginTop: '4px' }}>View</div>
             </Link>
           </div>
         </div>
@@ -393,21 +380,21 @@ export default function AdminDashboardPage() {
       {activeTab === 'forecast' && (
         <ForecastView forecast={forecast} />
       )}
-    </div>
+    </AppShell>
   )
 }
 
 function MetricCard({ title, value, subtitle, link }: { title: string; value: string | number; subtitle?: string; link?: string }) {
   const content = (
-    <div className="bg-gray-900 rounded-lg p-6 border border-gray-800 hover:border-gray-700 transition-colors">
-      <div className="text-sm text-gray-400 mb-1">{title}</div>
-      <div className="text-2xl font-bold text-white mb-1">{value}</div>
-      {subtitle && <div className="text-xs text-gray-500">{subtitle}</div>}
+    <div className="card" style={{ cursor: link ? 'pointer' : 'default' }}>
+      <div className="muted" style={{ fontSize: '12px', marginBottom: '4px' }}>{title}</div>
+      <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--t)', marginBottom: '4px' }}>{value}</div>
+      {subtitle && <div className="muted" style={{ fontSize: '11px' }}>{subtitle}</div>}
     </div>
   )
 
   if (link) {
-    return <Link href={link}>{content}</Link>
+    return <Link href={link} style={{ textDecoration: 'none' }}>{content}</Link>
   }
 
   return content
@@ -433,16 +420,16 @@ function AnalyticsView({
 
   if (!analytics) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">No analytics data available</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
+        <div style={{ color: 'var(--m)' }}>No analytics data available</div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
       {/* Summary Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
         <MetricCard
           title="Total Active"
           value={analytics.summary?.totalActiveSubscriptions || 0}
@@ -464,10 +451,10 @@ function AnalyticsView({
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px', marginTop: '14px' }}>
         {/* Plan Distribution */}
-        <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-          <h3 className="text-lg font-semibold text-white mb-4">Plan Distribution</h3>
+        <div className="card">
+          <b style={{ fontSize: '14px', marginBottom: '12px', display: 'block' }}>Plan Distribution</b>
           {analytics.planDistribution && analytics.planDistribution.length > 0 ? (
             <BarChart
               data={analytics.planDistribution.map((plan: any) => ({
@@ -478,15 +465,15 @@ function AnalyticsView({
               height={200}
             />
           ) : (
-            <div className="flex items-center justify-center h-[200px] text-gray-400">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px', color: 'var(--m)' }}>
               No plan distribution data available
             </div>
           )}
         </div>
 
         {/* Usage Segmentation - API Traces */}
-        <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-          <h3 className="text-lg font-semibold text-white mb-4">API Traces Usage</h3>
+        <div className="card">
+          <b style={{ fontSize: '14px', marginBottom: '12px', display: 'block' }}>API Traces Usage</b>
           {analytics.usageSegmentation?.apiTraces && analytics.usageSegmentation.apiTraces.length > 0 ? (
             <PieChart
               data={analytics.usageSegmentation.apiTraces.map((seg: any) => ({
@@ -496,27 +483,24 @@ function AnalyticsView({
               }))}
               size={200}
             />
-          ) : (
-            <div className="flex items-center justify-center h-[200px] text-gray-400">
-              No usage segmentation data available
-            </div>
-          )}
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px', color: 'var(--m)' }}>
+                  No usage segmentation data available
+                </div>
+              )}
         </div>
       </div>
 
       {/* Filters and Section Tabs */}
-      <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div className="flex gap-2 border-b border-gray-800">
+      <div className="card" style={{ marginTop: '14px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '14px' }}>
+          <div className="tabs">
             <button
               onClick={() => {
                 setActiveSection('atRisk')
                 setCurrentPage(1)
               }}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${activeSection === 'atRisk'
-                  ? 'border-b-2 border-blue-500 text-blue-400'
-                  : 'text-gray-400 hover:text-gray-300'
-                }`}
+              className={`tab ${activeSection === 'atRisk' ? 'active' : ''}`}
             >
               At Risk ({filteredAtRiskUsers.length})
             </button>
@@ -525,10 +509,7 @@ function AnalyticsView({
                 setActiveSection('atLimit')
                 setCurrentPage(1)
               }}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${activeSection === 'atLimit'
-                  ? 'border-b-2 border-blue-500 text-blue-400'
-                  : 'text-gray-400 hover:text-gray-300'
-                }`}
+              className={`tab ${activeSection === 'atLimit' ? 'active' : ''}`}
             >
               At Limit ({filteredAtLimitUsers.length})
             </button>
@@ -537,23 +518,20 @@ function AnalyticsView({
                 setActiveSection('conversions')
                 setCurrentPage(1)
               }}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${activeSection === 'conversions'
-                  ? 'border-b-2 border-blue-500 text-blue-400'
-                  : 'text-gray-400 hover:text-gray-300'
-                }`}
+              className={`tab ${activeSection === 'conversions' ? 'active' : ''}`}
             >
               Conversions ({filteredConversionOpps.length})
             </button>
           </div>
 
-          <div className="flex gap-2">
+          <div style={{ display: 'flex', gap: '8px' }}>
             <select
               value={planFilter}
               onChange={(e) => {
                 setPlanFilter(e.target.value)
                 setCurrentPage(1)
               }}
-              className="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+              className="select"
             >
               <option value="all">All Plans</option>
               <option value="free">Free</option>
@@ -567,7 +545,7 @@ function AnalyticsView({
                 setUsageFilter(e.target.value)
                 setCurrentPage(1)
               }}
-              className="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+              className="select"
             >
               <option value="all">All Usage</option>
               <option value="high">High (90%+)</option>
@@ -579,274 +557,222 @@ function AnalyticsView({
         {/* At Risk Users Table */}
         {activeSection === 'atRisk' && (
           <div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-800">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">User</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Plan</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Highest Usage</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Meters</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-800">
-                  {paginatedAtRisk.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
-                        No users found matching filters
-                      </td>
-                    </tr>
-                  ) : (
-                    paginatedAtRisk.map((user: any) => (
-                      <tr key={user.userId} className="hover:bg-gray-800/50">
-                        <td className="px-4 py-3 text-sm text-white">{user.email}</td>
-                        <td className="px-4 py-3 text-sm text-gray-300 capitalize">{user.planName}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-white font-medium">
-                              {user.highestUsage.percentage.toFixed(1)}%
-                            </span>
-                            <div className="w-24 bg-gray-800 rounded-full h-2">
-                              <div
-                                className={`h-2 rounded-full ${user.highestUsage.percentage >= 100
-                                    ? 'bg-red-600'
-                                    : user.highestUsage.percentage >= 90
-                                      ? 'bg-yellow-600'
-                                      : 'bg-blue-600'
-                                  }`}
-                                style={{ width: `${Math.min(100, user.highestUsage.percentage)}%` }}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-wrap gap-1">
-                            {Object.entries(user.allMeters).slice(0, 2).map(([key, meter]: [string, any]) => (
-                              <span
-                                key={key}
-                                className={`text-xs px-2 py-1 rounded ${meter.percentage >= 100
-                                    ? 'bg-red-900/30 text-red-400'
-                                    : meter.percentage >= 80
-                                      ? 'bg-yellow-900/30 text-yellow-400'
-                                      : 'bg-gray-800 text-gray-400'
-                                  }`}
-                              >
-                                {key}: {meter.percentage.toFixed(0)}%
-                              </span>
-                            ))}
-                            {Object.keys(user.allMeters).length > 2 && (
-                              <span className="text-xs text-gray-500">+{Object.keys(user.allMeters).length - 2}</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <Link
-                            href={`/admin/subscriptions?user=${user.userId}`}
-                            className="text-xs text-blue-400 hover:text-blue-300"
-                          >
-                            View →
-                          </Link>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {totalPages > 1 && (
-              <div className="mt-4 flex items-center justify-between">
-                <div className="text-sm text-gray-400">
-                  Showing {(currentPage - 1) * 10 + 1} to {Math.min(currentPage * 10, filteredAtRiskUsers.length)} of {filteredAtRiskUsers.length}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded text-sm"
-                  >
-                    Previous
-                  </button>
-                  <span className="px-3 py-1 text-sm text-gray-400">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded text-sm"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
+            <DataTable
+              data={paginatedAtRisk.map((user: any) => ({ ...user, id: user.userId }))}
+              columns={[
+                {
+                  key: 'user',
+                  label: 'User',
+                  render: (user: any) => <b>{user.email}</b>,
+                },
+                {
+                  key: 'plan',
+                  label: 'Plan',
+                  render: (user: any) => <span className="muted" style={{ textTransform: 'capitalize' }}>{user.planName}</span>,
+                },
+                {
+                  key: 'usage',
+                  label: 'Highest Usage',
+                  render: (user: any) => (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <b style={{ fontSize: '12px' }}>{user.highestUsage.percentage.toFixed(1)}%</b>
+                      <div style={{ width: '96px', background: 'var(--s2)', borderRadius: '999px', height: '8px' }}>
+                        <div
+                          style={{
+                            height: '8px',
+                            borderRadius: '999px',
+                            background: user.highestUsage.percentage >= 100
+                              ? 'var(--d)'
+                              : user.highestUsage.percentage >= 90
+                              ? 'var(--w)'
+                              : 'var(--p)',
+                            width: `${Math.min(100, user.highestUsage.percentage)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'meters',
+                  label: 'Meters',
+                  render: (user: any) => (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                      {Object.entries(user.allMeters).slice(0, 2).map(([key, meter]: [string, any]) => (
+                        <span
+                          key={key}
+                          className="chip"
+                          style={{
+                            borderColor: meter.percentage >= 100
+                              ? 'var(--d)'
+                              : meter.percentage >= 80
+                              ? 'var(--w)'
+                              : undefined,
+                            color: meter.percentage >= 100
+                              ? 'var(--d)'
+                              : meter.percentage >= 80
+                              ? 'var(--w)'
+                              : undefined,
+                            fontSize: '11px',
+                            padding: '4px 8px',
+                          }}
+                        >
+                          {key}: {meter.percentage.toFixed(0)}%
+                        </span>
+                      ))}
+                      {Object.keys(user.allMeters).length > 2 && (
+                        <span className="muted" style={{ fontSize: '11px' }}>+{Object.keys(user.allMeters).length - 2}</span>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  key: 'action',
+                  label: 'Action',
+                  render: (user: any) => (
+                    <Link
+                      href={`/admin/subscriptions?user=${user.userId}`}
+                      style={{ color: 'var(--p)', textDecoration: 'none', fontSize: '11px' }}
+                    >
+                      View →
+                    </Link>
+                  ),
+                },
+              ]}
+              loading={false}
+              emptyMessage="No users found matching filters"
+              footerNote={`Showing ${(currentPage - 1) * 10 + 1} to ${Math.min(currentPage * 10, filteredAtRiskUsers.length)} of ${filteredAtRiskUsers.length}`}
+              pagination={{
+                currentPage,
+                totalPages,
+                onPageChange: setCurrentPage,
+              }}
+            />
           </div>
         )}
 
         {/* At Limit Users Table */}
         {activeSection === 'atLimit' && (
           <div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-800">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">User</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Plan</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Exceeded Meters</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-800">
-                  {paginatedAtLimit.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
-                        No users found matching filters
-                      </td>
-                    </tr>
-                  ) : (
-                    paginatedAtLimit.map((user: any) => (
-                      <tr key={user.userId} className="hover:bg-gray-800/50">
-                        <td className="px-4 py-3 text-sm text-white">{user.email}</td>
-                        <td className="px-4 py-3 text-sm text-gray-300 capitalize">{user.planName}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-wrap gap-2">
-                            {user.exceededMeters.map((meter: string) => (
-                              <span
-                                key={meter}
-                                className="text-xs px-2 py-1 rounded bg-red-900/30 text-red-400"
-                              >
-                                {meter}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <Link
-                            href={`/admin/subscriptions?user=${user.userId}`}
-                            className="text-xs text-blue-400 hover:text-blue-300"
-                          >
-                            View →
-                          </Link>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {totalPages > 1 && (
-              <div className="mt-4 flex items-center justify-between">
-                <div className="text-sm text-gray-400">
-                  Showing {(currentPage - 1) * 10 + 1} to {Math.min(currentPage * 10, filteredAtLimitUsers.length)} of {filteredAtLimitUsers.length}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded text-sm"
-                  >
-                    Previous
-                  </button>
-                  <span className="px-3 py-1 text-sm text-gray-400">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded text-sm"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
+            <DataTable
+              data={paginatedAtLimit.map((user: any) => ({ ...user, id: user.userId }))}
+              columns={[
+                {
+                  key: 'user',
+                  label: 'User',
+                  render: (user: any) => <b>{user.email}</b>,
+                },
+                {
+                  key: 'plan',
+                  label: 'Plan',
+                  render: (user: any) => <span className="muted" style={{ textTransform: 'capitalize' }}>{user.planName}</span>,
+                },
+                {
+                  key: 'meters',
+                  label: 'Exceeded Meters',
+                  render: (user: any) => (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      {user.exceededMeters.map((meter: string) => (
+                        <span
+                          key={meter}
+                          className="chip"
+                          style={{ borderColor: 'var(--d)', color: 'var(--d)', fontSize: '11px', padding: '4px 8px' }}
+                        >
+                          {meter}
+                        </span>
+                      ))}
+                    </div>
+                  ),
+                },
+                {
+                  key: 'action',
+                  label: 'Action',
+                  render: (user: any) => (
+                    <Link
+                      href={`/admin/subscriptions?user=${user.userId}`}
+                      style={{ color: 'var(--p)', textDecoration: 'none', fontSize: '11px' }}
+                    >
+                      View →
+                    </Link>
+                  ),
+                },
+              ]}
+              loading={false}
+              emptyMessage="No users found matching filters"
+              footerNote={`Showing ${(currentPage - 1) * 10 + 1} to ${Math.min(currentPage * 10, filteredAtLimitUsers.length)} of ${filteredAtLimitUsers.length}`}
+              pagination={{
+                currentPage,
+                totalPages,
+                onPageChange: setCurrentPage,
+              }}
+            />
           </div>
         )}
 
         {/* Conversion Opportunities Table */}
         {activeSection === 'conversions' && (
           <div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-800">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">User</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Current Plan</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Recommended</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Usage</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-800">
-                  {paginatedOpps.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
-                        No opportunities found matching filters
-                      </td>
-                    </tr>
-                  ) : (
-                    paginatedOpps.map((opp: any) => (
-                      <tr key={opp.userId} className="hover:bg-gray-800/50">
-                        <td className="px-4 py-3 text-sm text-white">{opp.email}</td>
-                        <td className="px-4 py-3 text-sm text-gray-300 capitalize">{opp.currentPlan}</td>
-                        <td className="px-4 py-3">
-                          <span className="text-sm text-green-400 font-medium capitalize">
-                            {opp.recommendedPlan}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-white font-medium">
-                              {opp.usagePercentage.toFixed(1)}%
-                            </span>
-                            <div className="w-24 bg-gray-800 rounded-full h-2">
-                              <div
-                                className="bg-yellow-600 h-2 rounded-full"
-                                style={{ width: `${Math.min(100, opp.usagePercentage)}%` }}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <Link
-                            href={`/admin/subscriptions?user=${opp.userId}`}
-                            className="text-xs text-blue-400 hover:text-blue-300"
-                          >
-                            View →
-                          </Link>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {totalPages > 1 && (
-              <div className="mt-4 flex items-center justify-between">
-                <div className="text-sm text-gray-400">
-                  Showing {(currentPage - 1) * 10 + 1} to {Math.min(currentPage * 10, filteredConversionOpps.length)} of {filteredConversionOpps.length}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded text-sm"
-                  >
-                    Previous
-                  </button>
-                  <span className="px-3 py-1 text-sm text-gray-400">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded text-sm"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
+            <DataTable
+              data={paginatedOpps.map((opp: any) => ({ ...opp, id: opp.userId }))}
+              columns={[
+                {
+                  key: 'user',
+                  label: 'User',
+                  render: (opp: any) => <b>{opp.email}</b>,
+                },
+                {
+                  key: 'currentPlan',
+                  label: 'Current Plan',
+                  render: (opp: any) => <span className="muted" style={{ textTransform: 'capitalize' }}>{opp.currentPlan}</span>,
+                },
+                {
+                  key: 'recommended',
+                  label: 'Recommended',
+                  render: (opp: any) => (
+                    <b style={{ color: 'var(--a)', textTransform: 'capitalize' }}>{opp.recommendedPlan}</b>
+                  ),
+                },
+                {
+                  key: 'usage',
+                  label: 'Usage',
+                  render: (opp: any) => (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <b style={{ fontSize: '12px' }}>{opp.usagePercentage.toFixed(1)}%</b>
+                      <div style={{ width: '96px', background: 'var(--s2)', borderRadius: '999px', height: '8px' }}>
+                        <div
+                          style={{
+                            height: '8px',
+                            borderRadius: '999px',
+                            background: 'var(--w)',
+                            width: `${Math.min(100, opp.usagePercentage)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'action',
+                  label: 'Action',
+                  render: (opp: any) => (
+                    <Link
+                      href={`/admin/subscriptions?user=${opp.userId}`}
+                      style={{ color: 'var(--p)', textDecoration: 'none', fontSize: '11px' }}
+                    >
+                      View →
+                    </Link>
+                  ),
+                },
+              ]}
+              loading={false}
+              emptyMessage="No opportunities found matching filters"
+              footerNote={`Showing ${(currentPage - 1) * 10 + 1} to ${Math.min(currentPage * 10, filteredConversionOpps.length)} of ${filteredConversionOpps.length}`}
+              pagination={{
+                currentPage,
+                totalPages,
+                onPageChange: setCurrentPage,
+              }}
+            />
           </div>
         )}
       </div>
@@ -857,16 +783,16 @@ function AnalyticsView({
 function ForecastView({ forecast }: { forecast: any }) {
   if (!forecast) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">No forecast data available</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
+        <div style={{ color: 'var(--m)' }}>No forecast data available</div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
       {/* Key Forecast Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
         <MetricCard
           title="Current MRR"
           value={`$${forecast.revenueForecast?.currentMRR?.toFixed(2) || '0.00'}`}
@@ -886,8 +812,8 @@ function ForecastView({ forecast }: { forecast: any }) {
       </div>
 
       {/* Churn Risk Chart */}
-      <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-        <h3 className="text-lg font-semibold text-white mb-4">Churn Risk Distribution</h3>
+      <div className="card">
+        <b style={{ fontSize: '16px', marginBottom: '14px', display: 'block' }}>Churn Risk Distribution</b>
         {forecast?.churnRisk ? (
           <BarChart
             data={[
@@ -898,52 +824,52 @@ function ForecastView({ forecast }: { forecast: any }) {
             height={200}
           />
         ) : (
-          <div className="flex items-center justify-center h-[200px] text-gray-400">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px', color: 'var(--m)' }}>
             No churn risk data available
           </div>
         )}
       </div>
 
       {/* Revenue Forecast */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-          <h3 className="text-lg font-semibold text-white mb-4">Conversion Forecast</h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-300">Opportunities</span>
-              <span className="text-white font-semibold">{forecast.conversionForecast?.opportunities || 0}</span>
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px' }}>
+        <div className="card">
+          <b style={{ fontSize: '16px', marginBottom: '14px', display: 'block' }}>Conversion Forecast</b>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="muted">Opportunities</span>
+              <b>{forecast.conversionForecast?.opportunities || 0}</b>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-300">Estimated Conversions</span>
-              <span className="text-green-400 font-semibold">{forecast.conversionForecast?.estimatedConversions || 0}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="muted">Estimated Conversions</span>
+              <b style={{ color: 'var(--a)' }}>{forecast.conversionForecast?.estimatedConversions || 0}</b>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-300">Conversion Rate</span>
-              <span className="text-white font-semibold">{forecast.conversionForecast?.conversionRate?.toFixed(1) || 0}%</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="muted">Conversion Rate</span>
+              <b>{forecast.conversionForecast?.conversionRate?.toFixed(1) || 0}%</b>
             </div>
-            <div className="flex items-center justify-between pt-4 border-t border-gray-800">
-              <span className="text-gray-300">Estimated Revenue</span>
-              <span className="text-blue-400 font-semibold text-lg">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '14px', borderTop: '1px solid var(--b)' }}>
+              <span className="muted">Estimated Revenue</span>
+              <b style={{ color: 'var(--p)', fontSize: '16px' }}>
                 ${forecast.conversionForecast?.estimatedRevenue?.toFixed(2) || '0.00'}/mo
-              </span>
+              </b>
             </div>
           </div>
         </div>
 
-        <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-          <h3 className="text-lg font-semibold text-white mb-4">Usage Trends</h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-300">Average Usage</span>
-              <span className="text-white font-semibold">{forecast.usageTrends?.averageUsageGrowth?.toFixed(1) || 0}%</span>
+        <div className="card">
+          <b style={{ fontSize: '16px', marginBottom: '14px', display: 'block' }}>Usage Trends</b>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="muted">Average Usage</span>
+              <b>{forecast.usageTrends?.averageUsageGrowth?.toFixed(1) || 0}%</b>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-300">Approaching Limits</span>
-              <span className="text-yellow-400 font-semibold">{forecast.usageTrends?.usersApproachingLimits || 0}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="muted">Approaching Limits</span>
+              <b style={{ color: 'var(--w)' }}>{forecast.usageTrends?.usersApproachingLimits || 0}</b>
             </div>
-            <div className="flex items-center justify-between pt-4 border-t border-gray-800">
-              <span className="text-gray-300">Projected Churn</span>
-              <span className="text-red-400 font-semibold text-lg">{forecast.usageTrends?.projectedChurn || 0}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '14px', borderTop: '1px solid var(--b)' }}>
+              <span className="muted">Projected Churn</span>
+              <b style={{ color: 'var(--d)', fontSize: '16px' }}>{forecast.usageTrends?.projectedChurn || 0}</b>
             </div>
           </div>
         </div>

@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function SetupPage() {
@@ -12,32 +12,36 @@ export default function SetupPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [loading, setLoading] = useState(true)
 
+  const fetchProjects = useCallback(async () => {
+    if (!token) return
+    try {
+      const response = await api.projects.list(token)
+      setProjects(response.projects || [])
+      if (response.projects && response.projects.length > 0) {
+        setSelectedProjectId(response.projects[0].id)
+      }
+    } catch (error) {
+      console.error('Failed to fetch projects:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [token])
+
   useEffect(() => {
     if (!user || !token) {
       router.push('/login')
       return
     }
-
-    const fetchProjects = async () => {
-      try {
-        const response = await api.projects.list(token)
-        setProjects(response.projects || [])
-        if (response.projects && response.projects.length > 0) {
-          setSelectedProjectId(response.projects[0].id)
-        }
-      } catch (error) {
-        console.error('Failed to fetch projects:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchProjects()
-  }, [user, token, router])
+  }, [user, token, router, fetchProjects])
 
-  const selectedProject = projects.find(p => p.id === selectedProjectId)
-  const apiKey = selectedProject?.apiKey || ''
-  const endpoint = typeof window !== 'undefined' ? window.location.origin : ''
+  const handleProjectChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedProjectId(e.target.value)
+  }, [])
+
+  const selectedProject = useMemo(() => projects.find(p => p.id === selectedProjectId), [projects, selectedProjectId])
+  const apiKey = useMemo(() => selectedProject?.apiKey || '', [selectedProject])
+  const endpoint = useMemo(() => typeof window !== 'undefined' ? window.location.origin : '', [])
 
   const swiftCode = `// DevBridge.swift - Add this file to your Xcode project
 
@@ -233,7 +237,7 @@ class DevBridge private constructor() {
             </label>
             <select
               value={selectedProjectId}
-              onChange={(e) => setSelectedProjectId(e.target.value)}
+              onChange={handleProjectChange}
               className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {projects.map((project) => (

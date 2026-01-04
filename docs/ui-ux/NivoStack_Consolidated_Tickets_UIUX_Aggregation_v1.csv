@@ -1,0 +1,258 @@
+Title,Body,Labels
+01. [UI/UX] Global Design System + IA Restructure + Page Templates (Light/Dark ready),"Goal
+- Establish the global UI foundation for NivoStack Console to make every module consistent and fast to build.
+
+Scope
+- New Information Architecture (sidebar groups): Overview / Observe (Runtime) / Control / Operate / Developer / Organization
+- Standard page template: Header (title/subtitle/CTA) + KPI strip (optional) + FilterBar + Content + DetailDrawer (optional)
+- Define and implement design tokens usage across components (actual token implementation in separate ticket)
+
+Acceptance Criteria
+- Sidebar groups implemented, collapsible, active state, badge support (counts)
+- Topbar implemented (sticky), supports: breadcrumb, environment selector, data-mode pill, global search (optional)
+- At least 2 screens migrated to new template as proof (Devices + API Traces)","ui-ux,p0,seq-01,epic-foundation"
+02. [UI/UX] Data UX Contract: Aggregated vs Raw vs Live (no conflict) + Drilldown Rules,"Problem
+- We must support both aggregated dashboards (fast) and raw row-by-row debugging (deep), without one replacing the other.
+
+Requirements
+- Add a global “Data Mode” convention + pill on pages:
+  - Aggregated (dashboards)
+  - Raw (lists/investigations)
+  - Live (device debug streaming)
+- Dashboard tiles MUST include:
+  - Drilldown (aggregated detail)
+  - View Raw (opens raw screen with filters prefilled)
+- Define drilldown mapping standards:
+  - Error-rate → API Traces (error=true, time range)
+  - Crash spike → Crashes (group/version)
+  - Drop-off → Sessions/Screen Flow (funnel step/screen)
+- Live Debug entry points:
+  - Device row action “Open Live Debug”
+  - Alerts deep-links to Live Debug if device is debug-enabled
+
+Acceptance Criteria
+- Drilldown navigation carries filters consistently via URL params
+- Raw pages show “Raw” mode label, dashboards show “Aggregated”, Live Debug shows “Live”","ui-ux,p0,seq-02,epic-foundation,data-ux"
+03. [UI/UX] Theme Tokens + Theme Toggle (Light/Dark/System) + Persist Setting,"Scope
+- Implement token-based theme system (CSS variables or Tailwind tokens)
+- Toggle in topbar: Light / Dark / System
+- Persist selection per user (preferred) or localStorage (fallback)
+
+Acceptance Criteria
+- All base surfaces/text/border/primary/status colors controlled by tokens
+- Core components (buttons, cards, table, inputs) use tokens (no hard-coded colors)","ui-ux,p0,seq-03,epic-foundation,theme"
+04. [UI/UX] Reusable DataTable (server pagination/sort/columns/bulk/export + detail drawer hook),"Scope
+- Build a shared DataTable component used by Devices, API Traces, Logs, Crashes, Localization Keys, etc.
+
+Required features
+- Server pagination + sorting + column chooser
+- Row click opens DetailDrawer (configurable)
+- Bulk actions (optional per screen)
+- Export (CSV) action (optional per screen)
+- Supports large datasets (virtualization optional, but avoid client-side huge renders)
+
+Acceptance Criteria
+- Devices and API Traces refactored to use the component","ui-ux,p0,seq-04,epic-components,table,performance"
+05. [UI/UX] Reusable FilterBar + More Filters Drawer + Saved Views + URL State,"Scope
+- Build a shared filter system to standardize filtering across raw/aggregated pages.
+
+Required features
+- Debounced search
+- Quick filter chips + “More filters” drawer
+- Filters reflected in URL query params
+- Saved views (save, rename, set default) per user/project
+- Clear all / reset to default
+
+Acceptance Criteria
+- Devices and API Traces migrated to FilterBar","ui-ux,p0,seq-05,epic-components,filters,performance"
+06. [UI/UX] Projects List: search + filters + quick stats,"From previous UI-001, updated for new IA.
+
+Scope
+- Projects list page with: search, status filters, quick stats per project (devices/sessions/requests last 24h)
+- Quick action: open project, project settings, copy API key (permission gated)
+
+Acceptance Criteria
+- Server-side search and pagination
+- Quick stats are aggregated (do not scan raw tables)","ui-ux,p1,seq-06,epic-foundation,projects,aggregation"
+07. [UI/UX] Project Overview: make Overview default + add key health snapshot + drilldowns,"From previous UI-003, updated to match Data Mode contract.
+
+Scope
+- On project open, land on Overview with:
+  - Aggregated KPIs (requests, errors, crashes, active devices, cost)
+  - Short trends
+  - “View raw” actions that deep-link to raw pages with filters prefilled
+
+Acceptance Criteria
+- Overview reads from aggregates only
+- Every tile supports View Raw","ui-ux,p1,seq-07,epic-dashboard,overview,aggregation"
+08. [UI/UX] Devices: Professional Device Management UI (segments + advanced filters + detail drawer),"Consolidates previous UI-004 + new Devices redesign.
+
+UI Requirements
+- Segments: Total / iOS / Android / Debug Enabled / Active Today / 7d / 30d
+- Search: deviceId, deviceCode, userId/email, model, appVersion
+- Filters: platform, appVersion, osVersion, manufacturer/model, country, carrier, language, status, registered range, lastSeen range
+- Table columns default: Device, Platform, App, OS, Last Seen, Debug, Status
+- Row click → Device Detail Drawer tabs:
+  - Overview / Sessions / API Traces / Logs / Crashes / Metadata
+- Row action: Open Live Debug
+- Debug actions permission-gated
+
+Performance Requirements
+- Server pagination + debounced search
+- No client-side loading of large lists","ui-ux,p1,seq-08,epic-runtime,devices,performance"
+09. [UI/UX] Live Debug: near real-time raw feed for debug-enabled devices,"New screen (Live Mode).
+
+UI Requirements
+- Device selector (pin devices) + copy deep-link
+- Time window: 15m / 1h / 24h
+- Tabs: API / Logs / Crashes / Screen Flow
+- Streaming updates if available; fallback to polling every 3–5 seconds using since=lastTimestamp
+- Show masking/redaction status + permission to reveal bodies (if allowed)
+
+Acceptance Criteria
+- Works for a single device without scanning large raw ranges
+- Deep-linkable from Devices and Alerts","ui-ux,p1,seq-09,epic-runtime,live-debug,raw"
+10. [UI/UX] API Traces: list + detail drawer + redaction controls + on-device debug context,"Consolidates previous UI-005 + new API Traces redesign.
+
+UI Requirements
+- Columns: time, method, endpoint/url, status, duration, device, session, screenName, cost
+- Filters: time range, endpoint, method, status class, error only, deviceId, sessionId, screenName, country/carrier/networkType
+- Detail drawer tabs:
+  - Summary (request metadata)
+  - Headers
+  - Body (masked by default; permission + project policy)
+  - Related (logs, session timeline)
+- Quick action: “Open in Live Debug” if debug enabled device
+
+Performance Requirements
+- Request/response bodies fetched lazily (on open), not in list query","ui-ux,p1,seq-10,epic-runtime,api-traces,privacy,performance"
+11. [UI/UX] Logs: raw list + level/tag filters + sampling indicators,"UI Requirements
+- Columns: time, level, message, tag, device, session, screenName
+- Filters: time range, level, tag, device, session, screen, contains search
+- Detail drawer: full message + structured data json + file/line/function/class
+- Show retention and sampling status (if applied)
+
+Performance Requirements
+- Server-side pagination + debounced search","ui-ux,p2,seq-11,epic-runtime,logs,performance"
+12. [UI/UX] Crashes: grouping + versions + affected devices + drilldowns,"UI Requirements
+- Crash groups list: message/fingerprint, count, affected versions, first/last seen
+- Filters: version, platform, time range, device, country
+- Group detail: stacktrace, trends, impacted devices/sessions, related traces/logs
+- “View raw” actions to underlying crash events
+
+Performance Requirements
+- Grouping uses aggregates; raw events only on drilldown","ui-ux,p2,seq-12,epic-runtime,crashes,aggregation"
+13. [UI/UX] Sessions & Screen Flow: session list + timeline + funnels entry,"Scope
+- Sessions list (raw) with filters: time range, device, version, entry/exit screen, duration, error count
+- Session detail: screen timeline + correlated API traces/logs
+- Provide drilldown links from dashboard drop-off/funnel insights
+
+Performance Requirements
+- Session list server paginated
+- Timeline queries constrained by sessionId","ui-ux,p2,seq-13,epic-runtime,sessions,screen-flow,performance"
+14. [UI/UX] Business Config: table + categories + approvals + audit timeline,"Scope
+- Business Config keys list with inline edit (permission gated), categories, status enabled/disabled
+- Change history timeline + approvals workflow entry (if enabled)
+- Drilldown to usage analytics (aggregated reads)","ui-ux,p2,seq-14,epic-control,business-config"
+15. [UI/UX] Localization Keys: table with inline edit + per-language quick view,"Consolidates previous UI-006.
+
+Scope
+- Keys list with: key, description, category, platform, updatedAt
+- Inline edit for metadata; translation edit in drawer/modal per language
+- Bulk import/export
+- Search + filters (category/platform/missing translations)
+
+Performance Requirements
+- Server-side pagination; no loading all keys","ui-ux,p2,seq-15,epic-control,localization"
+16. [UI/UX] Localization Statistics: coverage dashboard + missing keys drilldown,"Consolidates previous UI-007.
+
+Scope
+- Aggregated view: translation coverage by language, missing keys by category, recent updates
+- Drilldown: open raw keys list filtered to missing translations
+
+Acceptance Criteria
+- Uses aggregate queries / views only","ui-ux,p2,seq-16,epic-dashboard,localization,aggregation"
+17. [UI/UX] Builds / Versioning: builds list + snapshots + change log,"Scope
+- Builds list (preview/production), active indicator
+- Build detail: business config snapshot + localization snapshot + change log (BuildChangeLog)
+- Actions: promote preview->production, compare builds
+
+Performance Requirements
+- Snapshot loaded on demand; summary counts in list","ui-ux,p2,seq-17,epic-control,builds"
+18. [UI/UX] Alerts Center: API Alerts + Config Alerts + events + acknowledgement workflow,"Scope
+- Unified Alerts page: API alerts + Config alerts + events feed
+- Filters: severity, status, time range, endpoint/config key
+- Event detail: link to raw traces/logs/live debug when device is available
+- Acknowledge + notes
+
+Acceptance Criteria
+- Alert event drilldown uses Data UX Contract","ui-ux,p2,seq-18,epic-operate,alerts"
+19. [UI/UX] SDK Settings: performance + privacy tabs (validation + preview),"Consolidates previous UI-008.
+
+Scope
+- Settings sections: batching/flush interval/queue sizes, masking rules, sensitive field patterns, min log level
+- Validation and preview: show what will be masked
+- Save confirmation and audit trail entry
+
+Acceptance Criteria
+- Includes guidance text and safe defaults","ui-ux,p2,seq-19,epic-developer,sdk-settings,privacy,performance"
+20. [UI/UX] Project Settings: rename + API key rotate + delete project (danger zone),"Consolidates previous UI-010 + UI-009 (danger actions).
+
+Scope
+- Project Settings: rename, environment, API keys rotate (permission gated)
+- Danger Zone: delete project, purge data, reset keys (multi-confirmation)
+- Audit log entry on each action
+
+Acceptance Criteria
+- Confirm modals, typed confirmation, re-auth requirement optional","ui-ux,p2,seq-20,epic-organization,security,danger-zone,audit"
+21. [UI/UX] Org Analytics (multi-project): aggregated dashboard + drilldowns,"Consolidates previous UI-002.
+
+Scope
+- Organization-level analytics across projects:
+  - total devices/sessions/requests/errors/cost trends
+  - top projects by errors/cost
+- Drilldown opens specific project raw views with filters
+
+Acceptance Criteria
+- Aggregated only (no raw scans)","ui-ux,p3,seq-21,epic-dashboard,org-analytics,aggregation"
+22. [DATA] Aggregation Layer v1: rollups/materialized views for dashboard KPIs,"Goal
+- Make dashboards fast and predictable by reading from aggregates, not raw events.
+
+Scope (initial rollups)
+- Per project + time bucket (hour/day):
+  - active devices
+  - sessions count
+  - api requests count
+  - error count / error rate
+  - latency percentiles (p95/p99) if available
+  - crash count
+  - cost sum (from ApiTrace.cost)
+- Provide query APIs to fetch dashboard tiles and trends
+
+Acceptance Criteria
+- Dashboard queries never scan ApiTrace/Log tables for charts
+- Drilldown links route to raw views with filters prefilled","data,aggregation,p1,seq-22,epic-aggregation,ui-ux"
+23. [DATA] Funnel/Drop-off Aggregations: session screen-flow derived metrics,"Goal
+- Support drop-off analytics without heavy raw scans.
+
+Scope
+- Build funnel metrics from Session.screenFlow (or derived events):
+  - step counts, drop-off %, time between steps
+- Provide drilldown mapping to raw sessions filtered by step/screen/time
+
+Acceptance Criteria
+- Funnel charts use aggregates; raw sessions only on drilldown","data,aggregation,p2,seq-23,epic-aggregation,ui-ux"
+24. [DATA] “Recent Raw” optimized queries for Live Debug (fast by design),"Goal
+- Make Live Debug safe/fast under load.
+
+Scope
+- Query patterns constrained by:
+  - projectId + deviceId + timestamp range (15m/1h/24h max)
+- Add or validate indexes:
+  - ApiTrace(projectId, deviceId, timestamp desc)
+  - Log(projectId, deviceId, timestamp desc)
+  - Crash(projectId, deviceId, timestamp desc)
+- Optional: separate storage policy/retention for raw tables
+
+Acceptance Criteria
+- Live Debug uses since=lastTimestamp to fetch deltas","data,performance,p1,seq-24,epic-aggregation,ui-ux"

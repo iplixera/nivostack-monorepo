@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Devices · NivoStack UI Spec</title>
+  
+<style>
+  :root{
+    --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    --r: 16px; --r2: 12px;
+    --shadow: 0 16px 48px rgba(0,0,0,.28);
+    --shadow2: 0 10px 28px rgba(0,0,0,.18);
+  }
+  [data-theme="light"]{
+    --bg:#F7F8FA; --sb:#FFFFFF; --top:#FFFFFF; --s:#FFFFFF; --s2:#F0F3F7;
+    --b:#E2E7EF; --t:#101828; --m:#667085;
+    --p:#2563EB; --a:#16A34A; --w:#D97706; --d:#DC2626;
+    --chip:#EEF2FF; --code:#0B1220;
+  }
+  [data-theme="dark"]{
+    --bg:#0B1220; --sb:#0F172A; --top:#0F172A; --s:#121B2E; --s2:#0B1326;
+    --b:rgba(148,163,184,.18); --t:#E5E7EB; --m:rgba(229,231,235,.72);
+    --p:#38BDF8; --a:#22C55E; --w:#F59E0B; --d:#EF4444;
+    --chip: rgba(56,189,248,.14); --code:#0B1220;
+  }
+  html,body{height:100%}
+  body{margin:0;font-family:var(--font);background:var(--bg);color:var(--t);}
+  a{color:inherit;text-decoration:none}
+  .app{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
+  .sidebar{background:var(--sb);border-right:1px solid var(--b);padding:16px;position:sticky;top:0;height:100vh;overflow:auto}
+  .main{min-width:0;display:flex;flex-direction:column}
+  .topbar{position:sticky;top:0;z-index:10;background:var(--top);border-bottom:1px solid var(--b);padding:14px 18px;display:flex;justify-content:space-between;gap:12px;align-items:center}
+  .content{padding:18px;max-width:1320px}
+  .brand{display:flex;gap:10px;align-items:center;padding:10px;border-radius:14px;background:linear-gradient(180deg,var(--s),var(--s2));border:1px solid var(--b);box-shadow:var(--shadow2)}
+  .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--p),var(--a));}
+  .brand b{font-size:14px}
+  .brand small{color:var(--m)}
+  .project{margin-top:12px;padding:10px;border-radius:14px;border:1px solid var(--b);background:var(--s)}
+  .project .row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+  .navTitle{margin:16px 10px 8px;font-size:11px;color:var(--m);letter-spacing:.08em;text-transform:uppercase}
+  .nav a{display:flex;justify-content:space-between;gap:10px;padding:10px 10px;border-radius:12px;color:var(--m);align-items:center}
+  .nav a:hover{background:var(--s2);color:var(--t)}
+  .nav a.active{background:var(--chip);border:1px solid var(--b);color:var(--t)}
+  .badge{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--b);color:var(--m)}
+  .title b{font-size:16px;display:block}
+  .title span{font-size:12px;color:var(--m)}
+  .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .pill{padding:8px 10px;border:1px solid var(--b);border-radius:999px;background:var(--s);font-size:12px;color:var(--m)}
+  .btn{padding:10px 12px;border-radius:12px;border:1px solid transparent;background:var(--p);color:white;font-weight:800;cursor:pointer}
+  .btn.secondary{background:transparent;border-color:var(--b);color:var(--t);font-weight:700}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--m);font-weight:700}
+  .card{background:var(--s);border:1px solid var(--b);border-radius:var(--r);box-shadow:var(--shadow2);padding:16px}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .input,.select{padding:10px 12px;border-radius:12px;border:1px solid var(--b);background:var(--s);color:var(--t)}
+  .input{min-width:260px}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid var(--b);background:var(--chip);font-size:11px;color:var(--m)}
+  .dot{width:8px;height:8px;border-radius:999px;background:var(--a)}
+  .dot.warn{background:var(--w)} .dot.bad{background:var(--d)}
+  .muted{color:var(--m)}
+  .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+  .kpi{padding:12px;border-radius:14px;border:1px solid var(--b);background:linear-gradient(180deg,var(--s),var(--s2))}
+  .kpi b{font-size:18px} .kpi span{display:block;color:var(--m);font-size:11px;margin-top:4px}
+  table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--b);border-radius:14px;overflow:hidden}
+  th,td{padding:10px 12px;font-size:12px;border-bottom:1px solid var(--b);vertical-align:top}
+  th{background:var(--s2);color:var(--m);text-align:left}
+  tr:last-child td{border-bottom:0}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .tab{padding:8px 10px;border-radius:999px;border:1px solid var(--b);background:transparent;color:var(--m);cursor:pointer;font-size:12px}
+  .tab.active{background:var(--chip);color:var(--t)}
+  .hr{height:1px;background:var(--b);margin:12px 0}
+  .note{border-left:4px solid var(--p);padding:10px 12px;border-radius:12px;background:linear-gradient(180deg,var(--s),var(--s2));border:1px solid var(--b)}
+  .code{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        background:var(--code);color:#E5E7EB;border:1px solid var(--b);border-radius:12px;padding:10px;overflow:auto;font-size:12px}
+  .statusRow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+</style>
+
+</head>
+<body>
+  <div class="app">
+    
+<aside class="sidebar">
+  <div class="brand">
+    <div class="logo"></div>
+    <div>
+      <b>NivoStack Console</b><br/>
+      <small>UI Spec · Functional Mock (file-by-file)</small>
+    </div>
+  </div>
+
+  <div class="project">
+    <div class="row">
+      <div>
+        <div style="font-weight:800">Performance Test Project</div>
+        <div class="muted" style="font-size:12px">prod · GCC</div>
+      </div>
+      <span class="badge">Switch ▼</span>
+    </div>
+  </div>
+
+  <div class="navTitle">Overview</div>
+  <div class="nav">
+    <a href="00_app_shell.html" data-slug="shell"><span>App Shell</span><span class="badge">Spec</span></a>
+    <a href="01_dashboard_aggregated.html" data-slug="dash"><span>Dashboard</span><span class="badge">Agg</span></a>
+  </div>
+
+  <div class="navTitle">Observe (Runtime)</div>
+  <div class="nav">
+    <a href="02_devices_raw.html" data-slug="devices"><span>Devices</span><span class="badge">Raw</span></a>
+    <a href="03_api_traces_raw.html" data-slug="traces"><span>API Traces</span><span class="badge">Raw</span></a>
+    <a href="04_live_debug_live.html" data-slug="live"><span>Live Debug</span><span class="badge">Live</span></a>
+  </div>
+
+  <div class="navTitle">Legend</div>
+  <div class="footerNote muted" style="margin-top:10px;font-size:11px">
+    Aggregated = rollups/materialized views<br/>
+    Raw = row-level tables (paged + filtered)<br/>
+    Live = recent raw deltas (poll/stream)
+  </div>
+</aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="title">
+          <b>Devices</b>
+          <span>Raw device registry for debugging + management. Drawer tabs show correlated raw data by deviceId.</span>
+        </div>
+        <div class="actions">
+          <span class="pill">Mode: <b style="color:var(--t)">Raw</b></span>
+          <span class="pill">Env: Production</span>
+          <button class="btn secondary" onclick="toggleTheme()">Light/Dark</button>
+          <button class="btn" onclick="alert('Mock CTA')">Primary Action</button>
+        </div>
+      </div>
+      <div class="content">
+        
+<div class="note">
+  <b>Mapping to current functions</b>
+  <div class="muted" style="margin-top:6px">
+    Keep current behavior: device list + filters + debug mode enable/disable + device detail view. Refactor UI only.
+  </div>
+</div>
+
+<div class="card" style="margin-top:14px">
+  <div class="statusRow">
+    <span class="chip"><span class="dot"></span> Server pagination</span>
+    <span class="chip"><span class="dot"></span> Indexed filters: projectId + lastSeenAt + platform</span>
+    <span class="chip"><span class="dot warn"></span> Debug mode actions permission-gated</span>
+    <span class="chip"><span class="dot"></span> Row → Drawer (Overview/Sessions/Traces/Logs/Crashes/Metadata)</span>
+  </div>
+</div>
+
+<div class="card" style="margin-top:14px">
+  <div class="row">
+    <input class="input" placeholder="Search deviceId / deviceCode / user email / model / appVersion"/>
+    <select class="select"><option>Platform: All</option><option>iOS</option><option>Android</option></select>
+    <select class="select"><option>Debug: All</option><option>Enabled</option><option>Disabled</option></select>
+    <select class="select"><option>Last Seen: Today</option><option>This Week</option><option>This Month</option></select>
+    <button class="btn secondary" onclick="alert('Mock: More filters drawer')">More Filters</button>
+    <button class="btn secondary" onclick="alert('Mock: Export CSV')">Export</button>
+    <button class="btn secondary" onclick="alert('Mock: Save view')">Saved Views</button>
+  </div>
+  <div class="row" style="margin-top:12px">
+    <span class="chip"><span class="dot"></span> Total 50</span>
+    <span class="chip"><span class="dot"></span> iOS 22</span>
+    <span class="chip"><span class="dot"></span> Android 28</span>
+    <span class="chip"><span class="dot warn"></span> Debug Enabled 6</span>
+    <span class="chip"><span class="dot"></span> Active Today 31</span>
+  </div>
+</div>
+
+<div class="card" style="margin-top:14px">
+  <table>
+    <thead>
+      <tr>
+        <th>Device</th><th>Platform</th><th>App</th><th>OS</th><th>Last Seen</th><th>Debug</th><th>Status</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>DV-10A2</b><div class="muted">iPhone 15 Pro · UAE</div></td>
+        <td>iOS</td><td>2.0.1</td><td>17.2</td><td>2m ago</td>
+        <td><span class="chip"><span class="dot warn"></span>Enabled</span></td>
+        <td><span class="chip"><span class="dot"></span>Active</span></td>
+        <td>
+          <a class="btn secondary" style="padding:7px 10px" href="04_live_debug_live.html">Live Debug</a>
+          <button class="btn secondary" style="padding:7px 10px" onclick="alert('Mock: open device drawer')">Open</button>
+        </td>
+      </tr>
+      <tr>
+        <td><b>DV-77C9</b><div class="muted">Samsung S23 · KSA</div></td>
+        <td>Android</td><td>2.0.1</td><td>14</td><td>18m ago</td>
+        <td><span class="chip"><span class="dot"></span>Off</span></td>
+        <td><span class="chip"><span class="dot"></span>Active</span></td>
+        <td>
+          <button class="btn secondary" style="padding:7px 10px" onclick="alert('Mock: enable debug')">Enable Debug</button>
+          <button class="btn secondary" style="padding:7px 10px" onclick="alert('Mock: open device drawer')">Open</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="footerNote">Implementation: keep existing API calls; move request bodies and heavy tabs to lazy fetch by deviceId.</div>
+</div>
+
+      </div>
+    </main>
+  </div>
+  
+<script>
+  function toggleTheme(){
+    const html = document.documentElement;
+    const next = html.dataset.theme === "dark" ? "light" : "dark";
+    html.dataset.theme = next;
+    localStorage.setItem("nivostack_theme", next);
+  }
+  (function initTheme(){
+    const saved = localStorage.getItem("nivostack_theme");
+    if (saved) document.documentElement.dataset.theme = saved;
+  })();
+</script>
+
+  
+    <script>
+      (function(){ 
+        document.querySelectorAll('a[data-slug]').forEach(a=>a.classList.toggle('active', a.dataset.slug==="devices"));
+      })();
+    </script>
+    
+</body>
+</html>

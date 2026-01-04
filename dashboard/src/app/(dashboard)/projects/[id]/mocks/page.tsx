@@ -1,10 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
 import { useParams } from 'next/navigation'
 import BuildsSubTab from '@/components/BuildsSubTab'
+import AppShell from '@/components/layout/AppShell'
+import PageHeader from '@/components/layout/PageHeader'
+import ThemeToggle from '@/components/ThemeToggle'
+import DataTable from '@/components/DataTable'
 
 type MockEnvironment = {
   id: string
@@ -36,8 +40,38 @@ type MockResponse = {
   isEnabled: boolean
 }
 
+// Extract common modal styles outside components for reuse
+const MODAL_OVERLAY_STYLE: React.CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  background: 'rgba(0, 0, 0, 0.5)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 50,
+}
+
+const MODAL_CONTENT_STYLE: React.CSSProperties = {
+  width: '100%',
+  maxWidth: '400px',
+  margin: '18px',
+}
+
+// Common button style for table actions
+const ACTION_BUTTON_STYLE: React.CSSProperties = {
+  padding: '7px 10px',
+  fontSize: '11px',
+}
+
+// Common flex container style for action buttons
+const ACTION_CONTAINER_STYLE: React.CSSProperties = {
+  display: 'flex',
+  gap: '8px',
+  flexWrap: 'wrap',
+}
+
 export default function MocksPage() {
-  const { user, token } = useAuth()
+  const { token } = useAuth()
   const params = useParams()
   const projectId = params.id as string
 
@@ -53,19 +87,7 @@ export default function MocksPage() {
   const [editingResponse, setEditingResponse] = useState<MockResponse | null>(null)
   const [activeSubTab, setActiveSubTab] = useState<'mocks' | 'builds'>('mocks')
 
-  useEffect(() => {
-    if (token && projectId) {
-      loadEnvironments()
-    }
-  }, [token, projectId])
-
-  useEffect(() => {
-    if (selectedEnvironment && token) {
-      loadEndpoints()
-    }
-  }, [selectedEnvironment, token])
-
-  const loadEnvironments = async () => {
+  const loadEnvironments = useCallback(async () => {
     if (!token || !projectId) return
     try {
       const response = await api.mocks.listEnvironments(projectId, token)
@@ -79,14 +101,13 @@ export default function MocksPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [token, projectId, selectedEnvironment])
 
-  const loadEndpoints = async () => {
-    if (!selectedEnvironment) return
+  const loadEndpoints = useCallback(async () => {
+    if (!selectedEnvironment || !token) return
     try {
-      const response = await api.mocks.listEndpoints(selectedEnvironment, token!)
+      const response = await api.mocks.listEndpoints(selectedEnvironment, token)
       setEndpoints(response.endpoints)
-      // Clear selected endpoint if it's not in the new list
       if (selectedEndpoint && !response.endpoints.find((e) => e.id === selectedEndpoint)) {
         setSelectedEndpoint(null)
         setSelectedEndpointData(null)
@@ -94,30 +115,44 @@ export default function MocksPage() {
     } catch (error) {
       console.error('Failed to load endpoints:', error)
     }
-  }
+  }, [selectedEnvironment, token, selectedEndpoint])
 
-  const loadEndpointDetails = async (endpointId: string) => {
+  const loadEndpointDetails = useCallback(async (endpointId: string) => {
+    if (!token) return
     try {
-      const response = await api.mocks.getEndpoint(endpointId, token!)
+      const response = await api.mocks.getEndpoint(endpointId, token)
       setSelectedEndpointData(response.endpoint)
     } catch (error) {
       console.error('Failed to load endpoint details:', error)
     }
-  }
+  }, [token])
+
+  useEffect(() => {
+    if (token && projectId) {
+      loadEnvironments()
+    }
+  }, [token, projectId, loadEnvironments])
+
+  useEffect(() => {
+    if (selectedEnvironment && token) {
+      loadEndpoints()
+    }
+  }, [selectedEnvironment, token, loadEndpoints])
 
   useEffect(() => {
     if (selectedEndpoint && token) {
       loadEndpointDetails(selectedEndpoint)
     }
-  }, [selectedEndpoint, token])
+  }, [selectedEndpoint, token, loadEndpointDetails])
 
-  const handleCreateEnvironment = async (data: {
+  const handleCreateEnvironment = useCallback(async (data: {
     name: string
     description?: string
     mode?: string
   }) => {
+    if (!token || !projectId) return
     try {
-      await api.mocks.createEnvironment(projectId, token!, {
+      await api.mocks.createEnvironment(projectId, token, {
         name: data.name,
         description: data.description,
         mode: data.mode || 'selective',
@@ -128,16 +163,16 @@ export default function MocksPage() {
       console.error('Failed to create environment:', error)
       alert('Failed to create environment')
     }
-  }
+  }, [token, projectId, loadEnvironments])
 
-  const handleCreateEndpoint = async (data: {
+  const handleCreateEndpoint = useCallback(async (data: {
     path: string
     method: string
     description?: string
   }) => {
-    if (!selectedEnvironment) return
+    if (!selectedEnvironment || !token) return
     try {
-      await api.mocks.createEndpoint(token!, {
+      await api.mocks.createEndpoint(token, {
         environmentId: selectedEnvironment,
         path: data.path,
         method: data.method,
@@ -149,9 +184,9 @@ export default function MocksPage() {
       console.error('Failed to create endpoint:', error)
       alert('Failed to create endpoint')
     }
-  }
+  }, [selectedEnvironment, token, loadEndpoints])
 
-  const handleCreateResponse = async (data: {
+  const handleCreateResponse = useCallback(async (data: {
     statusCode: number
     name?: string
     description?: string
@@ -160,9 +195,9 @@ export default function MocksPage() {
     delay?: number
     isDefault?: boolean
   }) => {
-    if (!selectedEndpoint) return
+    if (!selectedEndpoint || !token) return
     try {
-      await api.mocks.createResponse(token!, {
+      await api.mocks.createResponse(token, {
         endpointId: selectedEndpoint,
         ...data,
       })
@@ -172,11 +207,12 @@ export default function MocksPage() {
       console.error('Failed to create response:', error)
       alert('Failed to create response')
     }
-  }
+  }, [selectedEndpoint, token, loadEndpointDetails])
 
-  const handleUpdateResponse = async (responseId: string, data: any) => {
+  const handleUpdateResponse = useCallback(async (responseId: string, data: any) => {
+    if (!token) return
     try {
-      await api.mocks.updateResponse(responseId, token!, data)
+      await api.mocks.updateResponse(responseId, token, data)
       if (selectedEndpoint) {
         await loadEndpointDetails(selectedEndpoint)
       }
@@ -185,12 +221,12 @@ export default function MocksPage() {
       console.error('Failed to update response:', error)
       alert('Failed to update response')
     }
-  }
+  }, [token, selectedEndpoint, loadEndpointDetails])
 
-  const handleDeleteResponse = async (responseId: string) => {
-    if (!confirm('Are you sure you want to delete this response?')) return
+  const handleDeleteResponse = useCallback(async (responseId: string) => {
+    if (!confirm('Are you sure you want to delete this response?') || !token) return
     try {
-      await api.mocks.deleteResponse(responseId, token!)
+      await api.mocks.deleteResponse(responseId, token)
       if (selectedEndpoint) {
         await loadEndpointDetails(selectedEndpoint)
       }
@@ -198,12 +234,12 @@ export default function MocksPage() {
       console.error('Failed to delete response:', error)
       alert('Failed to delete response')
     }
-  }
+  }, [token, selectedEndpoint, loadEndpointDetails])
 
-  const handleDeleteEndpoint = async (endpointId: string) => {
-    if (!confirm('Are you sure you want to delete this endpoint? All responses will be deleted.')) return
+  const handleDeleteEndpoint = useCallback(async (endpointId: string) => {
+    if (!confirm('Are you sure you want to delete this endpoint? All responses will be deleted.') || !token) return
     try {
-      await api.mocks.deleteEndpoint(endpointId, token!)
+      await api.mocks.deleteEndpoint(endpointId, token)
       await loadEndpoints()
       setSelectedEndpoint(null)
       setSelectedEndpointData(null)
@@ -211,65 +247,304 @@ export default function MocksPage() {
       console.error('Failed to delete endpoint:', error)
       alert('Failed to delete endpoint')
     }
-  }
+  }, [token, loadEndpoints])
 
-  const handleToggleEnvironment = async (envId: string, enabled: boolean) => {
+  const handleToggleEnvironment = useCallback(async (envId: string, enabled: boolean) => {
+    if (!token) return
     try {
-      await api.mocks.updateEnvironment(envId, token!, { isEnabled: enabled })
+      await api.mocks.updateEnvironment(envId, token, { isEnabled: enabled })
       await loadEnvironments()
     } catch (error) {
       console.error('Failed to update environment:', error)
     }
-  }
+  }, [token, loadEnvironments])
 
-  const handleSetDefault = async (envId: string) => {
+  const handleSetDefault = useCallback(async (envId: string) => {
+    if (!token) return
     try {
-      await api.mocks.updateEnvironment(envId, token!, { isDefault: true })
+      await api.mocks.updateEnvironment(envId, token, { isDefault: true })
       await loadEnvironments()
     } catch (error) {
       console.error('Failed to set default environment:', error)
     }
-  }
+  }, [token, loadEnvironments])
 
   if (loading) {
-    return <div className="p-6 text-gray-400">Loading...</div>
+    return (
+      <AppShell>
+        <PageHeader
+          title="API Mocking"
+          subtitle="Create and manage mock environments and endpoints"
+          dataMode="Raw"
+          actions={<ThemeToggle />}
+        />
+        <div style={{ textAlign: 'center', padding: '100px 0', color: 'var(--m)' }}>
+          Loading...
+        </div>
+      </AppShell>
+    )
   }
 
-  const currentEnv = environments.find((e) => e.id === selectedEnvironment)
+  const currentEnv = useMemo(() => {
+    return environments.find((e) => e.id === selectedEnvironment)
+  }, [environments, selectedEnvironment])
+
+  // Memoize column definitions to prevent recreation on every render
+  const environmentColumns = useMemo(() => [
+    {
+      key: 'name',
+      label: 'Name',
+      render: (env: MockEnvironment) => (
+        <>
+          <b>{env.name}</b>
+          {env.isDefault && (
+            <span className="muted" style={{ fontSize: '11px', marginLeft: '8px' }}>(Default)</span>
+          )}
+          {env.description && (
+            <div className="muted" style={{ fontSize: '11px', marginTop: '4px' }}>{env.description}</div>
+          )}
+        </>
+      ),
+    },
+    {
+      key: 'mode',
+      label: 'Mode',
+      render: (env: MockEnvironment) => <span className="muted">{env.mode}</span>,
+    },
+    {
+      key: 'endpoints',
+      label: 'Endpoints',
+      render: (env: MockEnvironment) => <span className="muted">{env._count?.endpoints || 0}</span>,
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (env: MockEnvironment) => (
+        <span className="chip">
+          <span className={`dot ${env.isEnabled ? 'good' : ''}`} />
+          {env.isEnabled ? 'Enabled' : 'Disabled'}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (env: MockEnvironment) => (
+        <div style={ACTION_CONTAINER_STYLE}>
+          {!env.isDefault && (
+            <button
+              className="btn secondary"
+              style={ACTION_BUTTON_STYLE}
+              onClick={(e) => {
+                e.stopPropagation()
+                handleSetDefault(env.id)
+              }}
+            >
+              Set Default
+            </button>
+          )}
+          <button
+            className="btn secondary"
+            style={ACTION_BUTTON_STYLE}
+            onClick={(e) => {
+              e.stopPropagation()
+              setSelectedEnvironment(env.id)
+            }}
+          >
+            Select
+          </button>
+        </div>
+      ),
+    },
+  ], [handleSetDefault])
+
+  const endpointColumns = useMemo(() => [
+    {
+      key: 'method',
+      label: 'Method',
+      render: (endpoint: MockEndpoint) => (
+        <span style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, color: 'var(--p)' }}>
+          {endpoint.method}
+        </span>
+      ),
+    },
+    {
+      key: 'path',
+      label: 'Path',
+      render: (endpoint: MockEndpoint) => (
+        <span style={{ fontFamily: 'monospace', fontSize: '12px', color: 'var(--t)' }}>
+          {endpoint.path}
+        </span>
+      ),
+    },
+    {
+      key: 'description',
+      label: 'Description',
+      render: (endpoint: MockEndpoint) => (
+        <span className="muted">{endpoint.description || '-'}</span>
+      ),
+    },
+    {
+      key: 'responses',
+      label: 'Responses',
+      render: (endpoint: MockEndpoint) => (
+        <span className="muted">
+          {endpoint.responses.length} response{endpoint.responses.length !== 1 ? 's' : ''}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (endpoint: MockEndpoint) => (
+        !endpoint.isEnabled && (
+          <span className="chip">
+            <span className="dot" />
+            Disabled
+          </span>
+        )
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (endpoint: MockEndpoint) => (
+        <div style={ACTION_CONTAINER_STYLE}>
+          <button
+            className="btn secondary"
+            style={{ ...ACTION_BUTTON_STYLE, color: 'var(--d)', borderColor: 'var(--d)' }}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleDeleteEndpoint(endpoint.id)
+            }}
+          >
+            Delete
+          </button>
+        </div>
+      ),
+    },
+  ], [handleDeleteEndpoint])
+
+  const responseColumns = useMemo(() => [
+    {
+      key: 'status',
+      label: 'Status',
+      render: (response: MockResponse) => {
+        const statusColor = response.statusCode >= 200 && response.statusCode < 300
+          ? 'var(--a)'
+          : response.statusCode >= 400 && response.statusCode < 500
+            ? 'var(--w)'
+            : 'var(--d)'
+        return (
+          <span className="chip" style={{ borderColor: statusColor, color: statusColor }}>
+            {response.statusCode}
+          </span>
+        )
+      },
+    },
+    {
+      key: 'name',
+      label: 'Name',
+      render: (response: MockResponse) => <span className="muted">{response.name || '-'}</span>,
+    },
+    {
+      key: 'delay',
+      label: 'Delay',
+      render: (response: MockResponse) => <span className="muted">{response.delay}ms</span>,
+    },
+    {
+      key: 'flags',
+      label: 'Flags',
+      render: (response: MockResponse) => (
+        <div style={ACTION_CONTAINER_STYLE}>
+          {response.isDefault && (
+            <span className="chip">
+              <span className="dot" />
+              Default
+            </span>
+          )}
+          {!response.isEnabled && (
+            <span className="chip">
+              <span className="dot" />
+              Disabled
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'preview',
+      label: 'Preview',
+      render: (response: MockResponse) => (
+        response.responseBody && (
+          <div style={{ fontSize: '11px', fontFamily: 'monospace', color: 'var(--m)', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {JSON.stringify(response.responseBody).slice(0, 50)}...
+          </div>
+        )
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (response: MockResponse) => (
+        <div style={ACTION_CONTAINER_STYLE}>
+          <button
+            className="btn secondary"
+            style={ACTION_BUTTON_STYLE}
+            onClick={(e) => {
+              e.stopPropagation()
+              setEditingResponse(response)
+            }}
+          >
+            Edit
+          </button>
+          <button
+            className="btn secondary"
+            style={{ ...ACTION_BUTTON_STYLE, color: 'var(--d)', borderColor: 'var(--d)' }}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleDeleteResponse(response.id)
+            }}
+          >
+            Delete
+          </button>
+        </div>
+      ),
+    },
+  ], [handleDeleteResponse])
 
   return (
-    <div className="p-6">
+    <AppShell>
+      <PageHeader
+        title="API Mocking"
+        subtitle="Create and manage mock environments and endpoints"
+        dataMode="Raw"
+        actions={<ThemeToggle />}
+      />
+
       {/* Sub-tabs */}
-      <div className="mb-6 border-b border-gray-800">
-        <nav className="flex space-x-8">
+      <div className="card" style={{ marginTop: '18px' }}>
+        <div className="tabs">
           <button
             onClick={() => setActiveSubTab('mocks')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeSubTab === 'mocks'
-                ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
-            }`}
+            className={`tab ${activeSubTab === 'mocks' ? 'active' : ''}`}
           >
             API Mocks
           </button>
           <button
             onClick={() => setActiveSubTab('builds')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeSubTab === 'builds'
-                ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
-            }`}
+            className={`tab ${activeSubTab === 'builds' ? 'active' : ''}`}
           >
             Builds
           </button>
-        </nav>
+        </div>
       </div>
 
       {/* Builds Sub-tab */}
       {activeSubTab === 'builds' && (
-        <BuildsSubTab 
-          projectId={projectId} 
-          featureType="api_mocks" 
+        <BuildsSubTab
+          projectId={projectId}
+          featureType="api_mocks"
           featureLabel="API Mocks"
         />
       )}
@@ -277,248 +552,83 @@ export default function MocksPage() {
       {/* Mocks Sub-tab */}
       {activeSubTab === 'mocks' && (
         <>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">API Mocking</h1>
-        <button
-          onClick={() => setShowCreateEnv(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          + Create Environment
-        </button>
-      </div>
-
-      {/* Environments Table */}
-      <div className="bg-gray-900 rounded-lg border border-gray-800 mb-6">
-        <div className="p-4 border-b border-gray-800">
-          <h2 className="text-lg font-semibold text-white">Environments</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-800">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Mode</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Endpoints</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-800">
-              {environments.map((env) => (
-                <tr
-                  key={env.id}
-                  className={`cursor-pointer hover:bg-gray-800/50 ${
-                    selectedEnvironment === env.id ? 'bg-blue-900/20' : ''
-                  }`}
-                  onClick={() => setSelectedEnvironment(env.id)}
-                >
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <div className="text-sm font-medium text-white">
-                      {env.name}
-                      {env.isDefault && <span className="ml-2 text-xs text-gray-400">(Default)</span>}
-                    </div>
-                    {env.description && (
-                      <div className="text-xs text-gray-400 mt-1">{env.description}</div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">{env.mode}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">{env._count?.endpoints || 0}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs rounded ${
-                      env.isEnabled ? 'bg-green-900/30 text-green-400' : 'bg-gray-700 text-gray-400'
-                    }`}>
-                      {env.isEnabled ? 'Enabled' : 'Disabled'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    <div className="flex items-center gap-2">
-                      {!env.isDefault && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleSetDefault(env.id)
-                          }}
-                          className="text-blue-400 hover:text-blue-300"
-                        >
-                          Set Default
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Endpoints Table */}
-      {selectedEnvironment && (
-        <div className="bg-gray-900 rounded-lg border border-gray-800 mb-6">
-          <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white">
-              Endpoints {currentEnv && `(${currentEnv.name})`}
-            </h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '14px' }}>
+            <b style={{ fontSize: '18px' }}>Environments</b>
             <button
-              onClick={() => setShowCreateEndpoint(true)}
-              className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={() => setShowCreateEnv(true)}
+              className="btn"
             >
-              + Add Endpoint
+              Create Environment
             </button>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-800">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Method</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Path</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Description</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Responses</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-800">
-                {endpoints.map((endpoint) => (
-                  <tr
-                    key={endpoint.id}
-                    className={`cursor-pointer hover:bg-gray-800/50 ${
-                      selectedEndpoint === endpoint.id ? 'bg-blue-900/20' : ''
-                    }`}
-                    onClick={() => setSelectedEndpoint(endpoint.id)}
-                  >
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="font-mono text-sm font-medium text-blue-400">{endpoint.method}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="font-mono text-sm text-gray-300">{endpoint.path}</span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-400">
-                      {endpoint.description || '-'}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">
-                      {endpoint.responses.length} response{endpoint.responses.length !== 1 ? 's' : ''}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      {!endpoint.isEnabled && (
-                        <span className="px-2 py-1 text-xs rounded bg-gray-700 text-gray-400">Disabled</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDeleteEndpoint(endpoint.id)
-                        }}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {endpoints.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
-                      No endpoints yet. Click &quot;+ Add Endpoint&quot; to create one.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
 
-      {/* Responses Table */}
-      {selectedEndpointData && (
-        <div className="bg-gray-900 rounded-lg border border-gray-800">
-          <div className="p-4 border-b border-gray-800">
-            <h2 className="text-lg font-semibold text-white mb-2">
-              Responses for {selectedEndpointData.method} {selectedEndpointData.path}
-            </h2>
-            {selectedEndpointData.description && (
-              <p className="text-sm text-gray-400">{selectedEndpointData.description}</p>
-            )}
-          </div>
-          <div className="p-4">
-            <div className="mb-4">
-              <button
-                onClick={() => setShowCreateResponse(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                + Add Response
-              </button>
+          {/* Environments Table */}
+          <DataTable
+            data={environments}
+            columns={environmentColumns}
+            loading={false}
+            emptyMessage="No environments found. Create one to get started."
+            onRowClick={(env) => setSelectedEnvironment(env.id)}
+            footerNote={`Showing ${environments.length} environment${environments.length !== 1 ? 's' : ''}`}
+          />
+
+          {/* Endpoints Table */}
+          {selectedEnvironment && (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '18px' }}>
+                <b style={{ fontSize: '18px' }}>
+                  Endpoints {currentEnv && `(${currentEnv.name})`}
+                </b>
+                <button
+                  onClick={() => setShowCreateEndpoint(true)}
+                  className="btn"
+                >
+                  Add Endpoint
+                </button>
+              </div>
+
+              <DataTable
+                data={endpoints}
+                columns={endpointColumns}
+                loading={false}
+                emptyMessage='No endpoints yet. Click "Add Endpoint" to create one.'
+                onRowClick={(endpoint) => setSelectedEndpoint(endpoint.id)}
+                footerNote={`Showing ${endpoints.length} endpoint${endpoints.length !== 1 ? 's' : ''}`}
+              />
+            </>
+          )}
+
+          {/* Responses Table */}
+          {selectedEndpointData && (
+            <div className="card" style={{ marginTop: '18px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <div>
+                  <b style={{ fontSize: '16px' }}>
+                    Responses for {selectedEndpointData.method} {selectedEndpointData.path}
+                  </b>
+                  {selectedEndpointData.description && (
+                    <div className="muted" style={{ fontSize: '12px', marginTop: '4px' }}>
+                      {selectedEndpointData.description}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setShowCreateResponse(true)}
+                  className="btn"
+                >
+                  Add Response
+                </button>
+              </div>
+
+              <DataTable
+                data={selectedEndpointData.responses}
+                columns={responseColumns}
+                loading={false}
+                emptyMessage='No responses yet. Click "Add Response" to create one.'
+                footerNote={`Showing ${selectedEndpointData.responses.length} response${selectedEndpointData.responses.length !== 1 ? 's' : ''}`}
+              />
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-800">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Delay</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Flags</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Preview</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-800">
-                  {selectedEndpointData.responses.map((response) => (
-                    <tr key={response.id} className="hover:bg-gray-800/50">
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          response.statusCode >= 200 && response.statusCode < 300
-                            ? 'bg-green-900/30 text-green-400'
-                            : response.statusCode >= 400 && response.statusCode < 500
-                            ? 'bg-yellow-900/30 text-yellow-400'
-                            : 'bg-red-900/30 text-red-400'
-                        }`}>
-                          {response.statusCode}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-300">{response.name || '-'}</td>
-                      <td className="px-4 py-3 text-sm text-gray-300">{response.delay}ms</td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="flex gap-2">
-                          {response.isDefault && (
-                            <span className="px-2 py-0.5 text-xs rounded bg-blue-900/30 text-blue-400">Default</span>
-                          )}
-                          {!response.isEnabled && (
-                            <span className="px-2 py-0.5 text-xs rounded bg-gray-700 text-gray-400">Disabled</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        {response.responseBody && (
-                          <div className="text-xs font-mono text-gray-400 max-w-xs truncate">
-                            {JSON.stringify(response.responseBody).slice(0, 50)}...
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => setEditingResponse(response)}
-                            className="text-blue-400 hover:text-blue-300"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteResponse(response.id)}
-                            className="text-red-400 hover:text-red-300"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+          )}
         </>
       )}
 
@@ -552,7 +662,7 @@ export default function MocksPage() {
             : handleCreateResponse}
         />
       )}
-    </div>
+    </AppShell>
   )
 }
 
@@ -568,35 +678,35 @@ function CreateEnvironmentModal({
   const [mode, setMode] = useState('selective')
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 w-96">
-        <h2 className="text-xl font-bold mb-4 text-white">Create Mock Environment</h2>
-        <div className="space-y-4">
+    <div style={MODAL_OVERLAY_STYLE}>
+      <div className="card" style={MODAL_CONTENT_STYLE}>
+        <b style={{ fontSize: '18px', marginBottom: '14px', display: 'block' }}>Create Mock Environment</b>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Name</label>
+            <label className="muted" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>Name</label>
             <input
               type="text"
+              className="input"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500"
               placeholder="e.g., Development, Staging"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Description</label>
+            <label className="muted" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>Description</label>
             <textarea
+              className="input"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500"
               rows={2}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Mode</label>
+            <label className="muted" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>Mode</label>
             <select
+              className="select"
               value={mode}
               onChange={(e) => setMode(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white"
             >
               <option value="selective">Selective (only mocked endpoints)</option>
               <option value="global">Global (check all, fallback to real API)</option>
@@ -604,20 +714,20 @@ function CreateEnvironmentModal({
               <option value="blacklist">Blacklist (all except blacklisted)</option>
             </select>
           </div>
-          <div className="flex gap-2 justify-end">
+          <div style={{ display: 'flex', gap: '14px', justifyContent: 'flex-end', marginTop: '8px' }}>
             <button
+              className="btn secondary"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-700 rounded hover:bg-gray-800 text-gray-300"
             >
               Cancel
             </button>
             <button
+              className="btn"
               onClick={() => {
                 if (name) {
                   onSubmit({ name, description, mode })
                 }
               }}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               Create
             </button>
@@ -640,16 +750,16 @@ function CreateEndpointModal({
   const [description, setDescription] = useState('')
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 w-96">
-        <h2 className="text-xl font-bold mb-4 text-white">Create Mock Endpoint</h2>
-        <div className="space-y-4">
+    <div style={MODAL_OVERLAY_STYLE}>
+      <div className="card" style={MODAL_CONTENT_STYLE}>
+        <b style={{ fontSize: '18px', marginBottom: '14px', display: 'block' }}>Create Mock Endpoint</b>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Method</label>
+            <label className="muted" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>Method</label>
             <select
+              className="select"
               value={method}
               onChange={(e) => setMethod(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white"
             >
               <option value="GET">GET</option>
               <option value="POST">POST</option>
@@ -659,41 +769,42 @@ function CreateEndpointModal({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Path</label>
+            <label className="muted" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>Path</label>
             <input
               type="text"
+              className="input"
+              style={{ fontFamily: 'monospace' }}
               value={path}
               onChange={(e) => setPath(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded font-mono text-white placeholder-gray-500"
               placeholder="e.g., /api/users/:id"
             />
-            <div className="text-xs text-gray-400 mt-1">
+            <div className="muted" style={{ fontSize: '11px', marginTop: '4px' }}>
               Use :param for path parameters, * for wildcards
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Description</label>
+            <label className="muted" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>Description</label>
             <textarea
+              className="input"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500"
               rows={2}
             />
           </div>
-          <div className="flex gap-2 justify-end">
+          <div style={{ display: 'flex', gap: '14px', justifyContent: 'flex-end', marginTop: '8px' }}>
             <button
+              className="btn secondary"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-700 rounded hover:bg-gray-800 text-gray-300"
             >
               Cancel
             </button>
             <button
+              className="btn"
               onClick={() => {
                 if (path) {
                   onSubmit({ path, method, description })
                 }
               }}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               Create
             </button>
@@ -739,7 +850,6 @@ function ResponseEditorModal({
   const [bodyError, setBodyError] = useState('')
 
   const handleSubmit = () => {
-    // Validate JSON body
     let parsedBody: any = null
     if (responseBody.trim()) {
       try {
@@ -783,99 +893,108 @@ function ResponseEditorModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4 text-white">
+    <div style={{ ...MODAL_OVERLAY_STYLE, padding: '18px' }}>
+      <div className="card" style={{ ...MODAL_CONTENT_STYLE, maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto' }}>
+        <b style={{ fontSize: '18px', marginBottom: '14px', display: 'block' }}>
           {response ? 'Edit Response' : 'Create Response'}
-        </h2>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        </b>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div className="grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px' }}>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Status Code</label>
+              <label className="muted" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>Status Code</label>
               <input
                 type="number"
+                className="input"
                 value={statusCode}
                 onChange={(e) => setStatusCode(parseInt(e.target.value) || 200)}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white"
                 min={100}
                 max={599}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Delay (ms)</label>
+              <label className="muted" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>Delay (ms)</label>
               <input
                 type="number"
+                className="input"
                 value={delay}
                 onChange={(e) => setDelay(parseInt(e.target.value) || 0)}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white"
                 min={0}
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Name</label>
+            <label className="muted" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>Name</label>
             <input
               type="text"
+              className="input"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500"
               placeholder="e.g., Success, Not Found"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Description</label>
+            <label className="muted" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>Description</label>
             <textarea
+              className="input"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500"
               rows={2}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Response Body (JSON)</label>
+            <label className="muted" style={{ fontSize: '12px', marginBottom: '4px', display: 'block' }}>Response Body (JSON)</label>
             <textarea
+              className="input"
+              style={{
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                borderColor: bodyError ? 'var(--d)' : undefined,
+              }}
               value={responseBody}
               onChange={(e) => {
                 setResponseBody(e.target.value)
                 setBodyError('')
               }}
-              className={`w-full px-3 py-2 bg-gray-800 border rounded font-mono text-sm text-white ${
-                bodyError ? 'border-red-500' : 'border-gray-700'
-              }`}
               rows={10}
             />
-            {bodyError && <div className="text-xs text-red-400 mt-1">{bodyError}</div>}
+            {bodyError && (
+              <div style={{ color: 'var(--d)', fontSize: '11px', marginTop: '4px' }}>{bodyError}</div>
+            )}
           </div>
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-sm font-medium text-gray-300">Response Headers</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <label className="muted" style={{ fontSize: '12px' }}>Response Headers</label>
               <button
                 onClick={addHeader}
-                className="text-xs px-2 py-1 bg-blue-900/30 text-blue-400 rounded hover:bg-blue-900/50"
+                className="btn secondary"
+                style={{ padding: '4px 8px', fontSize: '11px' }}
               >
-                + Add Header
+                Add Header
               </button>
             </div>
-            <div className="space-y-2">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {responseHeaders.map((header, index) => (
-                <div key={index} className="flex gap-2">
+                <div key={index} style={{ display: 'flex', gap: '8px' }}>
                   <input
                     type="text"
+                    className="input"
+                    style={{ flex: 1 }}
                     value={header.key}
                     onChange={(e) => updateHeader(index, 'key', e.target.value)}
-                    className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500"
                     placeholder="Header name"
                   />
                   <input
                     type="text"
+                    className="input"
+                    style={{ flex: 1 }}
                     value={header.value}
                     onChange={(e) => updateHeader(index, 'value', e.target.value)}
-                    className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500"
                     placeholder="Header value"
                   />
                   <button
                     onClick={() => removeHeader(index)}
-                    className="px-3 py-2 text-red-400 hover:bg-red-900/20 rounded"
+                    className="btn secondary"
+                    style={{ padding: '7px 10px', color: 'var(--d)', borderColor: 'var(--d)' }}
                   >
                     ×
                   </button>
@@ -884,26 +1003,26 @@ function ResponseEditorModal({
             </div>
           </div>
           <div>
-            <label className="flex items-center gap-2">
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
               <input
                 type="checkbox"
                 checked={isDefault}
                 onChange={(e) => setIsDefault(e.target.checked)}
-                className="text-blue-600"
+                style={{ borderRadius: '4px' }}
               />
-              <span className="text-sm text-gray-300">Set as default response</span>
+              <span className="muted" style={{ fontSize: '12px' }}>Set as default response</span>
             </label>
           </div>
-          <div className="flex gap-2 justify-end">
+          <div style={{ display: 'flex', gap: '14px', justifyContent: 'flex-end', marginTop: '8px' }}>
             <button
+              className="btn secondary"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-700 rounded hover:bg-gray-800 text-gray-300"
             >
               Cancel
             </button>
             <button
+              className="btn"
               onClick={handleSubmit}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               {response ? 'Update' : 'Create'}
             </button>
@@ -913,4 +1032,3 @@ function ResponseEditorModal({
     </div>
   )
 }
-

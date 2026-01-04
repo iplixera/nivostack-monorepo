@@ -1,107 +1,87 @@
 #!/usr/bin/env python3
 """
-Update Issue Status in Tracker
+Update GitHub Issue Status
 
-Updates the status of an issue in the tracker file.
+Usage:
+  python3 scripts/github/update-issue-status.py <issue_number> <status>
+  
+Status options:
+  - in-progress: Mark issue as in progress
+  - done: Mark issue as done (closes it)
 """
 
-import re
 import sys
+import subprocess
+import os
 from pathlib import Path
 
-TRACKER_FILE = "docs/TRACKER_TESTING_UI.md"
+def get_github_token():
+    """Get GitHub token from environment or config file."""
+    token = os.environ.get("GITHUB_TOKEN")
+    if token:
+        return token
+    
+    tokens_file = Path.home() / ".devbridge_tokens"
+    if tokens_file.exists():
+        try:
+            with open(tokens_file, 'r') as f:
+                for line in f:
+                    if line.startswith("GITHUB_TOKEN="):
+                        token = line.split("=", 1)[1].strip().strip('"\'')
+                        if token and token != "ghp_your_token_here":
+                            return token
+        except Exception:
+            pass
+    
+    return None
 
-STATUS_MAP = {
-    "done": ":green_circle: Done",
-    "complete": ":green_circle: Done",
-    "finished": ":green_circle: Done",
-    "in progress": ":large_blue_circle: In Progress",
-    "working": ":large_blue_circle: In Progress",
-    "blocked": ":red_circle: Blocked",
-    "not started": ":white_circle: Not Started",
-}
-
-def update_status(item_id, new_status):
-    """Update status of an issue in the tracker."""
-    tracker_path = Path(TRACKER_FILE)
-    if not tracker_path.exists():
-        print(f"❌ Tracker file not found: {TRACKER_FILE}")
-        return False
+def update_issue_status(issue_number, status):
+    """Update GitHub issue status."""
+    repo = "iplixera/nivostack-monorepo"
     
-    # Normalize status
-    status_lower = new_status.lower()
-    if status_lower in STATUS_MAP:
-        status_emoji = STATUS_MAP[status_lower]
+    if status == "in-progress":
+        # Add comment and add label if needed
+        comment = "🔄 **Status: In Progress**\n\nStarting implementation..."
+        subprocess.run([
+            "gh", "issue", "comment", str(issue_number),
+            "--repo", repo,
+            "--body", comment
+        ], check=False)
+        print(f"✅ Issue #{issue_number} marked as in progress")
+        
+    elif status == "done":
+        # Close the issue
+        comment = "✅ **Status: Done**\n\nImplementation complete and merged to main."
+        subprocess.run([
+            "gh", "issue", "close", str(issue_number),
+            "--repo", repo,
+            "--comment", comment
+        ], check=False)
+        print(f"✅ Issue #{issue_number} marked as done (closed)")
     else:
-        # Try to match partial
-        for key, value in STATUS_MAP.items():
-            if key in status_lower:
-                status_emoji = value
-                break
-        else:
-            print(f"❌ Unknown status: {new_status}")
-            return False
-    
-    # Read tracker file
-    with open(tracker_path, 'r') as f:
-        lines = f.readlines()
-    
-    # Find and update the line
-    updated = False
-    for i, line in enumerate(lines):
-        if f"| {item_id} |" in line:
-            # Update status (5th column)
-            parts = [p.strip() for p in line.split('|')]
-            if len(parts) >= 6:
-                parts[5] = status_emoji
-                new_line = "| " + " | ".join(parts[1:-1]) + " |\n"
-                lines[i] = new_line
-                updated = True
-                break
-    
-    if updated:
-        # Write back
-        with open(tracker_path, 'w') as f:
-            f.writelines(lines)
-        print(f"✅ Updated {item_id} status to {status_emoji}")
-        return True
-    else:
-        print(f"❌ Could not find {item_id} in tracker")
-        return False
+        print(f"❌ Unknown status: {status}")
+        print("Valid statuses: in-progress, done")
+        sys.exit(1)
 
 def main():
-    """Main function."""
     if len(sys.argv) < 3:
-        print("Usage: update-issue-status.py <item_id> <status>")
-        print("  item_id: TEST-XXX or UI-XXX or #issue_number")
-        print("  status: done|in progress|blocked|not started")
+        print("Usage: python3 update-issue-status.py <issue_number> <status>")
+        print("Status: in-progress | done")
         sys.exit(1)
     
-    item_id = sys.argv[1]
+    issue_number = sys.argv[1]
     status = sys.argv[2]
     
-    # If item_id is an issue number, find the corresponding item
-    if item_id.startswith("#"):
-        issue_number = item_id[1:]
-        # Read tracker to find item with this issue number
-        tracker_path = Path(TRACKER_FILE)
-        with open(tracker_path, 'r') as f:
-            content = f.read()
-        
-        # Find line with this issue number
-        for line in content.split('\n'):
-            if f"| #{issue_number} |" in line:
-                # Extract item ID
-                parts = [p.strip() for p in line.split('|')]
-                if len(parts) >= 2:
-                    item_id = parts[1]
-                    break
-        else:
-            print(f"❌ Could not find issue #{issue_number} in tracker")
+    token = get_github_token()
+    if not token:
+        # Try using gh CLI directly
+        try:
+            subprocess.run(["gh", "--version"], capture_output=True, check=True)
+        except:
+            print("❌ No GitHub token found and gh CLI not available")
             sys.exit(1)
     
-    update_status(item_id, status)
+    update_issue_status(issue_number, status)
 
 if __name__ == "__main__":
     main()
-

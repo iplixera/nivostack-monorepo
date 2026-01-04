@@ -1,0 +1,66 @@
+name: Close Issue on Merge
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  close-issue:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - name: Extract issue numbers from PR
+        id: extract_issues
+        run: |
+          # Extract issue numbers from PR body and title
+          PR_BODY="${{ github.event.pull_request.body }}"
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          
+          # Look for patterns like "Closes #123" or "Fixes #456" or "#789"
+          ISSUES=$(echo -e "$PR_BODY\n$PR_TITLE" | grep -oE '#[0-9]+' | sort -u | tr '\n' ' ')
+          
+          if [ -z "$ISSUES" ]; then
+            echo "No issues found in PR"
+            echo "issues=" >> $GITHUB_OUTPUT
+          else
+            echo "Found issues: $ISSUES"
+            echo "issues=$ISSUES" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Close issues
+        if: steps.extract_issues.outputs.issues != ''
+        run: |
+          ISSUES="${{ steps.extract_issues.outputs.issues }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          
+          for issue in $ISSUES; do
+            # Remove # prefix
+            issue_num=${issue#\#}
+            
+            echo "Closing issue #$issue_num"
+            
+            # Add comment
+            gh issue comment "$issue_num" \
+              --repo "${{ github.repository }}" \
+              --body "✅ **Merged to main**
+              
+Related PR: #$PR_NUMBER
+PR URL: $PR_URL
+
+This issue is now complete and merged."
+            
+            # Close issue
+            gh issue close "$issue_num" \
+              --repo "${{ github.repository }}" \
+              --comment "Closed automatically after merge to main"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

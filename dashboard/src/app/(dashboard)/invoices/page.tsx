@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 
 export default function InvoicesPage() {

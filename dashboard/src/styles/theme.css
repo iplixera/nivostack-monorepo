@@ -1,0 +1,334 @@
+/* NivoStack Theme Tokens - Global Design System */
+
+:root {
+  /* Typography */
+  --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  
+  /* Spacing & Sizing */
+  --radius: 16px;
+  --radius-sm: 12px;
+  --radius-xs: 8px;
+  
+  /* Shadows */
+  --shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+  --shadow-sm: 0 10px 28px rgba(0, 0, 0, 0.18);
+  --shadow-xs: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Light Theme */
+[data-theme="light"] {
+  /* Backgrounds */
+  --bg: #F7F8FA;
+  --sb: #FFFFFF;      /* Sidebar */
+  --top: #FFFFFF;    /* Topbar */
+  --s: #FFFFFF;      /* Surface */
+  --s2: #F0F3F7;    /* Surface 2 */
+  
+  /* Borders */
+  --b: #E2E7EF;
+  
+  /* Text */
+  --t: #101828;      /* Text primary */
+  --m: #667085;      /* Text muted */
+  
+  /* Colors */
+  --p: #2563EB;      /* Primary */
+  --a: #16A34A;      /* Accent/Success */
+  --w: #D97706;      /* Warning */
+  --d: #DC2626;      /* Danger */
+  
+  /* UI Elements */
+  --chip: #EEF2FF;
+  --code: #0B1220;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+  /* Backgrounds */
+  --bg: #0B1220;
+  --sb: #0F172A;      /* Sidebar */
+  --top: #0F172A;    /* Topbar */
+  --s: #121B2E;       /* Surface */
+  --s2: #0B1326;     /* Surface 2 */
+  
+  /* Borders */
+  --b: rgba(148, 163, 184, 0.18);
+  
+  /* Text */
+  --t: #E5E7EB;      /* Text primary */
+  --m: rgba(229, 231, 235, 0.72); /* Text muted */
+  
+  /* Colors */
+  --p: #38BDF8;      /* Primary */
+  --a: #22C55E;      /* Accent/Success */
+  --w: #F59E0B;      /* Warning */
+  --d: #EF4444;      /* Danger */
+  
+  /* UI Elements */
+  --chip: rgba(56, 189, 248, 0.14);
+  --code: #0B1220;
+}
+
+/* System Theme (follows OS preference) */
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    /* Use dark theme values */
+    --bg: #0B1220;
+    --sb: #0F172A;
+    --top: #0F172A;
+    --s: #121B2E;
+    --s2: #0B1326;
+    --b: rgba(148, 163, 184, 0.18);
+    --t: #E5E7EB;
+    --m: rgba(229, 231, 235, 0.72);
+    --p: #38BDF8;
+    --a: #22C55E;
+    --w: #F59E0B;
+    --d: #EF4444;
+    --chip: rgba(56, 189, 248, 0.14);
+    --code: #0B1220;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  [data-theme="system"] {
+    /* Use light theme values */
+    --bg: #F7F8FA;
+    --sb: #FFFFFF;
+    --top: #FFFFFF;
+    --s: #FFFFFF;
+    --s2: #F0F3F7;
+    --b: #E2E7EF;
+    --t: #101828;
+    --m: #667085;
+    --p: #2563EB;
+    --a: #16A34A;
+    --w: #D97706;
+    --d: #DC2626;
+    --chip: #EEF2FF;
+    --code: #0B1220;
+  }
+}
+
+/* Base styles */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--t);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Utility classes for theme tokens */
+.bg-surface { background-color: var(--s); }
+.bg-surface-2 { background-color: var(--s2); }
+.bg-sidebar { background-color: var(--sb); }
+.bg-topbar { background-color: var(--top); }
+
+.text-primary { color: var(--t); }
+.text-muted { color: var(--m); }
+
+.border-default { border-color: var(--b); }
+
+.text-primary-color { color: var(--p); }
+.text-accent { color: var(--a); }
+.text-warning { color: var(--w); }
+.text-danger { color: var(--d); }
+
+.bg-chip { background-color: var(--chip); }
+
+/* Component classes matching mockups */
+.card {
+  background: var(--s);
+  border: 1px solid var(--b);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 14px;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.input,
+.select {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--b);
+  background: var(--s);
+  color: var(--t);
+  font-size: 12px;
+}
+
+.input {
+  min-width: 260px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--b);
+  background: var(--chip);
+  font-size: 11px;
+  color: var(--m);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--a);
+}
+
+.dot.warn {
+  background: var(--w);
+}
+
+.dot.bad {
+  background: var(--d);
+}
+
+.dot.good {
+  background: var(--a);
+}
+
+.statusRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.note {
+  border-left: 4px solid var(--p);
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, var(--s), var(--s2));
+  border: 1px solid var(--b);
+}
+
+.hr {
+  height: 1px;
+  background: var(--b);
+  margin: 12px 0;
+}
+
+.footerNote {
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--m);
+}
+
+.btn {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: var(--p);
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+.btn.secondary {
+  background: transparent;
+  border-color: var(--b);
+  color: var(--t);
+  font-weight: 700;
+}
+
+.btn.secondary:hover {
+  background: var(--s2);
+}
+
+.btn.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--m);
+  font-weight: 700;
+}
+
+.btn.ghost:hover {
+  background: var(--s2);
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--b);
+  padding-bottom: 0;
+}
+
+.tab {
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--m);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab:hover {
+  color: var(--t);
+}
+
+.tab.active {
+  color: var(--p);
+  border-bottom-color: var(--p);
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--b);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+th,
+td {
+  padding: 10px 12px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--b);
+  vertical-align: top;
+}
+
+th {
+  background: var(--s2);
+  color: var(--m);
+  text-align: left;
+}
+
+tr:last-child td {
+  border-bottom: 0;
+}
+
+tbody tr:hover {
+  background: var(--s2);
+}
+

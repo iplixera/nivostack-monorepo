@@ -1,7 +1,9 @@
 'use client'
 
+import { useMemo } from 'react'
+
 export default function DocsPage() {
-  const genericSwiftCode = `// DevBridge.swift - Add this file to your Xcode project
+  const genericSwiftCode = useMemo(() => `// DevBridge.swift - Add this file to your Xcode project
 
 import Foundation
 
@@ -73,7 +75,7 @@ class DevBridge {
     }
 }`
 
-  const genericKotlinCode = `// DevBridge.kt - Add this file to your Android project
+  const genericKotlinCode = useMemo(() => `// DevBridge.kt - Add this file to your Android project
 
 package com.yourapp.devbridge
 
@@ -159,7 +161,7 @@ object DevBridge {
             } catch (e: Exception) { }
         }.start()
     }
-}`
+}`, [])
 
   return (
     <div className="max-w-4xl">

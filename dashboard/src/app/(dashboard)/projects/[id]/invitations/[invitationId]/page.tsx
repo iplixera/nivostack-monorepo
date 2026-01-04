@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 
@@ -15,7 +15,7 @@ export default function InvitationRedirectPage() {
   const { user } = useAuth()
   const projectId = params?.id as string
 
-  useEffect(() => {
+  const handleRedirect = useCallback(() => {
     if (!user) {
       // Redirect to login if not authenticated
       router.push(`/login?redirect=/team?project=${projectId}`)
@@ -26,11 +26,22 @@ export default function InvitationRedirectPage() {
     router.push(`/team?project=${projectId}`)
   }, [user, projectId, router])
 
+  useEffect(() => {
+    handleRedirect()
+  }, [handleRedirect])
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-900">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-        <p className="text-gray-400">Redirecting to team page...</p>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--bg)' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{
+          animation: 'spin 1s linear infinite',
+          borderRadius: '50%',
+          height: '48px',
+          width: '48px',
+          borderBottom: '2px solid var(--p)',
+          margin: '0 auto 16px',
+        }}></div>
+        <p style={{ color: 'var(--m)' }}>Redirecting to team page...</p>
       </div>
     </div>
   )

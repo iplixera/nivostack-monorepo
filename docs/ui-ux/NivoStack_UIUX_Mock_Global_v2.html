@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>NivoStack · Global UI Mock (v2)</title>
+  <style>
+    :root{
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --r: 16px; --r2: 12px; --gap: 12px;
+      --shadow: 0 16px 48px rgba(0,0,0,.35);
+      --shadow2: 0 10px 28px rgba(0,0,0,.22);
+    }
+    [data-theme="light"]{
+      --bg:#F7F8FA; --sb:#FFFFFF; --top:#FFFFFF; --s:#FFFFFF; --s2:#F0F3F7;
+      --b:#E2E7EF; --t:#101828; --m:#667085;
+      --p:#2563EB; --a:#16A34A; --w:#D97706; --d:#DC2626;
+      --chip:#EEF2FF;
+    }
+    [data-theme="dark"]{
+      --bg:#0B1220; --sb:#0F172A; --top:#0F172A; --s:#121B2E; --s2:#0B1326;
+      --b:rgba(148,163,184,.18); --t:#E5E7EB; --m:rgba(229,231,235,.72);
+      --p:#38BDF8; --a:#22C55E; --w:#F59E0B; --d:#EF4444;
+      --chip: rgba(56,189,248,.14);
+    }
+    html,body{height:100%}
+    body{margin:0;font-family:var(--font);background:var(--bg);color:var(--t);}
+    a{color:inherit;text-decoration:none}
+    .app{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
+    .sidebar{background:var(--sb);border-right:1px solid var(--b);padding:16px;position:sticky;top:0;height:100vh;overflow:auto}
+    .main{min-width:0;display:flex;flex-direction:column}
+    .topbar{position:sticky;top:0;z-index:10;background:var(--top);border-bottom:1px solid var(--b);padding:14px 18px;display:flex;justify-content:space-between;gap:12px;align-items:center}
+    .content{padding:18px;max-width:1260px}
+    .brand{display:flex;gap:10px;align-items:center;padding:10px;border-radius:14px;background:linear-gradient(180deg,var(--s),var(--s2));border:1px solid var(--b);box-shadow:var(--shadow2)}
+    .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--p),var(--a));}
+    .brand b{font-size:14px}
+    .brand small{color:var(--m)}
+    .project{margin-top:12px;padding:10px;border-radius:14px;border:1px solid var(--b);background:var(--s)}
+    .project .row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .navTitle{margin:16px 10px 8px;font-size:11px;color:var(--m);letter-spacing:.08em;text-transform:uppercase}
+    .nav a{display:flex;justify-content:space-between;gap:10px;padding:10px 10px;border-radius:12px;color:var(--m);align-items:center}
+    .nav a:hover{background:var(--s2);color:var(--t)}
+    .nav a.active{background:var(--chip);border:1px solid var(--b);color:var(--t)}
+    .badge{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--b);color:var(--m)}
+    .title b{font-size:16px;display:block}
+    .title span{font-size:12px;color:var(--m)}
+    .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .pill{padding:8px 10px;border:1px solid var(--b);border-radius:999px;background:var(--s);font-size:12px;color:var(--m)}
+    .btn{padding:10px 12px;border-radius:12px;border:1px solid transparent;background:var(--p);color:white;font-weight:800;cursor:pointer}
+    .btn.secondary{background:transparent;border-color:var(--b);color:var(--t);font-weight:700}
+    .btn.ghost{background:transparent;border-color:transparent;color:var(--m);font-weight:700}
+    .card{background:var(--s);border:1px solid var(--b);border-radius:var(--r);box-shadow:var(--shadow2);padding:16px}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .input,.select{padding:10px 12px;border-radius:12px;border:1px solid var(--b);background:var(--s);color:var(--t)}
+    .input{min-width:260px}
+    .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid var(--b);background:var(--chip);font-size:11px;color:var(--m)}
+    .dot{width:8px;height:8px;border-radius:999px;background:var(--a)}
+    .dot.warn{background:var(--w)} .dot.bad{background:var(--d)}
+    .muted{color:var(--m)}
+    .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+    .kpi{padding:12px;border-radius:14px;border:1px solid var(--b);background:linear-gradient(180deg,var(--s),var(--s2))}
+    .kpi b{font-size:18px} .kpi span{display:block;color:var(--m);font-size:11px;margin-top:4px}
+    table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--b);border-radius:14px;overflow:hidden}
+    th,td{padding:10px 12px;font-size:12px;border-bottom:1px solid var(--b)}
+    th{background:var(--s2);color:var(--m);text-align:left}
+    tr:last-child td{border-bottom:0}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .tab{padding:8px 10px;border-radius:999px;border:1px solid var(--b);background:transparent;color:var(--m);cursor:pointer;font-size:12px}
+    .tab.active{background:var(--chip);color:var(--t)}
+    .hr{height:1px;background:var(--b);margin:12px 0}
+    .drawerMask{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:stretch;justify-content:flex-end;z-index:50}
+    .drawer{width:min(520px, 92vw);background:var(--s);border-left:1px solid var(--b);box-shadow:var(--shadow);padding:16px;overflow:auto}
+    .drawerHead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .drawerHead b{font-size:14px}
+    .kv{display:grid;grid-template-columns:140px 1fr;gap:8px;margin-top:10px;font-size:12px}
+    .kv div{padding:6px 0;border-bottom:1px dashed var(--b)}
+    .footerNote{margin-top:12px;color:var(--m);font-size:11px}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <b>NivoStack Console</b><br/>
+          <small>Global mock · v2 (Agg/Raw/Live)</small>
+        </div>
+      </div>
+
+      <div class="project">
+        <div class="row">
+          <div>
+            <div style="font-weight:800">Performance Test Project</div>
+            <div class="muted" style="font-size:12px">prod · GCC</div>
+          </div>
+          <span class="badge">Switch ▼</span>
+        </div>
+      </div>
+
+      <div class="navTitle">Overview</div>
+      <div class="nav">
+        <a href="#dashboard" data-slug="dashboard"><span>Dashboard</span><span class="badge">Agg</span></a>
+        <a href="#analytics" data-slug="analytics"><span>Analytics</span><span class="badge">Agg</span></a>
+      </div>
+
+      <div class="navTitle">Observe (Runtime)</div>
+      <div class="nav">
+        <a href="#devices" data-slug="devices"><span>Devices</span><span class="badge">Raw</span></a>
+        <a href="#sessions" data-slug="sessions"><span>Sessions</span><span class="badge">Raw</span></a>
+        <a href="#screenflow" data-slug="screenflow"><span>Screen Flow</span><span class="badge">Agg→Raw</span></a>
+        <a href="#traces" data-slug="traces"><span>API Traces</span><span class="badge">Raw</span></a>
+        <a href="#logs" data-slug="logs"><span>Logs</span><span class="badge">Raw</span></a>
+        <a href="#crashes" data-slug="crashes"><span>Crashes</span><span class="badge">Agg→Raw</span></a>
+        <a href="#livedebug" data-slug="livedebug"><span>Live Debug</span><span class="badge">Live</span></a>
+      </div>
+
+      <div class="navTitle">Control (App Control Plane)</div>
+      <div class="nav">
+        <a href="#bizconfig" data-slug="bizconfig"><span>Business Config</span><span class="badge">Control</span></a>
+        <a href="#localization" data-slug="localization"><span>Localization</span><span class="badge">Control</span></a>
+        <a href="#builds" data-slug="builds"><span>Builds</span><span class="badge">Control</span></a>
+      </div>
+
+      <div class="navTitle">Operate (Ops & Reliability)</div>
+      <div class="nav">
+        <a href="#alerts" data-slug="alerts"><span>Alerts</span><span class="badge">Ops</span></a>
+        <a href="#health" data-slug="health"><span>Monitoring</span><span class="badge">Agg</span></a>
+      </div>
+
+      <div class="navTitle">Developer</div>
+      <div class="nav">
+        <a href="#sdk" data-slug="sdk"><span>SDK Settings</span><span class="badge">Dev</span></a>
+        <a href="#keys" data-slug="keys"><span>API Keys</span><span class="badge">Dev</span></a>
+        <a href="#mocking" data-slug="mocking"><span>Mocking</span><span class="badge">TBD</span></a>
+      </div>
+
+      <div class="navTitle">Organization</div>
+      <div class="nav">
+        <a href="#team" data-slug="team"><span>Team</span><span class="badge">Org</span></a>
+        <a href="#billing" data-slug="billing"><span>Billing</span><span class="badge">Org</span></a>
+        <a href="#settings" data-slug="settings"><span>Settings</span><span class="badge">Org</span></a>
+      </div>
+
+      <div class="footerNote">
+        Rule: Dashboards read aggregates. Raw lists show row-level data. Live Debug shows recent raw streaming/polling.
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="title">
+          <b id="pageTitle">Dashboard</b>
+          <span id="pageSubtitle">Aggregated health and trends with drill-down to raw.</span>
+        </div>
+        <div class="actions">
+          <span class="pill" id="modePill">Aggregated</span>
+          <span class="pill">Env: Production</span>
+          <button class="btn secondary" onclick="toggleTheme()">Light/Dark</button>
+          <button class="btn" id="primaryCta" onclick="alert('Mock primary action')">Primary Action</button>
+        </div>
+      </div>
+
+      <div class="content" id="page"></div>
+    </main>
+  </div>
+
+  <div class="drawerMask" id="drawerMask" onclick="closeDrawer(event)">
+    <div class="drawer" onclick="event.stopPropagation()">
+      <div class="drawerHead">
+        <div>
+          <b id="drawerTitle">Detail</b>
+          <div class="muted" id="drawerSub" style="font-size:12px;margin-top:4px">Drawer detail view</div>
+        </div>
+        <button class="btn ghost" onclick="hideDrawer()">✕</button>
+      </div>
+      <div class="tabs" id="drawerTabs"></div>
+      <div class="hr"></div>
+      <div id="drawerBody"></div>
+    </div>
+  </div>
+
+<script>
+  const meta = {
+    dashboard: { title:"Dashboard", subtitle:"Aggregated health and trends with drill-down to raw.", mode:"Aggregated", cta:"Create Alert" },
+    analytics: { title:"Analytics", subtitle:"Aggregated deep analytics (cost, funnels, versions). Drill down to raw when needed.", mode:"Aggregated", cta:"Export Report" },
+
+    devices: { title:"Devices", subtitle:"Raw device registry with segmentation + drawer + debug actions.", mode:"Raw", cta:"Register Device" },
+    sessions: { title:"Sessions", subtitle:"Raw sessions list with drilldown to session timeline + correlated traces/logs.", mode:"Raw", cta:"Save View" },
+    screenflow: { title:"Screen Flow", subtitle:"Aggregated funnel/drop-off + drilldown to raw sessions.", mode:"Aggregated", cta:"Define Funnel" },
+
+    traces: { title:"API Traces", subtitle:"Raw traces list. Bodies fetched lazily with redaction controls.", mode:"Raw", cta:"Export CSV" },
+    logs: { title:"Logs", subtitle:"Raw logs list with level/tag filters and structured payload in drawer.", mode:"Raw", cta:"Export CSV" },
+    crashes: { title:"Crashes", subtitle:"Aggregated crash groups + drilldown to raw crash events.", mode:"Aggregated", cta:"Create Alert" },
+
+    livedebug: { title:"Live Debug", subtitle:"Recent raw feed for debug-enabled devices (realtime or polling fallback).", mode:"Live", cta:"Pin Device" },
+
+    bizconfig: { title:"Business Config", subtitle:"Control plane: keys, approvals, audit, and safe rollout.", mode:"Control", cta:"New Key" },
+    localization: { title:"Localization", subtitle:"Control plane: languages, keys, translations, coverage.", mode:"Control", cta:"Add Language" },
+    builds: { title:"Builds", subtitle:"Build snapshots + changelog + promote preview/production.", mode:"Control", cta:"New Build" },
+
+    alerts: { title:"Alerts", subtitle:"Unified alerts center (API + Config) with event feed and acknowledgements.", mode:"Ops", cta:"New Alert" },
+    health: { title:"Monitoring", subtitle:"Aggregated runtime health and SLA views (no raw scans).", mode:"Aggregated", cta:"Configure" },
+
+    sdk: { title:"SDK Settings", subtitle:"Performance + privacy settings with masking preview.", mode:"Dev", cta:"Save" },
+    keys: { title:"API Keys", subtitle:"Manage keys, environments, rotation and permissions.", mode:"Dev", cta:"Rotate Key" },
+    mocking: { title:"Mocking", subtitle:"Mock endpoints, environments, responses (TBD).", mode:"Dev", cta:"New Mock" },
+
+    team: { title:"Team", subtitle:"Members, roles, invitations, access control.", mode:"Org", cta:"Invite" },
+    billing: { title:"Billing", subtitle:"Plan, quotas, invoices and overage controls.", mode:"Org", cta:"Upgrade" },
+    settings: { title:"Settings", subtitle:"Project settings and danger zone actions (permission gated).", mode:"Org", cta:"Save" },
+  };
+
+  function kpiStrip(){
+    return `
+      <div class="card">
+        <div class="kpis">
+          <div class="kpi"><b>50</b><span>Active Devices</span></div>
+          <div class="kpi"><b>2.1k</b><span>API Requests</span></div>
+          <div class="kpi"><b>0.8%</b><span>Error Rate</span></div>
+          <div class="kpi"><b>180ms</b><span>P95 Latency</span></div>
+          <div class="kpi"><b>$12.40</b><span>Cost (Est.)</span></div>
+          <div class="kpi"><b>4</b><span>Config Changes</span></div>
+        </div>
+        <div class="footerNote">KPI tiles must support Drilldown (agg) and View Raw (pre-filtered raw lists).</div>
+      </div>`;
+  }
+
+  function filterBar(ph){
+    return `
+      <div class="card">
+        <div class="row">
+          <input class="input" placeholder="${ph}"/>
+          <select class="select"><option>Time: Last 24h</option><option>Last 7d</option><option>Last 30d</option></select>
+          <select class="select"><option>Env: Production</option><option>Staging</option></select>
+          <button class="btn secondary" onclick="alert('Mock: More filters drawer')">More Filters</button>
+          <span class="chip"><span class="dot"></span> URL-state filters</span>
+          <span class="chip"><span class="dot warn"></span> Saved Views</span>
+        </div>
+      </div>`;
+  }
+
+  function simpleTable(head, rows, onRow){
+    const thead = `<thead><tr>${head.map(h=>`<th>${h}</th>`).join("")}</tr></thead>`;
+    const tbody = `<tbody>${rows.map(r=>`
+      <tr onclick="${onRow}('${r.id}')">
+        ${r.cols.map(c=>`<td>${c}</td>`).join("")}
+      </tr>`).join("")}</tbody>`;
+    return `<table>${thead}${tbody}</table>`;
+  }
+
+  const tpl = {
+    dashboard: () => `
+      ${filterBar("Search (endpoint, screen, device, user)...")}
+      <div style="margin-top:14px">${kpiStrip()}</div>
+      <div class="grid" style="margin-top:14px">
+        <div class="card" style="grid-column:span 8">
+          <b>Traffic & Errors (Aggregated)</b>
+          <div class="muted" style="margin-top:4px">Reads from rollups/materialized views only.</div>
+          <div style="margin-top:12px;border:1px dashed var(--b);border-radius:14px;padding:18px" class="muted">
+            Chart placeholder (fast aggregated query)
+          </div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn secondary" onclick="location.hash='traces'">View raw API traces</button>
+            <button class="btn secondary" onclick="location.hash='devices'">View raw devices</button>
+            <button class="btn secondary" onclick="location.hash='crashes'">View crash groups</button>
+          </div>
+        </div>
+        <div class="card" style="grid-column:span 4">
+          <b>Health</b>
+          <div style="margin-top:12px" class="chip"><span class="dot warn"></span> API errors elevated</div>
+          <div style="margin-top:10px" class="chip"><span class="dot bad"></span> Body capture enabled</div>
+          <div style="margin-top:12px" class="muted">Each card must have View Raw drilldown.</div>
+        </div>
+      </div>
+    `,
+
+    analytics: () => `
+      ${filterBar("Search (metric, endpoint, version)...")}
+      <div class="grid" style="margin-top:14px">
+        <div class="card" style="grid-column:span 6">
+          <b>Cost Analytics (Aggregated)</b>
+          <div class="muted" style="margin-top:4px">Per session / per request / per device rollups.</div>
+          <div style="margin-top:12px;border:1px dashed var(--b);border-radius:14px;padding:18px" class="muted">
+            Cost chart placeholder
+          </div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn secondary" onclick="location.hash='traces'">View raw traces (cost)</button>
+          </div>
+        </div>
+        <div class="card" style="grid-column:span 6">
+          <b>Funnels / Drop-off (Aggregated)</b>
+          <div class="muted" style="margin-top:4px">Derived from session screenFlow aggregates.</div>
+          <div style="margin-top:12px;border:1px dashed var(--b);border-radius:14px;padding:18px" class="muted">
+            Funnel chart placeholder
+          </div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn secondary" onclick="location.hash='sessions'">Drilldown to raw sessions</button>
+            <button class="btn secondary" onclick="location.hash='screenflow'">Open screen flow</button>
+          </div>
+        </div>
+      </div>
+    `,
+
+    devices: () => {
+      const head = ["Device","Platform","App","OS","Last Seen","Debug","Status","Action"];
+      const rows = [
+        { id:"DV-10A2", cols:["<b>DV-10A2</b><div class='muted'>iPhone 15 Pro · UAE</div>","iOS","2.0.1","17.2","2m ago","<span class='chip'><span class='dot warn'></span>Enabled</span>","<span class='chip'><span class='dot'></span>Active</span>","<span class='chip'>Open</span>"]},
+        { id:"DV-77C9", cols:["<b>DV-77C9</b><div class='muted'>Samsung S23 · KSA</div>","Android","2.0.1","14","18m ago","<span class='chip'><span class='dot'></span>Off</span>","<span class='chip'><span class='dot'></span>Active</span>","<span class='chip'>Open</span>"]}
+      ];
+      return `
+        ${filterBar("Search deviceId / deviceCode / user email / model...")}
+        <div class="card" style="margin-top:14px">
+          <div class="row">
+            <span class="chip"><span class="dot"></span> Total 50</span>
+            <span class="chip"><span class="dot"></span> iOS 22</span>
+            <span class="chip"><span class="dot"></span> Android 28</span>
+            <span class="chip"><span class="dot warn"></span> Debug Enabled 6</span>
+            <span class="chip"><span class="dot"></span> Active Today 31</span>
+          </div>
+          <div style="margin-top:12px">
+            ${simpleTable(head, rows, "openDevice")}
+          </div>
+          <div class="footerNote">Row click opens drawer. “Open Live Debug” is a first-class action and should deep-link.</div>
+        </div>`;
+    },
+
+    sessions: () => `
+      ${filterBar("Search sessionId / entry screen / exit screen / device...")}
+      <div class="card" style="margin-top:14px">
+        <b>Sessions (Raw)</b>
+        <div class="muted" style="margin-top:6px">Server-paginated list. Timeline queries constrained by sessionId.</div>
+        <div style="margin-top:12px;border:1px dashed var(--b);border-radius:14px;padding:18px" class="muted">
+          Sessions table placeholder (row click opens Session Timeline drawer)
+        </div>
+      </div>
+    `,
+
+    screenflow: () => `
+      ${filterBar("Search funnel / screen / step...")}
+      <div class="grid" style="margin-top:14px">
+        <div class="card" style="grid-column:span 8">
+          <b>Drop-off / Funnel (Aggregated)</b>
+          <div class="muted" style="margin-top:6px">Aggregate first; drilldown opens raw sessions filtered by step + time.</div>
+          <div style="margin-top:12px;border:1px dashed var(--b);border-radius:14px;padding:18px" class="muted">
+            Funnel visualization placeholder
+          </div>
+        </div>
+        <div class="card" style="grid-column:span 4">
+          <b>Drilldown</b>
+          <div class="muted" style="margin-top:6px">When user clicks a funnel step:</div>
+          <div style="margin-top:10px" class="chip">Open Sessions (Raw) with filters</div>
+        </div>
+      </div>
+    `,
+
+    traces: () => `
+      ${filterBar("Search endpoint / url / device / status...")}
+      <div class="card" style="margin-top:14px">
+        <b>API Traces (Raw)</b>
+        <div class="muted" style="margin-top:6px">Bodies are not loaded in list; fetch lazily in drawer with masking.</div>
+        <div style="margin-top:12px;border:1px dashed var(--b);border-radius:14px;padding:18px" class="muted">
+          Traces table placeholder (row click opens Trace drawer)
+        </div>
+      </div>
+    `,
+
+    logs: () => `
+      ${filterBar("Search message / tag / device / screen...")}
+      <div class="card" style="margin-top:14px">
+        <b>Logs (Raw)</b>
+        <div class="muted" style="margin-top:6px">Level filters, tags, structured payload drawer.</div>
+        <div style="margin-top:12px;border:1px dashed var(--b);border-radius:14px;padding:18px" class="muted">
+          Logs table placeholder (row click opens Log drawer)
+        </div>
+      </div>
+    `,
+
+    crashes: () => `
+      ${filterBar("Search crash group / version / device...")}
+      <div class="card" style="margin-top:14px">
+        <b>Crashes (Aggregated → Raw)</b>
+        <div class="muted" style="margin-top:6px">Default view: grouped/fingerprint aggregates. Drilldown to raw crash events.</div>
+        <div style="margin-top:12px;border:1px dashed var(--b);border-radius:14px;padding:18px" class="muted">
+          Crash groups table placeholder + group trend chart placeholder
+        </div>
+      </div>
+    `,
+
+    livedebug: () => `
+      <div class="card">
+        <div class="row">
+          <select class="select"><option>Device: DV-10A2 (Debug Enabled)</option><option>DV-77C9</option></select>
+          <select class="select"><option>Window: Last 15m</option><option>Last 1h</option><option>Last 24h</option></select>
+          <select class="select"><option>Tab: API Traces</option><option>Logs</option><option>Crashes</option><option>Screen Flow</option></select>
+          <span class="chip"><span class="dot"></span> Streaming (realtime or polling)</span>
+          <span class="chip"><span class="dot warn"></span> Bodies masked by policy</span>
+        </div>
+      </div>
+      <div class="grid" style="margin-top:14px">
+        <div class="card" style="grid-column:span 8">
+          <b>Recent Raw Event Feed (Live)</b>
+          <div class="muted" style="margin-top:6px">Fetch deltas using since=lastTimestamp. Never scan large ranges.</div>
+          <table style="margin-top:12px">
+            <thead><tr><th>Time</th><th>Type</th><th>Summary</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr onclick="openEvent('API trace: GET /v1/profile')"><td>now</td><td>API</td><td>GET /v1/profile → 200 (120ms)</td><td><span class="chip">View</span></td></tr>
+              <tr onclick="openEvent('Log: screen=Home loaded')"><td>3s</td><td>LOG</td><td>info: screen=Home loaded</td><td><span class="chip">View</span></td></tr>
+              <tr onclick="openEvent('API trace: POST /v1/login 401')"><td>8s</td><td>API</td><td>POST /v1/login → 401 (90ms)</td><td><span class="chip">View</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card" style="grid-column:span 4">
+          <b>Controls</b>
+          <div class="muted" style="margin-top:10px">Debug mode is time-bound; device links are shareable.</div>
+          <div style="margin-top:10px" class="chip"><span class="dot"></span> Pin device</div>
+          <div style="margin-top:10px" class="chip"><span class="dot warn"></span> Request/Response: masked</div>
+          <div style="margin-top:10px" class="chip"><span class="dot bad"></span> Reveal requires role</div>
+        </div>
+      </div>
+    `,
+
+    bizconfig: () => `${filterBar("Search key / category / value...")}<div class="card" style="margin-top:14px"><b>Business Config (Control)</b><div class="muted" style="margin-top:6px">Approvals + audit timeline. Safe rollout.</div><div style="margin-top:12px;border:1px dashed var(--b);border-radius:14px;padding:18px" class="muted">Config table placeholder</div></div>`,
+    localization: () => `${filterBar("Search key / language / missing...")}<div class="grid" style="margin-top:14px"><div class="card" style="grid-column:span 8"><b>Localization Keys</b><div class="muted" style="margin-top:6px">Keys list + translation drawer.</div><div style="margin-top:12px;border:1px dashed var(--b);border-radius:14px;padding:18px" class="muted">Keys table placeholder</div></div><div class="card" style="grid-column:span 4"><b>Coverage (Aggregated)</b><div class="muted" style="margin-top:6px">Coverage chart + drilldown to missing keys (raw list filtered).</div><div style="margin-top:12px;border:1px dashed var(--b);border-radius:14px;padding:18px" class="muted">Coverage chart placeholder</div></div></div>`,
+    builds: () => `${filterBar("Search build / version / mode...")}<div class="card" style="margin-top:14px"><b>Builds</b><div class="muted" style="margin-top:6px">Snapshots on demand; compare builds; promote preview→prod.</div><div style="margin-top:12px;border:1px dashed var(--b);border-radius:14px;padding:18px" class="muted">Builds list placeholder</div></div>`,
+    alerts: () => `${filterBar("Search alert / endpoint / config key...")}<div class="card" style="margin-top:14px"><b>Alerts Center</b><div class="muted" style="margin-top:6px">Unified API + Config alerts with event feed. Drilldown to Raw/Live.</div><div style="margin-top:12px;border:1px dashed var(--b);border-radius:14px;padding:18px" class="muted">Alerts table placeholder</div></div>`,
+    health: () => `${filterBar("Search metric / endpoint / service...")}<div class="card" style="margin-top:14px"><b>Monitoring (Aggregated)</b><div class="muted" style="margin-top:6px">SLA/latency/error trends from rollups only.</div><div style="margin-top:12px;border:1px dashed var(--b);border-radius:14px;padding:18px" class="muted">Monitoring charts placeholder</div></div>`,
+    sdk: () => `<div class="card"><b>SDK Settings</b><div class="muted" style="margin-top:6px">Performance + privacy tabs. Masking preview required.</div><div class="tabs"><button class="tab active">Performance</button><button class="tab">Privacy</button><button class="tab">Debug</button></div><div class="hr"></div><div class="row"><span class="chip"><span class="dot"></span> batching</span><span class="chip"><span class="dot"></span> flush interval</span><span class="chip"><span class="dot warn"></span> masking</span></div></div>`,
+    keys: () => `<div class="card"><b>API Keys</b><div class="muted" style="margin-top:6px">Rotate keys (permission gated) and track usage.</div><div style="margin-top:12px;border:1px dashed var(--b);border-radius:14px;padding:18px" class="muted">Keys UI placeholder</div></div>`,
+    mocking: () => `<div class="card"><b>Mocking (TBD)</b><div class="muted" style="margin-top:6px">Mock environments, endpoints, responses, conditions.</div><div style="margin-top:12px;border:1px dashed var(--b);border-radius:14px;padding:18px" class="muted">Mocking UI placeholder</div></div>`,
+    team: () => `<div class="card"><b>Team</b><div class="muted" style="margin-top:6px">Members, roles, invitations, audit logs.</div><div style="margin-top:12px;border:1px dashed var(--b);border-radius:14px;padding:18px" class="muted">Team UI placeholder</div></div>`,
+    billing: () => `<div class="card"><b>Billing</b><div class="muted" style="margin-top:6px">Plans, quotas, invoices, enforcement states.</div><div class="row" style="margin-top:12px"><span class="chip"><span class="dot"></span> Plan: Team</span><span class="chip"><span class="dot warn"></span> 70% quota used</span><span class="chip"><span class="dot bad"></span> Overages disabled</span></div><div style="margin-top:12px;border:1px dashed var(--b);border-radius:14px;padding:18px" class="muted">Billing UI placeholder</div></div>`,
+    settings: () => `<div class="card"><b>Settings</b><div class="muted" style="margin-top:6px">Project settings + Danger Zone (typed confirmation).</div><div class="hr"></div><div class="row"><button class="btn secondary">Rename</button><button class="btn secondary">Rotate Keys</button><button class="btn secondary">Purge Data</button><button class="btn secondary">Delete Project</button></div><div class="footerNote">Danger Zone requires role checks + typed confirmation + audit entry.</div></div>`,
+  };
+
+  function render(slug){
+    slug = slug || "dashboard";
+    document.querySelectorAll('a[data-slug]').forEach(a => a.classList.toggle('active', a.dataset.slug === slug));
+    document.getElementById('pageTitle').textContent = meta[slug].title;
+    document.getElementById('pageSubtitle').textContent = meta[slug].subtitle;
+    document.getElementById('modePill').textContent = meta[slug].mode;
+    document.getElementById('primaryCta').textContent = meta[slug].cta;
+    document.getElementById('page').innerHTML = tpl[slug] ? tpl[slug]() : "<div class='card'>Missing template</div>";
+  }
+
+  function toggleTheme(){
+    const html = document.documentElement;
+    const next = html.dataset.theme === "dark" ? "light" : "dark";
+    html.dataset.theme = next;
+    localStorage.setItem("nivostack_theme", next);
+  }
+  window.toggleTheme = toggleTheme;
+
+  const saved = localStorage.getItem("nivostack_theme");
+  if (saved) document.documentElement.dataset.theme = saved;
+
+  function showDrawer(title, sub, tabs, bodyHtml){
+    document.getElementById("drawerTitle").textContent = title;
+    document.getElementById("drawerSub").textContent = sub;
+    const tabsEl = document.getElementById("drawerTabs");
+    tabsEl.innerHTML = "";
+    tabs.forEach((t,i)=>{
+      const btn = document.createElement("button");
+      btn.className = "tab" + (i===0 ? " active" : "");
+      btn.textContent = t;
+      btn.onclick = () => {
+        [...tabsEl.children].forEach(x=>x.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("drawerBody").innerHTML = bodyHtml(t);
+      };
+      tabsEl.appendChild(btn);
+    });
+    document.getElementById("drawerBody").innerHTML = bodyHtml(tabs[0]);
+    document.getElementById("drawerMask").style.display = "flex";
+  }
+  function hideDrawer(){ document.getElementById("drawerMask").style.display = "none"; }
+  window.hideDrawer = hideDrawer;
+  window.closeDrawer = (e) => { if (e.target.id === "drawerMask") hideDrawer(); };
+
+  window.openDevice = (id) => {
+    showDrawer(
+      "Device " + id,
+      "Raw device details + correlated data (drawer)",
+      ["Overview","Sessions","Traces","Logs","Crashes","Metadata"],
+      (tab)=>{
+        if(tab==="Overview") return `
+          <div class="kv">
+            <div class="muted">Platform</div><div>iOS</div>
+            <div class="muted">App Version</div><div>2.0.1</div>
+            <div class="muted">Last Seen</div><div>2m ago</div>
+            <div class="muted">Debug Mode</div>
+            <div>
+              <span class="chip"><span class="dot warn"></span>Enabled</span>
+              <button class="btn secondary" style="margin-left:8px" onclick="location.hash='livedebug'">Open Live Debug</button>
+            </div>
+          </div>`;
+        return `<div class="muted">Mock: ${tab} list constrained by deviceId.</div>`;
+      }
+    );
+  };
+
+  window.openEvent = (name) => {
+    showDrawer(
+      name,
+      "Raw event detail (bodies masked by policy)",
+      ["Summary","Headers","Body","Related"],
+      (tab)=>{
+        if(tab==="Body") return `<div class="muted">Body is masked by default. Requires permission to reveal.</div>`;
+        return `<div class="muted">Mock: ${tab} content.</div>`;
+      }
+    );
+  };
+
+  window.addEventListener('hashchange', () => render(location.hash.replace('#','')));
+  render(location.hash.replace('#','') || "dashboard");
+</script>
+</body>
+</html>

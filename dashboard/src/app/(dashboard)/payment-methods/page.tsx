@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
 import Link from 'next/link'
@@ -30,12 +30,7 @@ export default function PaymentMethodsPage() {
   const [error, setError] = useState('')
   const [addingMethod, setAddingMethod] = useState(false)
 
-  useEffect(() => {
-    if (!token) return
-    loadPaymentMethods()
-  }, [token])
-
-  const loadPaymentMethods = async () => {
+  const loadPaymentMethods = useCallback(async () => {
     try {
       setLoading(true)
       const data = await api.paymentMethods.list(token!)
@@ -45,18 +40,23 @@ export default function PaymentMethodsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [token])
 
-  const handleSetDefault = async (id: string) => {
+  useEffect(() => {
+    if (!token) return
+    loadPaymentMethods()
+  }, [token, loadPaymentMethods])
+
+  const handleSetDefault = useCallback(async (id: string) => {
     try {
       await api.paymentMethods.update(id, { isDefault: true }, token!)
       await loadPaymentMethods()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to set default payment method')
     }
-  }
+  }, [token, loadPaymentMethods])
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     if (!confirm('Are you sure you want to delete this payment method?')) {
       return
     }
@@ -67,21 +67,21 @@ export default function PaymentMethodsPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete payment method')
     }
-  }
+  }, [token, loadPaymentMethods])
 
-  const getCardBrandIcon = (brand: string | null | undefined) => {
+  const getCardBrandIcon = useCallback((brand: string | null | undefined) => {
     if (!brand) return '💳'
     const brandLower = brand.toLowerCase()
     if (brandLower.includes('visa')) return '💳'
     if (brandLower.includes('mastercard')) return '💳'
     if (brandLower.includes('amex') || brandLower.includes('american')) return '💳'
     return '💳'
-  }
+  }, [])
 
-  const formatCardNumber = (last4: string | null) => {
+  const formatCardNumber = useCallback((last4: string | null) => {
     if (!last4) return '•••• •••• •••• ••••'
     return `•••• •••• •••• ${last4}`
-  }
+  }, [])
 
   if (loading) {
     return (

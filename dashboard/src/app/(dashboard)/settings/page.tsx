@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
 import Link from 'next/link'
@@ -43,15 +43,7 @@ export default function DevBridgeSettingsPage() {
   const [sdkSettingsLoading, setSdkSettingsLoading] = useState(true)
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (token) {
-      loadFeatureFlags()
-      loadSubscriptionStatus()
-      loadSdkSettings()
-    }
-  }, [token])
-
-  const loadFeatureFlags = async () => {
+  const loadFeatureFlags = useCallback(async () => {
     if (!token) return
     try {
       setFeatureFlagsLoading(true)
@@ -68,9 +60,9 @@ export default function DevBridgeSettingsPage() {
     } finally {
       setFeatureFlagsLoading(false)
     }
-  }
+  }, [token])
 
-  const loadSdkSettings = async () => {
+  const loadSdkSettings = useCallback(async () => {
     if (!token) return
     try {
       setSdkSettingsLoading(true)
@@ -97,9 +89,9 @@ export default function DevBridgeSettingsPage() {
     } finally {
       setSdkSettingsLoading(false)
     }
-  }
+  }, [token])
 
-  const updateSdkSetting = async (updates: Partial<SdkSettings>) => {
+  const updateSdkSetting = useCallback(async (updates: Partial<SdkSettings>) => {
     if (!token || !currentProjectId || !sdkSettings) return
     try {
       const res = await fetch('/api/sdk-settings', {
@@ -117,9 +109,9 @@ export default function DevBridgeSettingsPage() {
       console.error('Failed to update SDK settings:', error)
       alert('Failed to update SDK settings. Please try again.')
     }
-  }
+  }, [token, currentProjectId, sdkSettings])
 
-  const loadSubscriptionStatus = async () => {
+  const loadSubscriptionStatus = useCallback(async () => {
     if (!token) return
     try {
       const response = await api.subscription.get(token)
@@ -130,9 +122,9 @@ export default function DevBridgeSettingsPage() {
     } catch (error) {
       console.error('Failed to load subscription status:', error)
     }
-  }
+  }, [token])
 
-  const updateFeatureFlag = async (key: keyof FeatureFlags, value: boolean) => {
+  const updateFeatureFlag = useCallback(async (key: keyof FeatureFlags, value: boolean) => {
     if (!token || !featureFlags) return
     try {
       // Get first project to update (feature flags are per-project)
@@ -148,7 +140,19 @@ export default function DevBridgeSettingsPage() {
       console.error('Failed to update feature flag:', error)
       alert('Failed to update feature flag. Please try again.')
     }
-  }
+  }, [token, featureFlags])
+
+  useEffect(() => {
+    if (token) {
+      loadFeatureFlags()
+      loadSubscriptionStatus()
+      loadSdkSettings()
+    }
+  }, [token, loadFeatureFlags, loadSubscriptionStatus, loadSdkSettings])
+
+  const handleTabChange = useCallback((tab: SettingsTab) => {
+    setActiveTab(tab)
+  }, [])
 
   if (!token) {
     return (
@@ -169,7 +173,7 @@ export default function DevBridgeSettingsPage() {
       <div className="border-b border-gray-800">
         <nav className="flex space-x-8">
           <button
-            onClick={() => setActiveTab('features')}
+            onClick={() => handleTabChange('features')}
             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeTab === 'features'
                 ? 'border-blue-500 text-blue-400'
@@ -179,7 +183,7 @@ export default function DevBridgeSettingsPage() {
             Product Features
           </button>
           <button
-            onClick={() => setActiveTab('performance')}
+            onClick={() => handleTabChange('performance')}
             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeTab === 'performance'
                 ? 'border-blue-500 text-blue-400'

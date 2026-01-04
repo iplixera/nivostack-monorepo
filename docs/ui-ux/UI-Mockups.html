@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>NivoStack · Global UI Mock (v1)</title>
+    <style>
+        :root {
+            --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+            --r: 16px
+        }
+
+        [data-theme="light"] {
+            --bg: #F7F8FA;
+            --s: #FFF;
+            --s2: #F0F3F7;
+            --b: #E2E7EF;
+            --t: #101828;
+            --m: #667085;
+            --p: #2563EB;
+            --a: #16A34A;
+            --chip: #EEF2FF
+        }
+
+        [data-theme="dark"] {
+            --bg: #0B1220;
+            --s: #121B2E;
+            --s2: #0F172A;
+            --b: rgba(148, 163, 184, .18);
+            --t: #E5E7EB;
+            --m: rgba(229, 231, 235, .7);
+            --p: #38BDF8;
+            --a: #22C55E;
+            --chip: rgba(56, 189, 248, .14)
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--t)
+        }
+
+        .app {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh
+        }
+
+        .sb {
+            background: var(--s2);
+            border-right: 1px solid var(--b);
+            padding: 16px
+        }
+
+        .main {
+            min-width: 0
+        }
+
+        .top {
+            position: sticky;
+            top: 0;
+            background: var(--s2);
+            border-bottom: 1px solid var(--b);
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center
+        }
+
+        .card {
+            background: var(--s);
+            border: 1px solid var(--b);
+            border-radius: var(--r);
+            padding: 16px;
+            margin: 18px;
+            max-width: 1200px
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-radius: 12px;
+            color: var(--m)
+        }
+
+        a.active {
+            background: var(--chip);
+            border: 1px solid var(--b);
+            color: var(--t)
+        }
+
+        .badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            border: 1px solid var(--b);
+            color: var(--m)
+        }
+
+        .btn {
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--b);
+            background: transparent;
+            color: var(--t);
+            cursor: pointer
+        }
+
+        .pill {
+            font-size: 12px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--b);
+            background: var(--s);
+            color: var(--m)
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center
+        }
+
+        .input,
+        .sel {
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--b);
+            background: var(--s);
+            color: var(--t)
+        }
+
+        .input {
+            min-width: 260px
+        }
+
+        .kpi {
+            display: inline-block;
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1px solid var(--b);
+            background: linear-gradient(180deg, var(--s), var(--s2));
+            margin: 6px 8px 0 0
+        }
+
+        .muted {
+            color: var(--m)
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1px solid var(--b);
+            border-radius: 14px;
+            overflow: hidden;
+            margin-top: 12px
+        }
+
+        th,
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--b);
+            font-size: 12px
+        }
+
+        th {
+            background: var(--s2);
+            color: var(--m);
+            text-align: left
+        }
+
+        tr:last-child td {
+            border-bottom: 0
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sb">
+            <div style="font-weight:900;margin-bottom:10px">NivoStack</div>
+
+            <div class="muted" style="font-size:12px;margin:10px 0 6px">Overview</div>
+            <a href="#dashboard" data-slug="dashboard">Dashboard <span class="badge">Agg</span></a>
+
+            <div class="muted" style="font-size:12px;margin:14px 0 6px">Observe (Runtime)</div>
+            <a href="#devices" data-slug="devices">Devices <span class="badge">Raw</span></a>
+            <a href="#live" data-slug="live">Live Debug <span class="badge">Live</span></a>
+
+            <div class="muted" style="font-size:12px;margin:14px 0 6px">Rule</div>
+            <div class="muted" style="font-size:12px">
+                Dashboards use aggregates. Debug uses raw. Drilldown connects both.
+            </div>
+
+            <div style="margin-top:14px">
+                <button class="btn" onclick="toggleTheme()">Toggle Light/Dark</button>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="top">
+                <div>
+                    <div id="t" style="font-weight:900">Dashboard</div>
+                    <div id="st" class="muted" style="font-size:12px">Aggregated trends + drilldown to raw</div>
+                </div>
+                <div class="row">
+                    <span class="pill" id="mode">Aggregated</span>
+                    <button class="btn" onclick="toggleTheme()">Theme</button>
+                </div>
+            </div>
+
+            <div class="card" id="page"></div>
+        </main>
+    </div>
+
+    <script>
+        const pages = {
+            dashboard: {
+                t: "Dashboard", st: "Aggregated trends + drilldown to raw", mode: "Aggregated",
+                html: `
+      <div class="row">
+        <input class="input" placeholder="Search (endpoint, screen, user, device)"/>
+        <select class="sel"><option>Last 24h</option><option>Last 7d</option><option>Last 30d</option></select>
+        <select class="sel"><option>Env: All</option><option>Production</option><option>Staging</option></select>
+      </div>
+      <div>
+        <span class="kpi"><b>50</b> <span class="muted">Active devices</span></span>
+        <span class="kpi"><b>2.1k</b> <span class="muted">Requests</span></span>
+        <span class="kpi"><b>0.8%</b> <span class="muted">Error rate</span></span>
+        <span class="kpi"><b>$12.40</b> <span class="muted">Cost</span></span>
+      </div>
+      <div style="margin-top:12px" class="muted">
+        Tiles must include “View raw” which routes to Devices/Traces with filters prefilled.
+      </div>`
+            },
+            devices: {
+                t: "Devices", st: "Raw device registry + segmentation + debug entry", mode: "Raw",
+                html: `
+      <div class="row">
+        <input class="input" placeholder="Search deviceId / deviceCode / user email / model"/>
+        <select class="sel"><option>Platform: All</option><option>iOS</option><option>Android</option></select>
+        <select class="sel"><option>Debug: All</option><option>Enabled</option><option>Disabled</option></select>
+        <button class="btn" onclick="alert('More filters drawer (mock)')">More filters</button>
+      </div>
+      <div>
+        <span class="kpi"><b>50</b> <span class="muted">Total</span></span>
+        <span class="kpi"><b>6</b> <span class="muted">Debug enabled</span></span>
+      </div>
+      <table>
+        <thead><tr><th>Device</th><th>Platform</th><th>App</th><th>Last Seen</th><th>Debug</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td>DV-10A2</td><td>iOS</td><td>2.0.1</td><td>2m</td><td>Enabled</td><td><a href="#live">Open Live Debug</a></td></tr>
+          <tr><td>DV-77C9</td><td>Android</td><td>2.0.1</td><td>18m</td><td>Off</td><td><span class="muted">Open drawer</span></td></tr>
+        </tbody>
+      </table>`
+            },
+            live: {
+                t: "Live Debug", st: "Near real-time raw feed (realtime or polling fallback)", mode: "Live",
+                html: `
+      <div class="row">
+        <select class="sel"><option>Device: DV-10A2 (Debug enabled)</option></select>
+        <select class="sel"><option>Window: 15m</option><option>1h</option><option>24h</option></select>
+        <select class="sel"><option>Tab: API</option><option>Logs</option><option>Crashes</option><option>Screen Flow</option></select>
+      </div>
+      <table>
+        <thead><tr><th>Time</th><th>Type</th><th>Summary</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td>now</td><td>API</td><td>GET /v1/profile → 200 (120ms)</td><td><span class="muted">View</span></td></tr>
+          <tr><td>3s</td><td>LOG</td><td>screen=Home loaded</td><td><span class="muted">View</span></td></tr>
+          <tr><td>8s</td><td>API</td><td>POST /v1/login → 401 (90ms)</td><td><span class="muted">View</span></td></tr>
+        </tbody>
+      </table>
+      <div class="muted" style="margin-top:10px">
+        Bodies may be masked by policy + role. Live mode uses realtime if possible; otherwise polls every 3–5s using “since last timestamp”.
+      </div>`
+            }
+        };
+
+        function render() {
+            const slug = (location.hash || "#dashboard").replace("#", "");
+            document.querySelectorAll("a[data-slug]").forEach(a => a.classList.toggle("active", a.dataset.slug === slug));
+            document.getElementById("t").textContent = pages[slug].t;
+            document.getElementById("st").textContent = pages[slug].st;
+            document.getElementById("mode").textContent = pages[slug].mode;
+            document.getElementById("page").innerHTML = pages[slug].html;
+        }
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.dataset.theme = html.dataset.theme === "dark" ? "light" : "dark";
+            localStorage.setItem("nivostack_theme", html.dataset.theme);
+        }
+        const saved = localStorage.getItem("nivostack_theme"); if (saved) document.documentElement.dataset.theme = saved;
+        window.addEventListener("hashchange", render); render();
+    </script>
+</body>
+
+</html>

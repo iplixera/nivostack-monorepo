@@ -4,18 +4,21 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
+import AppShell from '@/components/layout/AppShell'
+import PageHeader from '@/components/layout/PageHeader'
+import ThemeToggle from '@/components/ThemeToggle'
 
 type Project = {
   id: string
   name: string
   apiKey: string
   createdAt: string
-  role?: 'owner' | 'admin' | 'member' | 'viewer' // User's role in the project
+  role?: 'owner' | 'admin' | 'member' | 'viewer'
   invitedBy?: {
     name: string | null
     email: string
-  } | null // Who invited the user (null for owned projects)
-  joinedAt?: string | null // When user joined (for invited projects)
+  } | null
+  joinedAt?: string | null
   _count: {
     devices: number
     logs: number
@@ -90,7 +93,7 @@ export default function ProjectsPage() {
       setNewProjectName('')
       setShowCreateModal(false)
       fetchProjects()
-      fetchUsageStats() // Refresh usage stats after creating
+      fetchUsageStats()
     } catch (error: any) {
       const errorMessage = error?.response?.data?.error || error?.message || 'Failed to create project'
       setCreateError(errorMessage)
@@ -101,27 +104,57 @@ export default function ProjectsPage() {
   }
 
   if (loading) {
-    return <div className="text-gray-400">Loading projects...</div>
+    return (
+      <AppShell>
+        <PageHeader
+          title="Projects"
+          subtitle="Manage your projects"
+          dataMode="Org"
+          actions={<ThemeToggle />}
+        />
+        <div style={{ textAlign: 'center', padding: '100px 0', color: 'var(--m)' }}>
+          Loading projects...
+        </div>
+      </AppShell>
+    )
   }
 
   const limitReached = isLimitReached()
   const projectsUsage = usageStats?.projects
 
   return (
-    <div>
+    <AppShell>
+      <PageHeader
+        title="Projects"
+        subtitle="Manage your projects"
+        dataMode="Org"
+        actions={
+          <>
+            <ThemeToggle />
+            <button
+              onClick={() => setShowCreateModal(true)}
+              disabled={limitReached}
+              className="btn"
+            >
+              New Project
+            </button>
+          </>
+        }
+      />
+
       {/* Warning Banner */}
       {limitReached && (
-        <div className="mb-6 bg-yellow-900/20 border border-yellow-600 text-yellow-400 px-4 py-3 rounded-lg">
-          <div className="flex items-center justify-between">
+        <div className="card" style={{ marginTop: '18px', borderColor: 'var(--w)', background: 'rgba(234, 179, 8, 0.1)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <p className="font-medium">Project limit reached</p>
-              <p className="text-sm text-yellow-300 mt-1">
-                You have used {projectsUsage?.used} of {projectsUsage?.limit} projects. 
-                <Link href="/subscription" className="underline ml-1 hover:text-yellow-200">
+              <b style={{ color: 'var(--w)' }}>Project limit reached</b>
+              <div className="muted" style={{ marginTop: '6px', fontSize: '12px' }}>
+                You have used {projectsUsage?.used} of {projectsUsage?.limit} projects.{' '}
+                <Link href="/subscription" style={{ color: 'var(--p)', textDecoration: 'underline' }}>
                   Upgrade your plan
                 </Link>
                 {' '}to create more projects.
-              </p>
+              </div>
             </div>
           </div>
         </div>
@@ -129,60 +162,39 @@ export default function ProjectsPage() {
 
       {/* Usage Info */}
       {usageStats && !limitReached && projectsUsage && projectsUsage.limit !== null && (
-        <div className="mb-6 bg-gray-900 border border-gray-800 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-400">Projects Usage</span>
-            <span className="text-sm text-gray-300">
+        <div className="card" style={{ marginTop: '18px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <span className="muted" style={{ fontSize: '12px' }}>Projects Usage</span>
+            <span className="muted" style={{ fontSize: '12px' }}>
               {projectsUsage.used} / {projectsUsage.limit}
             </span>
           </div>
-          <div className="w-full bg-gray-800 rounded-full h-2">
+          <div style={{ width: '100%', background: 'var(--s2)', borderRadius: '999px', height: '8px' }}>
             <div
-              className={`h-2 rounded-full ${
-                projectsUsage.percentage >= 80
-                  ? 'bg-yellow-500'
-                  : projectsUsage.percentage >= 100
-                  ? 'bg-red-500'
-                  : 'bg-blue-500'
-              }`}
-              style={{ width: `${Math.min(projectsUsage.percentage, 100)}%` }}
+              style={{
+                height: '8px',
+                borderRadius: '999px',
+                background: projectsUsage.percentage >= 100 ? 'var(--d)' : projectsUsage.percentage >= 80 ? 'var(--w)' : 'var(--p)',
+                width: `${Math.min(projectsUsage.percentage, 100)}%`,
+              }}
             />
           </div>
         </div>
       )}
 
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-white">Projects</h1>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          disabled={limitReached}
-          className={`px-4 py-2 rounded transition-colors ${
-            limitReached
-              ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700 text-white'
-          }`}
-        >
-          New Project
-        </button>
-      </div>
-
       {projects.length === 0 ? (
-        <div className="text-center py-12 bg-gray-900 rounded-lg">
-          <p className="text-gray-400 mb-4">No projects yet</p>
+        <div className="card" style={{ marginTop: '18px', textAlign: 'center', padding: '60px 20px' }}>
+          <p className="muted" style={{ marginBottom: '18px' }}>No projects yet</p>
           <button
             onClick={() => setShowCreateModal(true)}
             disabled={limitReached}
-            className={`px-4 py-2 rounded transition-colors ${
-              limitReached
-                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
+            className="btn"
           >
             Create your first project
           </button>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '14px', marginTop: '18px' }}>
           {projects.map((project) => {
             const isOwned = project.role === 'owner'
             const isInvited = project.role && project.role !== 'owner'
@@ -191,56 +203,52 @@ export default function ProjectsPage() {
               <Link
                 key={project.id}
                 href={`/projects/${project.id}`}
-                className={`block p-6 rounded-lg transition-all ${
-                  isOwned
-                    ? 'bg-gray-900 hover:bg-gray-800 border border-gray-800'
-                    : 'bg-gray-900/80 hover:bg-gray-800/80 border border-blue-900/50 hover:border-blue-800/70'
-                }`}
+                className="card"
+                style={{
+                  display: 'block',
+                  textDecoration: 'none',
+                  borderColor: isOwned ? 'var(--b)' : 'var(--p)',
+                }}
               >
-                <div className="flex items-start justify-between mb-3">
-                  <h2 className="text-lg font-semibold text-white flex-1 pr-2">{project.name}</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                  <b style={{ flex: 1, paddingRight: '8px' }}>{project.name}</b>
                   {isOwned && (
-                    <span className="flex-shrink-0 px-2 py-1 text-xs font-medium rounded bg-purple-900/30 text-purple-400 border border-purple-800/50">
+                    <span className="chip">
+                      <span className="dot" />
                       Owned
                     </span>
                   )}
                   {isInvited && (
-                    <span className={`flex-shrink-0 px-2 py-1 text-xs font-medium rounded ${
-                      project.role === 'admin'
-                        ? 'bg-blue-900/30 text-blue-400 border border-blue-800/50'
-                        : project.role === 'member'
-                        ? 'bg-green-900/30 text-green-400 border border-green-800/50'
-                        : 'bg-gray-700/30 text-gray-400 border border-gray-600/50'
-                    }`}>
+                    <span className="chip">
+                      <span className={`dot ${project.role === 'admin' ? 'good' : project.role === 'member' ? 'warn' : ''}`} />
                       {project.role === 'admin' ? 'Admin' : project.role === 'member' ? 'Member' : 'Viewer'}
                     </span>
                   )}
                 </div>
                 
-                {/* Show inviter info for invited projects */}
                 {isInvited && project.invitedBy && (
-                  <div className="mb-3 text-xs text-gray-500">
+                  <div className="muted" style={{ fontSize: '11px', marginBottom: '12px' }}>
                     Invited by {project.invitedBy.name || project.invitedBy.email}
                     {project.joinedAt && (
-                      <span className="ml-2">
+                      <span style={{ marginLeft: '8px' }}>
                         • Joined {new Date(project.joinedAt).toLocaleDateString()}
                       </span>
                     )}
                   </div>
                 )}
                 
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="text-gray-400">
-                    <span className="text-white font-medium">{project._count.devices}</span> devices
+                <div className="grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', fontSize: '12px' }}>
+                  <div className="muted">
+                    <b style={{ color: 'var(--t)' }}>{project._count.devices}</b> devices
                   </div>
-                  <div className="text-gray-400">
-                    <span className="text-white font-medium">{project._count.logs}</span> logs
+                  <div className="muted">
+                    <b style={{ color: 'var(--t)' }}>{project._count.logs}</b> logs
                   </div>
-                  <div className="text-gray-400">
-                    <span className="text-red-400 font-medium">{project._count.crashes}</span> crashes
+                  <div className="muted">
+                    <b style={{ color: 'var(--d)' }}>{project._count.crashes}</b> crashes
                   </div>
-                  <div className="text-gray-400">
-                    <span className="text-white font-medium">{project._count.apiTraces}</span> traces
+                  <div className="muted">
+                    <b style={{ color: 'var(--t)' }}>{project._count.apiTraces}</b> traces
                   </div>
                 </div>
               </Link>
@@ -250,48 +258,51 @@ export default function ProjectsPage() {
       )}
 
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold text-white mb-4">Create Project</h2>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '18px' }}>
+          <div className="card" style={{ width: '100%', maxWidth: '500px' }}>
+            <b style={{ fontSize: '18px', marginBottom: '14px', display: 'block' }}>Create Project</b>
             {limitReached && (
-              <div className="mb-4 bg-yellow-900/20 border border-yellow-600 text-yellow-400 px-3 py-2 rounded text-sm">
-                Project limit reached. Please upgrade your plan to create more projects.
+              <div className="card" style={{ marginBottom: '14px', borderColor: 'var(--w)', background: 'rgba(234, 179, 8, 0.1)' }}>
+                <div style={{ color: 'var(--w)', fontSize: '12px' }}>
+                  Project limit reached. Please upgrade your plan to create more projects.
+                </div>
               </div>
             )}
             {createError && (
-              <div className="mb-4 bg-red-900/20 border border-red-600 text-red-400 px-3 py-2 rounded text-sm">
-                {createError}
+              <div className="card" style={{ marginBottom: '14px', borderColor: 'var(--d)', background: 'rgba(220, 38, 38, 0.1)' }}>
+                <div style={{ color: 'var(--d)', fontSize: '12px' }}>{createError}</div>
               </div>
             )}
             <form onSubmit={handleCreateProject}>
               <input
                 type="text"
+                className="input"
                 value={newProjectName}
                 onChange={(e) => {
                   setNewProjectName(e.target.value)
                   setCreateError('')
                 }}
                 placeholder="Project name"
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
                 required
                 disabled={limitReached}
+                style={{ marginBottom: '14px' }}
               />
-              <div className="flex justify-end space-x-3">
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                 <button
                   type="button"
+                  className="btn secondary"
                   onClick={() => {
                     setShowCreateModal(false)
                     setCreateError('')
                     setNewProjectName('')
                   }}
-                  className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
+                  className="btn"
                   disabled={creating || limitReached}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded transition-colors"
                 >
                   {creating ? 'Creating...' : 'Create'}
                 </button>
@@ -300,6 +311,6 @@ export default function ProjectsPage() {
           </div>
         </div>
       )}
-    </div>
+    </AppShell>
   )
 }

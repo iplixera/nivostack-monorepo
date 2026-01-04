@@ -7,6 +7,13 @@
  *   pnpm check:queue
  */
 
+// Load environment variables
+import dotenv from 'dotenv';
+import { resolve } from 'path';
+
+// Load .env.local from root directory
+dotenv.config({ path: resolve(__dirname, '../../.env.local') });
+
 import { aggregationQueue } from '../src/lib/aggregation/queue';
 
 async function main() {

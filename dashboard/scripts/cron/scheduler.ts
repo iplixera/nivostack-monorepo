@@ -10,6 +10,13 @@
  *   pnpm cron:scheduler
  */
 
+// Load environment variables
+import dotenv from 'dotenv';
+import { resolve } from 'path';
+
+// Load .env.local from root directory
+dotenv.config({ path: resolve(__dirname, '../../../.env.local') });
+
 import cron from 'node-cron';
 import { enqueueHourlyAggregation, enqueueDailyAggregation } from '../../src/lib/aggregation/enqueue';
 

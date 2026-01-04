@@ -7,6 +7,13 @@
  *   pnpm test:enqueue
  */
 
+// Load environment variables
+import dotenv from 'dotenv';
+import { resolve } from 'path';
+
+// Load .env.local from root directory
+dotenv.config({ path: resolve(__dirname, '../../.env.local') });
+
 import { enqueueHourlyAggregation, enqueueDailyAggregation } from '../src/lib/aggregation/enqueue';
 
 async function main() {

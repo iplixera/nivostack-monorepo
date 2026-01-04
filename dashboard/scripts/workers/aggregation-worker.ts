@@ -8,6 +8,13 @@
  *   pnpm worker:aggregation
  */
 
+// Load environment variables
+import dotenv from 'dotenv';
+import { resolve } from 'path';
+
+// Load .env.local from root directory
+dotenv.config({ path: resolve(__dirname, '../../../.env.local') });
+
 import { Worker } from 'bullmq';
 import Redis from 'ioredis';
 import { aggregateAll } from '../../src/lib/aggregation/aggregate';

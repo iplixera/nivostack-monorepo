@@ -20,17 +20,36 @@ import Redis from 'ioredis';
 import { aggregateAll } from '../../src/lib/aggregation/aggregate';
 
 // Redis connection configuration
+// Supports both local Redis (development) and Upstash Redis (production)
 // Note: maxRetriesPerRequest must be null for BullMQ workers (blocking operations)
-const redisConfig = {
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  password: process.env.REDIS_PASSWORD || undefined,
-  maxRetriesPerRequest: null, // Required for BullMQ blocking operations
-  retryStrategy: (times: number) => {
-    const delay = Math.min(times * 50, 2000);
-    return delay;
-  },
-};
+const redisConfig = (() => {
+  // Check if we're using Upstash Redis (production)
+  if (process.env.REDIS_HOST && process.env.REDIS_HOST.includes('upstash.io')) {
+    return {
+      host: process.env.REDIS_HOST,
+      port: parseInt(process.env.REDIS_PORT || '6379'),
+      password: process.env.REDIS_PASSWORD,
+      tls: process.env.REDIS_TLS === 'true' ? {} : undefined,
+      maxRetriesPerRequest: null, // Required for BullMQ blocking operations
+      retryStrategy: (times: number) => {
+        const delay = Math.min(times * 50, 2000);
+        return delay;
+      },
+    };
+  }
+
+  // Local Redis configuration (development)
+  return {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379'),
+    password: process.env.REDIS_PASSWORD || undefined,
+    maxRetriesPerRequest: null, // Required for BullMQ blocking operations
+    retryStrategy: (times: number) => {
+      const delay = Math.min(times * 50, 2000);
+      return delay;
+    },
+  };
+})();
 
 // Create Redis connection
 const redisConnection = new Redis(redisConfig);

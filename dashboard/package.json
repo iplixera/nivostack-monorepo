@@ -26,7 +26,11 @@
     "worker:aggregation": "tsx scripts/workers/aggregation-worker.ts",
     "cron:scheduler": "tsx scripts/cron/scheduler.ts",
     "test:enqueue": "tsx scripts/test-enqueue.ts",
-    "check:queue": "tsx scripts/check-queue.ts"
+    "check:queue": "tsx scripts/check-queue.ts",
+    "view:queue": "tsx scripts/view-queue-details.ts",
+    "view:queue:waiting": "tsx scripts/view-queue-details.ts --waiting",
+    "view:queue:prioritized": "tsx scripts/view-queue-details.ts --prioritized",
+    "view:queue:all": "tsx scripts/view-queue-details.ts --all"
   },
   "prisma": {
     "schema": "../prisma/schema.prisma",

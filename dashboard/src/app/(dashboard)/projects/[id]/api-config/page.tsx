@@ -4,7 +4,6 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
-import AppShell from '@/components/layout/AppShell'
 import PageHeader from '@/components/layout/PageHeader'
 import ThemeToggle from '@/components/ThemeToggle'
 import DataTable, { Column } from '@/components/DataTable'
@@ -177,7 +176,7 @@ export default function ApiConfigPage() {
   }, [])
 
   return (
-    <AppShell projectId={projectId} projectName={projectName}>
+    <div className="space-y-6">
       <PageHeader
         title="API Config"
         subtitle="Define API endpoints, cost per request, capture toggles, and monitoring defaults (per endpoint)."
@@ -212,7 +211,7 @@ export default function ApiConfigPage() {
         onRowClick={handleRowClick}
         footerNote="Implementation: API Config defines endpoints for cost analytics, monitoring, and capture policy. Changes affect cost calculations and monitoring."
       />
-    </AppShell>
+    </div>
   )
 }
 

@@ -1271,17 +1271,18 @@ model CrashAggregate {
   granularity String   // 'hourly' | 'daily'
 
   // Crash dimensions
-  errorType   String?
-  platform    String?
+  buildVersion String?
+  platform     String?
+  country      String?
 
   // Metrics
   count         Int     // Total crash count
-  uniqueUsers   Int     // Unique users affected
+  uniqueMessages Int    // Unique crash messages
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([projectId, period, granularity, errorType, platform])
+  @@unique([projectId, period, granularity, buildVersion, platform])
   @@index([projectId, period])
   @@index([projectId, granularity])
   @@index([period])

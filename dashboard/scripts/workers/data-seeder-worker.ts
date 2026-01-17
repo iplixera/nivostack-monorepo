@@ -23,6 +23,7 @@ const CONFIG = {
   INTERVAL_MS: 5000, // 5 seconds
 
   // Data generation rates (per interval)
+  DEVICES_PER_INTERVAL: 3, // New devices registering
   API_TRACES_PER_INTERVAL: 10,
   LOGS_PER_INTERVAL: 20,
   CRASHES_PER_INTERVAL: 1,
@@ -51,9 +52,22 @@ const CONFIG = {
 
   METHODS: ['GET', 'POST', 'PUT', 'DELETE'],
   STATUS_CODES: [200, 201, 204, 400, 401, 403, 404, 422, 500, 502, 503],
-  PLATFORMS: ['ios', 'android'],
+  PLATFORMS: ['ios', 'android', 'web'],
+  ENVIRONMENTS: ['production', 'staging', 'development'],
   SCREEN_NAMES: ['Home', 'Profile', 'Settings', 'Dashboard', 'Products', 'Cart', 'Checkout'],
   LOG_LEVELS: ['debug', 'info', 'warn', 'error'],
+  
+  // Device data
+  IOS_MODELS: ['iPhone 15 Pro', 'iPhone 15', 'iPhone 14 Pro', 'iPhone 14', 'iPhone 13', 'iPhone SE', 'iPad Pro', 'iPad Air'],
+  ANDROID_MODELS: ['Pixel 8 Pro', 'Pixel 7', 'Galaxy S24', 'Galaxy S23', 'OnePlus 12', 'Xiaomi 14'],
+  WEB_MODELS: ['Chrome', 'Safari', 'Firefox', 'Edge'],
+  MANUFACTURERS: {
+    ios: ['Apple'],
+    android: ['Google', 'Samsung', 'OnePlus', 'Xiaomi', 'Motorola'],
+    web: ['Google', 'Apple', 'Mozilla', 'Microsoft']
+  },
+  USER_NAMES: ['John Doe', 'Jane Smith', 'Alice Johnson', 'Bob Wilson', 'Carol Davis', 'David Brown', 'Emma Martinez', 'Frank Lee'],
+  DOMAINS: ['gmail.com', 'yahoo.com', 'outlook.com', 'icloud.com', 'proton.me'],
 };
 
 // Helper functions
@@ -75,6 +89,38 @@ function randomDeviceId(): string {
 
 function randomSessionToken(): string {
   return `session_${Date.now()}_${randomInt(1000, 9999)}`;
+}
+
+function generateDeviceCode(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const part1 = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  const part2 = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  return `${part1}-${part2}`;
+}
+
+function generateUserEmail(name: string): string {
+  const firstName = name.split(' ')[0].toLowerCase();
+  const domain = randomChoice(CONFIG.DOMAINS);
+  return `${firstName}.${randomInt(100, 999)}@${domain}`;
+}
+
+function getModelForPlatform(platform: string): string {
+  if (platform === 'ios') return randomChoice(CONFIG.IOS_MODELS);
+  if (platform === 'android') return randomChoice(CONFIG.ANDROID_MODELS);
+  if (platform === 'web') return randomChoice(CONFIG.WEB_MODELS);
+  return 'Unknown';
+}
+
+function getManufacturerForPlatform(platform: string): string {
+  const manufacturers = CONFIG.MANUFACTURERS[platform as keyof typeof CONFIG.MANUFACTURERS];
+  return manufacturers ? randomChoice(manufacturers) : 'Unknown';
+}
+
+function getOsVersion(platform: string): string {
+  if (platform === 'ios') return `${randomInt(15, 17)}.${randomInt(0, 5)}.${randomInt(0, 3)}`;
+  if (platform === 'android') return `${randomInt(11, 14)}.0`;
+  if (platform === 'web') return `${randomInt(110, 125)}.0.${randomInt(5000, 6000)}.0`;
+  return '1.0.0';
 }
 
 function getRandomEndpoint(): string {
@@ -121,6 +167,71 @@ function getRandomCost(endpoint: string): number {
 }
 
 // Data generators
+async function generateDevices() {
+  console.log(`[Data Seeder] Generating ${CONFIG.DEVICES_PER_INTERVAL} devices...`);
+
+  try {
+    const projects = await prisma.project.findMany({ select: { id: true } });
+    if (projects.length === 0) {
+      console.log('[Data Seeder] No projects found, skipping device generation');
+      return;
+    }
+
+    const devices = [];
+    for (let i = 0; i < CONFIG.DEVICES_PER_INTERVAL; i++) {
+      const project = randomChoice(projects);
+      const platform = randomChoice(CONFIG.PLATFORMS);
+      const model = getModelForPlatform(platform);
+      const manufacturer = getManufacturerForPlatform(platform);
+      const osVersion = getOsVersion(platform);
+      const appVersion = `${randomInt(1, 3)}.${randomInt(0, 9)}.${randomInt(0, 9)}`;
+      const deviceCode = generateDeviceCode();
+      
+      // 30% chance device has a user associated
+      const hasUser = Math.random() < 0.3;
+      const userName = hasUser ? randomChoice(CONFIG.USER_NAMES) : null;
+      const userEmail = hasUser && userName ? generateUserEmail(userName) : null;
+      const userId = hasUser ? `user_${randomInt(10000, 99999)}` : null;
+      
+      // Generate metadata
+      const metadata = {
+        sdkVersion: `${randomInt(1, 3)}.${randomInt(0, 5)}.0`,
+        installDate: new Date(Date.now() - randomInt(0, 90) * 24 * 60 * 60 * 1000).toISOString(),
+        language: randomChoice(['en', 'es', 'fr', 'de', 'ja', 'pt', 'zh']),
+        region: randomChoice(['US', 'GB', 'CA', 'AU', 'DE', 'FR', 'JP', 'BR']),
+        timeZone: randomChoice(['America/New_York', 'Europe/London', 'Asia/Tokyo', 'Australia/Sydney']),
+      };
+
+      const device = {
+        projectId: project.id,
+        deviceId: `device_${Date.now()}_${randomInt(10000, 99999)}`,
+        platform,
+        environment: randomChoice(CONFIG.ENVIRONMENTS),
+        osVersion,
+        appVersion,
+        model,
+        manufacturer,
+        deviceCode,
+        userId,
+        userEmail,
+        userName,
+        metadata,
+        debugModeEnabled: false,
+        status: 'active',
+        lastSeenAt: new Date(),
+        createdAt: new Date(Date.now() - randomInt(0, 30) * 24 * 60 * 60 * 1000), // Last 30 days
+      };
+
+      devices.push(device);
+    }
+
+    await prisma.device.createMany({ data: devices });
+    console.log(`[Data Seeder] ✅ Created ${devices.length} devices`);
+  } catch (error) {
+    console.error('[Data Seeder] ❌ Error generating devices:', error);
+  }
+}
+
 async function generateApiTraces() {
   console.log(`[Data Seeder] Generating ${CONFIG.API_TRACES_PER_INTERVAL} API traces...`);
 
@@ -157,6 +268,7 @@ async function generateApiTraces() {
             projectId: project.id,
             deviceId: randomDeviceId(),
             platform: randomChoice(CONFIG.PLATFORMS),
+            environment: randomChoice(CONFIG.ENVIRONMENTS),
             model: `Model ${randomInt(1, 20)}`,
             appVersion: `1.${randomInt(0, 9)}.${randomInt(0, 9)}`,
           },
@@ -182,7 +294,6 @@ async function generateApiTraces() {
             duration: randomInt(60000, 3600000), // 1min to 1hour
             screenCount: randomInt(5, 50),
             eventCount: randomInt(10, 200),
-            country: randomChoice(['US', 'CA', 'GB', 'DE', 'FR', 'JP', 'AU']),
             entryScreen: randomChoice(CONFIG.SCREEN_NAMES),
             exitScreen: randomChoice(CONFIG.SCREEN_NAMES),
           },
@@ -246,6 +357,7 @@ async function generateLogs() {
             projectId: project.id,
             deviceId: randomDeviceId(),
             platform: randomChoice(CONFIG.PLATFORMS),
+            environment: randomChoice(CONFIG.ENVIRONMENTS),
             model: `Model ${randomInt(1, 20)}`,
             appVersion: `1.${randomInt(0, 9)}.${randomInt(0, 9)}`,
           },
@@ -271,8 +383,6 @@ async function generateLogs() {
         timestamp,
         tag: randomChoice(['ui', 'network', 'db', 'auth', 'cache', 'file', 'notification']),
         screenName: randomChoice(CONFIG.SCREEN_NAMES),
-        buildVersion: device.appVersion,
-        platform: device.platform,
       };
 
       logs.push(log);
@@ -316,6 +426,7 @@ async function generateCrashes() {
             projectId: project.id,
             deviceId: randomDeviceId(),
             platform: randomChoice(CONFIG.PLATFORMS),
+            environment: randomChoice(CONFIG.ENVIRONMENTS),
             model: `Model ${randomInt(1, 20)}`,
             appVersion: `1.${randomInt(0, 9)}.${randomInt(0, 9)}`,
           },
@@ -395,6 +506,7 @@ async function generateSessions() {
             projectId: project.id,
             deviceId: randomDeviceId(),
             platform: randomChoice(CONFIG.PLATFORMS),
+            environment: randomChoice(CONFIG.ENVIRONMENTS),
             model: `Model ${randomInt(1, 20)}`,
             appVersion: `1.${randomInt(0, 9)}.${randomInt(0, 9)}`,
           },
@@ -410,19 +522,14 @@ async function generateSessions() {
         duration,
         screenCount: randomInt(5, 50),
         eventCount: randomInt(10, 200),
-        crashCount: Math.random() < CONFIG.CRASH_RATE ? 1 : 0,
-        country: randomChoice(['US', 'CA', 'GB', 'DE', 'FR', 'JP', 'AU']),
+        errorCount: randomInt(0, 5), // Add errorCount which exists in schema
         entryScreen: randomChoice(CONFIG.SCREEN_NAMES),
         exitScreen: randomChoice(CONFIG.SCREEN_NAMES),
-        firstScreen: randomChoice(CONFIG.SCREEN_NAMES),
-        lastScreen: randomChoice(CONFIG.SCREEN_NAMES),
+        screenFlow: Array.from({ length: randomInt(3, 10) }, () => randomChoice(CONFIG.SCREEN_NAMES)), // Array of screens
         appVersion: device.appVersion,
-        platform: device.platform,
-        networkType: randomChoice(['wifi', 'cellular', 'ethernet']),
-        carrier: randomChoice(['Verizon', 'AT&T', 'T-Mobile', 'Sprint', 'Vodafone', 'Orange']),
-        deviceModel: device.model,
         osVersion: device.platform === 'ios' ? `iOS ${randomInt(14, 17)}.${randomInt(0, 9)}` : `Android ${randomInt(10, 14)}`,
-        screenResolution: randomChoice(['375x812', '414x896', '390x844', '428x926', '1080x1920', '1440x2560']),
+        networkType: randomChoice(['wifi', 'cellular', 'ethernet']),
+        locale: randomChoice(['en_US', 'en_GB', 'fr_FR', 'de_DE', 'ja_JP', 'es_ES']),
         timezone: randomChoice(['America/New_York', 'Europe/London', 'Asia/Tokyo', 'Australia/Sydney', 'Pacific/Auckland']),
       };
 
@@ -440,6 +547,7 @@ async function generateSessions() {
 async function startDataSeeder() {
   console.log('[Data Seeder] 🚀 Starting data seeder worker...');
   console.log(`[Data Seeder] Interval: ${CONFIG.INTERVAL_MS}ms`);
+  console.log(`[Data Seeder] Devices: ${CONFIG.DEVICES_PER_INTERVAL} per interval`);
   console.log(`[Data Seeder] API Traces: ${CONFIG.API_TRACES_PER_INTERVAL} per interval`);
   console.log(`[Data Seeder] Logs: ${CONFIG.LOGS_PER_INTERVAL} per interval`);
   console.log(`[Data Seeder] Crashes: ${CONFIG.CRASHES_PER_INTERVAL} per interval (when triggered)`);
@@ -453,6 +561,7 @@ async function startDataSeeder() {
 
     try {
       await Promise.all([
+        generateDevices(),
         generateApiTraces(),
         generateLogs(),
         generateCrashes(),

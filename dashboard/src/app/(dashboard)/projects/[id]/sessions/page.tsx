@@ -4,7 +4,6 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
-import AppShell from '@/components/layout/AppShell'
 import PageHeader from '@/components/layout/PageHeader'
 import ThemeToggle from '@/components/ThemeToggle'
 import DataTable, { Column } from '@/components/DataTable'
@@ -35,6 +34,47 @@ export default function SessionsPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
   const [projectName, setProjectName] = useState('')
+  const [timeRangeFilter, setTimeRangeFilter] = useState('24h')
+  const [platformFilter, setPlatformFilter] = useState('all')
+  const [appVersionFilter, setAppVersionFilter] = useState('all')
+  const [error, setError] = useState('')
+
+  // Export handler
+  const handleExport = useCallback(async () => {
+    if (!token || !projectId) return
+    try {
+      const params = new URLSearchParams({
+        projectId,
+        search: searchQuery || '',
+        platform: platformFilter !== 'all' ? platformFilter : '',
+        appVersion: appVersionFilter !== 'all' ? appVersionFilter : '',
+        timeRange: timeRangeFilter,
+        format: 'csv'
+      })
+      
+      const response = await fetch(`/api/sessions/export?${params}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      
+      if (!response.ok) {
+        alert('Export failed. Please try again.')
+        return
+      }
+      
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `sessions-${projectId}-${Date.now()}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Export failed:', error)
+      alert('Export failed. Please try again.')
+    }
+  }, [token, projectId, searchQuery, platformFilter, appVersionFilter, timeRangeFilter])
 
   const fetchProject = useCallback(async () => {
     if (!token || !projectId) return
@@ -51,18 +91,28 @@ export default function SessionsPage() {
     if (!token || !projectId) return
     try {
       setLoading(true)
-      const response = await api.sessions.list(projectId, token, {
-        page,
-        limit: 20,
-      })
+      setError('')
+      
+      const params: Record<string, string> = {
+        page: page.toString(),
+        limit: '20',
+      }
+      
+      if (searchQuery) params.search = searchQuery
+      if (platformFilter !== 'all') params.platform = platformFilter
+      if (appVersionFilter !== 'all') params.appVersion = appVersionFilter
+      if (timeRangeFilter) params.timeRange = timeRangeFilter
+      
+      const response = await api.sessions.list(projectId, token, params)
       setSessions(response.sessions || [])
       setTotalPages(response.pagination?.totalPages || 1)
     } catch (error) {
       console.error('Failed to fetch sessions:', error)
+      setError('Failed to load sessions. Please try again.')
     } finally {
       setLoading(false)
     }
-  }, [token, projectId, page])
+  }, [token, projectId, page, searchQuery, platformFilter, appVersionFilter, timeRangeFilter])
 
   useEffect(() => {
     if (token && projectId) {
@@ -114,6 +164,8 @@ export default function SessionsPage() {
         { value: '7d', label: 'Last 7d' },
         { value: '30d', label: 'Last 30d' },
       ],
+      value: timeRangeFilter,
+      onChange: setTimeRangeFilter,
     },
     {
       type: 'select',
@@ -122,6 +174,8 @@ export default function SessionsPage() {
         { value: 'ios', label: 'iOS' },
         { value: 'android', label: 'Android' },
       ],
+      value: platformFilter,
+      onChange: setPlatformFilter,
     },
     {
       type: 'select',
@@ -130,10 +184,22 @@ export default function SessionsPage() {
         { value: '2.0.1', label: '2.0.1' },
         { value: '2.0.0', label: '2.0.0' },
       ],
+      value: appVersionFilter,
+      onChange: setAppVersionFilter,
     },
-    { type: 'button', label: 'More Filters', className: 'secondary' },
-    { type: 'button', label: 'Export', className: 'secondary' },
-  ], [searchQuery])
+    { 
+      type: 'button', 
+      label: 'More Filters', 
+      className: 'secondary',
+      onChange: () => alert('More Filters coming soon!')
+    },
+    { 
+      type: 'button', 
+      label: 'Export', 
+      className: 'secondary',
+      onChange: handleExport
+    },
+  ], [searchQuery, timeRangeFilter, platformFilter, appVersionFilter, handleExport])
 
   // Memoize stats array
   const statsItems = useMemo(() => [
@@ -157,9 +223,9 @@ export default function SessionsPage() {
       label: 'Session',
       render: (session) => (
         <>
-          <b>S-{session.sessionToken.slice(-4).toUpperCase()}</b>
+          <b>S-{session.sessionToken?.slice(-4).toUpperCase() || 'N/A'}</b>
           <div className="muted" style={{ fontSize: '11px' }}>
-            token: …{session.sessionToken.slice(-4)}
+            token: …{session.sessionToken?.slice(-4) || 'N/A'}
           </div>
         </>
       ),
@@ -229,7 +295,7 @@ export default function SessionsPage() {
   } : undefined, [totalPages, page])
 
   return (
-    <AppShell projectId={projectId} projectName={projectName}>
+    <div className="space-y-6">
       <PageHeader
         title="Sessions"
         subtitle="Raw sessions list. Drill into Session Timeline: correlated traces/logs/crashes + screen flow (by sessionId)."
@@ -265,7 +331,7 @@ export default function SessionsPage() {
         pagination={paginationConfig}
         footerNote="Implementation: Session Timeline drawer shows correlated traces/logs/crashes + screen flow by sessionId."
       />
-    </AppShell>
+    </div>
   )
 }
 

@@ -68,6 +68,7 @@ export default function UserProfileDropdown() {
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-64 bg-gray-900 rounded-lg shadow-xl border border-gray-800 z-50">
+          {/* User Info */}
           <div className="p-4 border-b border-gray-800">
             <div className="text-sm font-medium text-white">{user.name || 'User'}</div>
             <div className="text-xs text-gray-400 mt-1">{user.email}</div>
@@ -81,6 +82,10 @@ export default function UserProfileDropdown() {
           <div className="py-2">
             {!user.isAdmin && (
               <>
+                {/* Billing Section */}
+                <div className="px-4 py-2">
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Billing</div>
+                </div>
                 <Link
                   href="/subscription"
                   onClick={() => setIsOpen(false)}
@@ -93,7 +98,6 @@ export default function UserProfileDropdown() {
                     <span>Subscription</span>
                   </div>
                 </Link>
-
                 <Link
                   href="/billing"
                   onClick={() => setIsOpen(false)}
@@ -106,7 +110,6 @@ export default function UserProfileDropdown() {
                     <span>Billing</span>
                   </div>
                 </Link>
-
                 <Link
                   href="/invoices"
                   onClick={() => setIsOpen(false)}
@@ -119,7 +122,6 @@ export default function UserProfileDropdown() {
                     <span>Invoices</span>
                   </div>
                 </Link>
-
                 <Link
                   href="/subscription?tab=usage"
                   onClick={() => setIsOpen(false)}
@@ -137,6 +139,10 @@ export default function UserProfileDropdown() {
               </>
             )}
 
+            {/* Account Section */}
+            <div className="px-4 py-2">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Account</div>
+            </div>
             <Link
               href="/profile"
               onClick={() => setIsOpen(false)}
@@ -149,23 +155,30 @@ export default function UserProfileDropdown() {
                 <span>Profile Settings</span>
               </div>
             </Link>
+            {!user.isAdmin && (
+              <Link
+                href="/settings"
+                onClick={() => setIsOpen(false)}
+                className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+              >
+                <div className="flex items-center space-x-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>NivoStack Settings</span>
+                </div>
+              </Link>
+            )}
 
+            <div className="border-t border-gray-800 my-2"></div>
+
+            {/* Product Section */}
             {!user.isAdmin && (
               <>
-                <Link
-                  href="/settings"
-                  onClick={() => setIsOpen(false)}
-                  className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
-                >
-                  <div className="flex items-center space-x-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span>NivoStack Settings</span>
-                  </div>
-                </Link>
-
+                <div className="px-4 py-2">
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</div>
+                </div>
                 <Link
                   href="/docs"
                   onClick={() => setIsOpen(false)}
@@ -178,7 +191,6 @@ export default function UserProfileDropdown() {
                     <span>Developer Guide</span>
                   </div>
                 </Link>
-
                 <Link
                   href="/setup"
                   onClick={() => setIsOpen(false)}
@@ -191,9 +203,17 @@ export default function UserProfileDropdown() {
                     <span>Setup Instructions</span>
                   </div>
                 </Link>
+
+                <div className="border-t border-gray-800 my-2"></div>
               </>
             )}
 
+            {/* Admin/Team Section */}
+            <div className="px-4 py-2">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                {user.isAdmin ? 'Admin' : 'Team'}
+              </div>
+            </div>
             <Link
               href="/team"
               onClick={() => setIsOpen(false)}
@@ -206,25 +226,23 @@ export default function UserProfileDropdown() {
                 <span>Team Management</span>
               </div>
             </Link>
-
             {user.isAdmin && (
-              <>
-                <Link
-                  href="/admin"
-                  onClick={() => setIsOpen(false)}
-                  className="block px-4 py-2 text-sm text-purple-300 hover:bg-gray-800 hover:text-purple-200 transition-colors"
-                >
-                  <div className="flex items-center space-x-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                    </svg>
-                    <span>Admin Dashboard</span>
-                  </div>
-                </Link>
-              </>
+              <Link
+                href="/admin"
+                onClick={() => setIsOpen(false)}
+                className="block px-4 py-2 text-sm text-purple-300 hover:bg-gray-800 hover:text-purple-200 transition-colors"
+              >
+                <div className="flex items-center space-x-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                  <span>Admin Dashboard</span>
+                </div>
+              </Link>
             )}
           </div>
 
+          {/* Logout Section */}
           <div className="border-t border-gray-800 py-2">
             <button
               onClick={handleLogout}
@@ -243,4 +261,3 @@ export default function UserProfileDropdown() {
     </div>
   )
 }
-

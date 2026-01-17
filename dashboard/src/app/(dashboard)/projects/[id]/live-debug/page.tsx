@@ -4,7 +4,6 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
-import AppShell from '@/components/layout/AppShell'
 import PageHeader from '@/components/layout/PageHeader'
 import ThemeToggle from '@/components/ThemeToggle'
 import DataTable, { Column } from '@/components/DataTable'
@@ -202,7 +201,7 @@ export default function LiveDebugPage() {
   }, [])
 
   return (
-    <AppShell projectId={projectId} projectName={projectName}>
+    <div className="space-y-6">
       <PageHeader
         title="Live Debug"
         subtitle="Live feed for debug-enabled devices. Supports polling fallback; shows recent raw rows only."
@@ -301,7 +300,7 @@ export default function LiveDebugPage() {
           </div>
         </div>
       </div>
-    </AppShell>
+    </div>
   )
 }
 

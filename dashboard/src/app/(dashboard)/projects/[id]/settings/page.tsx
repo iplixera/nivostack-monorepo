@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
-import AppShell from '@/components/layout/AppShell'
 import PageHeader from '@/components/layout/PageHeader'
 import ThemeToggle from '@/components/ThemeToggle'
 
@@ -66,7 +65,7 @@ export default function ProjectSettingsPage() {
   }, [])
 
   return (
-    <AppShell projectId={projectId} projectName={projectName}>
+    <div className="space-y-6">
       <PageHeader
         title="Project Settings"
         subtitle="API keys, environments, security, data capture policies, retention, and feature toggles."
@@ -186,7 +185,7 @@ export default function ProjectSettingsPage() {
           </button>
         </div>
       </div>
-    </AppShell>
+    </div>
   )
 }
 

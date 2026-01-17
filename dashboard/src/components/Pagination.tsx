@@ -12,7 +12,9 @@ export interface PaginationData {
 }
 
 interface PaginationProps {
-  pagination: PaginationData
+  pagination?: PaginationData
+  currentPage?: number
+  totalPages?: number
   onPageChange: (page: number) => void
   onLimitChange?: (limit: number) => void
   showLimitSelector?: boolean
@@ -25,22 +27,30 @@ interface PaginationProps {
  */
 export const Pagination = memo(function Pagination({
   pagination,
+  currentPage,
+  totalPages,
   onPageChange,
   onLimitChange,
   showLimitSelector = true,
   limitOptions = [25, 50, 100],
   className = ''
 }: PaginationProps) {
-  const { page, limit, total, totalPages, hasNext, hasPrev } = pagination
+  // Handle both pagination object and individual props
+  const page = pagination?.page ?? currentPage ?? 1
+  const totalPagesValue = pagination?.totalPages ?? totalPages ?? 1
+  const limit = pagination?.limit ?? 20
+  const total = pagination?.total ?? 0
+  const hasNext = pagination?.hasNext ?? (page < totalPagesValue)
+  const hasPrev = pagination?.hasPrev ?? (page > 1)
 
   // Calculate visible page numbers
   const getVisiblePages = () => {
     const pages: (number | 'ellipsis')[] = []
     const showPages = 5 // Number of page buttons to show
 
-    if (totalPages <= showPages + 2) {
+    if (totalPagesValue <= showPages + 2) {
       // Show all pages if total is small
-      for (let i = 1; i <= totalPages; i++) {
+      for (let i = 1; i <= totalPagesValue; i++) {
         pages.push(i)
       }
     } else {
@@ -53,19 +63,19 @@ export const Pagination = memo(function Pagination({
 
       // Show pages around current page
       const start = Math.max(2, page - 1)
-      const end = Math.min(totalPages - 1, page + 1)
+      const end = Math.min(totalPagesValue - 1, page + 1)
 
       for (let i = start; i <= end; i++) {
         pages.push(i)
       }
 
-      if (page < totalPages - 2) {
+      if (page < totalPagesValue - 2) {
         pages.push('ellipsis')
       }
 
       // Always show last page
-      if (totalPages > 1) {
-        pages.push(totalPages)
+      if (totalPagesValue > 1) {
+        pages.push(totalPagesValue)
       }
     }
 

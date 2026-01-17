@@ -93,6 +93,9 @@ model Device {
   debugModeExpiresAt DateTime? // Auto-disable after this time
   debugModeEnabledBy String? // Dashboard user who enabled debug mode
 
+  // Environment - production, staging, development
+  environment String @default("production")
+
   // Soft Delete - mark as deleted when project is deleted (for analytics)
   status    String    @default("active") // active, deleted
   deletedAt DateTime? // When device was marked as deleted
@@ -115,6 +118,7 @@ model Device {
   @@index([projectId, status])
   // Performance optimization indexes
   @@index([projectId, platform]) // For platform filtering
+  @@index([projectId, environment]) // For environment filtering
   @@index([projectId, createdAt]) // For date range queries
   @@index([projectId, lastSeenAt]) // For recent devices
 }

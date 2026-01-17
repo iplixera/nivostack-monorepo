@@ -4,7 +4,6 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
-import AppShell from '@/components/layout/AppShell'
 import PageHeader from '@/components/layout/PageHeader'
 import ThemeToggle from '@/components/ThemeToggle'
 import DataTable, { Column } from '@/components/DataTable'
@@ -174,7 +173,7 @@ export default function BuildsPage() {
   }, [])
 
   return (
-    <AppShell projectId={projectId} projectName={projectName}>
+    <div className="space-y-6">
       <PageHeader
         title="Builds"
         subtitle="Versioning snapshots for Config + Localization. Promote Preview → Production with change log and rollback."
@@ -209,6 +208,6 @@ export default function BuildsPage() {
         onRowClick={handleRowClick}
         footerNote="Implementation: Builds version Config and Localization. Promote Preview → Production with change log and rollback support."
       />
-    </AppShell>
+    </div>
   )
 }

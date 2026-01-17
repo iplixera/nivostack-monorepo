@@ -5,7 +5,6 @@ import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
 import { useParams } from 'next/navigation'
 import BuildsSubTab from '@/components/BuildsSubTab'
-import AppShell from '@/components/layout/AppShell'
 import PageHeader from '@/components/layout/PageHeader'
 import ThemeToggle from '@/components/ThemeToggle'
 import DataTable from '@/components/DataTable'
@@ -271,7 +270,7 @@ export default function MocksPage() {
 
   if (loading) {
     return (
-      <AppShell>
+      <div className="space-y-6">
         <PageHeader
           title="API Mocking"
           subtitle="Create and manage mock environments and endpoints"
@@ -281,7 +280,7 @@ export default function MocksPage() {
         <div style={{ textAlign: 'center', padding: '100px 0', color: 'var(--m)' }}>
           Loading...
         </div>
-      </AppShell>
+      </div>
     )
   }
 
@@ -514,7 +513,7 @@ export default function MocksPage() {
   ], [handleDeleteResponse])
 
   return (
-    <AppShell>
+    <div className="space-y-6">
       <PageHeader
         title="API Mocking"
         subtitle="Create and manage mock environments and endpoints"
@@ -662,7 +661,7 @@ export default function MocksPage() {
             : handleCreateResponse}
         />
       )}
-    </AppShell>
+    </div>
   )
 }
 

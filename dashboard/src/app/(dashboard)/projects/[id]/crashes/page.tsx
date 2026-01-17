@@ -4,7 +4,6 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
-import AppShell from '@/components/layout/AppShell'
 import PageHeader from '@/components/layout/PageHeader'
 import ThemeToggle from '@/components/ThemeToggle'
 import DataTable, { Column } from '@/components/DataTable'
@@ -199,7 +198,7 @@ export default function CrashesPage() {
   } : undefined, [totalPages, page])
 
   return (
-    <AppShell projectId={projectId} projectName={projectName}>
+    <div className="space-y-6">
       <PageHeader
         title="Crashes"
         subtitle="Aggregated crash groups with drilldown to raw. Group by message/stack signature; show trends + affected devices."
@@ -235,7 +234,7 @@ export default function CrashesPage() {
         pagination={paginationConfig}
         footerNote="Implementation: crash groups aggregated by message/stack signature. Drilldown shows all raw crashes in group."
       />
-    </AppShell>
+    </div>
   )
 }
 

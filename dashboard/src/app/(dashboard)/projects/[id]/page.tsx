@@ -4,13 +4,12 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
-import AppShell from '@/components/layout/AppShell'
 import PageHeader from '@/components/layout/PageHeader'
 import ThemeToggle from '@/components/ThemeToggle'
 import FilterBar, { FilterItem } from '@/components/FilterBar'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Database, Activity, BarChart3 } from 'lucide-react'
+// Icons replaced with text/symbols
 import Link from 'next/link'
 
 export default function DashboardPage() {
@@ -19,7 +18,7 @@ export default function DashboardPage() {
   const projectId = params?.id as string
 
   const [projectName, setProjectName] = useState('')
-  const [dataMode, setDataMode] = useState<'aggregated' | 'raw'>('aggregated')
+  const [dataMode, setDataMode] = useState<'aggregated' | 'raw'>('raw')
   const [stats, setStats] = useState({
     activeDevices: 0,
     sessions: 0,
@@ -50,7 +49,16 @@ export default function DashboardPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }).then(res => res.json())
+        }).then(res => {
+          if (!res.ok) {
+            console.error('Stats API error:', res.status, res.statusText)
+            return { stats: {} }
+          }
+          return res.json()
+        }).catch(error => {
+          console.error('Stats API fetch error:', error)
+          return { stats: {} }
+        })
       ])
 
       const project = projectData.projects?.find(p => p.id === projectId)
@@ -133,7 +141,7 @@ export default function DashboardPage() {
   ], [])
 
   return (
-    <AppShell projectId={projectId} projectName={projectName}>
+    <div className="space-y-6">
       <PageHeader
         title="Dashboard"
         subtitle={`Health snapshot with drilldowns to raw pages (devices/traces/logs/crashes).`}
@@ -147,7 +155,7 @@ export default function DashboardPage() {
                 onClick={() => setDataMode('aggregated')}
                 className="flex items-center gap-2"
               >
-                <BarChart3 className="w-4 h-4" />
+                📊
                 Aggregated
               </Button>
               <Button
@@ -156,15 +164,10 @@ export default function DashboardPage() {
                 onClick={() => setDataMode('raw')}
                 className="flex items-center gap-2"
               >
-                <Database className="w-4 h-4" />
-                Raw
+                🔍
+                Raw (Debug)
               </Button>
-              <Badge variant="secondary" className="ml-2">
-                <Activity className="w-3 h-3 mr-1" />
-                {dataMode === 'aggregated' ? 'Pre-computed' : 'Live Query'}
-              </Badge>
             </div>
-            <ThemeToggle />
           </div>
         }
       />
@@ -173,17 +176,18 @@ export default function DashboardPage() {
       <div className="card" style={{ marginTop: '18px' }}>
         <div className="statusRow">
           <span className="chip">
-            <span className="dot" />
-            Data source: rollups/materialized views
-          </span>
-          <span className="chip">
-            <span className="dot warn" />
-            Drilldown must open Raw pages with URL filters
+            <span className="dot" style={{ background: dataMode === 'aggregated' ? 'var(--success)' : 'var(--info)' }} />
+            {dataMode === 'aggregated' ? 'Showing aggregated metrics (fast)' : 'Showing raw data (debug mode)'}
           </span>
           <span className="chip">
             <span className="dot" />
-            Time range default: 24h
+            Time range: Last 24 hours
           </span>
+          {dataMode === 'aggregated' && (
+            <span className="chip" style={{ color: 'var(--m)', fontSize: '11px' }}>
+              💡 Click any metric to drill down to raw data
+            </span>
+          )}
         </div>
       </div>
 
@@ -193,45 +197,162 @@ export default function DashboardPage() {
       {/* KPI Strip */}
       <div className="card" style={{ marginTop: '14px' }}>
         <div className="kpis" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '12px' }}>
-          <div className="kpi" style={{ padding: '12px', borderRadius: '14px', border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--s), var(--s2))' }}>
+          <Link 
+            href={`/projects/${projectId}/devices?timeRangePreset=24h`}
+            className="kpi" 
+            style={{ 
+              padding: '12px', 
+              borderRadius: '14px', 
+              border: '1px solid var(--b)', 
+              background: 'linear-gradient(180deg, var(--s), var(--s2))',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              textDecoration: 'none',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+          >
             <b style={{ fontSize: '18px', color: 'var(--t)' }}>{stats.activeDevices}</b>
             <span style={{ display: 'block', color: 'var(--m)', fontSize: '11px', marginTop: '4px' }}>
-              Active Devices
+              Active Devices (24h)
             </span>
-          </div>
-          <div className="kpi" style={{ padding: '12px', borderRadius: '14px', border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--s), var(--s2))' }}>
+          </Link>
+          <Link 
+            href={`/projects/${projectId}/sessions?timeRangePreset=24h`}
+            className="kpi" 
+            style={{ 
+              padding: '12px', 
+              borderRadius: '14px', 
+              border: '1px solid var(--b)', 
+              background: 'linear-gradient(180deg, var(--s), var(--s2))',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              textDecoration: 'none',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+          >
             <b style={{ fontSize: '18px', color: 'var(--t)' }}>{stats.sessions.toLocaleString()}</b>
             <span style={{ display: 'block', color: 'var(--m)', fontSize: '11px', marginTop: '4px' }}>
-              Sessions
+              Sessions (24h)
             </span>
-          </div>
-          <div className="kpi" style={{ padding: '12px', borderRadius: '14px', border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--s), var(--s2))' }}>
+          </Link>
+          <Link 
+            href={`/projects/${projectId}/traces?timeRangePreset=24h`}
+            className="kpi" 
+            style={{ 
+              padding: '12px', 
+              borderRadius: '14px', 
+              border: '1px solid var(--b)', 
+              background: 'linear-gradient(180deg, var(--s), var(--s2))',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              textDecoration: 'none',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+          >
             <b style={{ fontSize: '18px', color: 'var(--t)' }}>{stats.apiRequests.toLocaleString()}</b>
             <span style={{ display: 'block', color: 'var(--m)', fontSize: '11px', marginTop: '4px' }}>
-              API Requests
+              API Requests (24h)
             </span>
-          </div>
-          <div className="kpi" style={{ padding: '12px', borderRadius: '14px', border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--s), var(--s2))' }}>
-            <b style={{ fontSize: '18px', color: 'var(--t)' }}>{stats.errorRate}%</b>
+          </Link>
+          <Link 
+            href={`/projects/${projectId}/traces?timeRangePreset=24h&statusFilter=error`}
+            className="kpi" 
+            style={{ 
+              padding: '12px', 
+              borderRadius: '14px', 
+              border: '1px solid var(--b)', 
+              background: 'linear-gradient(180deg, var(--s), var(--s2))',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              textDecoration: 'none',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+          >
+            <b style={{ fontSize: '18px', color: stats.errorRate > 5 ? 'var(--error)' : 'var(--t)' }}>{stats.errorRate}%</b>
             <span style={{ display: 'block', color: 'var(--m)', fontSize: '11px', marginTop: '4px' }}>
-              Error Rate
+              Error Rate (24h)
             </span>
-          </div>
-          <div className="kpi" style={{ padding: '12px', borderRadius: '14px', border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--s), var(--s2))' }}>
+          </Link>
+          <Link 
+            href={`/projects/${projectId}/traces?timeRangePreset=24h&sortBy=latency`}
+            className="kpi" 
+            style={{ 
+              padding: '12px', 
+              borderRadius: '14px', 
+              border: '1px solid var(--b)', 
+              background: 'linear-gradient(180deg, var(--s), var(--s2))',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              textDecoration: 'none',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+          >
             <b style={{ fontSize: '18px', color: 'var(--t)' }}>{stats.p95Latency}ms</b>
             <span style={{ display: 'block', color: 'var(--m)', fontSize: '11px', marginTop: '4px' }}>
-              P95 Latency
+              P95 Latency (24h)
             </span>
-          </div>
-          <div className="kpi" style={{ padding: '12px', borderRadius: '14px', border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--s), var(--s2))' }}>
+          </Link>
+          <Link 
+            href="/subscription?tab=usage"
+            className="kpi" 
+            style={{ 
+              padding: '12px', 
+              borderRadius: '14px', 
+              border: '1px solid var(--b)', 
+              background: 'linear-gradient(180deg, var(--s), var(--s2))',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              textDecoration: 'none',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+          >
             <b style={{ fontSize: '18px', color: 'var(--t)' }}>${stats.costEstimate}</b>
             <span style={{ display: 'block', color: 'var(--m)', fontSize: '11px', marginTop: '4px' }}>
-              Cost Estimate
+              Est. Cost (24h)
             </span>
-          </div>
-        </div>
-        <div className="footerNote" style={{ marginTop: '12px' }}>
-          Each tile must include: Drilldown (agg view) + View Raw (prefilled filters).
+          </Link>
         </div>
       </div>
 
@@ -286,6 +407,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-    </AppShell>
+    </div>
   )
 }

@@ -4,7 +4,6 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
-import AppShell from '@/components/layout/AppShell'
 import PageHeader from '@/components/layout/PageHeader'
 import ThemeToggle from '@/components/ThemeToggle'
 import FilterBar, { FilterItem } from '@/components/FilterBar'
@@ -62,7 +61,7 @@ export default function ScreenFlowPage() {
   ], [])
 
   return (
-    <AppShell projectId={projectId} projectName={projectName}>
+    <div className="space-y-6">
       <PageHeader
         title="Screen Flow"
         subtitle="Aggregated screen flow visualization with funnels. Drilldown to raw sessions by screen sequence."
@@ -124,7 +123,7 @@ export default function ScreenFlowPage() {
           Implementation: Screen flow aggregated by screen transitions. Drilldown shows raw sessions matching the flow pattern.
         </div>
       </div>
-    </AppShell>
+    </div>
   )
 }
 

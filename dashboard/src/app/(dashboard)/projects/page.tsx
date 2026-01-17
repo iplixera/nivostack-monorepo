@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
-import AppShell from '@/components/layout/AppShell'
 import PageHeader from '@/components/layout/PageHeader'
 import ThemeToggle from '@/components/ThemeToggle'
 
@@ -105,7 +104,7 @@ export default function ProjectsPage() {
 
   if (loading) {
     return (
-      <AppShell>
+      <div className="space-y-6">
         <PageHeader
           title="Projects"
           subtitle="Manage your projects"
@@ -115,7 +114,7 @@ export default function ProjectsPage() {
         <div style={{ textAlign: 'center', padding: '100px 0', color: 'var(--m)' }}>
           Loading projects...
         </div>
-      </AppShell>
+      </div>
     )
   }
 
@@ -123,7 +122,7 @@ export default function ProjectsPage() {
   const projectsUsage = usageStats?.projects
 
   return (
-    <AppShell>
+    <div className="space-y-6">
       <PageHeader
         title="Projects"
         subtitle="Manage your projects"
@@ -239,16 +238,16 @@ export default function ProjectsPage() {
                 
                 <div className="grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', fontSize: '12px' }}>
                   <div className="muted">
-                    <b style={{ color: 'var(--t)' }}>{project._count.devices}</b> devices
+                    <b style={{ color: 'var(--t)' }}>{project._count.devices}</b> devices <span style={{ fontSize: '10px', opacity: 0.7 }}>(total)</span>
                   </div>
                   <div className="muted">
-                    <b style={{ color: 'var(--t)' }}>{project._count.logs}</b> logs
+                    <b style={{ color: 'var(--t)' }}>{project._count.logs}</b> logs <span style={{ fontSize: '10px', opacity: 0.7 }}>(all-time)</span>
                   </div>
                   <div className="muted">
-                    <b style={{ color: 'var(--d)' }}>{project._count.crashes}</b> crashes
+                    <b style={{ color: 'var(--d)' }}>{project._count.crashes}</b> crashes <span style={{ fontSize: '10px', opacity: 0.7 }}>(all-time)</span>
                   </div>
                   <div className="muted">
-                    <b style={{ color: 'var(--t)' }}>{project._count.apiTraces}</b> traces
+                    <b style={{ color: 'var(--t)' }}>{project._count.apiTraces}</b> traces <span style={{ fontSize: '10px', opacity: 0.7 }}>(all-time)</span>
                   </div>
                 </div>
               </Link>
@@ -311,6 +310,6 @@ export default function ProjectsPage() {
           </div>
         </div>
       )}
-    </AppShell>
+    </div>
   )
 }

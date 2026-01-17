@@ -4,7 +4,6 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
-import AppShell from '@/components/layout/AppShell'
 import PageHeader from '@/components/layout/PageHeader'
 import ThemeToggle from '@/components/ThemeToggle'
 import DataTable, { Column } from '@/components/DataTable'
@@ -192,7 +191,7 @@ export default function LocalizationPage() {
   } : undefined, [totalPages, page])
 
   return (
-    <AppShell projectId={projectId} projectName={projectName}>
+    <div className="space-y-6">
       <PageHeader
         title="Localization"
         subtitle="Control Plane. Manage languages, keys, translations, review workflow, and export formats."
@@ -268,7 +267,7 @@ export default function LocalizationPage() {
           </button>
         </div>
       </div>
-    </AppShell>
+    </div>
   )
 }
 

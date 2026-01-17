@@ -4,7 +4,6 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
-import AppShell from '@/components/layout/AppShell'
 import PageHeader from '@/components/layout/PageHeader'
 import ThemeToggle from '@/components/ThemeToggle'
 import DataTable, { Column } from '@/components/DataTable'
@@ -198,7 +197,7 @@ export default function BusinessConfigPage() {
   } : undefined, [totalPages, page])
 
   return (
-    <AppShell projectId={projectId} projectName={projectName}>
+    <div className="space-y-6">
       <PageHeader
         title="Business Config"
         subtitle="Manage business configuration keys and values. Supports categories, versioning, and A/B testing."
@@ -267,7 +266,7 @@ export default function BusinessConfigPage() {
         pagination={paginationConfig}
         footerNote="Implementation: Business config supports categories, versioning, and A/B testing. Changes are versioned and can be rolled back."
       />
-    </AppShell>
+    </div>
   )
 }
 

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { initTheme } from '@/lib/theme'
 import ThemeToggle from '../ThemeToggle'
+import UsagePill from '../UsagePill'
 import { useAuth } from '../AuthProvider'
 import Navigation from './Navigation'
 import { api } from '@/lib/api'
@@ -93,13 +94,13 @@ export default function AppShell({
   const isAdminMemo = useMemo(() => user?.isAdmin || false, [user?.isAdmin])
 
   return (
-    <div className="app" style={{ 
-      display: 'grid', 
-      gridTemplateColumns: '300px 1fr', 
-      minHeight: '100vh' 
+    <div className="app" style={{
+      display: 'grid',
+      gridTemplateColumns: '300px 1fr',
+      minHeight: '100vh'
     }}>
       {/* Sidebar */}
-      <aside 
+      <aside
         className="sidebar bg-sidebar border-r border-default"
         style={{
           background: 'var(--sb)',
@@ -112,7 +113,7 @@ export default function AppShell({
         }}
       >
         {/* Brand */}
-        <div 
+        <div
           className="brand"
           style={{
             display: 'flex',
@@ -125,7 +126,7 @@ export default function AppShell({
             boxShadow: 'var(--shadow-sm)'
           }}
         >
-          <div 
+          <div
             className="logo"
             style={{
               width: '34px',
@@ -142,101 +143,139 @@ export default function AppShell({
         </div>
 
         {/* Project Selector */}
-        {projectId && (
-          <div 
-            className="project"
-            style={{
-              marginTop: '12px',
-              padding: '10px',
-              borderRadius: '14px',
-              border: '1px solid var(--b)',
-              background: 'var(--s)',
-              position: 'relative'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'center' }}>
-              <div>
-                <div style={{ fontWeight: 800, color: 'var(--t)', fontSize: '14px' }}>
-                  {projectName || 'Project'}
-                </div>
-                <div style={{ color: 'var(--m)', fontSize: '12px' }}>prod · GCC</div>
+        <div style={{ marginTop: '16px' }}>
+          <div style={{
+            fontSize: '11px',
+            fontWeight: '600',
+            color: 'var(--m)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            marginBottom: '8px',
+            paddingLeft: '2px'
+          }}>
+            Current Project
+          </div>
+
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowProjectDropdown(!showProjectDropdown)}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '12px 16px',
+                background: 'var(--bg)',
+                border: '1px solid var(--b)',
+                borderRadius: '12px',
+                color: 'var(--t)',
+                cursor: 'pointer',
+                fontSize: '14px',
+                transition: 'all 0.2s'
+              }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <span style={{ fontWeight: '500', fontSize: '14px' }}>
+                  {projectName || 'Select Project'}
+                </span>
+                {projectId && (
+                  <span style={{ fontSize: '12px', color: 'var(--m)', marginTop: '2px' }}>
+                    prod · GCC
+                  </span>
+                )}
               </div>
-              {projects.length > 1 && (
-                <button
-                  onClick={handleToggleDropdown}
-                  className="badge"
-                  style={{
-                    fontSize: '11px',
-                    padding: '3px 8px',
-                    borderRadius: '999px',
-                    border: '1px solid var(--b)',
-                    color: 'var(--m)',
-                    cursor: 'pointer',
-                    background: 'transparent'
-                  }}
-                >
-                  Switch ▼
-                </button>
-              )}
-            </div>
-            {showProjectDropdown && projects.length > 1 && (
+              <svg
+                style={{
+                  width: '16px',
+                  height: '16px',
+                  transition: 'transform 0.2s',
+                  transform: showProjectDropdown ? 'rotate(180deg)' : 'rotate(0deg)'
+                }}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {showProjectDropdown && (
               <>
                 <div
                   style={{
                     position: 'fixed',
                     inset: 0,
-                    zIndex: 10
+                    zIndex: 50
                   }}
-                  onClick={handleCloseDropdown}
+                  onClick={() => setShowProjectDropdown(false)}
                 />
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    marginTop: '8px',
-                    width: '100%',
-                    background: 'var(--s)',
-                    border: '1px solid var(--b)',
-                    borderRadius: '12px',
-                    boxShadow: 'var(--shadow-sm)',
-                    zIndex: 20,
-                    maxHeight: '300px',
-                    overflow: 'auto'
-                  }}
-                >
-                  {projects.map((project) => (
-                    <button
-                      key={project.id}
-                      onClick={() => handleProjectChange(project.id)}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '10px',
-                        fontSize: '12px',
-                        color: project.id === projectId ? 'var(--t)' : 'var(--m)',
-                        background: project.id === projectId ? 'var(--chip)' : 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        borderRadius: '8px',
-                        margin: '4px'
-                      }}
-                    >
-                      {project.name}
-                    </button>
-                  ))}
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: '4px',
+                  background: 'var(--bg)',
+                  border: '1px solid var(--b)',
+                  borderRadius: '12px',
+                  boxShadow: 'var(--shadow-lg)',
+                  zIndex: 60,
+                  maxHeight: '300px',
+                  overflow: 'auto'
+                }}>
+                  {projects.length === 0 ? (
+                    <div style={{
+                      padding: '16px',
+                      textAlign: 'center',
+                      color: 'var(--m)',
+                      fontSize: '14px'
+                    }}>
+                      No projects available
+                    </div>
+                  ) : (
+                    projects.map((project) => (
+                      <button
+                        key={project.id}
+                        onClick={() => {
+                          setShowProjectDropdown(false)
+                          onProjectChange?.(project.id)
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          textAlign: 'left',
+                          border: 'none',
+                          background: project.id === projectId ? 'var(--accent)' : 'transparent',
+                          color: 'var(--t)',
+                          cursor: 'pointer',
+                          borderRadius: project.id === projectId ? '8px' : '0',
+                          fontSize: '14px',
+                          transition: 'background 0.2s'
+                        }}
+                      >
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontWeight: '500' }}>{project.name}</span>
+                          {project.role && project.role !== 'owner' && (
+                            <span style={{ fontSize: '12px', color: 'var(--m)', marginTop: '2px' }}>
+                              {project.role}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    ))
+                  )}
                 </div>
               </>
             )}
           </div>
-        )}
+        </div>
 
         {/* Navigation */}
         <Navigation projectId={projectId} isAdmin={isAdminMemo} />
       </aside>
 
       {/* Main Content */}
-      <main 
+      <main
         className="main"
         style={{
           minWidth: 0,
@@ -245,7 +284,7 @@ export default function AppShell({
         }}
       >
         {/* Topbar */}
-        <div 
+        <div
           className="topbar"
           style={{
             position: 'sticky',
@@ -260,15 +299,41 @@ export default function AppShell({
             alignItems: 'center'
           }}
         >
-          <div className="title">
+          {/* App Logo & Name */}
+          <div className="logo-section" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Link href="/projects" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: '16px'
+              }}>
+                N
+              </div>
+              <div>
+                <b style={{ fontSize: '16px', color: 'var(--t)' }}>NivoStack</b>
+                <div style={{ fontSize: '10px', color: 'var(--m)' }}>Studio</div>
+              </div>
+            </Link>
+          </div>
+
+
+          {/* Page Title */}
+          <div className="page-title" style={{ marginLeft: 'auto', textAlign: 'right' }}>
             <b style={{ fontSize: '16px', display: 'block', color: 'var(--t)' }}>
-              {projectName || 'NivoStack'}
+              NivoStack Studio
             </b>
             <span style={{ fontSize: '12px', color: 'var(--m)' }}>
-              Dashboard
+              {projectName ? `${projectName} Analytics` : 'Aggregated Analytics'}
             </span>
           </div>
-          <div 
+          <div
             className="actions"
             style={{
               display: 'flex',
@@ -277,16 +342,17 @@ export default function AppShell({
               flexWrap: 'wrap'
             }}
           >
+            {projectId && <UsagePill projectId={projectId} />}
             <ThemeToggle />
           </div>
         </div>
 
         {/* Content */}
-        <div 
+        <div
           className="content"
           style={{
-            padding: '18px',
-            maxWidth: '1320px',
+            padding: '24px 32px',
+            maxWidth: '1440px',
             width: '100%',
             margin: '0 auto'
           }}

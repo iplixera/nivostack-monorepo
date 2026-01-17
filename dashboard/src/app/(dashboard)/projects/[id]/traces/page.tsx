@@ -4,7 +4,6 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
-import AppShell from '@/components/layout/AppShell'
 import PageHeader from '@/components/layout/PageHeader'
 import ThemeToggle from '@/components/ThemeToggle'
 import DataTable, { Column } from '@/components/DataTable'
@@ -221,7 +220,7 @@ export default function ApiTracesPage() {
   } : undefined, [totalPages, page])
 
   return (
-    <AppShell projectId={projectId} projectName={projectName}>
+    <div className="space-y-6">
       <PageHeader
         title="API Traces"
         subtitle="Raw trace list with strict performance: list query excludes bodies. Drawer lazily fetches headers/bodies."
@@ -279,6 +278,6 @@ export default function ApiTracesPage() {
         pagination={paginationConfig}
         footerNote="Implementation detail: trace body fields loaded only when drawer opens (traceId). Never return bodies in list."
       />
-    </AppShell>
+    </div>
   )
 }

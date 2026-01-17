@@ -478,13 +478,12 @@ export async function aggregateCrashes(
   for (const agg of aggregates.values()) {
     await prisma.crashAggregate.upsert({
       where: {
-        projectId_period_granularity_buildVersion_platform_country: {
+        projectId_period_granularity_buildVersion_platform: {
           projectId: agg.projectId,
           period: agg.period,
           granularity: agg.granularity,
           buildVersion: agg.buildVersion,
           platform: agg.platform,
-          country: agg.country,
         },
       },
       update: {

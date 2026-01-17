@@ -4,7 +4,6 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
-import AppShell from '@/components/layout/AppShell'
 import PageHeader from '@/components/layout/PageHeader'
 import ThemeToggle from '@/components/ThemeToggle'
 import DataTable, { Column } from '@/components/DataTable'
@@ -192,7 +191,7 @@ export default function NotificationsPage() {
   }, [])
 
   return (
-    <AppShell projectId={projectId} projectName={projectName}>
+    <div className="space-y-6">
       <PageHeader
         title="Notifications"
         subtitle="User notification center + preferences. Includes quota warnings and alert events as first-class notifications."
@@ -321,7 +320,7 @@ export default function NotificationsPage() {
         }}
         footerNote="Implementation: Notifications include quota warnings, alert triggers, invites, and build promotions. All notifications are actionable."
       />
-    </AppShell>
+    </div>
   )
 }
 

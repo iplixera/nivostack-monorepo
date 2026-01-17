@@ -77,21 +77,21 @@ export default function Navigation({ projectId, counts = {}, isAdmin = false }: 
     },
     ...(isAdmin
       ? [
-          {
-            title: 'Admin',
-            items: [
-              { label: 'Dashboard', href: '/admin', badge: 'Admin' },
-              { label: 'Users', href: '/admin/users', badge: 'Admin' },
-              { label: 'Subscriptions', href: '/admin/subscriptions', badge: 'Admin' },
-              { label: 'Plans', href: '/admin/plans', badge: 'Admin' },
-              { label: 'Revenue', href: '/admin/revenue', badge: 'Admin' },
-              { label: 'Statistics', href: '/admin/statistics', badge: 'Admin' },
-              { label: 'Promo Codes', href: '/admin/promo-codes', badge: 'Admin' },
-              { label: 'Offers', href: '/admin/offers', badge: 'Admin' },
-              { label: 'Configurations', href: '/admin/configurations', badge: 'Admin' },
-            ],
-          },
-        ]
+        {
+          title: 'Admin',
+          items: [
+            { label: 'Dashboard', href: '/admin', badge: 'Admin' },
+            { label: 'Users', href: '/admin/users', badge: 'Admin' },
+            { label: 'Subscriptions', href: '/admin/subscriptions', badge: 'Admin' },
+            { label: 'Plans', href: '/admin/plans', badge: 'Admin' },
+            { label: 'Revenue', href: '/admin/revenue', badge: 'Admin' },
+            { label: 'Statistics', href: '/admin/statistics', badge: 'Admin' },
+            { label: 'Promo Codes', href: '/admin/promo-codes', badge: 'Admin' },
+            { label: 'Offers', href: '/admin/offers', badge: 'Admin' },
+            { label: 'Configurations', href: '/admin/configurations', badge: 'Admin' },
+          ],
+        },
+      ]
       : []),
   ]
 
@@ -100,7 +100,7 @@ export default function Navigation({ projectId, counts = {}, isAdmin = false }: 
       // For non-project pages, exact match
       return pathname === href
     }
-    
+
     // For project pages, check if pathname matches
     if (href.includes('?')) {
       const [base] = href.split('?')
@@ -111,7 +111,7 @@ export default function Navigation({ projectId, counts = {}, isAdmin = false }: 
       // For query-based navigation, check if we're on the project page
       return pathname?.startsWith(`/projects/${projectId}`)
     }
-    
+
     // Exact match or starts with
     return pathname === href || pathname?.startsWith(href + '/')
   }
@@ -162,7 +162,7 @@ export default function Navigation({ projectId, counts = {}, isAdmin = false }: 
 
               return (
                 <Link
-                  key={item.href}
+                  key={`${item.href}-${item.label}`}
                   href={item.href}
                   style={{
                     display: 'flex',
@@ -249,8 +249,8 @@ export default function Navigation({ projectId, counts = {}, isAdmin = false }: 
           padding: '0 10px'
         }}
       >
-        Aggregated = rollups/materialized views<br/>
-        Raw = row-level tables (paged + filtered)<br/>
+        Aggregated = rollups/materialized views<br />
+        Raw = row-level tables (paged + filtered)<br />
         Live = recent raw deltas (poll/stream)
       </div>
     </nav>

@@ -4,7 +4,6 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
-import AppShell from '@/components/layout/AppShell'
 import PageHeader from '@/components/layout/PageHeader'
 import ThemeToggle from '@/components/ThemeToggle'
 import DataTable, { Column } from '@/components/DataTable'
@@ -201,7 +200,7 @@ export default function AlertsPage() {
   }, [])
 
   return (
-    <AppShell projectId={projectId} projectName={projectName}>
+    <div className="space-y-6">
       <PageHeader
         title="Alerts"
         subtitle="Unified alerts center: API alerts + Config alerts. Includes event feed, acknowledgements, cooldown, routing."
@@ -241,7 +240,7 @@ export default function AlertsPage() {
         } : undefined}
         footerNote="Implementation: Alerts support API and Config types. Each alert has drilldown to raw data with filters applied."
       />
-    </AppShell>
+    </div>
   )
 }
 

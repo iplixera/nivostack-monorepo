@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
-import AppShell from '@/components/layout/AppShell'
 import PageHeader from '@/components/layout/PageHeader'
 import ThemeToggle from '@/components/ThemeToggle'
 
@@ -73,7 +72,7 @@ export default function SdkSettingsPage() {
   }, [])
 
   return (
-    <AppShell projectId={projectId} projectName={projectName}>
+    <div className="space-y-6">
       <PageHeader
         title="SDK Settings"
         subtitle="Control what the SDK captures: batching, flush interval, sensitive data masking, bodies capture policy."
@@ -231,7 +230,7 @@ export default function SdkSettingsPage() {
       <div className="footerNote" style={{ marginTop: '14px' }}>
         Implementation: SDK settings control what data is captured and how it's sent. Changes are auditable and may require approval.
       </div>
-    </AppShell>
+    </div>
   )
 }
 

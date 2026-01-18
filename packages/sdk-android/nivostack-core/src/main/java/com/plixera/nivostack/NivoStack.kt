@@ -863,10 +863,7 @@ class NivoStack private constructor(
      */
     fun isFullyInitialized(): Boolean = isFullyInitialized
     fun isConfigFetched(): Boolean = configFetched
-    fun isDeviceRegistered(): Boolean = deviceRegistered
-    fun isSessionStarted(): Boolean = sessionStarted
-    fun getInitError(): String? = initError
-    
+
     /**
      * Get current screen name
      */
@@ -881,33 +878,23 @@ class NivoStack private constructor(
      * Get current event count for this session
      */
     fun getEventCount(): Int = eventCount
-    
+
     /**
      * Get current error count for this session
      */
     fun getErrorCount(): Int = errorCount
-    
+
     /**
      * Get user properties set for this session
      */
     fun getUserProperties(): Map<String, Any> = userProperties.toMap()
-    
+
     /**
      * Clear user properties
      */
     fun clearUserProperties() {
         userProperties.clear()
     }
-    
-    /**
-     * Get pending trace count (traces waiting to be sent to server)
-     */
-    fun getPendingTraceCount(): Int = traceQueue.size
-    
-    /**
-     * Get pending log count (logs waiting to be sent to server)
-     */
-    fun getPendingLogCount(): Int = logQueue.size
     
     /**
      * Check if a specific feature is enabled

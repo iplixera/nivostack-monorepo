@@ -698,13 +698,14 @@ export default function ProjectDetailPage() {
       }
       setAllEndpoints(Array.from(endpointSet).sort())
 
-      console.log('Fetched environments and endpoints:', {
+      console.log('[DEBUG] Fetched environments and endpoints:', {
         environments: envSet.size,
         endpoints: endpointSet.size,
-        tracesFetched: allTracesRes.traces.length
+        tracesFetched: allTracesRes.traces.length,
+        endpointsList: Array.from(endpointSet).sort()
       })
     } catch (error) {
-      console.error('Failed to fetch all environments and endpoints:', error)
+      console.error('[DEBUG] Failed to fetch all environments and endpoints:', error)
     }
   }, [token, projectId, selectedBaseUrl])
 
@@ -1395,6 +1396,7 @@ export default function ProjectDetailPage() {
   // Fetch all environments when traces tab opens, and endpoints when environment changes
   useEffect(() => {
     if (!loading && activeTab === 'traces') {
+      console.log('[DEBUG] Fetching environments and endpoints...')
       fetchAllEnvironmentsAndEndpoints()
     }
   }, [activeTab, loading, selectedBaseUrl, fetchAllEnvironmentsAndEndpoints])
@@ -3489,10 +3491,13 @@ export default function ProjectDetailPage() {
                       <label className="text-gray-400 text-sm">API:</label>
                       <select
                         value={selectedEndpoint}
-                        onChange={(e) => setSelectedEndpoint(e.target.value)}
+                        onChange={(e) => {
+                          console.log('[DEBUG] Endpoint filter changed to:', e.target.value)
+                          setSelectedEndpoint(e.target.value)
+                        }}
                         className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none max-w-[300px]"
                       >
-                        <option value="">All APIs</option>
+                        <option value="">All APIs ({allEndpoints.length})</option>
                         {allEndpoints.map((endpoint) => (
                           <option key={endpoint} value={endpoint}>{endpoint}</option>
                         ))}

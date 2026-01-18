@@ -1834,6 +1834,7 @@ export default function ProjectDetailPage() {
         errorCount: 0,
         uniqueEnvironments: 0,
         uniqueEndpoints: 0,
+        uniqueAPIs: 0,
         avgDuration: 0,
         successRate: 0
       }
@@ -1844,7 +1845,7 @@ export default function ProjectDetailPage() {
 
     const uniqueEnvironments = environments.length
 
-    // Extract unique endpoints
+    // Extract unique endpoints (pathname only)
     const uniqueEndpoints = new Set(
       traces.map(t => {
         try {
@@ -1852,6 +1853,18 @@ export default function ProjectDetailPage() {
           return url.pathname
         } catch {
           return t.url
+        }
+      })
+    ).size
+
+    // Extract unique APIs (method + pathname combination)
+    const uniqueAPIs = new Set(
+      traces.map(t => {
+        try {
+          const url = new URL(t.url)
+          return `${t.method} ${url.pathname}`
+        } catch {
+          return `${t.method} ${t.url}`
         }
       })
     ).size
@@ -1869,6 +1882,7 @@ export default function ProjectDetailPage() {
       errorCount,
       uniqueEnvironments,
       uniqueEndpoints,
+      uniqueAPIs,
       avgDuration,
       successRate
     }
@@ -3283,7 +3297,7 @@ export default function ProjectDetailPage() {
                   })()}
 
                   {/* Summary Statistics */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-4">
                     <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
                       <div className="text-gray-400 text-xs mb-1">Total Traces</div>
                       <div className="text-2xl font-bold text-white">{traceStats.total}</div>
@@ -3305,6 +3319,10 @@ export default function ProjectDetailPage() {
                     <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
                       <div className="text-gray-400 text-xs mb-1">Endpoints</div>
                       <div className="text-2xl font-bold text-purple-400">{traceStats.uniqueEndpoints}</div>
+                    </div>
+                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+                      <div className="text-gray-400 text-xs mb-1">API Count</div>
+                      <div className="text-2xl font-bold text-cyan-400">{traceStats.uniqueAPIs}</div>
                     </div>
                     <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
                       <div className="text-gray-400 text-xs mb-1">Avg Duration</div>

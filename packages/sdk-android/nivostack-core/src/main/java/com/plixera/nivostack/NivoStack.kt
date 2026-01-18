@@ -119,11 +119,19 @@ class NivoStack private constructor(
                     instance = NivoStack(context.applicationContext, baseUrl, apiKey, projectId, enabled)
                     instance!!.syncInterval = syncIntervalMinutes?.let { it * 60 * 1000 } // Convert minutes to milliseconds
                     instance!!._initDeviceInfo()
-                    
+
+                    // Automatically register lifecycle observer for screen tracking
+                    // This enables automatic screen name tracking without any client code
+                    if (context.applicationContext is android.app.Application) {
+                        val app = context.applicationContext as android.app.Application
+                        app.registerActivityLifecycleCallbacks(NivoStackLifecycleObserver())
+                        instance!!.log("Lifecycle observer registered automatically")
+                    }
+
                     if (enabled) {
                         // Load cached config
                         instance!!._loadCachedConfig()
-                        
+
                         // Run network operations in background
                         instance!!._initializeInBackground()
                     }

@@ -568,6 +568,8 @@ export default function ProjectDetailPage() {
   const [traceDevices, setTraceDevices] = useState<TraceDevice[]>([])
   const [selectedScreen, setSelectedScreen] = useState<string>('')
   const [selectedDevice, setSelectedDevice] = useState<string>('')
+  const [selectedEnvironment, setSelectedEnvironment] = useState<string>('') // Base URL filter
+  const [selectedStatusCode, setSelectedStatusCode] = useState<string>('') // Status code filter
   const [groupBy, setGroupBy] = useState<'none' | 'device' | 'screen' | 'endpoint'>('none')
   const [expandedTrace, setExpandedTrace] = useState<string | null>(null)
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null)
@@ -664,6 +666,7 @@ export default function ProjectDetailPage() {
       const tracesRes = await api.traces.list(projectId, token, {
         screenName: selectedScreen || undefined,
         deviceId: selectedDevice || undefined,
+        statusCode: selectedStatusCode ? parseInt(selectedStatusCode) : undefined,
         page,
         limit: tracesPagination.limit
       })
@@ -678,7 +681,7 @@ export default function ProjectDetailPage() {
     } finally {
       setTracesLoading(false)
     }
-  }, [token, projectId, selectedScreen, selectedDevice, tracesPagination.limit])
+  }, [token, projectId, selectedScreen, selectedDevice, selectedStatusCode, tracesPagination.limit])
 
   const fetchLogs = useCallback(async (page: number = 1) => {
     if (!token || !projectId) return
@@ -1339,7 +1342,7 @@ export default function ProjectDetailPage() {
     if (!loading && activeTab === 'traces') {
       fetchTraces(1) // Reset to page 1 when filters change
     }
-  }, [selectedScreen, selectedDevice, activeTab, loading])
+  }, [selectedScreen, selectedDevice, selectedStatusCode, activeTab, loading])
 
   // Refetch traces when limit changes
   useEffect(() => {
@@ -1741,13 +1744,39 @@ export default function ProjectDetailPage() {
     }
   }
 
+  // Client-side filter traces by environment (base URL)
+  const filteredTraces = React.useMemo(() => {
+    if (!selectedEnvironment) return traces
+
+    return traces.filter(trace => {
+      const url = trace.url.toLowerCase()
+      return url.includes(selectedEnvironment.toLowerCase())
+    })
+  }, [traces, selectedEnvironment])
+
+  // Extract unique environments from traces for filter dropdown
+  const environments = React.useMemo(() => {
+    const envSet = new Set<string>()
+    traces.forEach(trace => {
+      try {
+        const url = new URL(trace.url)
+        const hostname = url.hostname
+        // Extract base domain (e.g., "flooss-backend.uat", "salaf-backend.uat.flooss.com")
+        envSet.add(hostname)
+      } catch {
+        // Invalid URL, skip
+      }
+    })
+    return Array.from(envSet).sort()
+  }, [traces])
+
   // Group traces by selected grouping
   const groupedTraces = React.useMemo(() => {
     if (groupBy === 'none') return null
 
     const groups: Record<string, { key: string; label: string; traces: Trace[]; count: number }> = {}
 
-    traces.forEach(trace => {
+    filteredTraces.forEach(trace => {
       let key: string
       let label: string
 
@@ -1776,7 +1805,7 @@ export default function ProjectDetailPage() {
     })
 
     return Object.values(groups).sort((a, b) => b.count - a.count)
-  }, [traces, groupBy])
+  }, [filteredTraces, groupBy])
 
   const copyApiKey = () => {
     navigator.clipboard.writeText(apiKey)
@@ -3187,6 +3216,42 @@ export default function ProjectDetailPage() {
                   })()}
                   {/* Filters and Actions Bar */}
                   <div className="flex flex-wrap items-center gap-3 p-4 bg-gray-900 rounded-lg">
+                    {/* Environment Filter (Base URL) */}
+                    <div className="flex items-center gap-2">
+                      <label className="text-gray-400 text-sm">Environment:</label>
+                      <select
+                        value={selectedEnvironment}
+                        onChange={(e) => setSelectedEnvironment(e.target.value)}
+                        className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                      >
+                        <option value="">All Environments</option>
+                        {environments.map((env) => (
+                          <option key={env} value={env}>{env}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Status Code Filter */}
+                    <div className="flex items-center gap-2">
+                      <label className="text-gray-400 text-sm">Status:</label>
+                      <select
+                        value={selectedStatusCode}
+                        onChange={(e) => setSelectedStatusCode(e.target.value)}
+                        className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                      >
+                        <option value="">All Status</option>
+                        <option value="200">200 - OK</option>
+                        <option value="201">201 - Created</option>
+                        <option value="400">400 - Bad Request</option>
+                        <option value="401">401 - Unauthorized</option>
+                        <option value="403">403 - Forbidden</option>
+                        <option value="404">404 - Not Found</option>
+                        <option value="417">417 - Expectation Failed</option>
+                        <option value="500">500 - Server Error</option>
+                        <option value="0">0 - Network Error</option>
+                      </select>
+                    </div>
+
                     {/* Screen Name Filter */}
                     <div className="flex items-center gap-2">
                       <label className="text-gray-400 text-sm">Screen:</label>
@@ -3259,11 +3324,11 @@ export default function ProjectDetailPage() {
                   </div>
 
                   {/* Traces List */}
-                  {tracesLoading && traces.length === 0 ? (
+                  {tracesLoading && filteredTraces.length === 0 ? (
                     <SkeletonTraceList count={10} />
-                  ) : traces.length === 0 ? (
+                  ) : filteredTraces.length === 0 ? (
                     <p className="text-gray-400 text-center py-8">
-                      {selectedScreen || selectedDevice ? 'No API traces match your filters' : 'No API traces yet'}
+                      {selectedScreen || selectedDevice || selectedEnvironment || selectedStatusCode ? 'No API traces match your filters' : 'No API traces yet'}
                     </p>
                   ) : groupBy !== 'none' && groupedTraces ? (
                     /* Grouped View */
@@ -3429,7 +3494,7 @@ export default function ProjectDetailPage() {
                           className="bg-gray-900 rounded-lg p-4"
                         />
                       )}
-                      {traces.map((trace) => (
+                      {filteredTraces.map((trace) => (
                         <TraceItem
                           key={trace.id}
                           trace={trace}

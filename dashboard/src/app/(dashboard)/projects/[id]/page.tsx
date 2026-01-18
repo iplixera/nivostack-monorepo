@@ -567,6 +567,7 @@ export default function ProjectDetailPage() {
   const [screenNames, setScreenNames] = useState<string[]>([])
   const [traceDevices, setTraceDevices] = useState<TraceDevice[]>([])
   const [allEnvironments, setAllEnvironments] = useState<string[]>([]) // All unique environments (never filtered)
+  const [allEndpoints, setAllEndpoints] = useState<string[]>([]) // All unique endpoints for selected environment
   const [selectedScreen, setSelectedScreen] = useState<string>('')
   const [selectedDevice, setSelectedDevice] = useState<string>('')
   const [selectedBaseUrl, setSelectedBaseUrl] = useState<string>('') // Base URL filter (backend filter)
@@ -664,29 +665,41 @@ export default function ProjectDetailPage() {
   const [monitorFilter, setMonitorFilter] = useState<'all' | 'unresolved' | 'resolved'>('unresolved')
   const [monitorSubTab, setMonitorSubTab] = useState<'errors' | 'settings'>('errors')
 
-  // Fetch all environments (unfiltered) for environment dropdown
-  const fetchAllEnvironments = useCallback(async () => {
+  // Fetch all environments and endpoints for dropdowns
+  const fetchAllEnvironmentsAndEndpoints = useCallback(async () => {
     if (!token || !projectId) return
     try {
+      // Fetch with only environment filter (if selected) to get all endpoints for that env
       const allTracesRes = await api.traces.list(projectId, token, {
-        limit: 1000 // Get enough to capture all unique environments
+        baseUrl: selectedBaseUrl || undefined,
+        limit: 1000 // Get enough to capture all unique values
       })
 
       const envSet = new Set<string>()
+      const endpointSet = new Set<string>()
+
       allTracesRes.traces.forEach(trace => {
         try {
           const url = new URL(trace.url)
           envSet.add(url.hostname)
+          const cleanPath = url.pathname.endsWith('/') && url.pathname.length > 1
+            ? url.pathname.slice(0, -1)
+            : url.pathname
+          endpointSet.add(cleanPath)
         } catch {
           // Invalid URL, skip
         }
       })
 
-      setAllEnvironments(Array.from(envSet).sort())
+      // Only update environments if we're fetching all (no environment selected)
+      if (!selectedBaseUrl) {
+        setAllEnvironments(Array.from(envSet).sort())
+      }
+      setAllEndpoints(Array.from(endpointSet).sort())
     } catch (error) {
-      console.error('Failed to fetch all environments:', error)
+      console.error('Failed to fetch all environments and endpoints:', error)
     }
-  }, [token, projectId])
+  }, [token, projectId, selectedBaseUrl])
 
   const fetchTraces = useCallback(async (page: number = 1) => {
     if (!token || !projectId) return
@@ -1372,12 +1385,12 @@ export default function ProjectDetailPage() {
   }, [token, projectId])
 
 
-  // Fetch all environments when traces tab opens (only once)
+  // Fetch all environments when traces tab opens, and endpoints when environment changes
   useEffect(() => {
-    if (!loading && activeTab === 'traces' && allEnvironments.length === 0) {
-      fetchAllEnvironments()
+    if (!loading && activeTab === 'traces') {
+      fetchAllEnvironmentsAndEndpoints()
     }
-  }, [activeTab, loading, allEnvironments.length, fetchAllEnvironments])
+  }, [activeTab, loading, selectedBaseUrl, fetchAllEnvironmentsAndEndpoints])
 
   // Refetch traces when filters change or tab is selected
   useEffect(() => {
@@ -3476,7 +3489,7 @@ export default function ProjectDetailPage() {
                         className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none max-w-[300px]"
                       >
                         <option value="">All APIs</option>
-                        {endpoints.map((endpoint) => (
+                        {allEndpoints.map((endpoint) => (
                           <option key={endpoint} value={endpoint}>{endpoint}</option>
                         ))}
                       </select>

@@ -4527,11 +4527,18 @@ export default function ProjectDetailPage() {
                     className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none min-w-[300px]"
                   >
                     <option value="">-- Select a session to view --</option>
-                    {flowData?.sessions.map((session) => (
-                      <option key={session.id} value={session.id}>
-                        {session.sessionToken} - {session.device?.model || 'Unknown'} ({session.requestCount} req, ${session.totalCost.toFixed(2)})
-                      </option>
-                    ))}
+                    {flowData?.sessions.map((session) => {
+                      // Show first 3 screens or device model
+                      const screenPreview = session.screenSequence && session.screenSequence.length > 0
+                        ? session.screenSequence.slice(0, 3).join(' → ') + (session.screenSequence.length > 3 ? '...' : '')
+                        : (session.device?.model || session.device?.platform || 'Unknown device')
+
+                      return (
+                        <option key={session.id} value={session.id}>
+                          {session.sessionToken} - {screenPreview} ({session.requestCount} req, ${session.totalCost.toFixed(2)})
+                        </option>
+                      )
+                    })}
                   </select>
                 </div>
                 <button

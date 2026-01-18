@@ -566,8 +566,6 @@ export default function ProjectDetailPage() {
   // Enhanced trace filters and state
   const [screenNames, setScreenNames] = useState<string[]>([])
   const [traceDevices, setTraceDevices] = useState<TraceDevice[]>([])
-  const [allEnvironments, setAllEnvironments] = useState<string[]>([]) // All unique environments for dropdown
-  const [allEndpoints, setAllEndpoints] = useState<string[]>([]) // All unique endpoints for dropdown
   const [selectedScreen, setSelectedScreen] = useState<string>('')
   const [selectedDevice, setSelectedDevice] = useState<string>('')
   const [selectedBaseUrl, setSelectedBaseUrl] = useState<string>('') // Base URL filter (backend filter)
@@ -665,38 +663,6 @@ export default function ProjectDetailPage() {
   const [monitorFilter, setMonitorFilter] = useState<'all' | 'unresolved' | 'resolved'>('unresolved')
   const [monitorSubTab, setMonitorSubTab] = useState<'errors' | 'settings'>('errors')
 
-  // Fetch all traces for dropdown population (no filters)
-  const fetchAllTraceMetadata = useCallback(async () => {
-    if (!token || !projectId) return
-    try {
-      // Fetch without filters to get all unique environments and endpoints
-      const allTracesRes = await api.traces.list(projectId, token, {
-        limit: 1000 // Get enough to capture all unique values
-      })
-
-      // Extract unique environments
-      const envSet = new Set<string>()
-      const endpointSet = new Set<string>()
-
-      allTracesRes.traces.forEach(trace => {
-        try {
-          const url = new URL(trace.url)
-          envSet.add(url.hostname)
-          const cleanPath = url.pathname.endsWith('/') && url.pathname.length > 1
-            ? url.pathname.slice(0, -1)
-            : url.pathname
-          endpointSet.add(cleanPath)
-        } catch {
-          // Invalid URL, skip
-        }
-      })
-
-      setAllEnvironments(Array.from(envSet).sort())
-      setAllEndpoints(Array.from(endpointSet).sort())
-    } catch (error) {
-      console.error('Failed to fetch trace metadata:', error)
-    }
-  }, [token, projectId])
 
   const fetchTraces = useCallback(async (page: number = 1) => {
     if (!token || !projectId) return
@@ -1381,12 +1347,6 @@ export default function ProjectDetailPage() {
     fetchData()
   }, [token, projectId])
 
-  // Fetch all trace metadata when traces tab is first opened
-  useEffect(() => {
-    if (!loading && activeTab === 'traces' && allEnvironments.length === 0) {
-      fetchAllTraceMetadata()
-    }
-  }, [activeTab, loading, allEnvironments.length, fetchAllTraceMetadata])
 
   // Refetch traces when filters change or tab is selected
   useEffect(() => {
@@ -3453,7 +3413,7 @@ export default function ProjectDetailPage() {
                         className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
                       >
                         <option value="">All Environments</option>
-                        {allEnvironments.map((env) => (
+                        {environments.map((env) => (
                           <option key={env} value={env}>{env}</option>
                         ))}
                       </select>
@@ -3485,7 +3445,7 @@ export default function ProjectDetailPage() {
                         className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none max-w-[300px]"
                       >
                         <option value="">All APIs</option>
-                        {allEndpoints.map((endpoint) => (
+                        {endpoints.map((endpoint) => (
                           <option key={endpoint} value={endpoint}>{endpoint}</option>
                         ))}
                       </select>

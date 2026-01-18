@@ -568,8 +568,10 @@ export default function ProjectDetailPage() {
   const [traceDevices, setTraceDevices] = useState<TraceDevice[]>([])
   const [selectedScreen, setSelectedScreen] = useState<string>('')
   const [selectedDevice, setSelectedDevice] = useState<string>('')
-  const [selectedEnvironment, setSelectedEnvironment] = useState<string>('') // Base URL filter
+  const [selectedBaseUrl, setSelectedBaseUrl] = useState<string>('') // Base URL filter (backend filter)
   const [selectedStatusCode, setSelectedStatusCode] = useState<string>('') // Status code filter
+  const [traceStartDate, setTraceStartDate] = useState<string>('') // Date range start
+  const [traceEndDate, setTraceEndDate] = useState<string>('') // Date range end
   const [groupBy, setGroupBy] = useState<'none' | 'device' | 'screen' | 'endpoint'>('none')
   const [expandedTrace, setExpandedTrace] = useState<string | null>(null)
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null)
@@ -667,6 +669,9 @@ export default function ProjectDetailPage() {
         screenName: selectedScreen || undefined,
         deviceId: selectedDevice || undefined,
         statusCode: selectedStatusCode ? parseInt(selectedStatusCode) : undefined,
+        baseUrl: selectedBaseUrl || undefined,
+        startDate: traceStartDate || undefined,
+        endDate: traceEndDate || undefined,
         page,
         limit: tracesPagination.limit
       })
@@ -681,7 +686,7 @@ export default function ProjectDetailPage() {
     } finally {
       setTracesLoading(false)
     }
-  }, [token, projectId, selectedScreen, selectedDevice, selectedStatusCode, tracesPagination.limit])
+  }, [token, projectId, selectedScreen, selectedDevice, selectedStatusCode, selectedBaseUrl, traceStartDate, traceEndDate, tracesPagination.limit])
 
   const fetchLogs = useCallback(async (page: number = 1) => {
     if (!token || !projectId) return
@@ -1342,7 +1347,7 @@ export default function ProjectDetailPage() {
     if (!loading && activeTab === 'traces') {
       fetchTraces(1) // Reset to page 1 when filters change
     }
-  }, [selectedScreen, selectedDevice, selectedStatusCode, activeTab, loading])
+  }, [selectedScreen, selectedDevice, selectedStatusCode, selectedBaseUrl, traceStartDate, traceEndDate, activeTab, loading])
 
   // Refetch traces when limit changes
   useEffect(() => {
@@ -1744,16 +1749,6 @@ export default function ProjectDetailPage() {
     }
   }
 
-  // Client-side filter traces by environment (base URL)
-  const filteredTraces = React.useMemo(() => {
-    if (!selectedEnvironment) return traces
-
-    return traces.filter(trace => {
-      const url = trace.url.toLowerCase()
-      return url.includes(selectedEnvironment.toLowerCase())
-    })
-  }, [traces, selectedEnvironment])
-
   // Extract unique environments from traces for filter dropdown
   const environments = React.useMemo(() => {
     const envSet = new Set<string>()
@@ -1776,7 +1771,7 @@ export default function ProjectDetailPage() {
 
     const groups: Record<string, { key: string; label: string; traces: Trace[]; count: number }> = {}
 
-    filteredTraces.forEach(trace => {
+    traces.forEach(trace => {
       let key: string
       let label: string
 
@@ -1805,7 +1800,7 @@ export default function ProjectDetailPage() {
     })
 
     return Object.values(groups).sort((a, b) => b.count - a.count)
-  }, [filteredTraces, groupBy])
+  }, [traces, groupBy])
 
   const copyApiKey = () => {
     navigator.clipboard.writeText(apiKey)
@@ -3214,14 +3209,168 @@ export default function ProjectDetailPage() {
 
                     return null
                   })()}
+
+                  {/* Summary Statistics */}
+                  {(() => {
+                    // Compute trace statistics
+                    const traceStats = React.useMemo(() => {
+                      if (traces.length === 0) {
+                        return {
+                          total: 0,
+                          successCount: 0,
+                          errorCount: 0,
+                          uniqueEnvironments: 0,
+                          uniqueEndpoints: 0,
+                          avgDuration: 0,
+                          successRate: 0
+                        }
+                      }
+
+                      const successCount = traces.filter(t => t.statusCode >= 200 && t.statusCode < 300).length
+                      const errorCount = traces.filter(t => t.statusCode >= 400 || t.statusCode === 0).length
+
+                      const uniqueEnvironments = environments.length
+
+                      // Extract unique endpoints
+                      const uniqueEndpoints = new Set(
+                        traces.map(t => {
+                          try {
+                            const url = new URL(t.url)
+                            return url.pathname
+                          } catch {
+                            return t.url
+                          }
+                        })
+                      ).size
+
+                      // Average duration
+                      const avgDuration = traces.length > 0
+                        ? traces.reduce((sum, t) => sum + (t.duration || 0), 0) / traces.length
+                        : 0
+
+                      const successRate = traces.length > 0 ? (successCount / traces.length) * 100 : 0
+
+                      return {
+                        total: traces.length,
+                        successCount,
+                        errorCount,
+                        uniqueEnvironments,
+                        uniqueEndpoints,
+                        avgDuration,
+                        successRate
+                      }
+                    }, [traces, environments])
+
+                    return (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
+                        <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+                          <div className="text-gray-400 text-xs mb-1">Total Traces</div>
+                          <div className="text-2xl font-bold text-white">{traceStats.total}</div>
+                        </div>
+                        <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+                          <div className="text-gray-400 text-xs mb-1">Success Rate</div>
+                          <div className="text-2xl font-bold text-green-400">
+                            {traceStats.successRate.toFixed(1)}%
+                          </div>
+                        </div>
+                        <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+                          <div className="text-gray-400 text-xs mb-1">Errors</div>
+                          <div className="text-2xl font-bold text-red-400">{traceStats.errorCount}</div>
+                        </div>
+                        <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+                          <div className="text-gray-400 text-xs mb-1">Environments</div>
+                          <div className="text-2xl font-bold text-blue-400">{traceStats.uniqueEnvironments}</div>
+                        </div>
+                        <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+                          <div className="text-gray-400 text-xs mb-1">Endpoints</div>
+                          <div className="text-2xl font-bold text-purple-400">{traceStats.uniqueEndpoints}</div>
+                        </div>
+                        <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+                          <div className="text-gray-400 text-xs mb-1">Avg Duration</div>
+                          <div className="text-2xl font-bold text-yellow-400">
+                            {traceStats.avgDuration.toFixed(0)}ms
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })()}
+
+                  {/* Date Range Filter Section */}
+                  <div className="flex flex-wrap items-center gap-3 p-4 bg-gray-900 rounded-lg mb-4">
+                    {/* Quick Buttons */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400 text-sm">Quick:</span>
+                      <button
+                        onClick={() => {
+                          const today = new Date().toISOString().split('T')[0]
+                          setTraceStartDate(today)
+                          setTraceEndDate(today)
+                        }}
+                        className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded border border-gray-700"
+                      >
+                        Today
+                      </button>
+                      <button
+                        onClick={() => {
+                          const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+                          setTraceStartDate(yesterday)
+                          setTraceEndDate(yesterday)
+                        }}
+                        className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded border border-gray-700"
+                      >
+                        Yesterday
+                      </button>
+                      <button
+                        onClick={() => {
+                          const week = new Date(Date.now() - 604800000).toISOString().split('T')[0]
+                          const today = new Date().toISOString().split('T')[0]
+                          setTraceStartDate(week)
+                          setTraceEndDate(today)
+                        }}
+                        className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded border border-gray-700"
+                      >
+                        Last 7 Days
+                      </button>
+                    </div>
+
+                    {/* Date Inputs */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400 text-sm">From:</span>
+                      <input
+                        type="date"
+                        value={traceStartDate}
+                        onChange={(e) => setTraceStartDate(e.target.value)}
+                        className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none"
+                      />
+                      <span className="text-gray-400 text-sm">To:</span>
+                      <input
+                        type="date"
+                        value={traceEndDate}
+                        onChange={(e) => setTraceEndDate(e.target.value)}
+                        className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none"
+                      />
+                      {(traceStartDate || traceEndDate) && (
+                        <button
+                          onClick={() => {
+                            setTraceStartDate('')
+                            setTraceEndDate('')
+                          }}
+                          className="px-2 py-1.5 bg-gray-800 text-gray-400 hover:text-white rounded-lg text-sm border border-gray-700"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Filters and Actions Bar */}
                   <div className="flex flex-wrap items-center gap-3 p-4 bg-gray-900 rounded-lg">
                     {/* Environment Filter (Base URL) */}
                     <div className="flex items-center gap-2">
                       <label className="text-gray-400 text-sm">Environment:</label>
                       <select
-                        value={selectedEnvironment}
-                        onChange={(e) => setSelectedEnvironment(e.target.value)}
+                        value={selectedBaseUrl}
+                        onChange={(e) => setSelectedBaseUrl(e.target.value)}
                         className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
                       >
                         <option value="">All Environments</option>
@@ -3324,11 +3473,11 @@ export default function ProjectDetailPage() {
                   </div>
 
                   {/* Traces List */}
-                  {tracesLoading && filteredTraces.length === 0 ? (
+                  {tracesLoading && traces.length === 0 ? (
                     <SkeletonTraceList count={10} />
-                  ) : filteredTraces.length === 0 ? (
+                  ) : traces.length === 0 ? (
                     <p className="text-gray-400 text-center py-8">
-                      {selectedScreen || selectedDevice || selectedEnvironment || selectedStatusCode ? 'No API traces match your filters' : 'No API traces yet'}
+                      {selectedScreen || selectedDevice || selectedBaseUrl || selectedStatusCode ? 'No API traces match your filters' : 'No API traces yet'}
                     </p>
                   ) : groupBy !== 'none' && groupedTraces ? (
                     /* Grouped View */
@@ -3494,7 +3643,7 @@ export default function ProjectDetailPage() {
                           className="bg-gray-900 rounded-lg p-4"
                         />
                       )}
-                      {filteredTraces.map((trace) => (
+                      {traces.map((trace) => (
                         <TraceItem
                           key={trace.id}
                           trace={trace}

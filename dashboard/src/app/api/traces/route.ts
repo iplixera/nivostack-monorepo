@@ -504,6 +504,9 @@ export async function GET(request: NextRequest) {
     const deviceId = searchParams.get('deviceId')
     const method = searchParams.get('method')
     const statusCode = searchParams.get('statusCode')
+    const baseUrl = searchParams.get('baseUrl')
+    const startDate = searchParams.get('startDate')
+    const endDate = searchParams.get('endDate')
     const screenName = searchParams.get('screenName')
     const groupByDevice = searchParams.get('groupByDevice') === 'true'
     // Pagination parameters (support both page/limit and offset/limit for backwards compatibility)
@@ -534,6 +537,17 @@ export async function GET(request: NextRequest) {
     if (deviceId) where.deviceId = deviceId
     if (method) where.method = method
     if (statusCode) where.statusCode = parseInt(statusCode)
+    if (baseUrl) {
+      where.url = {
+        contains: baseUrl
+      }
+    }
+    if (startDate || endDate) {
+      const dateRange: any = {}
+      if (startDate) dateRange.gte = new Date(startDate + 'T00:00:00.000Z')
+      if (endDate) dateRange.lte = new Date(endDate + 'T23:59:59.999Z')
+      where.timestamp = dateRange
+    }
     if (screenName) where.screenName = screenName
 
     // Get unique screen names for filter dropdown

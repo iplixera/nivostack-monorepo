@@ -594,7 +594,9 @@ class NivoStack private constructor(
      * Flush traces to server
      */
     private suspend fun _flushTraces() {
-        if (traceQueue.isEmpty() || registeredDeviceId == null) return
+        // Don't flush traces until session has started to ensure sessionToken is available
+        // This prevents orphaned traces that can't be linked to sessions
+        if (traceQueue.isEmpty() || registeredDeviceId == null || sessionToken == null) return
         
         val traces = mutableListOf<Map<String, Any>>()
         while (traces.size < sdkSettings.maxTraceQueueSize && traceQueue.isNotEmpty()) {
@@ -836,10 +838,15 @@ class NivoStack private constructor(
     fun getInitError(): String? = initError
     
     /**
+     * Get current screen name
+     */
+    fun getCurrentScreen(): String? = currentScreen
+
+    /**
      * Get current screen flow (list of screens visited in this session)
      */
     fun getScreenFlow(): List<String> = screenFlow.toList()
-    
+
     /**
      * Get current event count for this session
      */

@@ -28,10 +28,10 @@ async function isTrackingEnabled(projectId: string, deviceId?: string): Promise<
       select: { trackingMode: true }
     }),
     deviceId ? prisma.device.findFirst({
-      where: { projectId, deviceId },
-      select: { 
-        debugModeEnabled: true, 
-        debugModeExpiresAt: true 
+      where: { projectId, id: deviceId }, // Query by database ID, not platform deviceId
+      select: {
+        debugModeEnabled: true,
+        debugModeExpiresAt: true
       }
     }) : null
   ])
@@ -146,12 +146,13 @@ export async function POST(request: NextRequest) {
       }
 
       // Find device if deviceId provided
+      // Note: SDK sends database device ID (cuid), not platform device ID
       let device = null
       if (deviceId) {
         device = await prisma.device.findFirst({
           where: {
             projectId: project.id,
-            deviceId,
+            id: deviceId, // Query by database ID, not platform deviceId field
             status: 'active'
           }
         })

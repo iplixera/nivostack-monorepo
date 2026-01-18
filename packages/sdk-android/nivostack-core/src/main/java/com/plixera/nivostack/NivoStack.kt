@@ -153,19 +153,36 @@ class NivoStack private constructor(
      * Initialize device info
      */
     private fun _initDeviceInfo() {
-        // Get or create device ID
+        // Get or create device ID using Android Secure ID (persistent across app reinstalls)
         deviceId = prefs.getString("device_id", null) ?: run {
-            val newId = UUID.randomUUID().toString()
-            prefs.edit().putString("device_id", newId).apply()
-            newId
+            // Use Android Secure ID as stable device identifier
+            // This ID persists across app reinstalls but changes on factory reset
+            val androidId = android.provider.Settings.Secure.getString(
+                context.contentResolver,
+                android.provider.Settings.Secure.ANDROID_ID
+            )
+
+            // Create a consistent device ID based on Android ID
+            // This ensures same device gets same ID even after app reinstall
+            val stableDeviceId = if (!androidId.isNullOrEmpty() && androidId != "9774d56d682e549c") {
+                // Use Android ID (not the broken emulator ID)
+                "android_$androidId"
+            } else {
+                // Fallback to UUID only if Android ID unavailable (rare)
+                UUID.randomUUID().toString()
+            }
+
+            prefs.edit().putString("device_id", stableDeviceId).apply()
+            log("Generated stable device ID: $stableDeviceId")
+            stableDeviceId
         }
-        
+
         // Get or generate device code
         deviceCode = DeviceCodeGenerator.get(context) ?: run {
             val newCode = DeviceCodeGenerator.getOrGenerate(context)
             newCode
         }
-        
+
         deviceInfo = DeviceInfo.fromContext(context, deviceId!!)
     }
     
@@ -205,32 +222,46 @@ class NivoStack private constructor(
      */
     private fun _initializeInBackground() {
         scope.launch {
+            var registrationError: Exception? = null
+
             try {
                 // Fetch fresh config
                 _fetchSdkInitData()
                 configFetched = true
-                
+
                 // Register device
                 if (featureFlags.deviceTracking) {
-                    _registerDevice()
-                    deviceRegistered = true
+                    try {
+                        _registerDevice()
+                        deviceRegistered = true
+                    } catch (e: Exception) {
+                        registrationError = e
+                        log("Device registration failed: ${e.message}")
+                        // Don't throw - continue with other initialization
+                    }
                 }
-                
-                // Start session
-                if (featureFlags.sessionTracking) {
-                    _startSession()
-                    sessionStarted = true
+
+                // Start session (only if device is registered)
+                if (featureFlags.sessionTracking && registeredDeviceId != null) {
+                    try {
+                        _startSession()
+                        sessionStarted = true
+                    } catch (e: Exception) {
+                        log("Session start failed: ${e.message}")
+                        // Don't throw - continue with other initialization
+                    }
                 }
-                
+
                 isFullyInitialized = true
-                initError = null
-                
+                initError = registrationError?.message
+
                 // Start periodic sync timer after initialization (only if app is active)
                 if (isAppActive) {
                     _startSyncTimer()
                 }
             } catch (e: Exception) {
                 initError = e.message
+                log("SDK initialization failed: ${e.message}")
                 // Don't throw - background failures shouldn't crash the app
             }
         }
@@ -409,31 +440,56 @@ class NivoStack private constructor(
     }
     
     /**
-     * Register device with server
+     * Register device with server (with retry logic)
      */
     private suspend fun _registerDevice() {
-        try {
-            // Ensure device code exists before registration
-            if (deviceCode == null) {
-                deviceCode = DeviceCodeGenerator.getOrGenerate(context)
-            }
-            
-            val response = apiClient.registerDevice(projectId, deviceInfo, deviceCode)
-            
-            val deviceData = response["device"] as? Map<*, *>
-            if (deviceData != null) {
-                registeredDeviceId = deviceData["id"] as? String
-                val serverDeviceCode = deviceData["deviceCode"] as? String
-                
-                // Update device code if server assigned one
-                if (!serverDeviceCode.isNullOrEmpty() && serverDeviceCode != deviceCode) {
-                    deviceCode = serverDeviceCode
-                    DeviceCodeGenerator.save(context, serverDeviceCode)
+        // Ensure device code exists before registration
+        if (deviceCode == null) {
+            deviceCode = DeviceCodeGenerator.getOrGenerate(context)
+        }
+
+        var lastException: Exception? = null
+        val maxRetries = 3
+        var delayMs = 1000L
+
+        // Retry with exponential backoff
+        for (attempt in 1..maxRetries) {
+            try {
+                val response = apiClient.registerDevice(projectId, deviceInfo, deviceCode)
+
+                val deviceData = response["device"] as? Map<*, *>
+                if (deviceData != null) {
+                    registeredDeviceId = deviceData["id"] as? String
+                    val serverDeviceCode = deviceData["deviceCode"] as? String
+
+                    if (registeredDeviceId == null) {
+                        throw Exception("Device registration response missing 'id' field")
+                    }
+
+                    // Update device code if server assigned one
+                    if (!serverDeviceCode.isNullOrEmpty() && serverDeviceCode != deviceCode) {
+                        deviceCode = serverDeviceCode
+                        DeviceCodeGenerator.save(context, serverDeviceCode)
+                    }
+
+                    log("Device registered successfully with ID: $registeredDeviceId (attempt $attempt/$maxRetries)")
+                    return // Success!
+                } else {
+                    throw Exception("Device registration response missing 'device' object")
+                }
+            } catch (e: Exception) {
+                lastException = e
+                log("Device registration attempt $attempt/$maxRetries failed: ${e.message}")
+
+                if (attempt < maxRetries) {
+                    kotlinx.coroutines.delay(delayMs)
+                    delayMs *= 2 // Exponential backoff
                 }
             }
-        } catch (e: Exception) {
-            // Registration failed
         }
+
+        // All retries failed
+        throw lastException ?: Exception("Device registration failed after $maxRetries attempts")
     }
     
     /**
@@ -564,7 +620,7 @@ class NivoStack private constructor(
     
     /**
      * Refresh configuration from server
-     * 
+     *
      * @param forceRefresh If true, bypasses ETag and forces fresh fetch
      * @return true if config was updated, false if unchanged
      */
@@ -578,7 +634,24 @@ class NivoStack private constructor(
             false
         }
     }
-    
+
+    /**
+     * Retry device registration
+     * Useful if initial registration failed
+     *
+     * @return true if registration succeeded, false otherwise
+     */
+    suspend fun retryDeviceRegistration(): Boolean {
+        return try {
+            _registerDevice()
+            deviceRegistered = true
+            true
+        } catch (e: Exception) {
+            log("Device registration retry failed: ${e.message}")
+            false
+        }
+    }
+
     /**
      * Track API trace manually
      */

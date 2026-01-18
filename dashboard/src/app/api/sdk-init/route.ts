@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
   try {
     const apiKey = request.headers.get('x-api-key')
     const { searchParams } = new URL(request.url)
-    const deviceId = searchParams.get('deviceId') // Platform device ID to look up device config
+    const deviceId = searchParams.get('deviceId') // Database device ID (cuid) to look up device config
     const buildMode = searchParams.get('buildMode') as 'preview' | 'production' | null // 'preview' for debug builds, 'production' for release builds
 
     if (!apiKey) {
@@ -211,13 +211,13 @@ export async function GET(request: NextRequest) {
       }),
 
       // Device (if deviceId provided) - for device-specific config
-      // Note: Using findFirst because there's no unique constraint on projectId+deviceId
-      // (projectId is nullable, so uniqueness is enforced at application level)
+      // Note: deviceId parameter actually contains the database ID (cuid) returned from device registration
+      // SDK passes the registered device ID (from backend) not the platform device ID
       deviceId
         ? prisma.device.findFirst({
             where: {
               projectId,
-              deviceId,
+              id: deviceId, // Query by database ID, not platform deviceId field
               status: 'active' // Only get active devices
             },
             select: {

@@ -18,6 +18,7 @@ const DEFAULT_FEATURE_FLAGS = {
 // Helper to check if tracking is enabled for a device
 async function isTrackingEnabled(projectId: string, deviceId?: string): Promise<boolean> {
   // Fetch feature flags and SDK settings
+  // Note: deviceId parameter is the database ID (cuid), not platform device ID
   const [featureFlags, sdkSettings, device] = await Promise.all([
     prisma.featureFlags.findUnique({
       where: { projectId },
@@ -28,10 +29,10 @@ async function isTrackingEnabled(projectId: string, deviceId?: string): Promise<
       select: { trackingMode: true }
     }),
     deviceId ? prisma.device.findFirst({
-      where: { projectId, deviceId },
-      select: { 
-        debugModeEnabled: true, 
-        debugModeExpiresAt: true 
+      where: { projectId, id: deviceId }, // Query by database ID
+      select: {
+        debugModeEnabled: true,
+        debugModeExpiresAt: true
       }
     }) : null
   ])
@@ -408,12 +409,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Find device if deviceId provided
+    // Note: SDK sends the database device ID (cuid), not the platform device ID
     let device = null
     if (deviceId) {
       device = await prisma.device.findFirst({
         where: {
           projectId: project.id,
-          deviceId,
+          id: deviceId, // Query by database ID, not platform deviceId field
           status: 'active'
         }
       })

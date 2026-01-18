@@ -21,9 +21,9 @@ class ApiClient(
 
     init {
         client = OkHttpClient.Builder()
-            .connectTimeout(3, TimeUnit.SECONDS)
-            .readTimeout(3, TimeUnit.SECONDS)
-            .writeTimeout(3, TimeUnit.SECONDS)
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
             .build()
     }
 
@@ -52,8 +52,22 @@ class ApiClient(
             .build()
 
         val response = client.newCall(request).execute()
+
+        // Check if response is successful
+        if (!response.isSuccessful) {
+            val errorBody = response.body?.string() ?: "Unknown error"
+            throw IOException("Device registration failed with code ${response.code}: $errorBody")
+        }
+
         val responseBody = response.body?.string() ?: "{}"
-        return gson.fromJson(responseBody, Map::class.java) as Map<String, Any>
+
+        // Validate response has expected structure
+        val result = gson.fromJson(responseBody, Map::class.java) as Map<String, Any>
+        if (result["device"] == null) {
+            throw IOException("Invalid response: missing 'device' field in response: $responseBody")
+        }
+
+        return result
     }
 
     /**

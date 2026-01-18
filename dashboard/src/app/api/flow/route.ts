@@ -87,8 +87,9 @@ export async function GET(request: NextRequest) {
 
     // Build where clause
     const whereClause: Record<string, unknown> = {
-      projectId,
-      screenName: { not: null }
+      projectId
+      // Don't filter by screenName - we'll handle nulls with fallback in processing
+      // This allows Screen Flow to show data even for traces without screenName
     }
     if (sessionId) {
       whereClause.sessionId = sessionId
@@ -161,7 +162,7 @@ export async function GET(request: NextRequest) {
 
     // Process traces
     for (const trace of traces) {
-      const screenName = trace.screenName || 'Unknown'
+      const screenName = trace.screenName || 'AppLaunch' // Default to AppLaunch (matches SDK default)
       const isSuccess = trace.statusCode && trace.statusCode >= 200 && trace.statusCode < 400
       const cost = trace.cost || 0
 

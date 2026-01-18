@@ -183,6 +183,10 @@ model ApiTrace {
   carrier         String? // Mobile carrier name
   ipAddress       String? // Client IP address
   userAgent       String? // Full user agent string
+  // User tracking fields (enriched from SDK setUser)
+  userId          String? // App's user ID who made this request
+  userEmail       String? // User email for filtering
+  userName        String? // User display name
   // Cost tracking (calculated from ApiConfig)
   cost            Float? // Cost of this request based on ApiConfig
   timestamp       DateTime @default(now())
@@ -193,6 +197,7 @@ model ApiTrace {
   @@index([sessionId])
   @@index([timestamp])
   @@index([screenName])
+  @@index([userId])
 }
 
 // Remote API Configuration - define cost per endpoint

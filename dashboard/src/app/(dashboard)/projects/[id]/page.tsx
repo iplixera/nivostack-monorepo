@@ -670,9 +670,10 @@ export default function ProjectDetailPage() {
     if (!token || !projectId) return
     try {
       // Fetch with only environment filter (if selected) to get all endpoints for that env
+      // Use higher limit to ensure we capture all unique values
       const allTracesRes = await api.traces.list(projectId, token, {
         baseUrl: selectedBaseUrl || undefined,
-        limit: 1000 // Get enough to capture all unique values
+        limit: 5000 // Increased limit to capture all unique values
       })
 
       const envSet = new Set<string>()
@@ -696,6 +697,12 @@ export default function ProjectDetailPage() {
         setAllEnvironments(Array.from(envSet).sort())
       }
       setAllEndpoints(Array.from(endpointSet).sort())
+
+      console.log('Fetched environments and endpoints:', {
+        environments: envSet.size,
+        endpoints: endpointSet.size,
+        tracesFetched: allTracesRes.traces.length
+      })
     } catch (error) {
       console.error('Failed to fetch all environments and endpoints:', error)
     }
@@ -1873,7 +1880,10 @@ export default function ProjectDetailPage() {
 
   // Compute trace statistics
   const traceStats = React.useMemo(() => {
-    if (traces.length === 0) {
+    // Use pagination total for actual trace count, not current page
+    const total = tracesPagination.total || 0
+
+    if (total === 0) {
       return {
         total: 0,
         successCount: 0,
@@ -1889,21 +1899,14 @@ export default function ProjectDetailPage() {
     const successCount = traces.filter(t => t.statusCode >= 200 && t.statusCode < 300).length
     const errorCount = traces.filter(t => t.statusCode >= 400 || t.statusCode === 0).length
 
-    const uniqueEnvironments = environments.length
+    // Use allEnvironments for accurate count, not from current page
+    const uniqueEnvironments = allEnvironments.length
 
-    // Extract unique endpoints (pathname only)
-    const uniqueEndpoints = new Set(
-      traces.map(t => {
-        try {
-          const url = new URL(t.url)
-          return url.pathname
-        } catch {
-          return t.url
-        }
-      })
-    ).size
+    // Use allEndpoints for accurate count, not from current page
+    const uniqueEndpoints = allEndpoints.length
 
-    // Extract unique APIs (method + pathname combination)
+    // Extract unique APIs from current page (this is an approximation)
+    // For accurate count, we'd need to fetch all data
     const uniqueAPIs = new Set(
       traces.map(t => {
         try {
@@ -1915,15 +1918,16 @@ export default function ProjectDetailPage() {
       })
     ).size
 
-    // Average duration
+    // Average duration from current page (approximation)
     const avgDuration = traces.length > 0
       ? traces.reduce((sum, t) => sum + (t.duration || 0), 0) / traces.length
       : 0
 
+    // Success rate from current page (approximation)
     const successRate = traces.length > 0 ? (successCount / traces.length) * 100 : 0
 
     return {
-      total: traces.length,
+      total, // Use pagination total, not current page count
       successCount,
       errorCount,
       uniqueEnvironments,
@@ -1932,7 +1936,7 @@ export default function ProjectDetailPage() {
       avgDuration,
       successRate
     }
-  }, [traces, environments])
+  }, [traces, tracesPagination.total, allEnvironments, allEndpoints])
 
   const copyApiKey = () => {
     navigator.clipboard.writeText(apiKey)

@@ -225,7 +225,15 @@ class NivoStack private constructor(
                 // Ignore parse errors
             }
         }
-        
+
+        // Load cached user information (persists across app restarts)
+        val userId = prefs.getString("user_id", null)
+        if (userId != null) {
+            userProperties["userId"] = userId
+            prefs.getString("user_email", null)?.let { userProperties["email"] = it }
+            prefs.getString("user_name", null)?.let { userProperties["name"] = it }
+        }
+
         configFetched = true
     }
     
@@ -619,9 +627,18 @@ class NivoStack private constructor(
     fun queueTrace(trace: Map<String, Any>) {
         if (!featureFlags.apiTracking || !featureFlags.sdkEnabled) return
         if (!deviceConfig.trackingEnabled) return
-        
-        traceQueue.offer(trace)
-        
+
+        // Automatically enrich trace with user information if available
+        val enrichedTrace = trace.toMutableMap()
+        val userId = userProperties["userId"] as? String
+        if (userId != null) {
+            enrichedTrace["userId"] = userId
+            userProperties["email"]?.let { enrichedTrace["userEmail"] = it }
+            userProperties["name"]?.let { enrichedTrace["userName"] = it }
+        }
+
+        traceQueue.offer(enrichedTrace)
+
         // Flush if queue is full
         if (traceQueue.size >= sdkSettings.maxTraceQueueSize) {
             scope.launch { _flushTraces() }
@@ -679,8 +696,22 @@ class NivoStack private constructor(
      * Set user information
      */
     fun setUser(userId: String, email: String? = null, name: String? = null) {
+        // Store in memory for automatic trace enrichment
+        userProperties["userId"] = userId
+        if (email != null) userProperties["email"] = email
+        if (name != null) userProperties["name"] = name
+
+        // Persist to SharedPreferences (survives app restart)
+        prefs.edit().apply {
+            putString("user_id", userId)
+            if (email != null) putString("user_email", email)
+            if (name != null) putString("user_name", name)
+            apply()
+        }
+
+        // Sync to backend
         if (registeredDeviceId == null) return
-        
+
         scope.launch {
             try {
                 apiClient.setUser(registeredDeviceId!!, userId, email, name)
@@ -694,8 +725,22 @@ class NivoStack private constructor(
      * Clear user information
      */
     fun clearUser() {
+        // Clear from memory
+        userProperties.remove("userId")
+        userProperties.remove("email")
+        userProperties.remove("name")
+
+        // Clear from SharedPreferences
+        prefs.edit().apply {
+            remove("user_id")
+            remove("user_email")
+            remove("user_name")
+            apply()
+        }
+
+        // Clear from backend
         if (registeredDeviceId == null) return
-        
+
         scope.launch {
             try {
                 apiClient.clearUser(registeredDeviceId!!)

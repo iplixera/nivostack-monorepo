@@ -593,7 +593,7 @@ export const TraceItem = memo(function TraceItem({
             <span className={`font-medium flex-shrink-0 ${getStatusColor(trace.statusCode)}`}>
               {trace.statusCode || 'ERR'}
             </span>
-            <span className="text-gray-300 font-mono text-sm truncate">
+            <span className="text-gray-300 font-mono text-sm break-all">
               {trace.url}
             </span>
           </div>

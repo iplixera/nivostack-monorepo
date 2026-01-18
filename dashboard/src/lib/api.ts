@@ -340,7 +340,7 @@ export const api = {
     }
   },
   traces: {
-    list: (projectId: string, token: string, params?: { deviceId?: string; method?: string; statusCode?: number; baseUrl?: string; startDate?: string; endDate?: string; screenName?: string; groupByDevice?: boolean; page?: number; limit?: number; offset?: number }) =>
+    list: (projectId: string, token: string, params?: { deviceId?: string; method?: string; statusCode?: number; baseUrl?: string; endpoint?: string; startDate?: string; endDate?: string; screenName?: string; groupByDevice?: boolean; page?: number; limit?: number; offset?: number }) =>
       fetchApi<{
         traces: Array<{
           id: string;
@@ -373,7 +373,7 @@ export const api = {
           count: number;
         }>;
       }>(
-        `/api/traces?projectId=${projectId}${params?.deviceId ? `&deviceId=${params.deviceId}` : ''}${params?.method ? `&method=${params.method}` : ''}${params?.statusCode !== undefined ? `&statusCode=${params.statusCode}` : ''}${params?.baseUrl ? `&baseUrl=${encodeURIComponent(params.baseUrl)}` : ''}${params?.startDate ? `&startDate=${params.startDate}` : ''}${params?.endDate ? `&endDate=${params.endDate}` : ''}${params?.screenName ? `&screenName=${params.screenName}` : ''}${params?.groupByDevice ? `&groupByDevice=true` : ''}${params?.page ? `&page=${params.page}` : ''}${params?.limit ? `&limit=${params.limit}` : ''}${params?.offset ? `&offset=${params.offset}` : ''}`,
+        `/api/traces?projectId=${projectId}${params?.deviceId ? `&deviceId=${params.deviceId}` : ''}${params?.method ? `&method=${params.method}` : ''}${params?.statusCode !== undefined ? `&statusCode=${params.statusCode}` : ''}${params?.baseUrl ? `&baseUrl=${encodeURIComponent(params.baseUrl)}` : ''}${params?.endpoint ? `&endpoint=${encodeURIComponent(params.endpoint)}` : ''}${params?.startDate ? `&startDate=${params.startDate}` : ''}${params?.endDate ? `&endDate=${params.endDate}` : ''}${params?.screenName ? `&screenName=${params.screenName}` : ''}${params?.groupByDevice ? `&groupByDevice=true` : ''}${params?.page ? `&page=${params.page}` : ''}${params?.limit ? `&limit=${params.limit}` : ''}${params?.offset ? `&offset=${params.offset}` : ''}`,
         { token }
       ),
     clear: (projectId: string, token: string, deviceId?: string) =>

@@ -505,6 +505,7 @@ export async function GET(request: NextRequest) {
     const method = searchParams.get('method')
     const statusCode = searchParams.get('statusCode')
     const baseUrl = searchParams.get('baseUrl')
+    const endpoint = searchParams.get('endpoint')
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
     const screenName = searchParams.get('screenName')
@@ -537,11 +538,26 @@ export async function GET(request: NextRequest) {
     if (deviceId) where.deviceId = deviceId
     if (method) where.method = method
     if (statusCode) where.statusCode = parseInt(statusCode)
-    if (baseUrl) {
-      where.url = {
-        contains: baseUrl
+
+    // Handle URL filtering - baseUrl and endpoint can be combined
+    if (baseUrl || endpoint) {
+      const urlConditions: any[] = []
+      if (baseUrl) {
+        urlConditions.push({ contains: baseUrl })
+      }
+      if (endpoint) {
+        urlConditions.push({ contains: endpoint })
+      }
+
+      if (urlConditions.length === 1) {
+        where.url = urlConditions[0]
+      } else {
+        where.url = {
+          AND: urlConditions
+        }
       }
     }
+
     if (startDate || endDate) {
       const dateRange: any = {}
       if (startDate) dateRange.gte = new Date(startDate + 'T00:00:00.000Z')

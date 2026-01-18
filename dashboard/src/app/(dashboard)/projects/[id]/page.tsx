@@ -569,7 +569,9 @@ export default function ProjectDetailPage() {
   const [selectedScreen, setSelectedScreen] = useState<string>('')
   const [selectedDevice, setSelectedDevice] = useState<string>('')
   const [selectedBaseUrl, setSelectedBaseUrl] = useState<string>('') // Base URL filter (backend filter)
+  const [selectedMethod, setSelectedMethod] = useState<string>('') // HTTP method filter
   const [selectedStatusCode, setSelectedStatusCode] = useState<string>('') // Status code filter
+  const [selectedEndpoint, setSelectedEndpoint] = useState<string>('') // API endpoint filter
   const [traceStartDate, setTraceStartDate] = useState<string>('') // Date range start
   const [traceEndDate, setTraceEndDate] = useState<string>('') // Date range end
   const [groupBy, setGroupBy] = useState<'none' | 'device' | 'screen' | 'endpoint'>('none')
@@ -668,8 +670,10 @@ export default function ProjectDetailPage() {
       const tracesRes = await api.traces.list(projectId, token, {
         screenName: selectedScreen || undefined,
         deviceId: selectedDevice || undefined,
+        method: selectedMethod || undefined,
         statusCode: selectedStatusCode ? parseInt(selectedStatusCode) : undefined,
         baseUrl: selectedBaseUrl || undefined,
+        endpoint: selectedEndpoint || undefined,
         startDate: traceStartDate || undefined,
         endDate: traceEndDate || undefined,
         page,
@@ -686,7 +690,7 @@ export default function ProjectDetailPage() {
     } finally {
       setTracesLoading(false)
     }
-  }, [token, projectId, selectedScreen, selectedDevice, selectedStatusCode, selectedBaseUrl, traceStartDate, traceEndDate, tracesPagination.limit])
+  }, [token, projectId, selectedScreen, selectedDevice, selectedMethod, selectedStatusCode, selectedBaseUrl, selectedEndpoint, traceStartDate, traceEndDate, tracesPagination.limit])
 
   const fetchLogs = useCallback(async (page: number = 1) => {
     if (!token || !projectId) return
@@ -1347,7 +1351,7 @@ export default function ProjectDetailPage() {
     if (!loading && activeTab === 'traces') {
       fetchTraces(1) // Reset to page 1 when filters change
     }
-  }, [selectedScreen, selectedDevice, selectedStatusCode, selectedBaseUrl, traceStartDate, traceEndDate, activeTab, loading, fetchTraces])
+  }, [selectedScreen, selectedDevice, selectedMethod, selectedStatusCode, selectedBaseUrl, selectedEndpoint, traceStartDate, traceEndDate, activeTab, loading, fetchTraces])
 
   // Refetch traces when limit changes
   useEffect(() => {
@@ -1763,6 +1767,25 @@ export default function ProjectDetailPage() {
       }
     })
     return Array.from(envSet).sort()
+  }, [traces])
+
+  // Extract unique API endpoints from traces for filter dropdown
+  const endpoints = React.useMemo(() => {
+    const endpointSet = new Set<string>()
+    traces.forEach(trace => {
+      try {
+        const url = new URL(trace.url)
+        const pathname = url.pathname
+        // Clean up the pathname (remove trailing slashes, query params already removed by URL)
+        const cleanPath = pathname.endsWith('/') && pathname.length > 1
+          ? pathname.slice(0, -1)
+          : pathname
+        endpointSet.add(cleanPath)
+      } catch {
+        // Invalid URL, skip
+      }
+    })
+    return Array.from(endpointSet).sort()
   }, [traces])
 
   // Group traces by selected grouping
@@ -3376,6 +3399,38 @@ export default function ProjectDetailPage() {
                       </select>
                     </div>
 
+                    {/* HTTP Method Filter */}
+                    <div className="flex items-center gap-2">
+                      <label className="text-gray-400 text-sm">Method:</label>
+                      <select
+                        value={selectedMethod}
+                        onChange={(e) => setSelectedMethod(e.target.value)}
+                        className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                      >
+                        <option value="">All Methods</option>
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="PATCH">PATCH</option>
+                        <option value="DELETE">DELETE</option>
+                      </select>
+                    </div>
+
+                    {/* API Endpoint Filter */}
+                    <div className="flex items-center gap-2">
+                      <label className="text-gray-400 text-sm">API:</label>
+                      <select
+                        value={selectedEndpoint}
+                        onChange={(e) => setSelectedEndpoint(e.target.value)}
+                        className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none max-w-[300px]"
+                      >
+                        <option value="">All APIs</option>
+                        {endpoints.map((endpoint) => (
+                          <option key={endpoint} value={endpoint}>{endpoint}</option>
+                        ))}
+                      </select>
+                    </div>
+
                     {/* Status Code Filter */}
                     <div className="flex items-center gap-2">
                       <label className="text-gray-400 text-sm">Status:</label>
@@ -3473,7 +3528,7 @@ export default function ProjectDetailPage() {
                     <SkeletonTraceList count={10} />
                   ) : traces.length === 0 ? (
                     <p className="text-gray-400 text-center py-8">
-                      {selectedScreen || selectedDevice || selectedBaseUrl || selectedStatusCode ? 'No API traces match your filters' : 'No API traces yet'}
+                      {selectedScreen || selectedDevice || selectedMethod || selectedBaseUrl || selectedEndpoint || selectedStatusCode || traceStartDate || traceEndDate ? 'No API traces match your filters' : 'No API traces yet'}
                     </p>
                   ) : groupBy !== 'none' && groupedTraces ? (
                     /* Grouped View */
@@ -3519,7 +3574,7 @@ export default function ProjectDetailPage() {
                                         <span className={`font-medium flex-shrink-0 ${getStatusColor(trace.statusCode)}`}>
                                           {trace.statusCode || 'ERR'}
                                         </span>
-                                        <span className="text-gray-400 font-mono text-xs truncate">
+                                        <span className="text-gray-400 font-mono text-xs break-all">
                                           {trace.url}
                                         </span>
                                       </div>
@@ -3630,15 +3685,13 @@ export default function ProjectDetailPage() {
                   ) : (
                     /* Flat View */
                     <div className="space-y-2">
-                      {/* Pagination at top */}
-                      {tracesPagination.totalPages > 1 && (
-                        <Pagination
-                          pagination={tracesPagination}
-                          onPageChange={handleTracesPageChange}
-                          onLimitChange={handleTracesLimitChange}
-                          className="bg-gray-900 rounded-lg p-4"
-                        />
-                      )}
+                      {/* Pagination at top - Always show for consistency */}
+                      <Pagination
+                        pagination={tracesPagination}
+                        onPageChange={handleTracesPageChange}
+                        onLimitChange={handleTracesLimitChange}
+                        className="bg-gray-900 rounded-lg p-4"
+                      />
                       {traces.map((trace) => (
                         <TraceItem
                           key={trace.id}
@@ -3655,16 +3708,14 @@ export default function ProjectDetailPage() {
                           }}
                         />
                       ))}
-                      {/* Pagination at bottom */}
-                      {tracesPagination.totalPages > 1 && (
-                        <Pagination
-                          pagination={tracesPagination}
-                          onPageChange={handleTracesPageChange}
-                          onLimitChange={handleTracesLimitChange}
-                          showLimitSelector={false}
-                          className="bg-gray-900 rounded-lg p-4"
-                        />
-                      )}
+                      {/* Pagination at bottom - Always show for consistency */}
+                      <Pagination
+                        pagination={tracesPagination}
+                        onPageChange={handleTracesPageChange}
+                        onLimitChange={handleTracesLimitChange}
+                        showLimitSelector={false}
+                        className="bg-gray-900 rounded-lg p-4"
+                      />
                     </div>
                   )}
                 </>

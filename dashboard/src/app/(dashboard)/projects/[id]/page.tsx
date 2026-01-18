@@ -4541,12 +4541,14 @@ export default function ProjectDetailPage() {
                       })
 
                       return Array.from(deviceMap.entries()).map(([deviceId, {device, count}]) => {
-                        // Format: "Google Pixel 9 Pro - EBYD-AKXB (5 sessions)"
-                        const deviceName = device.model || device.platform || 'Unknown Device'
-                        const deviceCode = device.deviceCode ? ` - ${device.deviceCode}` : ''
+                        // Format: "EBYD-AKXB (android) - 5 sessions" or "android - 5 sessions" if no code
+                        const deviceLabel = device.deviceCode
+                          ? `${device.deviceCode} (${device.platform})`
+                          : `${device.platform}${device.model ? ` - ${device.model}` : ''}`
+
                         return (
                           <option key={deviceId} value={deviceId}>
-                            {deviceName}{deviceCode} ({count} session{count > 1 ? 's' : ''})
+                            {deviceLabel} - {count} session{count > 1 ? 's' : ''}
                           </option>
                         )
                       })
@@ -4570,22 +4572,17 @@ export default function ProjectDetailPage() {
                     }}
                     className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none min-w-[350px]"
                   >
-                    <option value="">
-                      {selectedFlowDevice
-                        ? '-- Select a session --'
-                        : '-- Select a device first or choose from all sessions --'}
-                    </option>
+                    <option value="">-- Select a session --</option>
                     {flowData?.sessions
                       .filter(session => !selectedFlowDevice || session.device?.deviceId === selectedFlowDevice)
                       .map((session) => {
-                        // Show first 3 screens
-                        const screenPreview = session.screenSequence && session.screenSequence.length > 0
-                          ? session.screenSequence.slice(0, 3).join(' → ') + (session.screenSequence.length > 3 ? '...' : '')
-                          : 'No screens tracked'
+                        // Format: "Session a1b2c3d4 [EBYD-AKXB] (37 requests)"
+                        const sessionIdShort = session.sessionToken.slice(0, 8)
+                        const deviceCode = session.device?.deviceCode ? ` [${session.device.deviceCode}]` : ''
 
                         return (
                           <option key={session.id} value={session.id}>
-                            {session.sessionToken} - {screenPreview} ({session.requestCount} req, ${session.totalCost.toFixed(2)})
+                            Session {sessionIdShort}{deviceCode} ({session.requestCount} request{session.requestCount !== 1 ? 's' : ''})
                           </option>
                         )
                       })}

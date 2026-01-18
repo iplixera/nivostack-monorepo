@@ -221,7 +221,7 @@ type FlowSession = {
   startedAt: string
   endedAt: string | null
   isActive: boolean
-  device: { deviceId: string; platform: string; model: string | null } | null
+  device: { deviceId: string; platform: string; model: string | null; deviceCode: string | null } | null
   requestCount: number
   totalCost: number
   screenSequence: string[]
@@ -606,6 +606,7 @@ export default function ProjectDetailPage() {
   // Flow chart state
   const [flowData, setFlowData] = useState<FlowData | null>(null)
   const [flowLoading, setFlowLoading] = useState(false)
+  const [selectedFlowDevice, setSelectedFlowDevice] = useState<string>('') // Device filter for sessions
   const [selectedFlowSession, setSelectedFlowSession] = useState<string>('')
   const [selectedEdge, setSelectedEdge] = useState<string | null>(null)
   const [nodePositions, setNodePositions] = useState<Record<string, { x: number; y: number }>>({})
@@ -4511,8 +4512,51 @@ export default function ProjectDetailPage() {
                     Flow
                   </button>
                 </div>
+                {/* Device Filter Dropdown */}
                 <div className="flex items-center gap-2">
-                  <label className="text-gray-400 text-sm">Select Session:</label>
+                  <label className="text-gray-400 text-sm">Device:</label>
+                  <select
+                    value={selectedFlowDevice}
+                    onChange={(e) => {
+                      setSelectedFlowDevice(e.target.value)
+                      setSelectedFlowSession('') // Clear session when device changes
+                      setSelectedEdge(null)
+                      setExpandedTimelineEvent(null)
+                    }}
+                    className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none min-w-[250px]"
+                  >
+                    <option value="">All Devices ({flowData?.sessions.length || 0} sessions)</option>
+                    {(() => {
+                      // Group sessions by device and count
+                      const deviceMap = new Map<string, {device: any, count: number}>()
+                      flowData?.sessions.forEach(session => {
+                        if (session.device) {
+                          const deviceKey = session.device.deviceId
+                          if (deviceMap.has(deviceKey)) {
+                            deviceMap.get(deviceKey)!.count++
+                          } else {
+                            deviceMap.set(deviceKey, { device: session.device, count: 1 })
+                          }
+                        }
+                      })
+
+                      return Array.from(deviceMap.entries()).map(([deviceId, {device, count}]) => {
+                        // Format: "Google Pixel 9 Pro - EBYD-AKXB (5 sessions)"
+                        const deviceName = device.model || device.platform || 'Unknown Device'
+                        const deviceCode = device.deviceCode ? ` - ${device.deviceCode}` : ''
+                        return (
+                          <option key={deviceId} value={deviceId}>
+                            {deviceName}{deviceCode} ({count} session{count > 1 ? 's' : ''})
+                          </option>
+                        )
+                      })
+                    })()}
+                  </select>
+                </div>
+
+                {/* Session Filter Dropdown */}
+                <div className="flex items-center gap-2">
+                  <label className="text-gray-400 text-sm">Session:</label>
                   <select
                     value={selectedFlowSession}
                     onChange={(e) => {
@@ -4524,21 +4568,27 @@ export default function ProjectDetailPage() {
                         fetchTimeline(sessionId)
                       }
                     }}
-                    className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none min-w-[300px]"
+                    className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none min-w-[350px]"
                   >
-                    <option value="">-- Select a session to view --</option>
-                    {flowData?.sessions.map((session) => {
-                      // Show first 3 screens or device model
-                      const screenPreview = session.screenSequence && session.screenSequence.length > 0
-                        ? session.screenSequence.slice(0, 3).join(' → ') + (session.screenSequence.length > 3 ? '...' : '')
-                        : (session.device?.model || session.device?.platform || 'Unknown device')
+                    <option value="">
+                      {selectedFlowDevice
+                        ? '-- Select a session --'
+                        : '-- Select a device first or choose from all sessions --'}
+                    </option>
+                    {flowData?.sessions
+                      .filter(session => !selectedFlowDevice || session.device?.deviceId === selectedFlowDevice)
+                      .map((session) => {
+                        // Show first 3 screens
+                        const screenPreview = session.screenSequence && session.screenSequence.length > 0
+                          ? session.screenSequence.slice(0, 3).join(' → ') + (session.screenSequence.length > 3 ? '...' : '')
+                          : 'No screens tracked'
 
-                      return (
-                        <option key={session.id} value={session.id}>
-                          {session.sessionToken} - {screenPreview} ({session.requestCount} req, ${session.totalCost.toFixed(2)})
-                        </option>
-                      )
-                    })}
+                        return (
+                          <option key={session.id} value={session.id}>
+                            {session.sessionToken} - {screenPreview} ({session.requestCount} req, ${session.totalCost.toFixed(2)})
+                          </option>
+                        )
+                      })}
                   </select>
                 </div>
                 <button

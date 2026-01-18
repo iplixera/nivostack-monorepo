@@ -121,7 +121,8 @@ export async function GET(request: NextRequest) {
               select: {
                 deviceId: true,
                 platform: true,
-                model: true
+                model: true,
+                deviceCode: true
               }
             }
           }

@@ -1347,7 +1347,7 @@ export default function ProjectDetailPage() {
     if (!loading && activeTab === 'traces') {
       fetchTraces(1) // Reset to page 1 when filters change
     }
-  }, [selectedScreen, selectedDevice, selectedStatusCode, selectedBaseUrl, traceStartDate, traceEndDate, activeTab, loading])
+  }, [selectedScreen, selectedDevice, selectedStatusCode, selectedBaseUrl, traceStartDate, traceEndDate, activeTab, loading, fetchTraces])
 
   // Refetch traces when limit changes
   useEffect(() => {

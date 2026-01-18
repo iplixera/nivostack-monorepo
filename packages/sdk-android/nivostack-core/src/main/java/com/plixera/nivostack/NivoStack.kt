@@ -79,6 +79,10 @@ class NivoStack private constructor(
     private var syncInterval: Long? = null // null = periodic sync disabled, only lifecycle sync
     private var syncJob: Job? = null
     private var isAppActive = true
+
+    // Periodic flush for debug devices
+    private var flushJob: Job? = null
+    private val debugFlushInterval = 5000L // 5 seconds for debug devices
     
     // Coroutine scope for background operations
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -258,6 +262,7 @@ class NivoStack private constructor(
                 // Start periodic sync timer after initialization (only if app is active)
                 if (isAppActive) {
                     _startSyncTimer()
+                    _startFlushTimer() // Start periodic flush for debug devices
                 }
             } catch (e: Exception) {
                 initError = e.message
@@ -272,7 +277,7 @@ class NivoStack private constructor(
      */
     internal fun onAppResumed() {
         isAppActive = true
-        
+
         // Immediate sync on foreground
         scope.launch {
             try {
@@ -281,9 +286,10 @@ class NivoStack private constructor(
                 // Ignore errors
             }
         }
-        
+
         // Start periodic sync timer
         _startSyncTimer()
+        _startFlushTimer() // Start periodic flush for debug devices
     }
     
     /**
@@ -292,6 +298,17 @@ class NivoStack private constructor(
     internal fun onAppPaused() {
         isAppActive = false
         _stopSyncTimer()
+        _stopFlushTimer()
+
+        // Flush traces and logs when app goes to background
+        scope.launch {
+            try {
+                _flushTraces()
+                _flushLogs()
+            } catch (e: Exception) {
+                log("Failed to flush on app background: ${e.message}")
+            }
+        }
     }
     
     /**
@@ -327,6 +344,41 @@ class NivoStack private constructor(
     private fun _stopSyncTimer() {
         syncJob?.cancel()
         syncJob = null
+    }
+
+    /**
+     * Start periodic flush timer for debug devices
+     * Automatically flushes traces and logs every 5 seconds when debug mode is enabled
+     */
+    private fun _startFlushTimer() {
+        _stopFlushTimer()
+
+        if (!enabled || !isAppActive || !deviceConfig.debugModeEnabled) {
+            return
+        }
+
+        flushJob = scope.launch {
+            while (isAppActive && enabled && deviceConfig.debugModeEnabled) {
+                delay(debugFlushInterval)
+                if (isAppActive && enabled && deviceConfig.debugModeEnabled) {
+                    try {
+                        _flushTraces()
+                        _flushLogs()
+                        log("Debug mode: Auto-flushed traces and logs")
+                    } catch (e: Exception) {
+                        log("Debug mode: Auto-flush failed: ${e.message}")
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Stop periodic flush timer
+     */
+    private fun _stopFlushTimer() {
+        flushJob?.cancel()
+        flushJob = null
     }
     
     /**
@@ -388,13 +440,19 @@ class NivoStack private constructor(
             // Parse device config
             val deviceConfigMap = data["deviceConfig"] as? Map<*, *>
             if (deviceConfigMap != null) {
+                val oldDebugMode = deviceConfig.debugModeEnabled
                 deviceConfig = DeviceConfig.fromJson(deviceConfigMap as Map<String, Any>)
-                
+
                 // Update device code if server assigned one
                 val serverDeviceCode = deviceConfigMap["deviceCode"] as? String
                 if (!serverDeviceCode.isNullOrEmpty() && serverDeviceCode != deviceCode) {
                     deviceCode = serverDeviceCode
                     DeviceCodeGenerator.save(context, serverDeviceCode)
+                }
+
+                // Restart flush timer if debug mode changed
+                if (oldDebugMode != deviceConfig.debugModeEnabled && isAppActive) {
+                    _startFlushTimer()
                 }
             }
             

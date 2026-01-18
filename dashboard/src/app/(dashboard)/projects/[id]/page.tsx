@@ -566,6 +566,7 @@ export default function ProjectDetailPage() {
   // Enhanced trace filters and state
   const [screenNames, setScreenNames] = useState<string[]>([])
   const [traceDevices, setTraceDevices] = useState<TraceDevice[]>([])
+  const [allEnvironments, setAllEnvironments] = useState<string[]>([]) // All unique environments (never filtered)
   const [selectedScreen, setSelectedScreen] = useState<string>('')
   const [selectedDevice, setSelectedDevice] = useState<string>('')
   const [selectedBaseUrl, setSelectedBaseUrl] = useState<string>('') // Base URL filter (backend filter)
@@ -663,6 +664,29 @@ export default function ProjectDetailPage() {
   const [monitorFilter, setMonitorFilter] = useState<'all' | 'unresolved' | 'resolved'>('unresolved')
   const [monitorSubTab, setMonitorSubTab] = useState<'errors' | 'settings'>('errors')
 
+  // Fetch all environments (unfiltered) for environment dropdown
+  const fetchAllEnvironments = useCallback(async () => {
+    if (!token || !projectId) return
+    try {
+      const allTracesRes = await api.traces.list(projectId, token, {
+        limit: 1000 // Get enough to capture all unique environments
+      })
+
+      const envSet = new Set<string>()
+      allTracesRes.traces.forEach(trace => {
+        try {
+          const url = new URL(trace.url)
+          envSet.add(url.hostname)
+        } catch {
+          // Invalid URL, skip
+        }
+      })
+
+      setAllEnvironments(Array.from(envSet).sort())
+    } catch (error) {
+      console.error('Failed to fetch all environments:', error)
+    }
+  }, [token, projectId])
 
   const fetchTraces = useCallback(async (page: number = 1) => {
     if (!token || !projectId) return
@@ -1347,6 +1371,13 @@ export default function ProjectDetailPage() {
     fetchData()
   }, [token, projectId])
 
+
+  // Fetch all environments when traces tab opens (only once)
+  useEffect(() => {
+    if (!loading && activeTab === 'traces' && allEnvironments.length === 0) {
+      fetchAllEnvironments()
+    }
+  }, [activeTab, loading, allEnvironments.length, fetchAllEnvironments])
 
   // Refetch traces when filters change or tab is selected
   useEffect(() => {
@@ -3413,7 +3444,7 @@ export default function ProjectDetailPage() {
                         className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
                       >
                         <option value="">All Environments</option>
-                        {environments.map((env) => (
+                        {allEnvironments.map((env) => (
                           <option key={env} value={env}>{env}</option>
                         ))}
                       </select>

@@ -75,6 +75,8 @@ class NivoStackInterceptor : Interceptor {
                 put("statusCode", responseCode)
                 put("statusMessage", responseMessage)
                 put("duration", requestDuration)
+                put("timestamp", System.currentTimeMillis()) // Add client-side timestamp for sequence tracking
+                instance.getCurrentScreenName()?.let { put("screenName", it) } // Add screen name
                 requestHeaders.let { put("requestHeaders", it) }
                 responseHeaders.let { put("responseHeaders", it) }
                 requestBody?.let { put("requestBody", it) }
@@ -97,6 +99,8 @@ class NivoStackInterceptor : Interceptor {
                 put("statusMessage", "Error")
                 put("duration", requestDuration)
                 put("error", error)
+                put("timestamp", System.currentTimeMillis()) // Add client-side timestamp for sequence tracking
+                instance.getCurrentScreenName()?.let { put("screenName", it) } // Add screen name
                 requestHeaders.let { put("requestHeaders", it) }
                 requestBody?.let { put("requestBody", it) }
             }

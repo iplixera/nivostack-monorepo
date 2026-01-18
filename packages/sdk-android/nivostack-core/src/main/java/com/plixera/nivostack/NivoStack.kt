@@ -911,6 +911,79 @@ class NivoStack private constructor(
         _flushTraces()
         _flushLogs()
     }
+
+    /**
+     * Get pending trace count for debugging
+     *
+     * @return Number of traces waiting to be flushed
+     */
+    fun getPendingTraceCount(): Int {
+        return traceQueue.size
+    }
+
+    /**
+     * Get pending log count for debugging
+     *
+     * @return Number of logs waiting to be flushed
+     */
+    fun getPendingLogCount(): Int {
+        return logQueue.size
+    }
+
+    /**
+     * Check if session has been started
+     * Useful for debugging trace sync issues
+     *
+     * @return true if session token exists, false otherwise
+     */
+    fun isSessionStarted(): Boolean {
+        return sessionToken != null
+    }
+
+    /**
+     * Check if device is registered
+     *
+     * @return true if device is registered with server, false otherwise
+     */
+    fun isDeviceRegistered(): Boolean {
+        return registeredDeviceId != null
+    }
+
+    /**
+     * Get initialization error if any
+     *
+     * @return Error message or null if no error
+     */
+    fun getInitError(): String? {
+        return initError
+    }
+
+    /**
+     * Check if SDK is fully initialized
+     *
+     * @return true if initialization completed, false otherwise
+     */
+    fun isInitialized(): Boolean {
+        return isFullyInitialized
+    }
+
+    /**
+     * Get current session token for debugging
+     *
+     * @return Session token or null if session not started
+     */
+    fun getSessionToken(): String? {
+        return sessionToken
+    }
+
+    /**
+     * Get current screen name
+     *
+     * @return Current screen name or null if no screen tracked yet
+     */
+    fun getCurrentScreenName(): String? {
+        return currentScreen
+    }
 }
 
 /**

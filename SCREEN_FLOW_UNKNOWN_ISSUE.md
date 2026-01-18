@@ -83,11 +83,13 @@ Even after rebuilding the app with the new SDK, you'll see "Unknown" for OLD ses
 - Screen Flow includes these traces
 - You'll see "AppLaunch" as the default screen name
 
-### Option 2: Register Lifecycle Observer (Best UX)
+### Option 2: Automatic Screen Tracking (NOW DEFAULT!)
 
-**Action Required:**
+**Great News:** As of commit `d81e7a2`, the SDK now automatically registers the lifecycle observer!
 
-Add ONE line to your Application class:
+**No Action Required:**
+
+The SDK now does everything automatically when you call `NivoStack.init()`:
 
 ```kotlin
 // File: FloosBHApplication.kt
@@ -101,18 +103,17 @@ class FloosBHApplication : Application() {
             projectId = "your-project-id",
             baseUrl = "https://ingest.nivostack.com"
         )
-
-        // ADD THIS LINE - enables automatic screen tracking
-        registerActivityLifecycleCallbacks(NivoStackLifecycleObserver())
+        // That's it! Lifecycle observer registered automatically ✅
+        // Screen tracking enabled automatically ✅
     }
 }
 ```
 
-**Why this is better:**
-- Automatically tracks REAL screen names (SplashActivity, LoginActivity, etc.)
-- No "AppLaunch" generic names
-- No manual `trackScreen()` calls needed
-- Exactly how Firebase, Sentry, etc. work
+**What You Get:**
+- ✅ Automatically tracks REAL screen names (SplashActivity, LoginActivity, etc.)
+- ✅ No "AppLaunch" generic names (unless APIs called before first Activity)
+- ✅ No manual `trackScreen()` calls needed
+- ✅ Exactly how Firebase, Sentry, etc. work
 
 **Result:**
 ```
@@ -120,12 +121,6 @@ Screen Flow:
 ├─ SplashActivity (5 requests)
 ├─ LoginActivity (12 requests)
 └─ MainActivity (48 requests)
-```
-
-Instead of:
-```
-Screen Flow:
-└─ AppLaunch (65 requests)
 ```
 
 ### Option 3: Clear Old Traces (Optional)

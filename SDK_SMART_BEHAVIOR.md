@@ -212,31 +212,31 @@ class FloosBHApplication : Application() {
             projectId = "your-project-id",
             baseUrl = "https://ingest.nivostack.com"
         )
+        // Lifecycle observer registered automatically ✅
+        // Screen tracking enabled automatically ✅
+        // No additional code needed ✅
     }
 }
 ```
 
-### Optional Enhancements (Recommended)
+### What Happens Automatically
 
-```kotlin
-class FloosBHApplication : Application() {
-    override fun onCreate() {
-        super.onCreate()
+When you call `NivoStack.init()`:
+1. ✅ SDK registers lifecycle observer automatically
+2. ✅ Activity screen names tracked automatically (SplashActivity, LoginActivity, etc.)
+3. ✅ App foreground/background events handled automatically
+4. ✅ Session recovery on app resume
+5. ✅ Trace flushing on app pause
 
-        NivoStack.init(...)
+### No Manual Code Needed
 
-        // OPTIONAL: Register lifecycle observer for custom screen names
-        // Without this: All screens = Activity class names
-        // With this: Custom names via trackScreen()
-        registerActivityLifecycleCallbacks(NivoStackLifecycleObserver())
-    }
-}
-```
+You do NOT need to:
+- ❌ Register lifecycle observer manually
+- ❌ Call `trackScreen()` in each Activity
+- ❌ Handle app lifecycle events
+- ❌ Manage screen tracking state
 
-**Why optional?**
-- SDK works perfectly fine without it
-- You get "AppLaunch" + Activity class names automatically
-- Only needed if you want custom screen names like "Home Dashboard" instead of "MainActivity"
+Everything is automatic!
 
 ---
 

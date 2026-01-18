@@ -76,7 +76,8 @@ class NivoStackInterceptor : Interceptor {
                 put("statusMessage", responseMessage)
                 put("duration", requestDuration)
                 put("timestamp", System.currentTimeMillis()) // Add client-side timestamp for sequence tracking
-                instance.getCurrentScreenName()?.let { put("screenName", it) } // Add screen name
+                // Smart screen name: use current screen or default to "AppLaunch" if called before any Activity
+                put("screenName", instance.getCurrentScreenName() ?: "AppLaunch")
                 requestHeaders.let { put("requestHeaders", it) }
                 responseHeaders.let { put("responseHeaders", it) }
                 requestBody?.let { put("requestBody", it) }
@@ -100,7 +101,8 @@ class NivoStackInterceptor : Interceptor {
                 put("duration", requestDuration)
                 put("error", error)
                 put("timestamp", System.currentTimeMillis()) // Add client-side timestamp for sequence tracking
-                instance.getCurrentScreenName()?.let { put("screenName", it) } // Add screen name
+                // Smart screen name: use current screen or default to "AppLaunch" if called before any Activity
+                put("screenName", instance.getCurrentScreenName() ?: "AppLaunch")
                 requestHeaders.let { put("requestHeaders", it) }
                 requestBody?.let { put("requestBody", it) }
             }

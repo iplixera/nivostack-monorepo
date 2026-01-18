@@ -245,14 +245,31 @@ class NivoStack private constructor(
                     }
                 }
 
-                // Start session (only if device is registered)
+                // Start session with retry logic (only if device is registered)
                 if (featureFlags.sessionTracking && registeredDeviceId != null) {
-                    try {
-                        _startSession()
-                        sessionStarted = true
-                    } catch (e: Exception) {
-                        log("Session start failed: ${e.message}")
-                        // Don't throw - continue with other initialization
+                    var retries = 0
+                    var sessionError: Exception? = null
+
+                    while (retries < 3 && !sessionStarted) {
+                        try {
+                            _startSession()
+                            sessionStarted = true
+                            log("Session started successfully")
+                            break
+                        } catch (e: Exception) {
+                            sessionError = e
+                            retries++
+                            log("Session start attempt $retries failed: ${e.message}")
+                            if (retries < 3) {
+                                delay(2000L * retries) // Exponential backoff: 2s, 4s, 6s
+                            }
+                        }
+                    }
+
+                    if (!sessionStarted && sessionError != null) {
+                        log("CRITICAL: Session failed after 3 retries - ${sessionError.message}")
+                        initError = "Session start failed: ${sessionError.message}"
+                        // SDK continues but will retry on next app foreground
                     }
                 }
 
@@ -277,6 +294,19 @@ class NivoStack private constructor(
      */
     internal fun onAppResumed() {
         isAppActive = true
+
+        // Retry session start if it failed during init
+        if (!sessionStarted && featureFlags.sessionTracking && registeredDeviceId != null) {
+            scope.launch {
+                try {
+                    _startSession()
+                    sessionStarted = true
+                    log("Session recovered on app foreground")
+                } catch (e: Exception) {
+                    log("Session recovery failed: ${e.message}")
+                }
+            }
+        }
 
         // Immediate sync on foreground
         scope.launch {

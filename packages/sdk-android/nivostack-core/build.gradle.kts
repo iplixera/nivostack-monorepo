@@ -13,7 +13,7 @@ afterEvaluate {
 
                 groupId = "com.github.iplixera"
                 artifactId = "nivostack-monorepo"
-                version = "1.1.0"
+                version = "1.1.1"
                 
                 pom {
                     name.set("NivoStack Android SDK")

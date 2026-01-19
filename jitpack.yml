@@ -3,5 +3,5 @@ jdk:
 install:
   - cd packages/sdk-android/example
   - chmod +x ./gradlew
-  - ./gradlew :nivostack-core:clean :nivostack-core:build :nivostack-core:publishToMavenLocal -x test
+  - ./gradlew :nivostack-core:clean :nivostack-core:build :nivostack-core:publishReleasePublicationToMavenLocal -x test
 

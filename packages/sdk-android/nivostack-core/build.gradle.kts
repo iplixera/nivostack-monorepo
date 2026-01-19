@@ -10,10 +10,10 @@ afterEvaluate {
         publications {
             create<MavenPublication>("release") {
                 from(components["release"])
-                
-                groupId = "com.github.${project.findProperty("github.user") ?: "iplixera"}"
-                artifactId = "nivostack-android"
-                version = project.findProperty("version") as? String ?: "1.1.0"
+
+                groupId = "com.github.iplixera"
+                artifactId = "nivostack-monorepo"
+                version = "1.1.0"
                 
                 pom {
                     name.set("NivoStack Android SDK")

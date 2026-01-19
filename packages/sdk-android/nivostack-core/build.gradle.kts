@@ -13,7 +13,7 @@ afterEvaluate {
                 
                 groupId = "com.github.${project.findProperty("github.user") ?: "iplixera"}"
                 artifactId = "nivostack-android"
-                version = project.findProperty("version") as? String ?: "1.0.0"
+                version = project.findProperty("version") as? String ?: "1.1.0"
                 
                 pom {
                     name.set("NivoStack Android SDK")

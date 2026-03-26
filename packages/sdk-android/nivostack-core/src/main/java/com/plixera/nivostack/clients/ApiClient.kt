@@ -11,19 +11,33 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Internal API client for communicating with NivoStack server
+ * 
+ * Uses two endpoints:
+ * - ingestUrl: For sending data (traces, logs, crashes, sessions, devices)
+ * - controlUrl: For fetching config (business config, localization, feature flags, SDK init)
  */
 class ApiClient(
-    private val baseUrl: String,
+    private val ingestUrl: String,
+    private val controlUrl: String,
     private val apiKey: String
 ) {
     private val gson = Gson()
-    private val client: OkHttpClient
+    private val ingestClient: OkHttpClient
+    private val controlClient: OkHttpClient
 
     init {
-        client = OkHttpClient.Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
+        // Client for ingest endpoints (sending data) - shorter timeout
+        ingestClient = OkHttpClient.Builder()
+            .connectTimeout(3, TimeUnit.SECONDS)
             .readTimeout(10, TimeUnit.SECONDS)
-            .writeTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(3, TimeUnit.SECONDS)
+            .build()
+
+        // Client for control endpoints (fetching config) - longer timeout
+        controlClient = OkHttpClient.Builder()
+            .connectTimeout(3, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .writeTimeout(3, TimeUnit.SECONDS)
             .build()
     }
 
@@ -45,12 +59,13 @@ class ApiClient(
 
         val requestBody = gson.toJson(body).toRequestBody(jsonMediaType)
         val request = Request.Builder()
-            .url("$baseUrl/api/devices")
+            .url("$ingestUrl/api/devices")
             .post(requestBody)
             .addHeader("Content-Type", "application/json")
             .addHeader("X-API-Key", apiKey)
             .build()
 
+<<<<<<< Updated upstream
         val response = client.newCall(request).execute()
 
         // Check if response is successful
@@ -59,6 +74,9 @@ class ApiClient(
             throw IOException("Device registration failed with code ${response.code}: $errorBody")
         }
 
+=======
+        val response = ingestClient.newCall(request).execute()
+>>>>>>> Stashed changes
         val responseBody = response.body?.string() ?: "{}"
 
         // Validate response has expected structure
@@ -87,13 +105,13 @@ class ApiClient(
 
         val requestBody = gson.toJson(body).toRequestBody(jsonMediaType)
         val request = Request.Builder()
-            .url("$baseUrl/api/devices/$deviceId/user")
+            .url("$ingestUrl/api/devices/$deviceId/user")
             .patch(requestBody)
             .addHeader("Content-Type", "application/json")
             .addHeader("X-API-Key", apiKey)
             .build()
 
-        client.newCall(request).execute()
+        ingestClient.newCall(request).execute()
     }
 
     /**
@@ -101,12 +119,12 @@ class ApiClient(
      */
     suspend fun clearUser(deviceId: String) {
         val request = Request.Builder()
-            .url("$baseUrl/api/devices/$deviceId/user")
+            .url("$ingestUrl/api/devices/$deviceId/user")
             .delete()
             .addHeader("X-API-Key", apiKey)
             .build()
 
-        client.newCall(request).execute()
+        ingestClient.newCall(request).execute()
     }
 
     /**
@@ -128,13 +146,13 @@ class ApiClient(
 
             val requestBody = gson.toJson(body).toRequestBody(jsonMediaType)
             val request = Request.Builder()
-                .url("$baseUrl/api/traces")
+                .url("$ingestUrl/api/traces")
                 .post(requestBody)
                 .addHeader("Content-Type", "application/json")
                 .addHeader("X-API-Key", apiKey)
                 .build()
 
-            client.newCall(request).execute()
+            ingestClient.newCall(request).execute()
         }
     }
 
@@ -153,13 +171,13 @@ class ApiClient(
 
             val requestBody = gson.toJson(body).toRequestBody(jsonMediaType)
             val request = Request.Builder()
-                .url("$baseUrl/api/logs")
+                .url("$ingestUrl/api/logs")
                 .post(requestBody)
                 .addHeader("Content-Type", "application/json")
                 .addHeader("X-API-Key", apiKey)
                 .build()
 
-            client.newCall(request).execute()
+            ingestClient.newCall(request).execute()
         }
     }
 
@@ -181,13 +199,13 @@ class ApiClient(
 
         val requestBody = gson.toJson(body).toRequestBody(jsonMediaType)
         val request = Request.Builder()
-            .url("$baseUrl/api/crashes")
+            .url("$ingestUrl/api/crashes")
             .post(requestBody)
             .addHeader("Content-Type", "application/json")
             .addHeader("X-API-Key", apiKey)
             .build()
 
-        client.newCall(request).execute()
+        ingestClient.newCall(request).execute()
     }
 
     /**
@@ -220,13 +238,13 @@ class ApiClient(
 
         val requestBody = gson.toJson(body).toRequestBody(jsonMediaType)
         val request = Request.Builder()
-            .url("$baseUrl/api/sessions")
+            .url("$ingestUrl/api/sessions")
             .post(requestBody)
             .addHeader("Content-Type", "application/json")
             .addHeader("X-API-Key", apiKey)
             .build()
 
-        val response = client.newCall(request).execute()
+        val response = ingestClient.newCall(request).execute()
         val responseBody = response.body?.string() ?: "{}"
         return gson.fromJson(responseBody, Map::class.java) as Map<String, Any>
     }
@@ -253,13 +271,13 @@ class ApiClient(
 
         val requestBody = gson.toJson(body).toRequestBody(jsonMediaType)
         val request = Request.Builder()
-            .url("$baseUrl/api/sessions")
+            .url("$ingestUrl/api/sessions")
             .put(requestBody)
             .addHeader("Content-Type", "application/json")
             .addHeader("X-API-Key", apiKey)
             .build()
 
-        val response = client.newCall(request).execute()
+        val response = ingestClient.newCall(request).execute()
         val responseBody = response.body?.string() ?: "{}"
         return gson.fromJson(responseBody, Map::class.java) as Map<String, Any>
     }
@@ -286,13 +304,13 @@ class ApiClient(
 
         val requestBody = gson.toJson(body).toRequestBody(jsonMediaType)
         val request = Request.Builder()
-            .url("$baseUrl/api/sessions")
+            .url("$ingestUrl/api/sessions")
             .patch(requestBody)
             .addHeader("Content-Type", "application/json")
             .addHeader("X-API-Key", apiKey)
             .build()
 
-        val response = client.newCall(request).execute()
+        val response = ingestClient.newCall(request).execute()
         val responseBody = response.body?.string() ?: "{}"
         return gson.fromJson(responseBody, Map::class.java) as Map<String, Any>
     }
@@ -304,7 +322,7 @@ class ApiClient(
         projectId: String,
         category: String? = null
     ): Map<String, Any> {
-        val urlBuilder = "$baseUrl/api/business-config".toHttpUrl().newBuilder()
+        val urlBuilder = "$controlUrl/api/business-config".toHttpUrl().newBuilder()
             .addQueryParameter("projectId", projectId)
         category?.let { urlBuilder.addQueryParameter("category", it) }
         val url = urlBuilder.build()
@@ -315,7 +333,7 @@ class ApiClient(
             .addHeader("X-API-Key", apiKey)
             .build()
 
-        val response = client.newCall(request).execute()
+        val response = controlClient.newCall(request).execute()
         val responseBody = response.body?.string() ?: "{}"
         return gson.fromJson(responseBody, Map::class.java) as Map<String, Any>
     }
@@ -327,7 +345,7 @@ class ApiClient(
         projectId: String,
         languageCode: String? = null
     ): Map<String, Any> {
-        val urlBuilder = "$baseUrl/api/localization/translations".toHttpUrl().newBuilder()
+        val urlBuilder = "$controlUrl/api/localization/translations".toHttpUrl().newBuilder()
             .addQueryParameter("projectId", projectId)
         languageCode?.let { urlBuilder.addQueryParameter("lang", it) }
         val url = urlBuilder.build()
@@ -338,7 +356,7 @@ class ApiClient(
             .addHeader("X-API-Key", apiKey)
             .build()
 
-        val response = client.newCall(request).execute()
+        val response = controlClient.newCall(request).execute()
         val responseBody = response.body?.string() ?: "{}"
         return gson.fromJson(responseBody, Map::class.java) as Map<String, Any>
     }
@@ -348,12 +366,12 @@ class ApiClient(
      */
     suspend fun getFeatureFlags(): Map<String, Any> {
         val request = Request.Builder()
-            .url("$baseUrl/api/feature-flags")
+            .url("$controlUrl/api/feature-flags")
             .get()
             .addHeader("X-API-Key", apiKey)
             .build()
 
-        val response = client.newCall(request).execute()
+        val response = controlClient.newCall(request).execute()
         val responseBody = response.body?.string() ?: "{}"
         return gson.fromJson(responseBody, Map::class.java) as Map<String, Any>
     }
@@ -363,12 +381,12 @@ class ApiClient(
      */
     suspend fun getSdkSettings(): Map<String, Any> {
         val request = Request.Builder()
-            .url("$baseUrl/api/sdk-settings")
+            .url("$controlUrl/api/sdk-settings")
             .get()
             .addHeader("X-API-Key", apiKey)
             .build()
 
-        val response = client.newCall(request).execute()
+        val response = controlClient.newCall(request).execute()
         val responseBody = response.body?.string() ?: "{}"
         return gson.fromJson(responseBody, Map::class.java) as Map<String, Any>
     }
@@ -388,7 +406,7 @@ class ApiClient(
         buildMode: String? = null,
         etag: String? = null
     ): SdkInitResponse {
-        val urlBuilder = "$baseUrl/api/sdk-init".toHttpUrl().newBuilder()
+        val urlBuilder = "$controlUrl/api/sdk-init".toHttpUrl().newBuilder()
             .addQueryParameter("projectId", projectId)
         deviceId?.let { urlBuilder.addQueryParameter("deviceId", it) }
         buildMode?.let { urlBuilder.addQueryParameter("buildMode", it) }
@@ -401,7 +419,7 @@ class ApiClient(
         etag?.let { requestBuilder.addHeader("If-None-Match", it) }
         val request = requestBuilder.build()
 
-        val response = client.newCall(request).execute()
+        val response = controlClient.newCall(request).execute()
         val responseEtag = response.header("ETag")
         val notModified = response.code == 304
         

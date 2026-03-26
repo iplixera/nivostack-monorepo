@@ -9,20 +9,14 @@ class NivoStackAndroidApplication : Application() {
         super.onCreate()
         
         // Initialize NivoStack SDK
-        // For Android emulator, use 10.0.2.2:3000 to access host's localhost:3000
-        // For physical device, use your computer's IP address
-        // For production, use https://ingest.nivostack.com
-        val baseUrl = if (true) { // Debug mode - use localhost for emulator
-            "http://10.0.2.2:3000" // Android emulator
-        } else {
-            "https://ingest.nivostack.com"
-        }
-        
+        // Using production endpoints (even in debug mode):
+        // - Ingest API: https://ingest.nivostack.com (for sending data)
+        // - Control API: https://api.nivostack.com (for fetching config)
         NivoStack.init(
             context = this,
-            baseUrl = baseUrl,
-            apiKey = "cmjoin79y00069z09upepkf11", // Your API key
-            projectId = "cmjoin79y00059z09y0x3eym7", // Your project ID
+            apiKey = "cmjvwzx140003og8t37yd6kor", // Project API key
+            projectId = "cmjvwzx140003og8t37yd6kor", // Project ID
+            // Using default production URLs (ingestUrl and controlUrl parameters omitted)
             enabled = true,
             syncIntervalMinutes = 15L // Sync config every 15 minutes when app is active
         )

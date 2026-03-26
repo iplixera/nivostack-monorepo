@@ -17,20 +17,24 @@ import kotlin.collections.HashMap
  * ```kotlin
  * NivoStack.init(
  *     context = this,
- *     baseUrl = "https://ingest.nivostack.com",
  *     apiKey = "your-project-api-key",
  *     projectId = "your-project-id"
  * )
  * ```
+ * 
+ * API endpoints are automatically configured:
+ * - Ingest API: https://ingest.nivostack.com (for sending data)
+ * - Control API: https://api.nivostack.com (for fetching config)
  */
 class NivoStack private constructor(
     private val context: Context,
-    val baseUrl: String,
+    val ingestUrl: String,
+    val controlUrl: String,
     val apiKey: String,
     val projectId: String,
     val enabled: Boolean
 ) {
-    internal val apiClient: ApiClient = ApiClient(baseUrl, apiKey)
+    internal val apiClient: ApiClient = ApiClient(ingestUrl, controlUrl, apiKey)
     private val prefs: SharedPreferences = context.getSharedPreferences("nivostack_prefs", Context.MODE_PRIVATE)
     
     // Device info
@@ -49,7 +53,7 @@ class NivoStack private constructor(
     var deviceConfig: DeviceConfig = DeviceConfig.defaults()
         private set
     
-    // Clients
+    // Clients (use control API for config fetching)
     val businessConfig: com.plixera.nivostack.clients.BusinessConfigClient = 
         com.plixera.nivostack.clients.BusinessConfigClient(apiClient, projectId)
     val localization: com.plixera.nivostack.clients.LocalizationClient = 
@@ -95,18 +99,24 @@ class NivoStack private constructor(
          * Initialize NivoStack SDK
          * 
          * @param context Application context
-         * @param baseUrl Base URL for NivoStack API (default: https://ingest.nivostack.com)
          * @param apiKey Project API key from NivoStack Studio dashboard
          * @param projectId Project ID (can be derived from API key)
+         * @param ingestUrl Base URL for ingest API (default: https://ingest.nivostack.com)
+         * @param controlUrl Base URL for control API (default: https://api.nivostack.com)
          * @param enabled Enable/disable SDK (useful for debug vs release builds)
          * @param syncIntervalMinutes Interval for periodic config sync in minutes. Default: null (periodic sync disabled, only lifecycle sync).
          *                           Set to a value (e.g., 15) to enable periodic sync every N minutes.
+         * 
+         * API endpoints are automatically configured:
+         * - Ingest API: https://ingest.nivostack.com (for sending data: traces, logs, crashes, sessions)
+         * - Control API: https://api.nivostack.com (for fetching config: business config, localization, feature flags)
          */
         fun init(
             context: Context,
-            baseUrl: String = "https://ingest.nivostack.com",
             apiKey: String,
             projectId: String,
+            ingestUrl: String = "https://ingest.nivostack.com",
+            controlUrl: String = "https://api.nivostack.com",
             enabled: Boolean = true,
             syncIntervalMinutes: Long? = null
         ): NivoStack {
@@ -116,7 +126,7 @@ class NivoStack private constructor(
             
             synchronized(this) {
                 if (instance == null) {
-                    instance = NivoStack(context.applicationContext, baseUrl, apiKey, projectId, enabled)
+                    instance = NivoStack(context.applicationContext, ingestUrl, controlUrl, apiKey, projectId, enabled)
                     instance!!.syncInterval = syncIntervalMinutes?.let { it * 60 * 1000 } // Convert minutes to milliseconds
                     instance!!._initDeviceInfo()
 

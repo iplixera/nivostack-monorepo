@@ -195,9 +195,9 @@ class MainActivity : AppCompatActivity() {
                 projectIdField.isAccessible = true
                 val projectId = projectIdField.get(instance) as String
                 
-                val baseUrlField = NivoStack::class.java.getDeclaredField("baseUrl")
-                baseUrlField.isAccessible = true
-                val baseUrl = baseUrlField.get(instance) as String
+                val ingestUrlField = NivoStack::class.java.getDeclaredField("ingestUrl")
+                ingestUrlField.isAccessible = true
+                val ingestUrl = ingestUrlField.get(instance) as String
                 
                 val apiKeyField = NivoStack::class.java.getDeclaredField("apiKey")
                 apiKeyField.isAccessible = true
@@ -215,7 +215,7 @@ class MainActivity : AppCompatActivity() {
                 
                 val requestBody = gson.toJson(body).toRequestBody(jsonMediaType)
                 val request = Request.Builder()
-                    .url("$baseUrl/api/devices")
+                    .url("$ingestUrl/api/devices")
                     .post(requestBody)
                     .addHeader("Content-Type", "application/json")
                     .addHeader("X-API-Key", apiKey)

@@ -15,6 +15,8 @@ import MocksPage from './mocks/page'
 import Sidebar from '@/components/Sidebar'
 import DeviceComparison from '@/components/DeviceComparison'
 import DeviceNotes from '@/components/DeviceNotes'
+import DashboardTab from '@/components/DashboardTab'
+import { PageContainer } from '@/components/ui'
 
 type Device = {
   id: string
@@ -131,7 +133,7 @@ type TraceDevice = {
   model: string
 }
 
-type Tab = 'devices' | 'logs' | 'crashes' | 'traces' | 'flow' | 'config' | 'analytics' | 'monitor' | 'settings' | 'setup' | 'business-config' | 'localization' | 'mocks'
+type Tab = 'dashboard' | 'devices' | 'sessions' | 'logs' | 'crashes' | 'traces' | 'flow' | 'config' | 'analytics' | 'monitor' | 'settings' | 'setup' | 'business-config' | 'localization' | 'mocks'
 
 type ApiConfig = {
   id: string
@@ -410,7 +412,7 @@ export default function ProjectDetailPage() {
   const projectId = params.id as string
   const { token } = useAuth()
 
-  const [activeTab, setActiveTab] = useState<Tab>('devices')
+  const [activeTab, setActiveTab] = useState<Tab>('dashboard')
   const [devices, setDevices] = useState<Device[]>([])
   const [deviceStats, setDeviceStats] = useState<DeviceStats>({ total: 0, android: 0, ios: 0, today: 0, thisWeek: 0, thisMonth: 0, debugModeCount: 0 })
   const [devicePlatformFilter, setDevicePlatformFilter] = useState<string>('')
@@ -2003,7 +2005,7 @@ export default function ProjectDetailPage() {
     if (status >= 200 && status < 300) return 'text-green-400'
     if (status >= 400 && status < 500) return 'text-yellow-400'
     if (status >= 500) return 'text-red-400'
-    return 'text-gray-400'
+    return 'text-gray-500 dark:text-gray-400'
   }
 
   const tryFormatJson = (body: string | null | undefined): string => {
@@ -2019,36 +2021,19 @@ export default function ProjectDetailPage() {
     switch (level) {
       case 'error': return 'text-red-400 bg-red-900/30'
       case 'warn': return 'text-yellow-400 bg-yellow-900/30'
-      case 'debug': return 'text-gray-400 bg-gray-700/30'
+      case 'debug': return 'text-gray-500 dark:text-gray-400 bg-gray-300/30 dark:bg-gray-700/30'
       default: return 'text-blue-400 bg-blue-900/30'
     }
   }
 
   if (loading) {
-    return <div className="text-gray-400">Loading...</div>
+    return <div className="text-gray-500 dark:text-gray-400">Loading...</div>
   }
 
   return (
-    <div>
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl font-bold text-white">Project Dashboard</h1>
-          <div className="flex items-center space-x-2">
-            <code className="px-3 py-1 bg-gray-800 rounded text-sm text-gray-300 font-mono">
-              {apiKey.slice(0, 12)}...
-            </code>
-            <button
-              onClick={copyApiKey}
-              className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded transition-colors"
-            >
-              {copied ? 'Copied!' : 'Copy API Key'}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex gap-6">
-        {/* Sidebar Navigation */}
+    <div className="flex min-h-[calc(100vh-3.5rem)]">
+      {/* v6: Sidebar - fixed width, sticky, viewport anchored */}
+      <aside className="w-64 flex-shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
         <Sidebar
           onTabChange={(tab) => setActiveTab(tab as Tab)}
           activeTab={activeTab}
@@ -2061,19 +2046,48 @@ export default function ProjectDetailPage() {
             monitor: monitorSummary?.unresolvedCount ?? 0,
           }}
         />
+      </aside>
 
-        {/* Main Content Area */}
-        <div className="flex-1 min-w-0">
+      {/* v6: Main Content Area - wide density for tables/dashboards */}
+      <main className="flex-1 min-w-0 overflow-auto">
+        <PageContainer density="wide">
+          {/* Dashboard Tab - New Overview with Aggregated/Raw modes */}
+          {activeTab === 'dashboard' && (
+            <DashboardTab
+              projectId={projectId}
+              projectName={projectName || 'Project'}
+              token={token || ''}
+              onDrilldown={(filters) => {
+                // v5: Navigate with filters preserved in URL
+                const params = new URLSearchParams()
+                if (filters.env) params.set('env', filters.env)
+                if (filters.range) params.set('range', filters.range)
+
+                const newTab = filters.tab
+                if (newTab === 'devices') setActiveTab('devices')
+                if (newTab === 'traces') setActiveTab('traces')
+                if (newTab === 'crashes') setActiveTab('crashes')
+                if (newTab === 'logs') setActiveTab('logs')
+
+                // Update URL with filter params
+                const queryString = params.toString()
+                if (queryString) {
+                  router.push(`?${queryString}`, { scroll: false })
+                }
+              }}
+            />
+          )}
+
           {activeTab === 'devices' && (
             <div className="space-y-4">
               {/* Sub-tabs */}
-              <div className="border-b border-gray-800">
+              <div className="border-b border-gray-200 dark:border-gray-800">
                 <nav className="flex space-x-8">
                   <button
                     onClick={() => setDeviceSubTab('list')}
                     className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${deviceSubTab === 'list'
-                        ? 'border-blue-500 text-blue-400'
-                        : 'border-transparent text-gray-400 hover:text-white'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                   >
                     Device List
@@ -2081,8 +2095,8 @@ export default function ProjectDetailPage() {
                   <button
                     onClick={() => setDeviceSubTab('settings')}
                     className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${deviceSubTab === 'settings'
-                        ? 'border-blue-500 text-blue-400'
-                        : 'border-transparent text-gray-400 hover:text-white'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                   >
                     Settings
@@ -2126,10 +2140,10 @@ export default function ProjectDetailPage() {
                                 <span>🚫</span>
                                 Device Registration Quota Exceeded
                               </h3>
-                              <p className="text-gray-300 text-sm mb-2">
+                              <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                                 You have reached your device registration limit: <strong>{usage.used}/{usage.limit} devices</strong> ({percentage.toFixed(1)}%).
                               </p>
-                              <p className="text-gray-300 text-sm">
+                              <p className="text-gray-600 dark:text-gray-300 text-sm">
                                 New device registrations will be blocked. Please upgrade your plan to register more devices.
                               </p>
                             </div>
@@ -2152,10 +2166,10 @@ export default function ProjectDetailPage() {
                                 <span>⚠️</span>
                                 Approaching Device Registration Limit
                               </h3>
-                              <p className="text-gray-300 text-sm mb-2">
+                              <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                                 You are approaching your device registration limit: <strong>{usage.used}/{usage.limit} devices</strong> ({percentage.toFixed(1)}%).
                               </p>
-                              <p className="text-gray-300 text-sm">
+                              <p className="text-gray-600 dark:text-gray-300 text-sm">
                                 You can register {Math.max(0, usage.limit - usage.used)} more device{usage.limit - usage.used !== 1 ? 's' : ''} before reaching your limit.
                               </p>
                             </div>
@@ -2173,11 +2187,11 @@ export default function ProjectDetailPage() {
                   })()}
 
                   {/* Action Bar */}
-                  <div className="flex items-center justify-between bg-gray-900 rounded-lg p-4 border border-gray-800">
+                  <div className="flex items-center justify-between bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
                     <div className="flex items-center gap-4">
                       {selectedDevices.size > 0 && (
                         <>
-                          <span className="text-gray-300 text-sm">
+                          <span className="text-gray-600 dark:text-gray-300 text-sm">
                             {selectedDevices.size} device{selectedDevices.size > 1 ? 's' : ''} selected
                           </span>
                           <button
@@ -2230,7 +2244,7 @@ export default function ProjectDetailPage() {
                             })
                         }
                       }}
-                      className="px-4 py-2 bg-gray-800 hover:bg-gray-750 text-white rounded-lg text-sm font-medium transition-colors border border-gray-700"
+                      className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm font-medium transition-colors border border-gray-300 dark:border-gray-700"
                     >
                       Export Devices
                     </button>
@@ -2238,38 +2252,38 @@ export default function ProjectDetailPage() {
 
                   {/* Stats Cards - Clean Professional Design */}
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-                      <div className="text-gray-400 text-xs mb-1">Total Devices</div>
-                      <div className="text-2xl font-bold text-white">{deviceStats.total}</div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Total Devices</div>
+                      <div className="text-2xl font-bold text-gray-900 dark:text-white">{deviceStats.total}</div>
                     </div>
-                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-                      <div className="text-gray-400 text-xs mb-1">Android</div>
-                      <div className="text-2xl font-bold text-white">{deviceStats.android}</div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Android</div>
+                      <div className="text-2xl font-bold text-gray-900 dark:text-white">{deviceStats.android}</div>
                     </div>
-                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-                      <div className="text-gray-400 text-xs mb-1">iOS</div>
-                      <div className="text-2xl font-bold text-white">{deviceStats.ios}</div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">iOS</div>
+                      <div className="text-2xl font-bold text-gray-900 dark:text-white">{deviceStats.ios}</div>
                     </div>
-                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-                      <div className="text-gray-400 text-xs mb-1">Debug Mode</div>
-                      <div className="text-2xl font-bold text-white">{deviceStats.debugModeCount}</div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Debug Mode</div>
+                      <div className="text-2xl font-bold text-gray-900 dark:text-white">{deviceStats.debugModeCount}</div>
                     </div>
-                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-                      <div className="text-gray-400 text-xs mb-1">Today</div>
-                      <div className="text-2xl font-bold text-white">{deviceStats.today}</div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Today</div>
+                      <div className="text-2xl font-bold text-gray-900 dark:text-white">{deviceStats.today}</div>
                     </div>
-                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-                      <div className="text-gray-400 text-xs mb-1">This Week</div>
-                      <div className="text-2xl font-bold text-white">{deviceStats.thisWeek}</div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">This Week</div>
+                      <div className="text-2xl font-bold text-gray-900 dark:text-white">{deviceStats.thisWeek}</div>
                     </div>
-                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-                      <div className="text-gray-400 text-xs mb-1">This Month</div>
-                      <div className="text-2xl font-bold text-white">{deviceStats.thisMonth}</div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">This Month</div>
+                      <div className="text-2xl font-bold text-gray-900 dark:text-white">{deviceStats.thisMonth}</div>
                     </div>
                   </div>
 
                   {/* Filters */}
-                  <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+                  <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
                     <div className="flex flex-wrap items-center gap-4">
                       {/* Search */}
                       <div className="flex items-center gap-2">
@@ -2278,12 +2292,12 @@ export default function ProjectDetailPage() {
                           value={deviceSearch}
                           onChange={(e) => setDeviceSearch(e.target.value)}
                           placeholder="Search device code, user..."
-                          className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none w-56"
+                          className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none w-56"
                         />
                         {deviceSearch && (
                           <button
                             onClick={() => setDeviceSearch('')}
-                            className="px-2 py-1.5 bg-gray-800 text-gray-400 hover:text-white rounded-lg text-sm border border-gray-700"
+                            className="px-2 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg text-sm border border-gray-300 dark:border-gray-700"
                             title="Clear search"
                           >
                             ✕
@@ -2293,11 +2307,11 @@ export default function ProjectDetailPage() {
 
                       {/* Platform Filter */}
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400 text-sm">Platform:</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-sm">Platform:</span>
                         <select
                           value={devicePlatformFilter}
                           onChange={(e) => setDevicePlatformFilter(e.target.value)}
-                          className="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none"
+                          className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white text-sm focus:border-blue-500 focus:outline-none"
                         >
                           <option value="">All</option>
                           <option value="android">Android</option>
@@ -2307,11 +2321,11 @@ export default function ProjectDetailPage() {
 
                       {/* Debug Mode Filter */}
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400 text-sm">Debug:</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-sm">Debug:</span>
                         <select
                           value={deviceDebugModeFilter}
                           onChange={(e) => setDeviceDebugModeFilter(e.target.value)}
-                          className="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none"
+                          className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white text-sm focus:border-blue-500 focus:outline-none"
                         >
                           <option value="">All</option>
                           <option value="enabled">Debug Only</option>
@@ -2320,11 +2334,11 @@ export default function ProjectDetailPage() {
 
                       {/* Device Category Filter */}
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400 text-sm">Category:</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-sm">Category:</span>
                         <select
                           value={deviceCategoryFilter}
                           onChange={(e) => setDeviceCategoryFilter(e.target.value)}
-                          className="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none"
+                          className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white text-sm focus:border-blue-500 focus:outline-none"
                         >
                           <option value="">All</option>
                           <option value="mobile">Mobile</option>
@@ -2336,18 +2350,18 @@ export default function ProjectDetailPage() {
 
                       {/* Device Brand Filter */}
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400 text-sm">Brand:</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-sm">Brand:</span>
                         <input
                           type="text"
                           value={deviceBrandFilter}
                           onChange={(e) => setDeviceBrandFilter(e.target.value)}
                           placeholder="Filter by brand..."
-                          className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none w-32"
+                          className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none w-32"
                         />
                         {deviceBrandFilter && (
                           <button
                             onClick={() => setDeviceBrandFilter('')}
-                            className="px-2 py-1.5 bg-gray-800 text-gray-400 hover:text-white rounded-lg text-sm border border-gray-700"
+                            className="px-2 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg text-sm border border-gray-300 dark:border-gray-700"
                             title="Clear brand filter"
                           >
                             ✕
@@ -2357,18 +2371,18 @@ export default function ProjectDetailPage() {
 
                       {/* Language Filter */}
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400 text-sm">Language:</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-sm">Language:</span>
                         <input
                           type="text"
                           value={deviceLanguageFilter}
                           onChange={(e) => setDeviceLanguageFilter(e.target.value)}
                           placeholder="e.g., en, fr..."
-                          className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none w-24"
+                          className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none w-24"
                         />
                         {deviceLanguageFilter && (
                           <button
                             onClick={() => setDeviceLanguageFilter('')}
-                            className="px-2 py-1.5 bg-gray-800 text-gray-400 hover:text-white rounded-lg text-sm border border-gray-700"
+                            className="px-2 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg text-sm border border-gray-300 dark:border-gray-700"
                             title="Clear language filter"
                           >
                             ✕
@@ -2378,20 +2392,20 @@ export default function ProjectDetailPage() {
 
                       {/* Date Range Filter */}
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400 text-sm">Registered:</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-sm">Registered:</span>
                         <input
                           type="date"
                           value={deviceStartDate}
                           onChange={(e) => setDeviceStartDate(e.target.value)}
-                          className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none"
+                          className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                           placeholder="From"
                         />
-                        <span className="text-gray-400">to</span>
+                        <span className="text-gray-500 dark:text-gray-400">to</span>
                         <input
                           type="date"
                           value={deviceEndDate}
                           onChange={(e) => setDeviceEndDate(e.target.value)}
-                          className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none"
+                          className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                           placeholder="To"
                         />
                         {(deviceStartDate || deviceEndDate) && (
@@ -2400,7 +2414,7 @@ export default function ProjectDetailPage() {
                               setDeviceStartDate('')
                               setDeviceEndDate('')
                             }}
-                            className="px-2 py-1.5 bg-gray-800 text-gray-400 hover:text-white rounded-lg text-sm border border-gray-700"
+                            className="px-2 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg text-sm border border-gray-300 dark:border-gray-700"
                             title="Clear date filter"
                           >
                             ✕
@@ -2425,7 +2439,7 @@ export default function ProjectDetailPage() {
                   {devicesLoading && devices.length === 0 ? (
                     <SkeletonDeviceList count={6} />
                   ) : devices.length === 0 ? (
-                    <p className="text-gray-400 text-center py-8">
+                    <p className="text-gray-500 dark:text-gray-400 text-center py-8">
                       {devicePlatformFilter || deviceStartDate || deviceEndDate || debouncedDeviceSearch
                         ? 'No devices match the current filters'
                         : 'No devices registered yet'}
@@ -2438,7 +2452,7 @@ export default function ProjectDetailPage() {
                           pagination={devicesPagination}
                           onPageChange={handleDevicePageChange}
                           onLimitChange={handleDeviceLimitChange}
-                          className="bg-gray-900 rounded-lg p-4"
+                          className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent"
                         />
                       )}
                       {devices.map((device) => (
@@ -2470,7 +2484,7 @@ export default function ProjectDetailPage() {
                           onPageChange={handleDevicePageChange}
                           onLimitChange={handleDeviceLimitChange}
                           showLimitSelector={false}
-                          className="bg-gray-900 rounded-lg p-4"
+                          className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent"
                         />
                       )}
                     </div>
@@ -2493,7 +2507,7 @@ export default function ProjectDetailPage() {
               {/* Device Details Modal */}
               {selectedDeviceForDetails && token && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                  <div className="bg-gray-900 rounded-lg border border-gray-800 max-w-4xl w-full max-h-[90vh] overflow-auto">
+                  <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 max-w-4xl w-full max-h-[90vh] overflow-auto">
                     <div className="sticky top-0 bg-gray-900 border-b border-gray-800 p-6 flex items-center justify-between">
                       <h2 className="text-xl font-bold text-white">Device Details</h2>
                       <button
@@ -2513,19 +2527,19 @@ export default function ProjectDetailPage() {
               {deviceSubTab === 'settings' && token && (
                 <div className="space-y-6">
                   {sdkSettingsLoading ? (
-                    <div className="bg-gray-900 rounded-lg p-8 text-center">
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-8 text-center border border-gray-200 dark:border-gray-800">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                      <p className="text-gray-400">Loading device settings...</p>
+                      <p className="text-gray-500 dark:text-gray-400">Loading device settings...</p>
                     </div>
                   ) : sdkSettings ? (
                     <>
                       {/* Tracking Mode */}
-                      <div className="bg-gray-900 rounded-lg p-4">
+                      <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-2xl">📡</span>
                       <div>
                         <h3 className="text-white font-medium">Tracking Mode</h3>
-                        <p className="text-gray-400 text-sm">Control which devices send API traces and session data</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Control which devices send API traces and session data</p>
                         {/* Debug: Show current value */}
                         <p className="text-gray-500 text-xs mt-1">Current: <span className="font-mono text-blue-400">{sdkSettings.trackingMode || 'not set'}</span></p>
                       </div>
@@ -2598,8 +2612,8 @@ export default function ProjectDetailPage() {
                   </div>
                     </>
                   ) : (
-                    <div className="bg-gray-900 rounded-lg p-8 text-center">
-                      <p className="text-gray-400">Failed to load device settings. Please try refreshing the page.</p>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-8 text-center border border-gray-200 dark:border-gray-800">
+                      <p className="text-gray-500 dark:text-gray-400">Failed to load device settings. Please try refreshing the page.</p>
                     </div>
                   )}
                 </div>
@@ -2610,13 +2624,13 @@ export default function ProjectDetailPage() {
           {activeTab === 'logs' && (
             <div className="space-y-4">
               {/* Sub-tabs */}
-              <div className="border-b border-gray-800">
+              <div className="border-b border-gray-200 dark:border-gray-800">
                 <nav className="flex space-x-8">
                   <button
                     onClick={() => setLogsSubTab('list')}
                     className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${logsSubTab === 'list'
-                        ? 'border-blue-500 text-blue-400'
-                        : 'border-transparent text-gray-400 hover:text-white'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                   >
                     Logs
@@ -2624,8 +2638,8 @@ export default function ProjectDetailPage() {
                   <button
                     onClick={() => setLogsSubTab('settings')}
                     className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${logsSubTab === 'settings'
-                        ? 'border-blue-500 text-blue-400'
-                        : 'border-transparent text-gray-400 hover:text-white'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                   >
                     Settings
@@ -2664,10 +2678,10 @@ export default function ProjectDetailPage() {
                                 <span>🚫</span>
                                 <span>Logs Quota Exceeded</span>
                               </h3>
-                              <p className="text-gray-300 text-sm mb-2">
+                              <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                                 You have reached your logs limit: <strong>{usage.used}/{usage.limit} logs</strong> ({percentage.toFixed(1)}%).
                               </p>
-                              <p className="text-gray-300 text-sm">
+                              <p className="text-gray-600 dark:text-gray-300 text-sm">
                                 New logs will be blocked. Please upgrade your plan to continue logging.
                               </p>
                             </div>
@@ -2689,10 +2703,10 @@ export default function ProjectDetailPage() {
                                 <span>⚠️</span>
                                 <span>Approaching Logs Limit</span>
                               </h3>
-                              <p className="text-gray-300 text-sm mb-2">
+                              <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                                 You are approaching your logs limit: <strong>{usage.used}/{usage.limit} logs</strong> ({percentage.toFixed(1)}%).
                               </p>
-                              <p className="text-gray-300 text-sm">
+                              <p className="text-gray-600 dark:text-gray-300 text-sm">
                                 You can log {Math.max(0, usage.limit - usage.used)} more log{usage.limit - usage.used !== 1 ? 's' : ''} before reaching your limit.
                               </p>
                             </div>
@@ -2709,10 +2723,10 @@ export default function ProjectDetailPage() {
                     return null
                   })()}
                   {/* Log Level Summary */}
-                  <div className="flex flex-wrap gap-2 p-4 bg-gray-900 rounded-lg">
+                  <div className="flex flex-wrap gap-2 p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
                     <button
                       onClick={() => setLogLevelFilter('')}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === '' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === '' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
                     >
                       All ({logsTotal})
@@ -2720,7 +2734,7 @@ export default function ProjectDetailPage() {
                     {logLevels.verbose > 0 && (
                       <button
                         onClick={() => setLogLevelFilter('verbose')}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === 'verbose' ? 'bg-gray-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === 'verbose' ? 'bg-gray-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                           }`}
                       >
                         Verbose ({logLevels.verbose})
@@ -2729,7 +2743,7 @@ export default function ProjectDetailPage() {
                     {logLevels.debug > 0 && (
                       <button
                         onClick={() => setLogLevelFilter('debug')}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === 'debug' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-purple-400 hover:bg-gray-700'
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === 'debug' ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-purple-600 dark:text-purple-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                           }`}
                       >
                         Debug ({logLevels.debug})
@@ -2738,7 +2752,7 @@ export default function ProjectDetailPage() {
                     {logLevels.info > 0 && (
                       <button
                         onClick={() => setLogLevelFilter('info')}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === 'info' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-blue-400 hover:bg-gray-700'
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === 'info' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                           }`}
                       >
                         Info ({logLevels.info})
@@ -2747,7 +2761,7 @@ export default function ProjectDetailPage() {
                     {logLevels.warn > 0 && (
                       <button
                         onClick={() => setLogLevelFilter('warn')}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === 'warn' ? 'bg-yellow-600 text-white' : 'bg-gray-800 text-yellow-400 hover:bg-gray-700'
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === 'warn' ? 'bg-yellow-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-yellow-600 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                           }`}
                       >
                         Warn ({logLevels.warn})
@@ -2756,7 +2770,7 @@ export default function ProjectDetailPage() {
                     {logLevels.error > 0 && (
                       <button
                         onClick={() => setLogLevelFilter('error')}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === 'error' ? 'bg-red-600 text-white' : 'bg-gray-800 text-red-400 hover:bg-gray-700'
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === 'error' ? 'bg-red-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-red-600 dark:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                           }`}
                       >
                         Error ({logLevels.error})
@@ -2765,7 +2779,7 @@ export default function ProjectDetailPage() {
                     {logLevels.assert > 0 && (
                       <button
                         onClick={() => setLogLevelFilter('assert')}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === 'assert' ? 'bg-red-800 text-white' : 'bg-gray-800 text-red-500 hover:bg-gray-700'
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${logLevelFilter === 'assert' ? 'bg-red-800 text-white' : 'bg-gray-100 dark:bg-gray-800 text-red-700 dark:text-red-500 hover:bg-gray-200 dark:hover:bg-gray-700'
                           }`}
                       >
                         Assert ({logLevels.assert})
@@ -2774,7 +2788,7 @@ export default function ProjectDetailPage() {
                   </div>
 
                   {/* Search and Filters */}
-                  <div className="flex flex-wrap items-center gap-3 p-4 bg-gray-900 rounded-lg">
+                  <div className="flex flex-wrap items-center gap-3 p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
                     {/* Search Input */}
                     <div className="flex-1 min-w-[200px]">
                       <input
@@ -2782,18 +2796,18 @@ export default function ProjectDetailPage() {
                         placeholder="Search logs (message, tag, class, function)..."
                         value={logSearch}
                         onChange={(e) => setLogSearch(e.target.value)}
-                        className="w-full bg-gray-800 text-gray-300 text-sm rounded-lg px-4 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                        className="w-full bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm rounded-lg px-4 py-2 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                       />
                     </div>
 
                     {/* Tag Filter */}
                     {logTags.length > 0 && (
                       <div className="flex items-center gap-2">
-                        <label className="text-gray-400 text-sm">Tag:</label>
+                        <label className="text-gray-500 dark:text-gray-400 text-sm">Tag:</label>
                         <select
                           value={logTagFilter}
                           onChange={(e) => setLogTagFilter(e.target.value)}
-                          className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                          className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                         >
                           <option value="">All Tags</option>
                           {logTags.map((tag) => (
@@ -2806,11 +2820,11 @@ export default function ProjectDetailPage() {
                     {/* Screen Filter */}
                     {logScreenNames.length > 0 && (
                       <div className="flex items-center gap-2">
-                        <label className="text-gray-400 text-sm">Screen:</label>
+                        <label className="text-gray-500 dark:text-gray-400 text-sm">Screen:</label>
                         <select
                           value={logScreenFilter}
                           onChange={(e) => setLogScreenFilter(e.target.value)}
-                          className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                          className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                         >
                           <option value="">All Screens</option>
                           {logScreenNames.map((screen) => (
@@ -2837,7 +2851,7 @@ export default function ProjectDetailPage() {
                   {logsLoading && logs.length === 0 ? (
                     <SkeletonLogList count={10} />
                   ) : logs.length === 0 ? (
-                    <p className="text-gray-400 text-center py-8">
+                    <p className="text-gray-500 dark:text-gray-400 text-center py-8">
                       {debouncedLogSearch || logLevelFilter || logTagFilter || logScreenFilter
                         ? 'No logs match your filters'
                         : 'No logs yet. Integrate the SDK to start capturing console logs.'}
@@ -2850,7 +2864,7 @@ export default function ProjectDetailPage() {
                           pagination={logsPagination}
                           onPageChange={handleLogsPageChange}
                           onLimitChange={handleLogsLimitChange}
-                          className="bg-gray-900 rounded-lg p-4"
+                          className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent"
                         />
                       )}
                       {logs.map((log) => (
@@ -2868,7 +2882,7 @@ export default function ProjectDetailPage() {
                           onPageChange={handleLogsPageChange}
                           onLimitChange={handleLogsLimitChange}
                           showLimitSelector={false}
-                          className="bg-gray-900 rounded-lg p-4"
+                          className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent"
                         />
                       )}
                     </div>
@@ -2879,15 +2893,15 @@ export default function ProjectDetailPage() {
               {logsSubTab === 'settings' && token && sdkSettings && (
                 <div className="space-y-6">
                   {/* Capture Print Statements */}
-                  <div className="bg-gray-900 rounded-lg p-4">
+                  <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-2xl">🖨️</span>
                       <div>
                         <h3 className="text-white font-medium">Capture Print Statements</h3>
-                        <p className="text-gray-400 text-sm">Auto-capture print() statements as logs</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Auto-capture print() statements as logs</p>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                    <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                       <div className="flex items-center gap-3">
                         <span className="text-lg">📝</span>
                         <div>
@@ -2908,12 +2922,12 @@ export default function ProjectDetailPage() {
                   </div>
 
                   {/* Log Control */}
-                  <div className="bg-gray-900 rounded-lg p-4">
+                  <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-2xl">🎛️</span>
                       <div>
                         <h3 className="text-white font-medium">Log Control</h3>
-                        <p className="text-gray-400 text-sm">Control log levels and filtering</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Control log levels and filtering</p>
                         {!featureFlags?.logging && (
                           <p className="text-orange-400 text-xs mt-1">
                             ⚠️ Logging feature flag is disabled in Project Settings. Log Control settings won't take effect until logging is enabled.
@@ -2922,7 +2936,7 @@ export default function ProjectDetailPage() {
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <div className="p-3 bg-gray-800 rounded-lg">
+                      <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                         <p className="text-white text-sm font-medium mb-2">Minimum Log Level</p>
                         <p className="text-gray-500 text-xs mb-3">
                           {sdkSettings.minLogLevel === 'disabled' 
@@ -2952,7 +2966,7 @@ export default function ProjectDetailPage() {
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">📊</span>
                           <div>
@@ -2971,7 +2985,7 @@ export default function ProjectDetailPage() {
                         </label>
                       </div>
                       {sdkSettings.logSamplingEnabled && (
-                        <div className="p-3 bg-gray-800 rounded-lg">
+                        <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                           <label className="text-white text-sm font-medium mb-2 block">Sampling Rate</label>
                           <input
                             type="number"
@@ -3023,10 +3037,10 @@ export default function ProjectDetailPage() {
                             <span>🚫</span>
                             <span>Crashes Quota Exceeded</span>
                           </h3>
-                          <p className="text-gray-300 text-sm mb-2">
+                          <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                             You have reached your crashes limit: <strong>{usage.used}/{usage.limit} crashes</strong> ({percentage.toFixed(1)}%).
                           </p>
-                          <p className="text-gray-300 text-sm">
+                          <p className="text-gray-600 dark:text-gray-300 text-sm">
                             New crash reports will be blocked. Please upgrade your plan to continue crash reporting.
                           </p>
                         </div>
@@ -3048,10 +3062,10 @@ export default function ProjectDetailPage() {
                             <span>⚠️</span>
                             <span>Approaching Crashes Limit</span>
                           </h3>
-                          <p className="text-gray-300 text-sm mb-2">
+                          <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                             You are approaching your crashes limit: <strong>{usage.used}/{usage.limit} crashes</strong> ({percentage.toFixed(1)}%).
                           </p>
-                          <p className="text-gray-300 text-sm">
+                          <p className="text-gray-600 dark:text-gray-300 text-sm">
                             You can report {Math.max(0, usage.limit - usage.used)} more crash{usage.limit - usage.used !== 1 ? 'es' : ''} before reaching your limit.
                           </p>
                         </div>
@@ -3068,7 +3082,7 @@ export default function ProjectDetailPage() {
                 return null
               })()}
               {/* Filters and Search Bar */}
-              <div className="flex flex-wrap items-center gap-3 p-4 bg-gray-900 rounded-lg">
+              <div className="flex flex-wrap items-center gap-3 p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
                 {/* Search */}
                 <div className="flex-1 min-w-[200px]">
                   <input
@@ -3076,17 +3090,17 @@ export default function ProjectDetailPage() {
                     value={crashSearch}
                     onChange={(e) => setCrashSearch(e.target.value)}
                     placeholder="Search crashes by message or stack trace..."
-                    className="w-full px-3 py-1.5 bg-gray-800 text-gray-300 rounded text-sm border border-gray-700 focus:border-blue-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded text-sm border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                   />
                 </div>
 
                 {/* Platform Filter */}
                 <div className="flex items-center gap-2">
-                  <label className="text-gray-400 text-sm">Platform:</label>
+                  <label className="text-gray-500 dark:text-gray-400 text-sm">Platform:</label>
                   <select
                     value={crashPlatformFilter}
                     onChange={(e) => setCrashPlatformFilter(e.target.value)}
-                    className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                    className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                   >
                     <option value="">All Platforms</option>
                     {crashPlatforms.map((platform) => (
@@ -3097,11 +3111,11 @@ export default function ProjectDetailPage() {
 
                 {/* Device Filter */}
                 <div className="flex items-center gap-2">
-                  <label className="text-gray-400 text-sm">Device:</label>
+                  <label className="text-gray-500 dark:text-gray-400 text-sm">Device:</label>
                   <select
                     value={crashDeviceFilter}
                     onChange={(e) => setCrashDeviceFilter(e.target.value)}
-                    className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none min-w-[200px]"
+                    className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none min-w-[200px]"
                   >
                     <option value="">All Devices</option>
                     {crashDevices.map((device) => (
@@ -3114,21 +3128,21 @@ export default function ProjectDetailPage() {
 
                 {/* Date Range */}
                 <div className="flex items-center gap-2">
-                  <label className="text-gray-400 text-sm">From:</label>
+                  <label className="text-gray-500 dark:text-gray-400 text-sm">From:</label>
                   <input
                     type="date"
                     value={crashStartDate}
                     onChange={(e) => setCrashStartDate(e.target.value)}
-                    className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                    className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <label className="text-gray-400 text-sm">To:</label>
+                  <label className="text-gray-500 dark:text-gray-400 text-sm">To:</label>
                   <input
                     type="date"
                     value={crashEndDate}
                     onChange={(e) => setCrashEndDate(e.target.value)}
-                    className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                    className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                   />
                 </div>
 
@@ -3153,12 +3167,12 @@ export default function ProjectDetailPage() {
               {crashesLoading ? (
                 <SkeletonCrashList />
               ) : crashes.length === 0 ? (
-                <p className="text-gray-400 text-center py-8">No crashes found</p>
+                <p className="text-gray-500 dark:text-gray-400 text-center py-8">No crashes found</p>
               ) : (
                 <>
                   <div className="space-y-3">
                     {crashes.map((crash) => (
-                      <div key={crash.id} className="p-4 bg-gray-900 rounded-lg border border-red-900/50 hover:border-red-800/70 transition-colors">
+                      <div key={crash.id} className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 border border-red-900/50 hover:border-red-800/70 transition-colors">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
                             <span className="text-red-400 font-medium">{crash.message}</span>
@@ -3210,7 +3224,7 @@ export default function ProjectDetailPage() {
                   {/* Pagination */}
                   {crashesPagination.totalPages > 1 && (
                     <div className="flex items-center justify-between pt-4">
-                      <div className="text-gray-400 text-sm">
+                      <div className="text-gray-500 dark:text-gray-400 text-sm">
                         Showing {((crashesPagination.page - 1) * crashesPagination.limit) + 1} to {Math.min(crashesPagination.page * crashesPagination.limit, crashesPagination.total)} of {crashesPagination.total} crashes
                       </div>
                       <Pagination
@@ -3228,13 +3242,13 @@ export default function ProjectDetailPage() {
           {activeTab === 'traces' && (
             <div className="space-y-4">
               {/* Sub-tabs */}
-              <div className="border-b border-gray-800">
+              <div className="border-b border-gray-200 dark:border-gray-800">
                 <nav className="flex space-x-8">
                   <button
                     onClick={() => setTracesSubTab('list')}
                     className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${tracesSubTab === 'list'
-                        ? 'border-blue-500 text-blue-400'
-                        : 'border-transparent text-gray-400 hover:text-white'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                   >
                     API Traces
@@ -3242,8 +3256,8 @@ export default function ProjectDetailPage() {
                   <button
                     onClick={() => setTracesSubTab('security')}
                     className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${tracesSubTab === 'security'
-                        ? 'border-blue-500 text-blue-400'
-                        : 'border-transparent text-gray-400 hover:text-white'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                   >
                     Security Settings
@@ -3295,10 +3309,10 @@ export default function ProjectDetailPage() {
                                 <span>🚫</span>
                                 <span>API Traces Quota Exceeded</span>
                               </h3>
-                              <p className="text-gray-300 text-sm mb-2">
+                              <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                                 You have reached your {exceededMeter.toLowerCase()} limit: <strong>{exceededUsage.used}/{exceededUsage.limit}</strong> ({exceededUsage.percentage.toFixed(1)}%).
                               </p>
-                              <p className="text-gray-300 text-sm">
+                              <p className="text-gray-600 dark:text-gray-300 text-sm">
                                 New API traces will be blocked. Please upgrade your plan to continue tracking API requests.
                               </p>
                             </div>
@@ -3328,10 +3342,10 @@ export default function ProjectDetailPage() {
                                 <span>⚠️</span>
                                 <span>Approaching API Traces Limit</span>
                               </h3>
-                              <p className="text-gray-300 text-sm mb-2">
+                              <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                                 You are approaching your {warningMeter.toLowerCase()} limit: <strong>{warningUsage.used}/{warningUsage.limit}</strong> ({warningUsage.limit ? ((warningUsage.used / warningUsage.limit) * 100).toFixed(1) : '0'}%).
                               </p>
-                              <p className="text-gray-300 text-sm">
+                              <p className="text-gray-600 dark:text-gray-300 text-sm">
                                 You can track {Math.max(0, (warningUsage.limit || 0) - warningUsage.used)} more {warningMeter.toLowerCase()} before reaching your limit.
                               </p>
                             </div>
@@ -3351,34 +3365,34 @@ export default function ProjectDetailPage() {
 
                   {/* Summary Statistics */}
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-4">
-                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-                      <div className="text-gray-400 text-xs mb-1">Total Traces</div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Total Traces</div>
                       <div className="text-2xl font-bold text-white">{traceStats.total}</div>
                     </div>
-                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-                      <div className="text-gray-400 text-xs mb-1">Success Rate</div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Success Rate</div>
                       <div className="text-2xl font-bold text-green-400">
                         {traceStats.successRate.toFixed(1)}%
                       </div>
                     </div>
-                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-                      <div className="text-gray-400 text-xs mb-1">Errors</div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Errors</div>
                       <div className="text-2xl font-bold text-red-400">{traceStats.errorCount}</div>
                     </div>
-                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-                      <div className="text-gray-400 text-xs mb-1">Environments</div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Environments</div>
                       <div className="text-2xl font-bold text-blue-400">{traceStats.uniqueEnvironments}</div>
                     </div>
-                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-                      <div className="text-gray-400 text-xs mb-1">Endpoints</div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Endpoints</div>
                       <div className="text-2xl font-bold text-purple-400">{traceStats.uniqueEndpoints}</div>
                     </div>
-                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-                      <div className="text-gray-400 text-xs mb-1">API Count</div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">API Count</div>
                       <div className="text-2xl font-bold text-cyan-400">{traceStats.uniqueAPIs}</div>
                     </div>
-                    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-                      <div className="text-gray-400 text-xs mb-1">Avg Duration</div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Avg Duration</div>
                       <div className="text-2xl font-bold text-yellow-400">
                         {traceStats.avgDuration.toFixed(0)}ms
                       </div>
@@ -3386,17 +3400,17 @@ export default function ProjectDetailPage() {
                   </div>
 
                   {/* Date Range Filter Section */}
-                  <div className="flex flex-wrap items-center gap-3 p-4 bg-gray-900 rounded-lg mb-4">
+                  <div className="flex flex-wrap items-center gap-3 p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 mb-4">
                     {/* Quick Buttons */}
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-400 text-sm">Quick:</span>
+                      <span className="text-gray-500 dark:text-gray-400 text-sm">Quick:</span>
                       <button
                         onClick={() => {
                           const today = new Date().toISOString().split('T')[0]
                           setTraceStartDate(today)
                           setTraceEndDate(today)
                         }}
-                        className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded border border-gray-700"
+                        className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm rounded border border-gray-300 dark:border-gray-700"
                       >
                         Today
                       </button>
@@ -3406,7 +3420,7 @@ export default function ProjectDetailPage() {
                           setTraceStartDate(yesterday)
                           setTraceEndDate(yesterday)
                         }}
-                        className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded border border-gray-700"
+                        className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm rounded border border-gray-300 dark:border-gray-700"
                       >
                         Yesterday
                       </button>
@@ -3417,7 +3431,7 @@ export default function ProjectDetailPage() {
                           setTraceStartDate(week)
                           setTraceEndDate(today)
                         }}
-                        className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded border border-gray-700"
+                        className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm rounded border border-gray-300 dark:border-gray-700"
                       >
                         Last 7 Days
                       </button>
@@ -3425,19 +3439,19 @@ export default function ProjectDetailPage() {
 
                     {/* Date Inputs */}
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-400 text-sm">From:</span>
+                      <span className="text-gray-500 dark:text-gray-400 text-sm">From:</span>
                       <input
                         type="date"
                         value={traceStartDate}
                         onChange={(e) => setTraceStartDate(e.target.value)}
-                        className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none"
+                        className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                       />
-                      <span className="text-gray-400 text-sm">To:</span>
+                      <span className="text-gray-500 dark:text-gray-400 text-sm">To:</span>
                       <input
                         type="date"
                         value={traceEndDate}
                         onChange={(e) => setTraceEndDate(e.target.value)}
-                        className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none"
+                        className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                       />
                       {(traceStartDate || traceEndDate) && (
                         <button
@@ -3445,7 +3459,7 @@ export default function ProjectDetailPage() {
                             setTraceStartDate('')
                             setTraceEndDate('')
                           }}
-                          className="px-2 py-1.5 bg-gray-800 text-gray-400 hover:text-white rounded-lg text-sm border border-gray-700"
+                          className="px-2 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg text-sm border border-gray-300 dark:border-gray-700"
                         >
                           Clear
                         </button>
@@ -3454,14 +3468,14 @@ export default function ProjectDetailPage() {
                   </div>
 
                   {/* Filters and Actions Bar */}
-                  <div className="flex flex-wrap items-center gap-3 p-4 bg-gray-900 rounded-lg">
+                  <div className="flex flex-wrap items-center gap-3 p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
                     {/* Environment Filter (Base URL) */}
                     <div className="flex items-center gap-2">
-                      <label className="text-gray-400 text-sm">Environment:</label>
+                      <label className="text-gray-500 dark:text-gray-400 text-sm">Environment:</label>
                       <select
                         value={selectedBaseUrl}
                         onChange={(e) => setSelectedBaseUrl(e.target.value)}
-                        className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                        className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                       >
                         <option value="">All Environments</option>
                         {allEnvironments.map((env) => (
@@ -3472,11 +3486,11 @@ export default function ProjectDetailPage() {
 
                     {/* HTTP Method Filter */}
                     <div className="flex items-center gap-2">
-                      <label className="text-gray-400 text-sm">Method:</label>
+                      <label className="text-gray-500 dark:text-gray-400 text-sm">Method:</label>
                       <select
                         value={selectedMethod}
                         onChange={(e) => setSelectedMethod(e.target.value)}
-                        className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                        className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                       >
                         <option value="">All Methods</option>
                         <option value="GET">GET</option>
@@ -3489,14 +3503,14 @@ export default function ProjectDetailPage() {
 
                     {/* API Endpoint Filter */}
                     <div className="flex items-center gap-2">
-                      <label className="text-gray-400 text-sm">API:</label>
+                      <label className="text-gray-500 dark:text-gray-400 text-sm">API:</label>
                       <select
                         value={selectedEndpoint}
                         onChange={(e) => {
                           console.log('[DEBUG] Endpoint filter changed to:', e.target.value)
                           setSelectedEndpoint(e.target.value)
                         }}
-                        className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none max-w-[300px]"
+                        className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none max-w-[300px]"
                       >
                         <option value="">All APIs ({allEndpoints.length})</option>
                         {allEndpoints.map((endpoint) => (
@@ -3507,11 +3521,11 @@ export default function ProjectDetailPage() {
 
                     {/* Status Code Filter */}
                     <div className="flex items-center gap-2">
-                      <label className="text-gray-400 text-sm">Status:</label>
+                      <label className="text-gray-500 dark:text-gray-400 text-sm">Status:</label>
                       <select
                         value={selectedStatusCode}
                         onChange={(e) => setSelectedStatusCode(e.target.value)}
-                        className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                        className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                       >
                         <option value="">All Status</option>
                         <option value="200">200 - OK</option>
@@ -3528,11 +3542,11 @@ export default function ProjectDetailPage() {
 
                     {/* Screen Name Filter */}
                     <div className="flex items-center gap-2">
-                      <label className="text-gray-400 text-sm">Screen:</label>
+                      <label className="text-gray-500 dark:text-gray-400 text-sm">Screen:</label>
                       <select
                         value={selectedScreen}
                         onChange={(e) => setSelectedScreen(e.target.value)}
-                        className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                        className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                       >
                         <option value="">All Screens</option>
                         {screenNames.map((name) => (
@@ -3543,11 +3557,11 @@ export default function ProjectDetailPage() {
 
                     {/* Device Filter */}
                     <div className="flex items-center gap-2">
-                      <label className="text-gray-400 text-sm">Device:</label>
+                      <label className="text-gray-500 dark:text-gray-400 text-sm">Device:</label>
                       <select
                         value={selectedDevice}
                         onChange={(e) => setSelectedDevice(e.target.value)}
-                        className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                        className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                       >
                         <option value="">All Devices</option>
                         {traceDevices.map((device) => (
@@ -3560,11 +3574,11 @@ export default function ProjectDetailPage() {
 
                     {/* Group By Dropdown */}
                     <div className="flex items-center gap-2">
-                      <label className="text-gray-400 text-sm">Group by:</label>
+                      <label className="text-gray-500 dark:text-gray-400 text-sm">Group by:</label>
                       <select
                         value={groupBy}
                         onChange={(e) => setGroupBy(e.target.value as 'none' | 'device' | 'screen' | 'endpoint')}
-                        className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                        className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                       >
                         <option value="none">None</option>
                         <option value="screen">Screen Name</option>
@@ -3601,14 +3615,14 @@ export default function ProjectDetailPage() {
                   {tracesLoading && traces.length === 0 ? (
                     <SkeletonTraceList count={10} />
                   ) : traces.length === 0 ? (
-                    <p className="text-gray-400 text-center py-8">
+                    <p className="text-gray-500 dark:text-gray-400 text-center py-8">
                       {selectedScreen || selectedDevice || selectedMethod || selectedBaseUrl || selectedEndpoint || selectedStatusCode || traceStartDate || traceEndDate ? 'No API traces match your filters' : 'No API traces yet'}
                     </p>
                   ) : groupBy !== 'none' && groupedTraces ? (
                     /* Grouped View */
                     <div className="space-y-3">
                       {groupedTraces.map((group) => (
-                        <div key={group.key} className="bg-gray-900 rounded-lg overflow-hidden">
+                        <div key={group.key} className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800">
                           {/* Group Header */}
                           <button
                             onClick={() => setExpandedGroup(expandedGroup === group.key ? null : group.key)}
@@ -3648,13 +3662,13 @@ export default function ProjectDetailPage() {
                                         <span className={`font-medium flex-shrink-0 ${getStatusColor(trace.statusCode)}`}>
                                           {trace.statusCode || 'ERR'}
                                         </span>
-                                        <span className="text-gray-400 font-mono text-xs break-all">
+                                        <span className="text-gray-500 dark:text-gray-400 font-mono text-xs break-all">
                                           {trace.url}
                                         </span>
                                       </div>
                                       <div className="flex items-center space-x-3 text-xs flex-shrink-0 ml-4">
                                         {trace.duration && (
-                                          <span className="text-gray-400">{trace.duration}ms</span>
+                                          <span className="text-gray-500 dark:text-gray-400">{trace.duration}ms</span>
                                         )}
                                         <span className="text-gray-500">{formatTime(trace.timestamp)}</span>
                                         <span className="text-gray-500">{expandedTrace === trace.id ? '▼' : '▶'}</span>
@@ -3668,7 +3682,7 @@ export default function ProjectDetailPage() {
                                         </span>
                                       )}
                                       {trace.device && (
-                                        <span className="px-2 py-0.5 bg-gray-700/50 text-gray-400 rounded">
+                                        <span className="px-2 py-0.5 bg-gray-200/50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 rounded">
                                           {trace.device.platform} - {trace.device.model || trace.device.deviceId.slice(0, 8)}
                                         </span>
                                       )}
@@ -3695,7 +3709,7 @@ export default function ProjectDetailPage() {
                                         {trace.requestHeaders && Object.keys(trace.requestHeaders).length > 0 && (
                                           <div className="mb-2">
                                             <span className="text-xs text-gray-500">Headers:</span>
-                                            <pre className="mt-1 p-2 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-32">
+                                            <pre className="mt-1 p-2 bg-gray-100 dark:bg-gray-950 rounded text-xs text-gray-500 dark:text-gray-400 overflow-x-auto max-h-32">
                                               {JSON.stringify(trace.requestHeaders, null, 2)}
                                             </pre>
                                           </div>
@@ -3703,7 +3717,7 @@ export default function ProjectDetailPage() {
                                         {trace.requestBody && (
                                           <div>
                                             <span className="text-xs text-gray-500">Body:</span>
-                                            <pre className="mt-1 p-2 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-48">
+                                            <pre className="mt-1 p-2 bg-gray-100 dark:bg-gray-950 rounded text-xs text-gray-500 dark:text-gray-400 overflow-x-auto max-h-48">
                                               {formatBody(trace.requestBody)}
                                             </pre>
                                           </div>
@@ -3715,7 +3729,7 @@ export default function ProjectDetailPage() {
                                         {trace.responseBody && (
                                           <div>
                                             <span className="text-xs text-gray-500">Body:</span>
-                                            <pre className="mt-1 p-2 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-64">
+                                            <pre className="mt-1 p-2 bg-gray-100 dark:bg-gray-950 rounded text-xs text-gray-500 dark:text-gray-400 overflow-x-auto max-h-64">
                                               {formatBody(trace.responseBody)}
                                             </pre>
                                           </div>
@@ -3764,7 +3778,7 @@ export default function ProjectDetailPage() {
                         pagination={tracesPagination}
                         onPageChange={handleTracesPageChange}
                         onLimitChange={handleTracesLimitChange}
-                        className="bg-gray-900 rounded-lg p-4"
+                        className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent"
                       />
                       {traces.map((trace) => (
                         <TraceItem
@@ -3788,7 +3802,7 @@ export default function ProjectDetailPage() {
                         onPageChange={handleTracesPageChange}
                         onLimitChange={handleTracesLimitChange}
                         showLimitSelector={false}
-                        className="bg-gray-900 rounded-lg p-4"
+                        className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent"
                       />
                     </div>
                   )}
@@ -3798,23 +3812,23 @@ export default function ProjectDetailPage() {
               {tracesSubTab === 'security' && token && (
                 <div className="space-y-6">
                   {sdkSettingsLoading ? (
-                    <div className="bg-gray-900 rounded-lg p-8 text-center">
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-8 text-center border border-gray-200 dark:border-gray-800">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                      <p className="text-gray-400">Loading security settings...</p>
+                      <p className="text-gray-500 dark:text-gray-400">Loading security settings...</p>
                     </div>
                   ) : sdkSettings ? (
                     <>
                       {/* Security Settings */}
-                      <div className="bg-gray-900 rounded-lg p-4">
+                      <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-2xl">🔒</span>
                       <div>
                         <h3 className="text-white font-medium">Security Settings</h3>
-                        <p className="text-gray-400 text-sm">Control data capture and privacy settings</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Control data capture and privacy settings</p>
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">📤</span>
                           <div>
@@ -3833,7 +3847,7 @@ export default function ProjectDetailPage() {
                         </label>
                       </div>
 
-                      <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">📥</span>
                           <div>
@@ -3852,7 +3866,7 @@ export default function ProjectDetailPage() {
                         </label>
                       </div>
 
-                      <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">🔐</span>
                           <div>
@@ -3873,7 +3887,7 @@ export default function ProjectDetailPage() {
 
                       {/* Sensitive Field Patterns */}
                       {sdkSettings.sanitizeSensitiveData && (
-                        <div className="p-3 bg-gray-800 rounded-lg">
+                        <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                           <p className="text-white text-sm font-medium mb-2">Sensitive Field Patterns</p>
                           <p className="text-gray-500 text-xs mb-3">Fields matching these patterns will be redacted</p>
                           <div className="flex flex-wrap gap-2 mb-3">
@@ -3914,8 +3928,8 @@ export default function ProjectDetailPage() {
                   </div>
                     </>
                   ) : (
-                    <div className="bg-gray-900 rounded-lg p-8 text-center">
-                      <p className="text-gray-400">Failed to load security settings. Please try refreshing the page.</p>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-8 text-center border border-gray-200 dark:border-gray-800">
+                      <p className="text-gray-500 dark:text-gray-400">Failed to load security settings. Please try refreshing the page.</p>
                     </div>
                   )}
                 </div>
@@ -3938,25 +3952,25 @@ export default function ProjectDetailPage() {
 
               {/* Add Config Form */}
               {showAddConfig && (
-                <div className="bg-gray-900 rounded-lg p-4 space-y-4">
-                  <h3 className="text-white font-medium">Add New Endpoint Config</h3>
+                <div className="bg-white dark:bg-gray-900 rounded-lg p-4 space-y-4 border border-gray-200 dark:border-gray-800">
+                  <h3 className="text-gray-900 dark:text-white font-medium">Add New Endpoint Config</h3>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
-                      <label className="block text-gray-400 text-sm mb-1">Endpoint Path</label>
+                      <label className="block text-gray-500 dark:text-gray-400 text-sm mb-1">Endpoint Path</label>
                       <input
                         type="text"
                         placeholder="/api/users/*"
                         value={newConfig.endpoint}
                         onChange={(e) => setNewConfig({ ...newConfig, endpoint: e.target.value })}
-                        className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                        className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm rounded px-3 py-2 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-gray-400 text-sm mb-1">Method (optional)</label>
+                      <label className="block text-gray-500 dark:text-gray-400 text-sm mb-1">Method (optional)</label>
                       <select
                         value={newConfig.method}
                         onChange={(e) => setNewConfig({ ...newConfig, method: e.target.value })}
-                        className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                        className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm rounded px-3 py-2 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                       >
                         <option value="">All Methods</option>
                         <option value="GET">GET</option>
@@ -3967,24 +3981,24 @@ export default function ProjectDetailPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-gray-400 text-sm mb-1">Name (optional)</label>
+                      <label className="block text-gray-500 dark:text-gray-400 text-sm mb-1">Name (optional)</label>
                       <input
                         type="text"
                         placeholder="User API"
                         value={newConfig.name}
                         onChange={(e) => setNewConfig({ ...newConfig, name: e.target.value })}
-                        className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                        className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm rounded px-3 py-2 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-gray-400 text-sm mb-1">Cost Per Request</label>
+                      <label className="block text-gray-500 dark:text-gray-400 text-sm mb-1">Cost Per Request</label>
                       <input
                         type="number"
                         step="0.001"
                         placeholder="0.00"
                         value={newConfig.costPerRequest}
                         onChange={(e) => setNewConfig({ ...newConfig, costPerRequest: parseFloat(e.target.value) || 0 })}
-                        className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none"
+                        className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm rounded px-3 py-2 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -4000,7 +4014,7 @@ export default function ProjectDetailPage() {
                         setShowAddConfig(false)
                         setNewConfig({ endpoint: '', method: '', name: '', costPerRequest: 0 })
                       }}
-                      className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded transition-colors"
+                      className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-white text-sm rounded transition-colors"
                     >
                       Cancel
                     </button>
@@ -4010,14 +4024,14 @@ export default function ProjectDetailPage() {
 
               {/* Suggested Endpoints from Traces */}
               {suggestedEndpoints.length > 0 && (
-                <div className="bg-gray-900/50 rounded-lg p-4">
-                  <h3 className="text-gray-300 font-medium mb-3">Suggested Endpoints (from traces)</h3>
+                <div className="bg-gray-100 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-transparent">
+                  <h3 className="text-gray-700 dark:text-gray-300 font-medium mb-3">Suggested Endpoints (from traces)</h3>
                   <div className="flex flex-wrap gap-2">
                     {suggestedEndpoints.slice(0, 10).map((ep, idx) => (
                       <button
                         key={idx}
                         onClick={() => addSuggestedEndpoint(ep)}
-                        className="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs rounded border border-gray-700 transition-colors"
+                        className="px-3 py-1 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs rounded border border-gray-300 dark:border-gray-700 transition-colors"
                       >
                         <span className="text-blue-400">{ep.method}</span> {ep.endpoint}
                       </button>
@@ -4028,28 +4042,28 @@ export default function ProjectDetailPage() {
 
               {/* Existing Configs */}
               {configs.length === 0 ? (
-                <p className="text-gray-400 text-center py-8">No API configurations yet. Add endpoints to track costs.</p>
+                <p className="text-gray-500 dark:text-gray-400 text-center py-8">No API configurations yet. Add endpoints to track costs.</p>
               ) : (
                 <div className="space-y-2">
                   {configs.map((config) => (
-                    <div key={config.id} className="bg-gray-900 rounded-lg p-4">
+                    <div key={config.id} className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                       {editingConfig?.id === config.id ? (
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                           <div>
-                            <label className="block text-gray-400 text-xs mb-1">Endpoint</label>
+                            <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">Endpoint</label>
                             <input
                               type="text"
                               value={editingConfig.endpoint}
                               onChange={(e) => setEditingConfig({ ...editingConfig, endpoint: e.target.value })}
-                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                              className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm rounded px-3 py-2 border border-gray-300 dark:border-gray-700"
                             />
                           </div>
                           <div>
-                            <label className="block text-gray-400 text-xs mb-1">Method</label>
+                            <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">Method</label>
                             <select
                               value={editingConfig.method || ''}
                               onChange={(e) => setEditingConfig({ ...editingConfig, method: e.target.value || null })}
-                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                              className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm rounded px-3 py-2 border border-gray-300 dark:border-gray-700"
                             >
                               <option value="">All</option>
                               <option value="GET">GET</option>
@@ -4059,22 +4073,22 @@ export default function ProjectDetailPage() {
                             </select>
                           </div>
                           <div>
-                            <label className="block text-gray-400 text-xs mb-1">Name</label>
+                            <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">Name</label>
                             <input
                               type="text"
                               value={editingConfig.name || ''}
                               onChange={(e) => setEditingConfig({ ...editingConfig, name: e.target.value || null })}
-                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                              className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm rounded px-3 py-2 border border-gray-300 dark:border-gray-700"
                             />
                           </div>
                           <div>
-                            <label className="block text-gray-400 text-xs mb-1">Cost</label>
+                            <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">Cost</label>
                             <input
                               type="number"
                               step="0.001"
                               value={editingConfig.costPerRequest}
                               onChange={(e) => setEditingConfig({ ...editingConfig, costPerRequest: parseFloat(e.target.value) || 0 })}
-                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                              className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm rounded px-3 py-2 border border-gray-300 dark:border-gray-700"
                             />
                           </div>
                           <div className="flex gap-2">
@@ -4104,12 +4118,12 @@ export default function ProjectDetailPage() {
                               <span className="text-white font-mono text-sm">{config.endpoint}</span>
                             </div>
                             {config.name && (
-                              <span className="text-gray-400 text-sm">({config.name})</span>
+                              <span className="text-gray-500 dark:text-gray-400 text-sm">({config.name})</span>
                             )}
                           </div>
                           <div className="flex items-center gap-4">
                             <span className="text-green-400 font-medium">${config.costPerRequest.toFixed(2)} USD</span>
-                            <span className={`px-2 py-0.5 rounded text-xs ${config.isEnabled ? 'bg-green-900/50 text-green-400' : 'bg-gray-700 text-gray-400'}`}>
+                            <span className={`px-2 py-0.5 rounded text-xs ${config.isEnabled ? 'bg-green-900/50 text-green-400' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}>
                               {config.isEnabled ? 'Active' : 'Disabled'}
                             </span>
                             {/* Monitoring Toggle */}
@@ -4133,7 +4147,7 @@ export default function ProjectDetailPage() {
                             </div>
                             <button
                               onClick={() => setEditingConfig(config)}
-                              className="text-gray-400 hover:text-white text-sm"
+                              className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm"
                             >
                               Edit
                             </button>
@@ -4156,33 +4170,33 @@ export default function ProjectDetailPage() {
           {activeTab === 'analytics' && (
             <div className="space-y-6">
               {analyticsLoading ? (
-                <p className="text-gray-400 text-center py-8">Loading analytics...</p>
+                <p className="text-gray-500 dark:text-gray-400 text-center py-8">Loading analytics...</p>
               ) : !analytics ? (
-                <p className="text-gray-400 text-center py-8">No analytics data available</p>
+                <p className="text-gray-500 dark:text-gray-400 text-center py-8">No analytics data available</p>
               ) : (
                 <>
                   {/* Summary Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="bg-gray-900 rounded-lg p-4">
-                      <p className="text-gray-400 text-sm">Total Cost</p>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">Total Cost</p>
                       <p className="text-2xl font-bold text-green-400">${analytics.summary.totalCost.toFixed(2)} <span className="text-sm font-normal">USD</span></p>
                     </div>
-                    <div className="bg-gray-900 rounded-lg p-4">
-                      <p className="text-gray-400 text-sm">Total Requests</p>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">Total Requests</p>
                       <p className="text-2xl font-bold text-white">{analytics.summary.totalRequests.toLocaleString()}</p>
                     </div>
-                    <div className="bg-gray-900 rounded-lg p-4">
-                      <p className="text-gray-400 text-sm">Avg Cost/Request</p>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">Avg Cost/Request</p>
                       <p className="text-2xl font-bold text-blue-400">${analytics.summary.avgCostPerRequest.toFixed(2)} <span className="text-sm font-normal">USD</span></p>
                     </div>
-                    <div className="bg-gray-900 rounded-lg p-4">
-                      <p className="text-gray-400 text-sm">Unique Endpoints Cost</p>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">Unique Endpoints Cost</p>
                       <p className="text-2xl font-bold text-purple-400">${analytics.summary.uniqueEndpointsCost.toFixed(2)} <span className="text-sm font-normal">USD</span></p>
                     </div>
                   </div>
 
                   {/* Cost by Device */}
-                  <div className="bg-gray-900 rounded-lg p-4">
+                  <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-white font-medium">Cost by Device</h3>
                       <div className="flex items-center gap-2">
@@ -4208,16 +4222,16 @@ export default function ProjectDetailPage() {
                       </div>
                     </div>
                     {analytics.deviceCosts.length === 0 ? (
-                      <p className="text-gray-400 text-sm">No device costs recorded.</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">No device costs recorded.</p>
                     ) : (
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="border-b border-gray-800">
-                              <th className="text-left text-gray-400 py-2 px-3">Device</th>
-                              <th className="text-right text-gray-400 py-2 px-3">Requests</th>
-                              <th className="text-right text-gray-400 py-2 px-3">Cost/Request</th>
-                              <th className="text-right text-gray-400 py-2 px-3">Total Cost</th>
+                              <th className="text-left text-gray-500 dark:text-gray-400 py-2 px-3">Device</th>
+                              <th className="text-right text-gray-500 dark:text-gray-400 py-2 px-3">Requests</th>
+                              <th className="text-right text-gray-500 dark:text-gray-400 py-2 px-3">Cost/Request</th>
+                              <th className="text-right text-gray-500 dark:text-gray-400 py-2 px-3">Total Cost</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -4233,7 +4247,7 @@ export default function ProjectDetailPage() {
                                     <div className="flex items-center gap-2">
                                       <span>{dc.device?.platform === 'android' ? '🤖' : '🍎'}</span>
                                       <div>
-                                        <p className="text-white">{dc.device?.model || 'Unknown'}</p>
+                                        <p className="text-gray-900 dark:text-white">{dc.device?.model || 'Unknown'}</p>
                                         <p className="text-gray-500 text-xs font-mono">{dc.device?.deviceId.slice(0, 12)}...</p>
                                       </div>
                                     </div>
@@ -4250,7 +4264,7 @@ export default function ProjectDetailPage() {
                   </div>
 
                   {/* Cost by Session */}
-                  <div className="bg-gray-900 rounded-lg p-4">
+                  <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-white font-medium">Cost by Session</h3>
                       <div className="flex items-center gap-2">
@@ -4285,18 +4299,18 @@ export default function ProjectDetailPage() {
                       </div>
                     </div>
                     {analytics.sessionCosts.length === 0 ? (
-                      <p className="text-gray-400 text-sm">No session costs recorded.</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">No session costs recorded.</p>
                     ) : (
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="border-b border-gray-800">
-                              <th className="text-left text-gray-400 py-2 px-3">Session</th>
-                              <th className="text-left text-gray-400 py-2 px-3">Device</th>
-                              <th className="text-left text-gray-400 py-2 px-3">Time</th>
-                              <th className="text-right text-gray-400 py-2 px-3">Requests</th>
-                              <th className="text-right text-gray-400 py-2 px-3">Cost/Request</th>
-                              <th className="text-right text-gray-400 py-2 px-3">Total Cost</th>
+                              <th className="text-left text-gray-500 dark:text-gray-400 py-2 px-3">Session</th>
+                              <th className="text-left text-gray-500 dark:text-gray-400 py-2 px-3">Device</th>
+                              <th className="text-left text-gray-500 dark:text-gray-400 py-2 px-3">Time</th>
+                              <th className="text-right text-gray-500 dark:text-gray-400 py-2 px-3">Requests</th>
+                              <th className="text-right text-gray-500 dark:text-gray-400 py-2 px-3">Cost/Request</th>
+                              <th className="text-right text-gray-500 dark:text-gray-400 py-2 px-3">Total Cost</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -4322,7 +4336,7 @@ export default function ProjectDetailPage() {
                                   <td className="py-2 px-3 text-gray-300">
                                     {session.device ? `${session.device.model || session.device.deviceId.slice(0, 8)}` : '-'}
                                   </td>
-                                  <td className="py-2 px-3 text-gray-400 text-xs">
+                                  <td className="py-2 px-3 text-gray-500 dark:text-gray-400 text-xs">
                                     {formatTime(session.startedAt)}
                                   </td>
                                   <td className="py-2 px-3 text-right text-gray-300">{session.requestCount.toLocaleString()}</td>
@@ -4337,7 +4351,7 @@ export default function ProjectDetailPage() {
                   </div>
 
                   {/* Cost by Endpoint */}
-                  <div className="bg-gray-900 rounded-lg p-4">
+                  <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-white font-medium">Cost by Endpoint</h3>
                       <div className="flex items-center gap-2">
@@ -4372,17 +4386,17 @@ export default function ProjectDetailPage() {
                       </div>
                     </div>
                     {analytics.endpointCosts.length === 0 ? (
-                      <p className="text-gray-400 text-sm">No endpoint costs. Configure API costs first.</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">No endpoint costs. Configure API costs first.</p>
                     ) : (
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="border-b border-gray-800">
-                              <th className="text-left text-gray-400 py-2 px-3">Method</th>
-                              <th className="text-left text-gray-400 py-2 px-3">Endpoint</th>
-                              <th className="text-right text-gray-400 py-2 px-3">Requests</th>
-                              <th className="text-right text-gray-400 py-2 px-3">Cost/Request</th>
-                              <th className="text-right text-gray-400 py-2 px-3">Total Cost</th>
+                              <th className="text-left text-gray-500 dark:text-gray-400 py-2 px-3">Method</th>
+                              <th className="text-left text-gray-500 dark:text-gray-400 py-2 px-3">Endpoint</th>
+                              <th className="text-right text-gray-500 dark:text-gray-400 py-2 px-3">Requests</th>
+                              <th className="text-right text-gray-500 dark:text-gray-400 py-2 px-3">Cost/Request</th>
+                              <th className="text-right text-gray-500 dark:text-gray-400 py-2 px-3">Total Cost</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -4443,10 +4457,10 @@ export default function ProjectDetailPage() {
                                 <span>🚫</span>
                                 <span>Sessions Quota Exceeded</span>
                               </h3>
-                              <p className="text-gray-300 text-sm mb-2">
+                              <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                                 You have reached your sessions limit: <strong>{sessionsUsage.used}/{sessionsUsage.limit} sessions</strong> ({percentage.toFixed(1)}%).
                               </p>
-                              <p className="text-gray-300 text-sm">
+                              <p className="text-gray-600 dark:text-gray-300 text-sm">
                                 New sessions will be blocked. Please upgrade your plan to continue tracking user sessions.
                               </p>
                             </div>
@@ -4468,10 +4482,10 @@ export default function ProjectDetailPage() {
                                 <span>⚠️</span>
                                 <span>Approaching Sessions Limit</span>
                               </h3>
-                              <p className="text-gray-300 text-sm mb-2">
+                              <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                                 You are approaching your sessions limit: <strong>{sessionsUsage.used}/{sessionsUsage.limit} sessions</strong> ({percentage.toFixed(1)}%).
                               </p>
-                              <p className="text-gray-300 text-sm">
+                              <p className="text-gray-600 dark:text-gray-300 text-sm">
                                 You can track {Math.max(0, sessionsUsage.limit - sessionsUsage.used)} more session{sessionsUsage.limit - sessionsUsage.used !== 1 ? 's' : ''} before reaching your limit.
                               </p>
                             </div>
@@ -4490,14 +4504,14 @@ export default function ProjectDetailPage() {
                 </>
               )}
               {/* Session Selector Header */}
-              <div className="flex flex-wrap items-center gap-4 p-4 bg-gray-900 rounded-lg">
+              <div className="flex flex-wrap items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
                 {/* View Mode Toggle */}
-                <div className="flex items-center bg-gray-800 rounded-lg p-1">
+                <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
                   <button
                     onClick={() => setFlowViewMode('timeline')}
                     className={`px-3 py-1.5 text-sm rounded-md transition-colors ${flowViewMode === 'timeline'
                         ? 'bg-blue-600 text-white'
-                        : 'text-gray-400 hover:text-white'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                   >
                     Timeline
@@ -4506,7 +4520,7 @@ export default function ProjectDetailPage() {
                     onClick={() => setFlowViewMode('flow')}
                     className={`px-3 py-1.5 text-sm rounded-md transition-colors ${flowViewMode === 'flow'
                         ? 'bg-blue-600 text-white'
-                        : 'text-gray-400 hover:text-white'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                   >
                     Flow
@@ -4514,7 +4528,7 @@ export default function ProjectDetailPage() {
                 </div>
                 {/* Device Filter Dropdown */}
                 <div className="flex items-center gap-2">
-                  <label className="text-gray-400 text-sm">Device:</label>
+                  <label className="text-gray-500 dark:text-gray-400 text-sm">Device:</label>
                   <select
                     value={selectedFlowDevice}
                     onChange={(e) => {
@@ -4523,7 +4537,7 @@ export default function ProjectDetailPage() {
                       setSelectedEdge(null)
                       setExpandedTimelineEvent(null)
                     }}
-                    className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none min-w-[250px]"
+                    className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none min-w-[250px]"
                   >
                     <option value="">All Devices ({flowData?.sessions.length || 0} sessions)</option>
                     {(() => {
@@ -4558,7 +4572,7 @@ export default function ProjectDetailPage() {
 
                 {/* Session Filter Dropdown */}
                 <div className="flex items-center gap-2">
-                  <label className="text-gray-400 text-sm">Session:</label>
+                  <label className="text-gray-500 dark:text-gray-400 text-sm">Session:</label>
                   <select
                     value={selectedFlowSession}
                     onChange={(e) => {
@@ -4570,7 +4584,7 @@ export default function ProjectDetailPage() {
                         fetchTimeline(sessionId)
                       }
                     }}
-                    className="bg-gray-800 text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-700 focus:border-blue-500 focus:outline-none min-w-[350px]"
+                    className="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm rounded px-3 py-1.5 border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none min-w-[350px]"
                   >
                     <option value="">-- Select a session --</option>
                     {flowData?.sessions
@@ -4602,12 +4616,12 @@ export default function ProjectDetailPage() {
               </div>
 
               {flowLoading ? (
-                <p className="text-gray-400 text-center py-8">Loading flow data...</p>
+                <p className="text-gray-500 dark:text-gray-400 text-center py-8">Loading flow data...</p>
               ) : !flowData || flowData.sessions.length === 0 ? (
-                <p className="text-gray-400 text-center py-8">No session data available. Make sure your app is sending screenName with traces.</p>
+                <p className="text-gray-500 dark:text-gray-400 text-center py-8">No session data available. Make sure your app is sending screenName with traces.</p>
               ) : !selectedFlowSession ? (
                 /* Show session list when no session selected */
-                <div className="bg-gray-900 rounded-lg p-4">
+                <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                   <h3 className="text-white font-medium mb-4">Available Sessions</h3>
                   <div className="space-y-3">
                     {flowData.sessions.slice(0, 20).map((session) => (
@@ -4628,12 +4642,12 @@ export default function ProjectDetailPage() {
                               {session.sessionToken}
                             </span>
                             {session.device && (
-                              <span className="text-gray-400 text-xs">
+                              <span className="text-gray-500 dark:text-gray-400 text-xs">
                                 {session.device.model || session.device.deviceId.slice(0, 8)}
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-4 text-xs text-gray-400">
+                          <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                             <span>{session.requestCount} requests</span>
                             <span className="text-green-400">${session.totalCost.toFixed(2)}</span>
                           </div>
@@ -4666,20 +4680,20 @@ export default function ProjectDetailPage() {
                     const currentSession = flowData.sessions.find(s => s.id === selectedFlowSession)
                     if (!currentSession) return null
                     return (
-                      <div className="bg-gray-900 rounded-lg p-4">
+                      <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className={`w-3 h-3 rounded-full ${currentSession.isActive ? 'bg-green-400' : 'bg-gray-500'}`} />
                             <span className="text-white font-medium">{currentSession.sessionToken}</span>
                             {currentSession.device && (
-                              <span className="text-gray-400 text-sm">
+                              <span className="text-gray-500 dark:text-gray-400 text-sm">
                                 {currentSession.device.platform} - {currentSession.device.model || currentSession.device.deviceId.slice(0, 8)}
                               </span>
                             )}
                           </div>
                           <div className="flex items-center gap-6 text-sm">
-                            <span className="text-gray-400">{currentSession.requestCount} requests</span>
-                            <span className="text-gray-400">{currentSession.screenSequence.length} screens</span>
+                            <span className="text-gray-500 dark:text-gray-400">{currentSession.requestCount} requests</span>
+                            <span className="text-gray-500 dark:text-gray-400">{currentSession.screenSequence.length} screens</span>
                             <span className="text-green-400 font-medium">${currentSession.totalCost.toFixed(2)}</span>
                           </div>
                         </div>
@@ -4689,11 +4703,11 @@ export default function ProjectDetailPage() {
 
                   {/* Timeline View */}
                   {flowViewMode === 'timeline' && (
-                    <div className="bg-gray-900 rounded-lg p-4">
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                       {timelineLoading ? (
-                        <p className="text-gray-400 text-center py-8">Loading timeline...</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-center py-8">Loading timeline...</p>
                       ) : !timelineData ? (
-                        <div className="text-gray-400 text-center py-8">
+                        <div className="text-gray-500 dark:text-gray-400 text-center py-8">
                           <p>No timeline data available.</p>
                           <button
                             onClick={() => fetchTimeline(selectedFlowSession)}
@@ -4707,7 +4721,7 @@ export default function ProjectDetailPage() {
                           {/* Timeline Stats */}
                           <div className="flex items-center gap-6 mb-6 pb-4 border-b border-gray-800">
                             <div className="flex items-center gap-2">
-                              <span className="text-gray-400 text-sm">Requests:</span>
+                              <span className="text-gray-500 dark:text-gray-400 text-sm">Requests:</span>
                               <span className="text-white font-medium">{timelineData.stats.totalRequests}</span>
                               <span className="text-green-400 text-xs">({timelineData.stats.successfulRequests} ok)</span>
                               {timelineData.stats.failedRequests > 0 && (
@@ -4715,22 +4729,22 @@ export default function ProjectDetailPage() {
                               )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-gray-400 text-sm">Logs:</span>
+                              <span className="text-gray-500 dark:text-gray-400 text-sm">Logs:</span>
                               <span className="text-white font-medium">{timelineData.stats.totalLogs}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-gray-400 text-sm">Cost:</span>
+                              <span className="text-gray-500 dark:text-gray-400 text-sm">Cost:</span>
                               <span className="text-green-400 font-medium">${timelineData.stats.totalCost.toFixed(2)}</span>
                             </div>
                             {timelineData.session.appVersion && (
                               <div className="flex items-center gap-2">
-                                <span className="text-gray-400 text-sm">App:</span>
+                                <span className="text-gray-500 dark:text-gray-400 text-sm">App:</span>
                                 <span className="text-white text-sm">{timelineData.session.appVersion}</span>
                               </div>
                             )}
                             {timelineData.session.locale && (
                               <div className="flex items-center gap-2">
-                                <span className="text-gray-400 text-sm">Locale:</span>
+                                <span className="text-gray-500 dark:text-gray-400 text-sm">Locale:</span>
                                 <span className="text-white text-sm">{timelineData.session.locale}</span>
                               </div>
                             )}
@@ -4775,7 +4789,7 @@ export default function ProjectDetailPage() {
                                     : event.statusCode >= 400
                                       ? 'text-red-400'
                                       : 'text-yellow-400'
-                                  : 'text-gray-400'
+                                  : 'text-gray-500 dark:text-gray-400'
 
                                 return (
                                   <div key={eventId} className="flex items-start gap-3 py-1">
@@ -4803,7 +4817,7 @@ export default function ProjectDetailPage() {
                                           {event.cost !== null && event.cost > 0 && (
                                             <span className="text-green-400 text-xs">${event.cost.toFixed(2)}</span>
                                           )}
-                                          <span className="text-gray-400 text-xs truncate max-w-md" title={event.url}>
+                                          <span className="text-gray-500 dark:text-gray-400 text-xs truncate max-w-md" title={event.url}>
                                             {event.endpoint}
                                           </span>
                                           {event.error && (
@@ -4816,7 +4830,7 @@ export default function ProjectDetailPage() {
                                       {isExpanded && (
                                         <div className="px-3 pb-3 space-y-3 border-t border-gray-700 pt-3">
                                           <div>
-                                            <p className="text-gray-400 text-xs mb-1">URL</p>
+                                            <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">URL</p>
                                             <p className="text-gray-300 text-xs font-mono break-all bg-gray-900 p-2 rounded">{event.url}</p>
                                           </div>
                                           {event.error && (
@@ -4827,7 +4841,7 @@ export default function ProjectDetailPage() {
                                           )}
                                           {event.requestBody && (
                                             <div>
-                                              <p className="text-gray-400 text-xs mb-1">Request Body</p>
+                                              <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Request Body</p>
                                               <pre className="text-gray-300 text-xs font-mono bg-gray-900 p-2 rounded overflow-x-auto max-h-40">
                                                 {(() => {
                                                   try {
@@ -4841,7 +4855,7 @@ export default function ProjectDetailPage() {
                                           )}
                                           {event.responseBody && (
                                             <div>
-                                              <p className="text-gray-400 text-xs mb-1">Response Body</p>
+                                              <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Response Body</p>
                                               <pre className="text-gray-300 text-xs font-mono bg-gray-900 p-2 rounded overflow-x-auto max-h-40">
                                                 {(() => {
                                                   try {
@@ -4888,7 +4902,7 @@ export default function ProjectDetailPage() {
                                             {event.level}
                                           </span>
                                           {event.tag && (
-                                            <span className="px-2 py-0.5 bg-gray-700 text-gray-400 rounded text-xs">
+                                            <span className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded text-xs">
                                               {event.tag}
                                             </span>
                                           )}
@@ -4902,12 +4916,12 @@ export default function ProjectDetailPage() {
                                       {isExpanded && (
                                         <div className="px-3 pb-3 space-y-3 border-t border-gray-700 pt-3">
                                           <div>
-                                            <p className="text-gray-400 text-xs mb-1">Message</p>
+                                            <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Message</p>
                                             <p className="text-gray-300 text-sm bg-gray-900 p-2 rounded whitespace-pre-wrap">{event.message}</p>
                                           </div>
                                           {event.fileName && (
                                             <div>
-                                              <p className="text-gray-400 text-xs mb-1">Location</p>
+                                              <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Location</p>
                                               <p className="text-gray-300 text-xs font-mono">
                                                 {event.fileName}
                                                 {event.lineNumber && `:${event.lineNumber}`}
@@ -4918,7 +4932,7 @@ export default function ProjectDetailPage() {
                                           )}
                                           {event.data && typeof event.data === 'object' && Object.keys(event.data).length > 0 ? (
                                             <div>
-                                              <p className="text-gray-400 text-xs mb-1">Data</p>
+                                              <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Data</p>
                                               <pre className="text-gray-300 text-xs font-mono bg-gray-900 p-2 rounded overflow-x-auto max-h-40">
                                                 {JSON.stringify(event.data, null, 2)}
                                               </pre>
@@ -4948,9 +4962,9 @@ export default function ProjectDetailPage() {
                     <>
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" style={{ minHeight: '600px' }}>
                         {/* Left: Flow Visualization */}
-                        <div className="bg-gray-900 rounded-lg p-4 overflow-auto">
+                        <div className="bg-white dark:bg-gray-900 rounded-lg p-4 overflow-auto border border-gray-200 dark:border-gray-800">
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-white font-medium">Screen Flow</h3>
+                            <h3 className="text-gray-900 dark:text-white font-medium">Screen Flow</h3>
                             {featureFlags && (!featureFlags.screenTracking || !featureFlags.sessionTracking) && (
                               <div className="px-3 py-1.5 bg-orange-500/10 border border-orange-500/30 rounded text-xs text-orange-400">
                                 ⚠️ {!featureFlags.screenTracking && !featureFlags.sessionTracking 
@@ -4982,15 +4996,15 @@ export default function ProjectDetailPage() {
                                         <span className="w-8 h-8 flex items-center justify-center bg-indigo-600 text-white text-sm rounded-full font-bold flex-shrink-0">
                                           {idx + 1}
                                         </span>
-                                        <div className="flex-1 bg-gray-800 rounded-lg p-3 border-2 border-gray-700">
-                                          <span className="text-white font-medium">{screen}</span>
+                                        <div className="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border-2 border-gray-300 dark:border-gray-700">
+                                          <span className="text-gray-900 dark:text-white font-medium">{screen}</span>
                                           {(() => {
                                             const node = flowData.nodes.find(n => n.id === screen)
                                             if (!node) return null
                                             const successRate = node.requestCount > 0 ? ((node.successCount / node.requestCount) * 100).toFixed(0) : '0'
                                             return (
                                               <div className="flex items-center gap-4 mt-1 text-xs">
-                                                <span className="text-gray-400">{node.requestCount} req</span>
+                                                <span className="text-gray-500 dark:text-gray-400">{node.requestCount} req</span>
                                                 <span className={Number(successRate) >= 90 ? 'text-green-400' : Number(successRate) >= 50 ? 'text-yellow-400' : 'text-red-400'}>
                                                   {successRate}% ok
                                                 </span>
@@ -5020,7 +5034,7 @@ export default function ProjectDetailPage() {
                                               <span className={`px-2 py-0.5 rounded-full font-medium ${isEdgeSelected ? 'bg-blue-600 text-white' : 'bg-indigo-900/50 text-indigo-400'}`}>
                                                 #{edge.sequenceNumber}
                                               </span>
-                                              <span className="text-gray-400">{edge.requestCount} requests</span>
+                                              <span className="text-gray-500 dark:text-gray-400">{edge.requestCount} requests</span>
                                               <span className={edge.errorCount > 0 ? 'text-red-400' : 'text-green-400'}>
                                                 {edge.successCount}/{edge.requestCount} ok
                                               </span>
@@ -5054,8 +5068,8 @@ export default function ProjectDetailPage() {
                         </div>
 
                         {/* Right: Transition Details */}
-                        <div className="bg-gray-900 rounded-lg p-4 overflow-auto">
-                          <h3 className="text-white font-medium mb-4">Transition Details</h3>
+                        <div className="bg-white dark:bg-gray-900 rounded-lg p-4 overflow-auto border border-gray-200 dark:border-gray-800">
+                          <h3 className="text-gray-900 dark:text-white font-medium mb-4">Transition Details</h3>
 
                           {!selectedEdge ? (
                             <div className="flex items-center justify-center h-full min-h-[400px] text-gray-500">
@@ -5076,13 +5090,13 @@ export default function ProjectDetailPage() {
                                 return (
                                   <>
                                     {/* Transition Header */}
-                                    <div className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg">
+                                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                                       <span className="px-3 py-1 bg-indigo-600 text-white text-sm rounded-full font-bold">
                                         #{edge.sequenceNumber}
                                       </span>
                                       <div>
-                                        <p className="text-white font-medium">{edge.source} → {edge.target}</p>
-                                        <p className="text-gray-400 text-xs">
+                                        <p className="text-gray-900 dark:text-white font-medium">{edge.source} → {edge.target}</p>
+                                        <p className="text-gray-500 dark:text-gray-400 text-xs">
                                           {edge.requestCount} requests | {edge.successCount} success | {edge.errorCount} errors | ${edge.totalCost.toFixed(2)}
                                         </p>
                                       </div>
@@ -5108,10 +5122,10 @@ export default function ProjectDetailPage() {
                                               }`}>
                                               {ep.statusCode}
                                             </span>
-                                            <span className="text-gray-400 text-xs">{ep.duration}ms</span>
+                                            <span className="text-gray-500 dark:text-gray-400 text-xs">{ep.duration}ms</span>
                                           </div>
                                           <div className="flex items-center gap-3 text-xs">
-                                            <span className="text-gray-400">{ep.count}x</span>
+                                            <span className="text-gray-500 dark:text-gray-400">{ep.count}x</span>
                                             <span className={ep.successRate >= 90 ? 'text-green-400' : ep.successRate >= 50 ? 'text-yellow-400' : 'text-red-400'}>
                                               {ep.successRate.toFixed(0)}%
                                             </span>
@@ -5120,7 +5134,7 @@ export default function ProjectDetailPage() {
                                         </div>
 
                                         {/* URL */}
-                                        <div className="mb-3 p-2 bg-gray-950 rounded text-xs font-mono text-gray-400 break-all">
+                                        <div className="mb-3 p-2 bg-gray-100 dark:bg-gray-950 rounded text-xs font-mono text-gray-500 dark:text-gray-400 break-all">
                                           {ep.url}
                                         </div>
 
@@ -5128,7 +5142,7 @@ export default function ProjectDetailPage() {
                                         <div className="mb-3">
                                           <h4 className="text-sm font-medium text-gray-300 mb-2">Request Body</h4>
                                           {ep.requestBody ? (
-                                            <pre className="p-3 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-40">
+                                            <pre className="p-3 bg-gray-100 dark:bg-gray-950 rounded text-xs text-gray-500 dark:text-gray-400 overflow-x-auto max-h-40">
                                               {(() => {
                                                 try {
                                                   return JSON.stringify(JSON.parse(ep.requestBody), null, 2)
@@ -5146,7 +5160,7 @@ export default function ProjectDetailPage() {
                                         <div>
                                           <h4 className="text-sm font-medium text-gray-300 mb-2">Response Body</h4>
                                           {ep.responseBody ? (
-                                            <pre className="p-3 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-40">
+                                            <pre className="p-3 bg-gray-100 dark:bg-gray-950 rounded text-xs text-gray-500 dark:text-gray-400 overflow-x-auto max-h-40">
                                               {(() => {
                                                 try {
                                                   return JSON.stringify(JSON.parse(ep.responseBody), null, 2)
@@ -5170,18 +5184,18 @@ export default function ProjectDetailPage() {
                       </div>
 
                       {/* Screen Summary Table */}
-                      <div className="bg-gray-900 rounded-lg p-4">
+                      <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                         <h3 className="text-white font-medium mb-4">Screen Summary</h3>
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead>
                               <tr className="border-b border-gray-800">
-                                <th className="text-left text-gray-400 py-2 px-4">Screen</th>
-                                <th className="text-right text-gray-400 py-2 px-4">Requests</th>
-                                <th className="text-right text-gray-400 py-2 px-4">Success</th>
-                                <th className="text-right text-gray-400 py-2 px-4">Errors</th>
-                                <th className="text-right text-gray-400 py-2 px-4">Success Rate</th>
-                                <th className="text-right text-gray-400 py-2 px-4">Total Cost</th>
+                                <th className="text-left text-gray-500 dark:text-gray-400 py-2 px-4">Screen</th>
+                                <th className="text-right text-gray-500 dark:text-gray-400 py-2 px-4">Requests</th>
+                                <th className="text-right text-gray-500 dark:text-gray-400 py-2 px-4">Success</th>
+                                <th className="text-right text-gray-500 dark:text-gray-400 py-2 px-4">Errors</th>
+                                <th className="text-right text-gray-500 dark:text-gray-400 py-2 px-4">Success Rate</th>
+                                <th className="text-right text-gray-500 dark:text-gray-400 py-2 px-4">Total Cost</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -5216,13 +5230,13 @@ export default function ProjectDetailPage() {
           {activeTab === 'monitor' && (
             <div className="space-y-6">
               {/* Sub-tabs */}
-              <div className="border-b border-gray-800">
+              <div className="border-b border-gray-200 dark:border-gray-800">
                 <nav className="flex space-x-8">
                   <button
                     onClick={() => setMonitorSubTab('errors')}
                     className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${monitorSubTab === 'errors'
-                        ? 'border-blue-500 text-blue-400'
-                        : 'border-transparent text-gray-400 hover:text-white'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                   >
                     Monitored Errors
@@ -5230,8 +5244,8 @@ export default function ProjectDetailPage() {
                   <button
                     onClick={() => setMonitorSubTab('settings')}
                     className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${monitorSubTab === 'settings'
-                        ? 'border-blue-500 text-blue-400'
-                        : 'border-transparent text-gray-400 hover:text-white'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                   >
                     Settings
@@ -5244,20 +5258,20 @@ export default function ProjectDetailPage() {
                   {/* Monitor Summary Cards */}
                   {monitorSummary && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="bg-gray-900 rounded-lg p-4">
-                        <p className="text-gray-400 text-sm">Total Errors</p>
+                      <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Total Errors</p>
                         <p className="text-2xl font-bold text-white">{monitorSummary.totalErrors}</p>
                       </div>
-                      <div className="bg-gray-900 rounded-lg p-4">
-                        <p className="text-gray-400 text-sm">Unresolved</p>
+                      <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Unresolved</p>
                         <p className="text-2xl font-bold text-red-400">{monitorSummary.unresolvedCount}</p>
                       </div>
-                      <div className="bg-gray-900 rounded-lg p-4">
-                        <p className="text-gray-400 text-sm">Resolved</p>
+                      <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Resolved</p>
                         <p className="text-2xl font-bold text-green-400">{monitorSummary.resolvedCount}</p>
                       </div>
-                      <div className="bg-gray-900 rounded-lg p-4">
-                        <p className="text-gray-400 text-sm">Total Occurrences</p>
+                      <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Total Occurrences</p>
                         <p className="text-2xl font-bold text-white">{monitorSummary.totalOccurrences}</p>
                       </div>
                     </div>
@@ -5282,10 +5296,10 @@ export default function ProjectDetailPage() {
                   {/* Master-Detail View */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Error List (Master) */}
-                    <div className="bg-gray-900 rounded-lg p-4">
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                       <h3 className="text-white font-medium mb-4">Monitored Errors</h3>
                       {monitoredErrors.length === 0 ? (
-                        <p className="text-gray-400 text-center py-8">No errors found</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-center py-8">No errors found</p>
                       ) : (
                         <div className="space-y-3 max-h-[600px] overflow-y-auto">
                           {monitoredErrors.map((error) => (
@@ -5302,10 +5316,10 @@ export default function ProjectDetailPage() {
                                   }`}>
                                   {error.isResolved ? 'Resolved' : 'Active'}
                                 </span>
-                                <span className="text-gray-400 text-xs">{error.occurrenceCount} occurrences</span>
+                                <span className="text-gray-500 dark:text-gray-400 text-xs">{error.occurrenceCount} occurrences</span>
                               </div>
                               <h4 className="text-white font-medium">{error.alert.title}</h4>
-                              <p className="text-gray-400 text-sm mt-1">
+                              <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
                                 <span className={getStatusColor(error.statusCode || 0)}>{error.statusCode}</span>
                                 {' '}{error.method} {error.endpoint}
                               </p>
@@ -5320,7 +5334,7 @@ export default function ProjectDetailPage() {
                     </div>
 
                     {/* Error Details (Detail) */}
-                    <div className="bg-gray-900 rounded-lg p-4">
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                       <h3 className="text-white font-medium mb-4">Error Details</h3>
                       {selectedError ? (
                         <div className="space-y-4">
@@ -5340,11 +5354,11 @@ export default function ProjectDetailPage() {
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
                               <span className="text-gray-500">Error Type</span>
-                              <p className="text-white">{selectedError.errorType}</p>
+                              <p className="text-gray-900 dark:text-white">{selectedError.errorType}</p>
                             </div>
                             <div>
                               <span className="text-gray-500">Error Code</span>
-                              <p className="text-white">{selectedError.errorCode}</p>
+                              <p className="text-gray-900 dark:text-white">{selectedError.errorCode}</p>
                             </div>
                             <div>
                               <span className="text-gray-500">Status Code</span>
@@ -5352,7 +5366,7 @@ export default function ProjectDetailPage() {
                             </div>
                             <div>
                               <span className="text-gray-500">Method</span>
-                              <p className="text-white">{selectedError.method}</p>
+                              <p className="text-gray-900 dark:text-white">{selectedError.method}</p>
                             </div>
                             <div className="col-span-2">
                               <span className="text-gray-500">Endpoint</span>
@@ -5363,19 +5377,19 @@ export default function ProjectDetailPage() {
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
                               <span className="text-gray-500">First Occurrence</span>
-                              <p className="text-white">{formatTime(selectedError.firstOccurrence)}</p>
+                              <p className="text-gray-900 dark:text-white">{formatTime(selectedError.firstOccurrence)}</p>
                             </div>
                             <div>
                               <span className="text-gray-500">Last Occurrence</span>
-                              <p className="text-white">{formatTime(selectedError.lastOccurrence)}</p>
+                              <p className="text-gray-900 dark:text-white">{formatTime(selectedError.lastOccurrence)}</p>
                             </div>
                             <div>
                               <span className="text-gray-500">Total Occurrences</span>
-                              <p className="text-white">{selectedError.occurrenceCount}</p>
+                              <p className="text-gray-900 dark:text-white">{selectedError.occurrenceCount}</p>
                             </div>
                             <div>
                               <span className="text-gray-500">Affected Devices</span>
-                              <p className="text-white">{selectedError.affectedDevices.length}</p>
+                              <p className="text-gray-900 dark:text-white">{selectedError.affectedDevices.length}</p>
                             </div>
                           </div>
 
@@ -5405,7 +5419,7 @@ export default function ProjectDetailPage() {
                           )}
                         </div>
                       ) : (
-                        <p className="text-gray-400 text-center py-8">Select an error to view details</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-center py-8">Select an error to view details</p>
                       )}
                     </div>
                   </div>
@@ -5426,49 +5440,49 @@ export default function ProjectDetailPage() {
 
                   {/* Add Alert Form */}
                   {showAddAlert && (
-                    <div className="bg-gray-900 rounded-lg p-4 border border-blue-500">
-                      <h4 className="text-white font-medium mb-4">New Alert Rule</h4>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-blue-500">
+                      <h4 className="text-gray-900 dark:text-white font-medium mb-4">New Alert Rule</h4>
                       <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-gray-400 text-sm">Alert Title *</label>
+                            <label className="text-gray-500 dark:text-gray-400 text-sm">Alert Title *</label>
                             <input
                               type="text"
                               value={newAlert.title}
                               onChange={(e) => setNewAlert({ ...newAlert, title: e.target.value })}
                               placeholder="e.g., Server Error Alert"
-                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                              className="w-full mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                             />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">Description</label>
+                            <label className="text-gray-500 dark:text-gray-400 text-sm">Description</label>
                             <input
                               type="text"
                               value={newAlert.description}
                               onChange={(e) => setNewAlert({ ...newAlert, description: e.target.value })}
                               placeholder="Optional description"
-                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                              className="w-full mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                             />
                           </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-gray-400 text-sm">Endpoint (optional, leave empty for all)</label>
+                            <label className="text-gray-500 dark:text-gray-400 text-sm">Endpoint (optional, leave empty for all)</label>
                             <input
                               type="text"
                               value={newAlert.endpoint}
                               onChange={(e) => setNewAlert({ ...newAlert, endpoint: e.target.value })}
                               placeholder="/api/users/*"
-                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                              className="w-full mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                             />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">Method (optional)</label>
+                            <label className="text-gray-500 dark:text-gray-400 text-sm">Method (optional)</label>
                             <select
                               value={newAlert.method}
                               onChange={(e) => setNewAlert({ ...newAlert, method: e.target.value })}
-                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                              className="w-full mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                             >
                               <option value="">All Methods</option>
                               <option value="GET">GET</option>
@@ -5482,7 +5496,7 @@ export default function ProjectDetailPage() {
 
                         {/* Error Code Selection */}
                         <div className="space-y-2">
-                          <label className="text-gray-400 text-sm">Monitor Standard Error Codes</label>
+                          <label className="text-gray-500 dark:text-gray-400 text-sm">Monitor Standard Error Codes</label>
                           <div className="flex items-center gap-4">
                             <label className="flex items-center gap-2 text-white text-sm">
                               <input
@@ -5498,7 +5512,7 @@ export default function ProjectDetailPage() {
                             <div className="mt-2 space-y-2">
                               <p className="text-gray-500 text-xs">Select error codes to monitor:</p>
                               <div className="flex flex-wrap gap-2">
-                                <span className="text-gray-400 text-xs">Client (4xx):</span>
+                                <span className="text-gray-500 dark:text-gray-400 text-xs">Client (4xx):</span>
                                 {standardErrorCodes.client.map((code) => (
                                   <label key={code} className="flex items-center gap-1 text-sm">
                                     <input
@@ -5518,7 +5532,7 @@ export default function ProjectDetailPage() {
                                 ))}
                               </div>
                               <div className="flex flex-wrap gap-2">
-                                <span className="text-gray-400 text-xs">Server (5xx):</span>
+                                <span className="text-gray-500 dark:text-gray-400 text-xs">Server (5xx):</span>
                                 {standardErrorCodes.server.map((code) => (
                                   <label key={code} className="flex items-center gap-1 text-sm">
                                     <input
@@ -5556,7 +5570,7 @@ export default function ProjectDetailPage() {
 
                         {/* Custom Error Codes */}
                         <div className="space-y-2">
-                          <label className="text-gray-400 text-sm">Custom Status Codes</label>
+                          <label className="text-gray-500 dark:text-gray-400 text-sm">Custom Status Codes</label>
                           <div className="flex flex-wrap gap-2">
                             {newAlert.customStatusCodes.map((code, idx) => (
                               <span key={idx} className="px-2 py-1 bg-purple-900 text-purple-300 rounded text-sm flex items-center gap-1">
@@ -5577,7 +5591,7 @@ export default function ProjectDetailPage() {
                               value={customCodeInput}
                               onChange={(e) => setCustomCodeInput(e.target.value)}
                               placeholder="e.g., 418"
-                              className="w-24 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                              className="w-24 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                             />
                             <button
                               onClick={() => {
@@ -5595,17 +5609,17 @@ export default function ProjectDetailPage() {
                         {/* Body Error Detection */}
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-gray-400 text-sm">Body Error Field (JSON path)</label>
+                            <label className="text-gray-500 dark:text-gray-400 text-sm">Body Error Field (JSON path)</label>
                             <input
                               type="text"
                               value={newAlert.bodyErrorField}
                               onChange={(e) => setNewAlert({ ...newAlert, bodyErrorField: e.target.value })}
                               placeholder="error.code or status"
-                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                              className="w-full mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                             />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">Body Error Values</label>
+                            <label className="text-gray-500 dark:text-gray-400 text-sm">Body Error Values</label>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {newAlert.bodyErrorValues.map((val, idx) => (
                                 <span key={idx} className="px-2 py-0.5 bg-orange-900 text-orange-300 rounded text-xs flex items-center gap-1">
@@ -5626,7 +5640,7 @@ export default function ProjectDetailPage() {
                                 value={bodyErrorValueInput}
                                 onChange={(e) => setBodyErrorValueInput(e.target.value)}
                                 placeholder="ERROR_CODE"
-                                className="flex-1 px-2 py-1 bg-gray-800 text-white rounded border border-gray-700 text-xs"
+                                className="flex-1 px-2 py-1 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-xs"
                               />
                               <button
                                 onClick={() => {
@@ -5644,17 +5658,17 @@ export default function ProjectDetailPage() {
                         {/* Header Error Detection */}
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-gray-400 text-sm">Header Error Field</label>
+                            <label className="text-gray-500 dark:text-gray-400 text-sm">Header Error Field</label>
                             <input
                               type="text"
                               value={newAlert.headerErrorField}
                               onChange={(e) => setNewAlert({ ...newAlert, headerErrorField: e.target.value })}
                               placeholder="X-Error-Code"
-                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                              className="w-full mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                             />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">Header Error Values</label>
+                            <label className="text-gray-500 dark:text-gray-400 text-sm">Header Error Values</label>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {newAlert.headerErrorValues.map((val, idx) => (
                                 <span key={idx} className="px-2 py-0.5 bg-pink-900 text-pink-300 rounded text-xs flex items-center gap-1">
@@ -5675,7 +5689,7 @@ export default function ProjectDetailPage() {
                                 value={headerErrorValueInput}
                                 onChange={(e) => setHeaderErrorValueInput(e.target.value)}
                                 placeholder="ERROR"
-                                className="flex-1 px-2 py-1 bg-gray-800 text-white rounded border border-gray-700 text-xs"
+                                className="flex-1 px-2 py-1 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-xs"
                               />
                               <button
                                 onClick={() => {
@@ -5692,7 +5706,7 @@ export default function ProjectDetailPage() {
 
                         {/* Notification Channels */}
                         <div className="space-y-2">
-                          <label className="text-gray-400 text-sm">Notification Channels</label>
+                          <label className="text-gray-500 dark:text-gray-400 text-sm">Notification Channels</label>
                           <div className="flex flex-wrap gap-4">
                             <label className="flex items-center gap-2 text-white text-sm">
                               <input
@@ -5753,50 +5767,50 @@ export default function ProjectDetailPage() {
 
                   {/* Alert List */}
                   {alerts.length === 0 ? (
-                    <p className="text-gray-400 text-center py-8">No alert rules configured yet</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-center py-8">No alert rules configured yet</p>
                   ) : (
                     <div className="space-y-3">
                       {alerts.map((alert) => (
-                        <div key={alert.id} className="bg-gray-900 rounded-lg p-4">
+                        <div key={alert.id} className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                           {editingAlert?.id === alert.id ? (
                             /* Edit Mode */
                             <div className="space-y-4">
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                  <label className="text-gray-400 text-sm">Alert Title *</label>
+                                  <label className="text-gray-500 dark:text-gray-400 text-sm">Alert Title *</label>
                                   <input
                                     type="text"
                                     value={editingAlert.title}
                                     onChange={(e) => setEditingAlert({ ...editingAlert, title: e.target.value })}
-                                    className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                                    className="w-full mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                                   />
                                 </div>
                                 <div>
-                                  <label className="text-gray-400 text-sm">Description</label>
+                                  <label className="text-gray-500 dark:text-gray-400 text-sm">Description</label>
                                   <input
                                     type="text"
                                     value={editingAlert.description || ''}
                                     onChange={(e) => setEditingAlert({ ...editingAlert, description: e.target.value })}
-                                    className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                                    className="w-full mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                                   />
                                 </div>
                               </div>
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                  <label className="text-gray-400 text-sm">Endpoint</label>
+                                  <label className="text-gray-500 dark:text-gray-400 text-sm">Endpoint</label>
                                   <input
                                     type="text"
                                     value={editingAlert.endpoint || ''}
                                     onChange={(e) => setEditingAlert({ ...editingAlert, endpoint: e.target.value })}
-                                    className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                                    className="w-full mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                                   />
                                 </div>
                                 <div>
-                                  <label className="text-gray-400 text-sm">Method</label>
+                                  <label className="text-gray-500 dark:text-gray-400 text-sm">Method</label>
                                   <select
                                     value={editingAlert.method || ''}
                                     onChange={(e) => setEditingAlert({ ...editingAlert, method: e.target.value })}
-                                    className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                                    className="w-full mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                                   >
                                     <option value="">All Methods</option>
                                     <option value="GET">GET</option>
@@ -5829,7 +5843,7 @@ export default function ProjectDetailPage() {
                                 <div>
                                   <h4 className="text-white font-medium">{alert.title}</h4>
                                   {alert.description && (
-                                    <p className="text-gray-400 text-sm mt-1">{alert.description}</p>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{alert.description}</p>
                                   )}
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -5859,19 +5873,19 @@ export default function ProjectDetailPage() {
                               <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
                                   <span className="text-gray-500">Endpoint:</span>
-                                  <p className="text-white">{alert.endpoint || 'All endpoints'}</p>
+                                  <p className="text-gray-900 dark:text-white">{alert.endpoint || 'All endpoints'}</p>
                                 </div>
                                 <div>
                                   <span className="text-gray-500">Method:</span>
-                                  <p className="text-white">{alert.method || 'All methods'}</p>
+                                  <p className="text-gray-900 dark:text-white">{alert.method || 'All methods'}</p>
                                 </div>
                                 <div>
                                   <span className="text-gray-500">Monitored Errors:</span>
-                                  <p className="text-white">{alert._count.monitoredErrors}</p>
+                                  <p className="text-gray-900 dark:text-white">{alert._count.monitoredErrors}</p>
                                 </div>
                                 <div>
                                   <span className="text-gray-500">Status:</span>
-                                  <span className={`ml-2 px-2 py-0.5 rounded text-xs ${alert.isEnabled ? 'bg-green-900 text-green-300' : 'bg-gray-700 text-gray-400'
+                                  <span className={`ml-2 px-2 py-0.5 rounded text-xs ${alert.isEnabled ? 'bg-green-900 text-green-300' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                                     }`}>
                                     {alert.isEnabled ? 'Enabled' : 'Disabled'}
                                   </span>
@@ -5928,13 +5942,13 @@ export default function ProjectDetailPage() {
           {activeTab === 'settings' && (
             <div className="space-y-6">
               {/* Settings Horizontal Menu */}
-              <div className="border-b border-gray-800">
+              <div className="border-b border-gray-200 dark:border-gray-800">
                 <nav className="flex space-x-8">
                   <button
                     onClick={() => setSettingsTab('notifications')}
                     className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${settingsTab === 'notifications'
-                        ? 'border-blue-500 text-blue-400'
-                        : 'border-transparent text-gray-400 hover:text-white'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                   >
                     Notifications
@@ -5942,8 +5956,8 @@ export default function ProjectDetailPage() {
                   <button
                     onClick={() => setSettingsTab('features')}
                     className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${settingsTab === 'features'
-                        ? 'border-blue-500 text-blue-400'
-                        : 'border-transparent text-gray-400 hover:text-white'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                   >
                     Product Features
@@ -5951,8 +5965,8 @@ export default function ProjectDetailPage() {
                   <button
                     onClick={() => setSettingsTab('sdk')}
                     className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${settingsTab === 'sdk'
-                        ? 'border-blue-500 text-blue-400'
-                        : 'border-transparent text-gray-400 hover:text-white'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                   >
                     SDK Settings
@@ -5960,8 +5974,8 @@ export default function ProjectDetailPage() {
                   <button
                     onClick={() => setSettingsTab('cleanup')}
                     className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${settingsTab === 'cleanup'
-                        ? 'border-blue-500 text-blue-400'
-                        : 'border-transparent text-gray-400 hover:text-white'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                   >
                     Data Cleanup
@@ -5969,8 +5983,8 @@ export default function ProjectDetailPage() {
                   <button
                     onClick={() => setSettingsTab('project')}
                     className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${settingsTab === 'project'
-                        ? 'border-blue-500 text-blue-400'
-                        : 'border-transparent text-gray-400 hover:text-white'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                   >
                     Project Settings
@@ -5982,13 +5996,13 @@ export default function ProjectDetailPage() {
               {settingsTab === 'notifications' && notificationSettings && (
                 <div className="space-y-6">
                   {/* Email Settings */}
-                  <div className="bg-gray-900 rounded-lg p-4">
+                  <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">📧</span>
                         <div>
                           <h3 className="text-white font-medium">Email Notifications</h3>
-                          <p className="text-gray-400 text-sm">Receive alerts via email</p>
+                          <p className="text-gray-500 dark:text-gray-400 text-sm">Receive alerts via email</p>
                         </div>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -6003,7 +6017,7 @@ export default function ProjectDetailPage() {
                     </div>
                     {notificationSettings.emailEnabled && (
                       <div className="mt-4">
-                        <label className="text-gray-400 text-sm">Email Addresses</label>
+                        <label className="text-gray-500 dark:text-gray-400 text-sm">Email Addresses</label>
                         <div className="flex flex-wrap gap-2 mt-2">
                           {notificationSettings.emailAddresses.map((email, idx) => (
                             <span key={idx} className="px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-sm flex items-center gap-2">
@@ -6023,7 +6037,7 @@ export default function ProjectDetailPage() {
                             value={newEmailAddress}
                             onChange={(e) => setNewEmailAddress(e.target.value)}
                             placeholder="Add email address"
-                            className="flex-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                            className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                           />
                           <button
                             onClick={() => {
@@ -6042,13 +6056,13 @@ export default function ProjectDetailPage() {
                   </div>
 
                   {/* Push Settings */}
-                  <div className="bg-gray-900 rounded-lg p-4">
+                  <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">🔔</span>
                         <div>
                           <h3 className="text-white font-medium">Push Notifications</h3>
-                          <p className="text-gray-400 text-sm">Receive real-time push alerts</p>
+                          <p className="text-gray-500 dark:text-gray-400 text-sm">Receive real-time push alerts</p>
                         </div>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -6064,13 +6078,13 @@ export default function ProjectDetailPage() {
                   </div>
 
                   {/* SMS Settings */}
-                  <div className="bg-gray-900 rounded-lg p-4">
+                  <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">📱</span>
                         <div>
                           <h3 className="text-white font-medium">SMS Notifications</h3>
-                          <p className="text-gray-400 text-sm">Receive alerts via SMS</p>
+                          <p className="text-gray-500 dark:text-gray-400 text-sm">Receive alerts via SMS</p>
                         </div>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -6085,7 +6099,7 @@ export default function ProjectDetailPage() {
                     </div>
                     {notificationSettings.smsEnabled && (
                       <div className="mt-4">
-                        <label className="text-gray-400 text-sm">Phone Numbers</label>
+                        <label className="text-gray-500 dark:text-gray-400 text-sm">Phone Numbers</label>
                         <div className="flex flex-wrap gap-2 mt-2">
                           {notificationSettings.smsNumbers.map((num, idx) => (
                             <span key={idx} className="px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-sm flex items-center gap-2">
@@ -6105,7 +6119,7 @@ export default function ProjectDetailPage() {
                             value={newSmsNumber}
                             onChange={(e) => setNewSmsNumber(e.target.value)}
                             placeholder="+1234567890"
-                            className="flex-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                            className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                           />
                           <button
                             onClick={() => {
@@ -6124,13 +6138,13 @@ export default function ProjectDetailPage() {
                   </div>
 
                   {/* Webhook Settings */}
-                  <div className="bg-gray-900 rounded-lg p-4">
+                  <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">🔗</span>
                         <div>
                           <h3 className="text-white font-medium">Webhook</h3>
-                          <p className="text-gray-400 text-sm">Send alerts to your webhook endpoint</p>
+                          <p className="text-gray-500 dark:text-gray-400 text-sm">Send alerts to your webhook endpoint</p>
                         </div>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -6146,23 +6160,23 @@ export default function ProjectDetailPage() {
                     {notificationSettings.webhookEnabled && (
                       <div className="mt-4 space-y-4">
                         <div>
-                          <label className="text-gray-400 text-sm">Webhook URL</label>
+                          <label className="text-gray-500 dark:text-gray-400 text-sm">Webhook URL</label>
                           <input
                             type="url"
                             value={notificationSettings.webhookUrl || ''}
                             onChange={(e) => handleSaveNotificationSettings({ webhookUrl: e.target.value })}
                             placeholder="https://your-webhook.com/endpoint"
-                            className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                            className="w-full mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                           />
                         </div>
                         <div>
-                          <label className="text-gray-400 text-sm">Secret (for signature verification)</label>
+                          <label className="text-gray-500 dark:text-gray-400 text-sm">Secret (for signature verification)</label>
                           <input
                             type="password"
                             value={notificationSettings.webhookSecret || ''}
                             onChange={(e) => handleSaveNotificationSettings({ webhookSecret: e.target.value })}
                             placeholder="Optional webhook secret"
-                            className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                            className="w-full mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                           />
                         </div>
                       </div>
@@ -6186,49 +6200,49 @@ export default function ProjectDetailPage() {
 
                   {/* Add Alert Form */}
                   {showAddAlert && (
-                    <div className="bg-gray-900 rounded-lg p-4 border border-blue-500">
-                      <h4 className="text-white font-medium mb-4">New Alert Rule</h4>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-blue-500">
+                      <h4 className="text-gray-900 dark:text-white font-medium mb-4">New Alert Rule</h4>
                       <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-gray-400 text-sm">Alert Title *</label>
+                            <label className="text-gray-500 dark:text-gray-400 text-sm">Alert Title *</label>
                             <input
                               type="text"
                               value={newAlert.title}
                               onChange={(e) => setNewAlert({ ...newAlert, title: e.target.value })}
                               placeholder="e.g., Server Error Alert"
-                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                              className="w-full mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                             />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">Description</label>
+                            <label className="text-gray-500 dark:text-gray-400 text-sm">Description</label>
                             <input
                               type="text"
                               value={newAlert.description}
                               onChange={(e) => setNewAlert({ ...newAlert, description: e.target.value })}
                               placeholder="Optional description"
-                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                              className="w-full mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                             />
                           </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-gray-400 text-sm">Endpoint (optional, leave empty for all)</label>
+                            <label className="text-gray-500 dark:text-gray-400 text-sm">Endpoint (optional, leave empty for all)</label>
                             <input
                               type="text"
                               value={newAlert.endpoint}
                               onChange={(e) => setNewAlert({ ...newAlert, endpoint: e.target.value })}
                               placeholder="/api/users/*"
-                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                              className="w-full mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                             />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">Method (optional)</label>
+                            <label className="text-gray-500 dark:text-gray-400 text-sm">Method (optional)</label>
                             <select
                               value={newAlert.method}
                               onChange={(e) => setNewAlert({ ...newAlert, method: e.target.value })}
-                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                              className="w-full mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                             >
                               <option value="">All Methods</option>
                               <option value="GET">GET</option>
@@ -6242,7 +6256,7 @@ export default function ProjectDetailPage() {
 
                         {/* Error Code Selection */}
                         <div className="space-y-2">
-                          <label className="text-gray-400 text-sm">Monitor Standard Error Codes</label>
+                          <label className="text-gray-500 dark:text-gray-400 text-sm">Monitor Standard Error Codes</label>
                           <div className="flex items-center gap-4">
                             <label className="flex items-center gap-2 text-white text-sm">
                               <input
@@ -6258,7 +6272,7 @@ export default function ProjectDetailPage() {
                             <div className="mt-2 space-y-2">
                               <p className="text-gray-500 text-xs">Select error codes to monitor:</p>
                               <div className="flex flex-wrap gap-2">
-                                <span className="text-gray-400 text-xs">Client (4xx):</span>
+                                <span className="text-gray-500 dark:text-gray-400 text-xs">Client (4xx):</span>
                                 {standardErrorCodes.client.map((code) => (
                                   <label key={code} className="flex items-center gap-1 text-sm">
                                     <input
@@ -6278,7 +6292,7 @@ export default function ProjectDetailPage() {
                                 ))}
                               </div>
                               <div className="flex flex-wrap gap-2">
-                                <span className="text-gray-400 text-xs">Server (5xx):</span>
+                                <span className="text-gray-500 dark:text-gray-400 text-xs">Server (5xx):</span>
                                 {standardErrorCodes.server.map((code) => (
                                   <label key={code} className="flex items-center gap-1 text-sm">
                                     <input
@@ -6316,7 +6330,7 @@ export default function ProjectDetailPage() {
 
                         {/* Custom Error Codes */}
                         <div className="space-y-2">
-                          <label className="text-gray-400 text-sm">Custom Status Codes</label>
+                          <label className="text-gray-500 dark:text-gray-400 text-sm">Custom Status Codes</label>
                           <div className="flex flex-wrap gap-2">
                             {newAlert.customStatusCodes.map((code, idx) => (
                               <span key={idx} className="px-2 py-1 bg-purple-900 text-purple-300 rounded text-sm flex items-center gap-1">
@@ -6337,7 +6351,7 @@ export default function ProjectDetailPage() {
                               value={customCodeInput}
                               onChange={(e) => setCustomCodeInput(e.target.value)}
                               placeholder="e.g., 418"
-                              className="w-24 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                              className="w-24 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                             />
                             <button
                               onClick={() => {
@@ -6355,17 +6369,17 @@ export default function ProjectDetailPage() {
                         {/* Body Error Detection */}
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-gray-400 text-sm">Body Error Field (JSON path)</label>
+                            <label className="text-gray-500 dark:text-gray-400 text-sm">Body Error Field (JSON path)</label>
                             <input
                               type="text"
                               value={newAlert.bodyErrorField}
                               onChange={(e) => setNewAlert({ ...newAlert, bodyErrorField: e.target.value })}
                               placeholder="error.code or status"
-                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                              className="w-full mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                             />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">Body Error Values</label>
+                            <label className="text-gray-500 dark:text-gray-400 text-sm">Body Error Values</label>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {newAlert.bodyErrorValues.map((val, idx) => (
                                 <span key={idx} className="px-2 py-0.5 bg-orange-900 text-orange-300 rounded text-xs flex items-center gap-1">
@@ -6386,7 +6400,7 @@ export default function ProjectDetailPage() {
                                 value={bodyErrorValueInput}
                                 onChange={(e) => setBodyErrorValueInput(e.target.value)}
                                 placeholder="ERROR_CODE"
-                                className="flex-1 px-2 py-1 bg-gray-800 text-white rounded border border-gray-700 text-xs"
+                                className="flex-1 px-2 py-1 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-xs"
                               />
                               <button
                                 onClick={() => {
@@ -6404,17 +6418,17 @@ export default function ProjectDetailPage() {
                         {/* Header Error Detection */}
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-gray-400 text-sm">Header Error Field</label>
+                            <label className="text-gray-500 dark:text-gray-400 text-sm">Header Error Field</label>
                             <input
                               type="text"
                               value={newAlert.headerErrorField}
                               onChange={(e) => setNewAlert({ ...newAlert, headerErrorField: e.target.value })}
                               placeholder="X-Error-Code"
-                              className="w-full mt-1 px-3 py-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                              className="w-full mt-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-sm"
                             />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">Header Error Values</label>
+                            <label className="text-gray-500 dark:text-gray-400 text-sm">Header Error Values</label>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {newAlert.headerErrorValues.map((val, idx) => (
                                 <span key={idx} className="px-2 py-0.5 bg-pink-900 text-pink-300 rounded text-xs flex items-center gap-1">
@@ -6435,7 +6449,7 @@ export default function ProjectDetailPage() {
                                 value={headerErrorValueInput}
                                 onChange={(e) => setHeaderErrorValueInput(e.target.value)}
                                 placeholder="ERROR"
-                                className="flex-1 px-2 py-1 bg-gray-800 text-white rounded border border-gray-700 text-xs"
+                                className="flex-1 px-2 py-1 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-700 text-xs"
                               />
                               <button
                                 onClick={() => {
@@ -6452,7 +6466,7 @@ export default function ProjectDetailPage() {
 
                         {/* Notification Channels */}
                         <div className="space-y-2">
-                          <label className="text-gray-400 text-sm">Notification Channels</label>
+                          <label className="text-gray-500 dark:text-gray-400 text-sm">Notification Channels</label>
                           <div className="flex flex-wrap gap-4">
                             <label className="flex items-center gap-2 text-white text-sm">
                               <input
@@ -6513,52 +6527,52 @@ export default function ProjectDetailPage() {
 
                   {/* Alert List */}
                   {alerts.length === 0 ? (
-                    <p className="text-gray-400 text-center py-8">No alert rules configured yet</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-center py-8">No alert rules configured yet</p>
                   ) : (
                     <div className="space-y-3">
                       {alerts.map((alert) => (
-                        <div key={alert.id} className="bg-gray-900 rounded-lg p-4">
+                        <div key={alert.id} className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                           {editingAlert?.id === alert.id ? (
                             /* Edit Mode */
                             <div className="space-y-4">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                  <label className="block text-gray-400 text-xs mb-1">Title</label>
+                                  <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">Title</label>
                                   <input
                                     type="text"
                                     value={editingAlert.title}
                                     onChange={(e) => setEditingAlert({ ...editingAlert, title: e.target.value })}
-                                    className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                                    className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm rounded px-3 py-2 border border-gray-300 dark:border-gray-700"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-gray-400 text-xs mb-1">Description</label>
+                                  <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">Description</label>
                                   <input
                                     type="text"
                                     value={editingAlert.description || ''}
                                     onChange={(e) => setEditingAlert({ ...editingAlert, description: e.target.value || null })}
-                                    className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                                    className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm rounded px-3 py-2 border border-gray-300 dark:border-gray-700"
                                   />
                                 </div>
                               </div>
 
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                  <label className="block text-gray-400 text-xs mb-1">Endpoint (optional)</label>
+                                  <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">Endpoint (optional)</label>
                                   <input
                                     type="text"
                                     placeholder="/api/users/*"
                                     value={editingAlert.endpoint || ''}
                                     onChange={(e) => setEditingAlert({ ...editingAlert, endpoint: e.target.value || null })}
-                                    className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                                    className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm rounded px-3 py-2 border border-gray-300 dark:border-gray-700"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-gray-400 text-xs mb-1">Method</label>
+                                  <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">Method</label>
                                   <select
                                     value={editingAlert.method || ''}
                                     onChange={(e) => setEditingAlert({ ...editingAlert, method: e.target.value || null })}
-                                    className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                                    className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm rounded px-3 py-2 border border-gray-300 dark:border-gray-700"
                                   >
                                     <option value="">All Methods</option>
                                     <option value="GET">GET</option>
@@ -6572,7 +6586,7 @@ export default function ProjectDetailPage() {
 
                               {/* Standard Error Codes */}
                               <div>
-                                <label className="block text-gray-400 text-xs mb-2">Standard Error Codes</label>
+                                <label className="block text-gray-500 dark:text-gray-400 text-xs mb-2">Standard Error Codes</label>
                                 <div className="flex flex-wrap gap-2">
                                   {[400, 401, 403, 404, 405, 408, 409, 422, 429, 500, 501, 502, 503, 504].map((code) => (
                                     <button
@@ -6586,7 +6600,7 @@ export default function ProjectDetailPage() {
                                       }}
                                       className={`px-2 py-1 text-xs rounded ${editingAlert.standardErrorCodes.includes(code)
                                           ? code >= 500 ? 'bg-red-600 text-white' : 'bg-orange-600 text-white'
-                                          : 'bg-gray-700 text-gray-400'
+                                          : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                                         }`}
                                     >
                                       {code}
@@ -6597,7 +6611,7 @@ export default function ProjectDetailPage() {
 
                               {/* Custom Status Codes */}
                               <div>
-                                <label className="block text-gray-400 text-xs mb-1">Custom Status Codes (comma-separated)</label>
+                                <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">Custom Status Codes (comma-separated)</label>
                                 <input
                                   type="text"
                                   placeholder="418, 451, 599"
@@ -6606,24 +6620,24 @@ export default function ProjectDetailPage() {
                                     const codes = e.target.value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
                                     setEditingAlert({ ...editingAlert, customStatusCodes: codes })
                                   }}
-                                  className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                                  className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm rounded px-3 py-2 border border-gray-300 dark:border-gray-700"
                                 />
                               </div>
 
                               {/* Body Error Detection */}
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                  <label className="block text-gray-400 text-xs mb-1">Body Error Field (JSON path)</label>
+                                  <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">Body Error Field (JSON path)</label>
                                   <input
                                     type="text"
                                     placeholder="error.code"
                                     value={editingAlert.bodyErrorField || ''}
                                     onChange={(e) => setEditingAlert({ ...editingAlert, bodyErrorField: e.target.value || null })}
-                                    className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                                    className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm rounded px-3 py-2 border border-gray-300 dark:border-gray-700"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-gray-400 text-xs mb-1">Body Error Values (comma-separated)</label>
+                                  <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">Body Error Values (comma-separated)</label>
                                   <input
                                     type="text"
                                     placeholder="INVALID_TOKEN, EXPIRED"
@@ -6632,14 +6646,14 @@ export default function ProjectDetailPage() {
                                       const values = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
                                       setEditingAlert({ ...editingAlert, bodyErrorValues: values })
                                     }}
-                                    className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-700"
+                                    className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm rounded px-3 py-2 border border-gray-300 dark:border-gray-700"
                                   />
                                 </div>
                               </div>
 
                               {/* Notification Channels */}
                               <div>
-                                <label className="block text-gray-400 text-xs mb-2">Notify Via</label>
+                                <label className="block text-gray-500 dark:text-gray-400 text-xs mb-2">Notify Via</label>
                                 <div className="flex gap-4">
                                   <label className="flex items-center gap-2 text-sm">
                                     <input
@@ -6711,11 +6725,11 @@ export default function ProjectDetailPage() {
                                   </label>
                                   <div>
                                     <h4 className="text-white font-medium">{alert.title}</h4>
-                                    {alert.description && <p className="text-gray-400 text-sm">{alert.description}</p>}
+                                    {alert.description && <p className="text-gray-500 dark:text-gray-400 text-sm">{alert.description}</p>}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-gray-400 text-xs">{alert._count.monitoredErrors} errors</span>
+                                  <span className="text-gray-500 dark:text-gray-400 text-xs">{alert._count.monitoredErrors} errors</span>
                                   <button
                                     onClick={() => setEditingAlert(alert)}
                                     className="text-gray-500 hover:text-blue-400 text-sm"
@@ -6728,12 +6742,12 @@ export default function ProjectDetailPage() {
                               </div>
                               <div className="mt-3 flex flex-wrap gap-2 text-xs">
                                 {alert.endpoint && (
-                                  <span className="px-2 py-1 bg-gray-800 text-gray-400 rounded">
+                                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">
                                     {alert.method || '*'} {alert.endpoint}
                                   </span>
                                 )}
                                 {alert.standardErrorCodes.length > 0 && (
-                                  <span className="px-2 py-1 bg-gray-800 text-gray-400 rounded">
+                                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">
                                     Status: {alert.standardErrorCodes.join(', ')}
                                   </span>
                                 )}
@@ -6752,7 +6766,7 @@ export default function ProjectDetailPage() {
                                     Header: {alert.headerErrorField}
                                   </span>
                                 )}
-                                <span className="px-2 py-1 bg-gray-800 text-gray-400 rounded">
+                                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">
                                   {[
                                     alert.notifyEmail && 'Email',
                                     alert.notifyPush && 'Push',
@@ -6804,12 +6818,12 @@ export default function ProjectDetailPage() {
                     </div>
                   )}
 
-                  <div className="bg-gray-900 rounded-lg p-4">
+                  <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-2xl">⚙️</span>
                       <div>
                         <h3 className="text-white font-medium">SDK Feature Flags</h3>
-                        <p className="text-gray-400 text-sm">Control which features are enabled in the SDK. Changes take effect on next app launch.</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Control which features are enabled in the SDK. Changes take effect on next app launch.</p>
                         {subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') && (
                           <p className="text-red-400 text-sm mt-1">
                             ⚠️ Features are disabled {!subscriptionStatus.enabled ? 'due to subscription being disabled by admin' : subscriptionStatus.status !== 'active' ? `due to subscription being ${subscriptionStatus.status}` : 'due to expired trial subscription'}.
@@ -6820,11 +6834,11 @@ export default function ProjectDetailPage() {
 
                     {featureFlagsLoading ? (
                       <div className="flex items-center justify-center py-8">
-                        <svg className="animate-spin h-6 w-6 text-gray-400" viewBox="0 0 24 24">
+                        <svg className="animate-spin h-6 w-6 text-gray-500 dark:text-gray-400" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                        <span className="ml-2 text-gray-400">Loading feature flags...</span>
+                        <span className="ml-2 text-gray-500 dark:text-gray-400">Loading feature flags...</span>
                       </div>
                     ) : featureFlags ? (
                       <div className="space-y-6">
@@ -6862,7 +6876,7 @@ export default function ProjectDetailPage() {
 
                         {/* Core Features */}
                         <div className={featureFlags.sdkEnabled && (!subscriptionStatus || (subscriptionStatus.enabled && subscriptionStatus.trialActive && subscriptionStatus.status === 'active')) ? '' : 'opacity-50 pointer-events-none'}>
-                          <h4 className="text-gray-400 text-sm font-medium mb-3">
+                          <h4 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-3">
                             Core Features
                             {!featureFlags.sdkEnabled && <span className="text-red-400"> (SDK Disabled)</span>}
                             {subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') && (
@@ -6872,7 +6886,7 @@ export default function ProjectDetailPage() {
                             )}
                           </h4>
                           <div className={`space-y-3 ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'pointer-events-none opacity-50' : ''}`}>
-                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                               <div className="flex items-center gap-3">
                                 <span className="text-lg">📡</span>
                                 <div>
@@ -6892,7 +6906,7 @@ export default function ProjectDetailPage() {
                               </label>
                             </div>
 
-                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                               <div className="flex items-center gap-3">
                                 <span className="text-lg">📱</span>
                                 <div>
@@ -6912,7 +6926,7 @@ export default function ProjectDetailPage() {
                               </label>
                             </div>
 
-                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                               <div className="flex items-center gap-3">
                                 <span className="text-lg">💥</span>
                                 <div>
@@ -6932,7 +6946,7 @@ export default function ProjectDetailPage() {
                               </label>
                             </div>
 
-                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                               <div className="flex items-center gap-3">
                                 <span className="text-lg">📝</span>
                                 <div>
@@ -6956,7 +6970,7 @@ export default function ProjectDetailPage() {
 
                         {/* Additional Features */}
                         <div className={featureFlags.sdkEnabled && (!subscriptionStatus || (subscriptionStatus.enabled && subscriptionStatus.trialActive && subscriptionStatus.status === 'active')) ? '' : 'opacity-50 pointer-events-none'}>
-                          <h4 className="text-gray-400 text-sm font-medium mb-3">
+                          <h4 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-3">
                             Additional Features
                             {!featureFlags.sdkEnabled && <span className="text-red-400">(SDK Disabled)</span>}
                             {subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') && (
@@ -6966,7 +6980,7 @@ export default function ProjectDetailPage() {
                             )}
                           </h4>
                           <div className={`space-y-3 ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'pointer-events-none opacity-50' : ''}`}>
-                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                               <div className="flex items-center gap-3">
                                 <span className="text-lg">📲</span>
                                 <div>
@@ -6985,7 +6999,7 @@ export default function ProjectDetailPage() {
                               </label>
                             </div>
 
-                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                               <div className="flex items-center gap-3">
                                 <span className="text-lg">🔗</span>
                                 <div>
@@ -7005,7 +7019,7 @@ export default function ProjectDetailPage() {
                               </label>
                             </div>
 
-                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                               <div className="flex items-center gap-3">
                                 <span className="text-lg">⚡</span>
                                 <div>
@@ -7025,7 +7039,7 @@ export default function ProjectDetailPage() {
                               </label>
                             </div>
 
-                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                               <div className="flex items-center gap-3">
                                 <span className="text-lg">🌍</span>
                                 <div>
@@ -7049,7 +7063,7 @@ export default function ProjectDetailPage() {
 
                         {/* Performance Options */}
                         <div className={featureFlags.sdkEnabled && (!subscriptionStatus || (subscriptionStatus.enabled && subscriptionStatus.trialActive && subscriptionStatus.status === 'active')) ? '' : 'opacity-50 pointer-events-none'}>
-                          <h4 className="text-gray-400 text-sm font-medium mb-3">
+                          <h4 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-3">
                             Performance Options
                             {!featureFlags.sdkEnabled && <span className="text-red-400">(SDK Disabled)</span>}
                             {subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') && (
@@ -7059,7 +7073,7 @@ export default function ProjectDetailPage() {
                             )}
                           </h4>
                           <div className={`space-y-3 ${subscriptionStatus && (!subscriptionStatus.enabled || !subscriptionStatus.trialActive || subscriptionStatus.status !== 'active') ? 'pointer-events-none opacity-50' : ''}`}>
-                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                               <div className="flex items-center gap-3">
                                 <span className="text-lg">📴</span>
                                 <div>
@@ -7079,7 +7093,7 @@ export default function ProjectDetailPage() {
                               </label>
                             </div>
 
-                            <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                               <div className="flex items-center gap-3">
                                 <span className="text-lg">📦</span>
                                 <div>
@@ -7102,7 +7116,7 @@ export default function ProjectDetailPage() {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-gray-400 text-center py-8">Failed to load feature flags</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-center py-8">Failed to load feature flags</p>
                     )}
                   </div>
                 </div>
@@ -7113,11 +7127,11 @@ export default function ProjectDetailPage() {
                 <div className="space-y-6">
                   {sdkSettingsLoading ? (
                     <div className="flex items-center justify-center py-8">
-                      <svg className="animate-spin h-6 w-6 text-gray-400" viewBox="0 0 24 24">
+                      <svg className="animate-spin h-6 w-6 text-gray-500 dark:text-gray-400" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
-                      <span className="ml-2 text-gray-400">Loading SDK settings...</span>
+                      <span className="ml-2 text-gray-500 dark:text-gray-400">Loading SDK settings...</span>
                     </div>
                   ) : sdkSettings ? (
                     <div className="space-y-6">
@@ -7125,16 +7139,16 @@ export default function ProjectDetailPage() {
                       {/* Note: Security Settings moved to API Traces Security Settings tab */}
                       
                       {/* Performance Settings */}
-                      <div className="bg-gray-900 rounded-lg p-4">
+                      <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                         <div className="flex items-center gap-3 mb-4">
                           <span className="text-2xl">⚡</span>
                           <div>
                             <h3 className="text-white font-medium">Performance Settings</h3>
-                            <p className="text-gray-400 text-sm">Configure batching and queue behavior</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">Configure batching and queue behavior</p>
                           </div>
                         </div>
                         <div className="space-y-3">
-                          <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                          <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                             <div className="flex items-center gap-3">
                               <span className="text-lg">📦</span>
                               <div>
@@ -7153,7 +7167,7 @@ export default function ProjectDetailPage() {
                             </label>
                           </div>
 
-                          <div className="p-3 bg-gray-800 rounded-lg">
+                          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                             <div className="flex items-center gap-3 mb-3">
                               <span className="text-lg">📝</span>
                               <div>
@@ -7171,7 +7185,7 @@ export default function ProjectDetailPage() {
                             />
                           </div>
 
-                          <div className="p-3 bg-gray-800 rounded-lg">
+                          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                             <div className="flex items-center gap-3 mb-3">
                               <span className="text-lg">📡</span>
                               <div>
@@ -7189,7 +7203,7 @@ export default function ProjectDetailPage() {
                             />
                           </div>
 
-                          <div className="p-3 bg-gray-800 rounded-lg">
+                          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                             <div className="flex items-center gap-3 mb-3">
                               <span className="text-lg">⏱️</span>
                               <div>
@@ -7210,16 +7224,16 @@ export default function ProjectDetailPage() {
                       </div>
 
                       {/* Log Control Settings */}
-                      <div className="bg-gray-900 rounded-lg p-4">
+                      <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-transparent">
                         <div className="flex items-center gap-3 mb-4">
                           <span className="text-2xl">📋</span>
                           <div>
                             <h3 className="text-white font-medium">Log Control</h3>
-                            <p className="text-gray-400 text-sm">Configure logging behavior and levels</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">Configure logging behavior and levels</p>
                           </div>
                         </div>
                         <div className="space-y-3">
-                          <div className="p-3 bg-gray-800 rounded-lg">
+                          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                             <div className="flex items-center gap-3 mb-3">
                               <span className="text-lg">📊</span>
                               <div>
@@ -7240,7 +7254,7 @@ export default function ProjectDetailPage() {
                             </select>
                           </div>
 
-                          <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                          <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                             <div className="flex items-center gap-3">
                               <span className="text-lg">🔍</span>
                               <div>
@@ -7262,7 +7276,7 @@ export default function ProjectDetailPage() {
                       </div>
                     </div>
                   ) : (
-                    <p className="text-gray-400 text-center py-8">Failed to load SDK settings</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-center py-8">Failed to load SDK settings</p>
                   )}
                 </div>
               )}
@@ -7271,15 +7285,15 @@ export default function ProjectDetailPage() {
               {settingsTab === 'project' && (
                 <div className="space-y-6">
                   {/* Project Name */}
-                  <div className="bg-gray-900 rounded-lg p-6">
-                    <h3 className="text-white font-medium mb-4">Project Name</h3>
+                  <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+                    <h3 className="text-gray-900 dark:text-white font-medium mb-4">Project Name</h3>
                     {isEditingName ? (
                       <div className="flex items-center gap-3">
                         <input
                           type="text"
                           value={editingProjectName}
                           onChange={(e) => setEditingProjectName(e.target.value)}
-                          className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="Project name"
                           disabled={updatingName}
                         />
@@ -7313,17 +7327,17 @@ export default function ProjectDetailPage() {
                             setEditingProjectName(projectName)
                           }}
                           disabled={updatingName}
-                          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded transition-colors"
+                          className="px-4 py-2 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-white rounded transition-colors"
                         >
                           Cancel
                         </button>
                       </div>
                     ) : (
                       <div className="flex items-center gap-3">
-                        <span className="text-gray-300">{projectName}</span>
+                        <span className="text-gray-600 dark:text-gray-300">{projectName}</span>
                         <button
                           onClick={() => setIsEditingName(true)}
-                          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded transition-colors text-sm"
+                          className="px-4 py-2 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-white rounded transition-colors text-sm"
                         >
                           Edit
                         </button>
@@ -7332,14 +7346,14 @@ export default function ProjectDetailPage() {
                   </div>
 
                   {/* API Key */}
-                  <div className="bg-gray-900 rounded-lg p-6">
-                    <h3 className="text-white font-medium mb-4">API Key</h3>
+                  <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+                    <h3 className="text-gray-900 dark:text-white font-medium mb-4">API Key</h3>
                     <div className="flex items-center gap-3">
                       <input
                         type="text"
                         value={apiKey}
                         readOnly
-                        className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-300 font-mono text-sm"
+                        className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-600 dark:text-gray-300 font-mono text-sm"
                       />
                       <button
                         onClick={() => {
@@ -7352,18 +7366,18 @@ export default function ProjectDetailPage() {
                         {copied ? 'Copied!' : 'Copy'}
                       </button>
                     </div>
-                    <p className="text-gray-400 text-sm mt-2">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
                       Use this API key to initialize the DevBridge SDK in your mobile app.
                     </p>
                   </div>
 
                   {/* Danger Zone */}
-                  <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-6">
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-500/50 rounded-lg p-6">
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-2xl">⚠️</span>
                       <div>
                         <h3 className="text-red-400 font-bold text-lg">Danger Zone</h3>
-                        <p className="text-gray-300 text-sm">Deleting a project will permanently remove all associated data including devices, logs, traces, crashes, and configurations.</p>
+                        <p className="text-gray-600 dark:text-gray-300 text-sm">Deleting a project will permanently remove all associated data including devices, logs, traces, crashes, and configurations.</p>
                       </div>
                     </div>
                     <button
@@ -7377,12 +7391,12 @@ export default function ProjectDetailPage() {
                   {/* Delete Confirmation Modal */}
                   {showDeleteConfirm && (
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                      <div className="bg-gray-900 rounded-lg p-6 w-full max-w-md border border-red-500/50">
-                        <h3 className="text-red-400 font-bold text-lg mb-2">Delete Project</h3>
-                        <p className="text-gray-300 mb-4">
+                      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 w-full max-w-md border border-red-300 dark:border-red-500/50">
+                        <h3 className="text-red-600 dark:text-red-400 font-bold text-lg mb-2">Delete Project</h3>
+                        <p className="text-gray-600 dark:text-gray-300 mb-4">
                           Are you sure you want to delete <strong className="text-white">{projectName}</strong>? This action cannot be undone and will permanently delete:
                         </p>
-                        <ul className="list-disc list-inside text-gray-400 text-sm mb-6 space-y-1">
+                        <ul className="list-disc list-inside text-gray-500 dark:text-gray-400 text-sm mb-6 space-y-1">
                           <li>All devices and device data</li>
                           <li>All logs, traces, and crashes</li>
                           <li>All business configurations</li>
@@ -7394,7 +7408,7 @@ export default function ProjectDetailPage() {
                           <button
                             onClick={() => setShowDeleteConfirm(false)}
                             disabled={deletingProject}
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded transition-colors"
+                            className="px-4 py-2 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-white rounded transition-colors"
                           >
                             Cancel
                           </button>
@@ -7427,12 +7441,12 @@ export default function ProjectDetailPage() {
               {settingsTab === 'cleanup' && (
                 <div className="space-y-6">
                   {/* Warning Banner */}
-                  <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-4">
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-500/50 rounded-lg p-4">
                     <div className="flex items-center gap-3">
                       <span className="text-3xl">⚠️</span>
                       <div>
                         <h3 className="text-red-400 font-bold text-lg">Danger Zone</h3>
-                        <p className="text-gray-300 text-sm">These actions will permanently delete data and cannot be undone.</p>
+                        <p className="text-gray-600 dark:text-gray-300 text-sm">These actions will permanently delete data and cannot be undone.</p>
                       </div>
                     </div>
                   </div>
@@ -7440,15 +7454,15 @@ export default function ProjectDetailPage() {
                   {/* Cleanup Actions */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Delete Devices */}
-                    <div className="bg-gray-900 rounded-lg p-6 hover:bg-gray-850 transition-colors">
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-gray-850 transition-colors border border-gray-200 dark:border-gray-800">
                       <div className="flex items-start gap-4">
                         <span className="text-4xl">📱</span>
                         <div className="flex-1">
-                          <h3 className="text-white font-semibold text-lg mb-2">Delete All Devices</h3>
-                          <p className="text-gray-400 text-sm mb-4">
+                          <h3 className="text-gray-900 dark:text-white font-semibold text-lg mb-2">Delete All Devices</h3>
+                          <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
                             Permanently removes all registered devices and their associated data.
                           </p>
-                          <ul className="text-gray-500 text-xs space-y-1 mb-4">
+                          <ul className="text-gray-500 dark:text-gray-400 text-xs space-y-1 mb-4">
                             <li>• Device registrations</li>
                             <li>• Debug mode settings</li>
                             <li>• Device metadata</li>
@@ -7471,15 +7485,15 @@ export default function ProjectDetailPage() {
                     </div>
 
                     {/* Delete API Traces */}
-                    <div className="bg-gray-900 rounded-lg p-6 hover:bg-gray-850 transition-colors">
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-gray-850 transition-colors border border-gray-200 dark:border-gray-800">
                       <div className="flex items-start gap-4">
                         <span className="text-4xl">📡</span>
                         <div className="flex-1">
-                          <h3 className="text-white font-semibold text-lg mb-2">Delete All API Traces</h3>
-                          <p className="text-gray-400 text-sm mb-4">
+                          <h3 className="text-gray-900 dark:text-white font-semibold text-lg mb-2">Delete All API Traces</h3>
+                          <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
                             Permanently removes all captured API request/response traces.
                           </p>
-                          <ul className="text-gray-500 text-xs space-y-1 mb-4">
+                          <ul className="text-gray-500 dark:text-gray-400 text-xs space-y-1 mb-4">
                             <li>• HTTP requests/responses</li>
                             <li>• Request/response bodies</li>
                             <li>• Headers and metadata</li>
@@ -7502,15 +7516,15 @@ export default function ProjectDetailPage() {
                     </div>
 
                     {/* Delete Logs */}
-                    <div className="bg-gray-900 rounded-lg p-6 hover:bg-gray-850 transition-colors">
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-gray-850 transition-colors border border-gray-200 dark:border-gray-800">
                       <div className="flex items-start gap-4">
                         <span className="text-4xl">📝</span>
                         <div className="flex-1">
-                          <h3 className="text-white font-semibold text-lg mb-2">Delete All Logs</h3>
-                          <p className="text-gray-400 text-sm mb-4">
+                          <h3 className="text-gray-900 dark:text-white font-semibold text-lg mb-2">Delete All Logs</h3>
+                          <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
                             Permanently removes all application logs.
                           </p>
-                          <ul className="text-gray-500 text-xs space-y-1 mb-4">
+                          <ul className="text-gray-500 dark:text-gray-400 text-xs space-y-1 mb-4">
                             <li>• Debug logs</li>
                             <li>• Info logs</li>
                             <li>• Error logs</li>
@@ -7533,15 +7547,15 @@ export default function ProjectDetailPage() {
                     </div>
 
                     {/* Delete Sessions */}
-                    <div className="bg-gray-900 rounded-lg p-6 hover:bg-gray-850 transition-colors">
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-gray-850 transition-colors border border-gray-200 dark:border-gray-800">
                       <div className="flex items-start gap-4">
                         <span className="text-4xl">🔄</span>
                         <div className="flex-1">
-                          <h3 className="text-white font-semibold text-lg mb-2">Delete All Sessions</h3>
-                          <p className="text-gray-400 text-sm mb-4">
+                          <h3 className="text-gray-900 dark:text-white font-semibold text-lg mb-2">Delete All Sessions</h3>
+                          <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
                             Permanently removes all session data and their events.
                           </p>
-                          <ul className="text-gray-500 text-xs space-y-1 mb-4">
+                          <ul className="text-gray-500 dark:text-gray-400 text-xs space-y-1 mb-4">
                             <li>• Session records</li>
                             <li>• Session events</li>
                             <li>• Session metadata</li>
@@ -7564,15 +7578,15 @@ export default function ProjectDetailPage() {
                     </div>
 
                     {/* Delete Crashes */}
-                    <div className="bg-gray-900 rounded-lg p-6 hover:bg-gray-850 transition-colors">
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-gray-850 transition-colors border border-gray-200 dark:border-gray-800">
                       <div className="flex items-start gap-4">
                         <span className="text-4xl">💥</span>
                         <div className="flex-1">
-                          <h3 className="text-white font-semibold text-lg mb-2">Delete All Crashes</h3>
-                          <p className="text-gray-400 text-sm mb-4">
+                          <h3 className="text-gray-900 dark:text-white font-semibold text-lg mb-2">Delete All Crashes</h3>
+                          <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
                             Permanently removes all crash reports and stack traces.
                           </p>
-                          <ul className="text-gray-500 text-xs space-y-1 mb-4">
+                          <ul className="text-gray-500 dark:text-gray-400 text-xs space-y-1 mb-4">
                             <li>• Crash reports</li>
                             <li>• Stack traces</li>
                             <li>• Crash metadata</li>
@@ -7595,15 +7609,15 @@ export default function ProjectDetailPage() {
                     </div>
 
                     {/* Delete Screens */}
-                    <div className="bg-gray-900 rounded-lg p-6 hover:bg-gray-850 transition-colors">
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-gray-850 transition-colors border border-gray-200 dark:border-gray-800">
                       <div className="flex items-start gap-4">
                         <span className="text-4xl">🖥️</span>
                         <div className="flex-1">
-                          <h3 className="text-white font-semibold text-lg mb-2">Delete All Screens</h3>
-                          <p className="text-gray-400 text-sm mb-4">
+                          <h3 className="text-gray-900 dark:text-white font-semibold text-lg mb-2">Delete All Screens</h3>
+                          <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
                             Permanently removes all screen tracking data.
                           </p>
-                          <ul className="text-gray-500 text-xs space-y-1 mb-4">
+                          <ul className="text-gray-500 dark:text-gray-400 text-xs space-y-1 mb-4">
                             <li>• Screen views</li>
                             <li>• Screen transitions</li>
                             <li>• Screen metadata</li>
@@ -7680,8 +7694,8 @@ export default function ProjectDetailPage() {
           {activeTab === 'setup' && (
             <SetupInstructions apiKey={apiKey} />
           )}
-        </div>
-      </div>
+        </PageContainer>
+      </main>
     </div>
   )
 }
@@ -7847,7 +7861,7 @@ object DevBridge {
     <div className="space-y-8">
       <div>
         <h2 className="text-xl font-bold text-white mb-4">Quick Setup</h2>
-        <p className="text-gray-400 mb-4">
+        <p className="text-gray-500 dark:text-gray-400 mb-4">
           Copy one of the files below into your project to start tracking API calls, logs, and crashes.
         </p>
       </div>
@@ -7855,7 +7869,7 @@ object DevBridge {
       <div>
         <h3 className="text-lg font-semibold text-white mb-3">iOS (Swift)</h3>
         <div className="relative">
-          <pre className="p-4 bg-gray-900 rounded-lg overflow-x-auto text-sm text-gray-300">
+          <pre className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-x-auto text-sm text-gray-300">
             {swiftCode}
           </pre>
         </div>
@@ -7879,7 +7893,7 @@ DevBridge.shared.crash("Unexpected error", stackTrace: Thread.callStackSymbols.j
       <div>
         <h3 className="text-lg font-semibold text-white mb-3">Android (Kotlin)</h3>
         <div className="relative">
-          <pre className="p-4 bg-gray-900 rounded-lg overflow-x-auto text-sm text-gray-300">
+          <pre className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-x-auto text-sm text-gray-300">
             {kotlinCode}
           </pre>
         </div>

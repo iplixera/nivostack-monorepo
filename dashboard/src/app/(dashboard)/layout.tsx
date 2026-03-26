@@ -8,6 +8,7 @@ import SubscriptionBanner from '@/components/SubscriptionBanner'
 import Sidebar from '@/components/Sidebar'
 import UserProfileDropdown from '@/components/UserProfileDropdown'
 import NotificationBell from '@/components/NotificationBell'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { api } from '@/lib/api'
 
 export default function DashboardLayout({
@@ -76,8 +77,8 @@ export default function DashboardLayout({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-gray-400">Loading...</div>
+      <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center">
+        <div className="text-gray-500 dark:text-gray-400">Loading...</div>
       </div>
     )
   }
@@ -87,19 +88,18 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex">
-      <div className="flex-1 flex flex-col">
-        {/* Top Navigation */}
-        <nav className="bg-gray-900 border-b border-gray-800">
-          <div className="px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col">
+      {/* v6: Top Header - full width, fixed height, sticky */}
+      <nav className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+        <div className="px-4 sm:px-6">
+          <div className="flex justify-between h-14">
               <div className="flex items-center space-x-8">
                 {isProjectPage ? (
                   // Project selector dropdown
                   <div className="relative">
                     <button
                       onClick={() => setShowProjectDropdown(!showProjectDropdown)}
-                      className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white transition-colors"
+                      className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-white transition-colors"
                       disabled={projectsLoading}
                     >
                       <span className="text-lg font-semibold">
@@ -121,15 +121,15 @@ export default function DashboardLayout({
                           className="fixed inset-0 z-10"
                           onClick={() => setShowProjectDropdown(false)}
                         />
-                        <div className="absolute top-full left-0 mt-2 w-64 bg-gray-900 border border-gray-800 rounded-lg shadow-xl z-20 max-h-96 overflow-y-auto">
+                        <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl z-20 max-h-96 overflow-y-auto">
                           <div className="p-2">
-                            <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                            <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                               Select Project
                             </div>
                             {projectsLoading ? (
-                              <div className="px-3 py-2 text-gray-400 text-sm">Loading...</div>
+                              <div className="px-3 py-2 text-gray-500 dark:text-gray-400 text-sm">Loading...</div>
                             ) : projects.length === 0 ? (
-                              <div className="px-3 py-2 text-gray-400 text-sm">No projects</div>
+                              <div className="px-3 py-2 text-gray-500 dark:text-gray-400 text-sm">No projects</div>
                             ) : (
                               projects.map((project) => (
                                 <button
@@ -138,7 +138,7 @@ export default function DashboardLayout({
                                   className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
                                     project.id === projectId
                                       ? 'bg-blue-600 text-white'
-                                      : 'text-gray-300 hover:bg-gray-800'
+                                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                                   }`}
                                 >
                                   <div className="flex items-center justify-between">
@@ -146,10 +146,10 @@ export default function DashboardLayout({
                                     {project.role && project.role !== 'owner' && (
                                       <span className={`ml-2 px-1.5 py-0.5 text-xs rounded ${
                                         project.role === 'admin'
-                                          ? 'bg-blue-900/30 text-blue-400'
+                                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                                           : project.role === 'member'
-                                          ? 'bg-green-900/30 text-green-400'
-                                          : 'bg-gray-700/30 text-gray-400'
+                                          ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                                          : 'bg-gray-100 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400'
                                       }`}>
                                         {project.role}
                                       </span>
@@ -158,11 +158,11 @@ export default function DashboardLayout({
                                 </button>
                               ))
                             )}
-                            <div className="border-t border-gray-800 mt-2 pt-2">
+                            <div className="border-t border-gray-200 dark:border-gray-800 mt-2 pt-2">
                               <Link
                                 href="/projects"
                                 onClick={() => setShowProjectDropdown(false)}
-                                className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded transition-colors"
+                                className="block px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
                               >
                                 View All Projects
                               </Link>
@@ -173,8 +173,8 @@ export default function DashboardLayout({
                     )}
                   </div>
                 ) : (
-                  <Link href={isAdmin ? "/admin" : "/projects"} className="text-xl font-bold text-white">
-                    DevBridge
+                  <Link href={isAdmin ? "/admin" : "/projects"} className="text-xl font-bold text-gray-900 dark:text-white">
+                    NivoStack
                   </Link>
                 )}
                 {isAdmin ? (
@@ -184,8 +184,8 @@ export default function DashboardLayout({
                       href="/admin"
                       className={`transition-colors ${
                         pathname === '/admin'
-                          ? 'text-white font-medium'
-                          : 'text-gray-300 hover:text-white'
+                          ? 'text-gray-900 dark:text-white font-medium'
+                          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                       }`}
                     >
                       Dashboard
@@ -194,8 +194,8 @@ export default function DashboardLayout({
                       href="/admin/users"
                       className={`transition-colors ${
                         pathname === '/admin/users'
-                          ? 'text-white font-medium'
-                          : 'text-gray-300 hover:text-white'
+                          ? 'text-gray-900 dark:text-white font-medium'
+                          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                       }`}
                     >
                       Users
@@ -204,8 +204,8 @@ export default function DashboardLayout({
                       href="/admin/plans"
                       className={`transition-colors ${
                         pathname === '/admin/plans'
-                          ? 'text-white font-medium'
-                          : 'text-gray-300 hover:text-white'
+                          ? 'text-gray-900 dark:text-white font-medium'
+                          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                       }`}
                     >
                       Plans
@@ -214,8 +214,8 @@ export default function DashboardLayout({
                       href="/admin/subscriptions"
                       className={`transition-colors ${
                         pathname?.startsWith('/admin/subscriptions')
-                          ? 'text-white font-medium'
-                          : 'text-gray-300 hover:text-white'
+                          ? 'text-gray-900 dark:text-white font-medium'
+                          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                       }`}
                     >
                       Subscriptions
@@ -224,8 +224,8 @@ export default function DashboardLayout({
                       href="/admin/revenue"
                       className={`transition-colors ${
                         pathname === '/admin/revenue'
-                          ? 'text-white font-medium'
-                          : 'text-gray-300 hover:text-white'
+                          ? 'text-gray-900 dark:text-white font-medium'
+                          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                       }`}
                     >
                       Revenue
@@ -234,8 +234,8 @@ export default function DashboardLayout({
                       href="/admin/configurations"
                       className={`transition-colors ${
                         pathname === '/admin/configurations'
-                          ? 'text-white font-medium'
-                          : 'text-gray-300 hover:text-white'
+                          ? 'text-gray-900 dark:text-white font-medium'
+                          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                       }`}
                     >
                       Configurations
@@ -244,8 +244,8 @@ export default function DashboardLayout({
                       href="/admin/statistics"
                       className={`transition-colors ${
                         pathname === '/admin/statistics'
-                          ? 'text-white font-medium'
-                          : 'text-gray-300 hover:text-white'
+                          ? 'text-gray-900 dark:text-white font-medium'
+                          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                       }`}
                     >
                       Statistics
@@ -257,7 +257,7 @@ export default function DashboardLayout({
                     <>
                       <Link
                         href="/projects"
-                        className="text-gray-300 hover:text-white transition-colors"
+                        className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
                       >
                         Projects
                       </Link>
@@ -265,22 +265,20 @@ export default function DashboardLayout({
                   )
                 )}
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                <ThemeToggle />
                 <NotificationBell />
                 <UserProfileDropdown />
               </div>
             </div>
           </div>
         </nav>
-        
-        {/* Main Content */}
+
+        {/* v6: Main Content - full width, no centered container */}
         <main className="flex-1 overflow-auto">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {!isAdmin && <SubscriptionBanner />}
-            {children}
-          </div>
+          {!isAdmin && <SubscriptionBanner />}
+          {children}
         </main>
-      </div>
     </div>
   )
 }

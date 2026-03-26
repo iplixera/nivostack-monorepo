@@ -135,7 +135,7 @@ export default function CreateSubscriptionPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">Loading...</div>
+        <div className="text-gray-500 dark:text-gray-400">Loading...</div>
       </div>
     )
   }
@@ -145,35 +145,35 @@ export default function CreateSubscriptionPage() {
       <div>
         <button
           onClick={() => router.back()}
-          className="text-gray-400 hover:text-white mb-4 flex items-center gap-2"
+          className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
         >
           ← Back
         </button>
-        <h1 className="text-3xl font-bold text-white mb-2">Create New Subscription</h1>
-        <p className="text-gray-400">Assign a plan to a user and apply optional discounts</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Create New Subscription</h1>
+        <p className="text-gray-500 dark:text-gray-400">Assign a plan to a user and apply optional discounts</p>
         <p className="text-sm text-gray-500 mt-1">
-          💡 Need to create or edit a plan?{' '}
-          <Link href="/admin/plans" className="text-blue-400 hover:text-blue-300 underline">
+          Need to create or edit a plan?{' '}
+          <Link href="/admin/plans" className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 underline">
             Manage Plans
           </Link>
         </p>
       </div>
 
-      <div className="bg-gray-900 rounded-lg p-6 space-y-6">
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 space-y-6 border border-gray-200 dark:border-gray-800">
         {/* User Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Select User</label>
+          <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Select User</label>
           <input
             type="text"
             placeholder="Search by email or name..."
             value={searchUser}
             onChange={(e) => setSearchUser(e.target.value)}
-            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white mb-2"
+            className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white mb-2"
           />
           <select
             value={selectedUserId}
             onChange={(e) => setSelectedUserId(e.target.value)}
-            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
+            className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white"
             required
           >
             <option value="">-- Select User --</option>
@@ -187,11 +187,11 @@ export default function CreateSubscriptionPage() {
 
         {/* Plan Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Select Plan</label>
+          <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Select Plan</label>
           <select
             value={selectedPlanId}
             onChange={(e) => setSelectedPlanId(e.target.value)}
-            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
+            className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white"
             required
           >
             <option value="">-- Select Plan --</option>
@@ -205,7 +205,7 @@ export default function CreateSubscriptionPage() {
 
         {/* Discount Options */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Discount</label>
+          <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Discount</label>
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               <label className="flex items-center">
@@ -217,7 +217,7 @@ export default function CreateSubscriptionPage() {
                   onChange={() => setDiscountType('none')}
                   className="mr-2"
                 />
-                <span className="text-gray-300">No Discount</span>
+                <span className="text-gray-600 dark:text-gray-300">No Discount</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -228,7 +228,7 @@ export default function CreateSubscriptionPage() {
                   onChange={() => setDiscountType('promo')}
                   className="mr-2"
                 />
-                <span className="text-gray-300">Promo Code</span>
+                <span className="text-gray-600 dark:text-gray-300">Promo Code</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -239,7 +239,7 @@ export default function CreateSubscriptionPage() {
                   onChange={() => setDiscountType('direct')}
                   className="mr-2"
                 />
-                <span className="text-gray-300">Direct Discount</span>
+                <span className="text-gray-600 dark:text-gray-300">Direct Discount</span>
               </label>
             </div>
 
@@ -249,7 +249,7 @@ export default function CreateSubscriptionPage() {
                 <select
                   value={selectedPromoCodeId}
                   onChange={(e) => setSelectedPromoCodeId(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
+                  className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white"
                 >
                   <option value="">-- Select Promo Code --</option>
                   {promoCodes.map((pc) => (
@@ -260,7 +260,7 @@ export default function CreateSubscriptionPage() {
                   ))}
                 </select>
                 {selectedPromoCode && (
-                  <div className="mt-2 p-3 bg-blue-900/20 border border-blue-600 rounded text-sm text-blue-300">
+                  <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-600 rounded text-sm text-blue-700 dark:text-blue-300">
                     <div>Code: <strong>{selectedPromoCode.code}</strong></div>
                     <div>Discount: {selectedPromoCode.discountType === 'percent' ? `${selectedPromoCode.discountValue}%` : `$${selectedPromoCode.discountValue}`}</div>
                     {selectedPromoCode.maxUses && (
@@ -278,25 +278,25 @@ export default function CreateSubscriptionPage() {
             {discountType === 'direct' && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Percentage Discount (%)</label>
+                  <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Percentage Discount (%)</label>
                   <input
                     type="number"
                     min="0"
                     max="100"
                     value={directDiscountPercent}
                     onChange={(e) => setDirectDiscountPercent(parseFloat(e.target.value) || 0)}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
+                    className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white"
                     placeholder="0"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Fixed Amount Discount ($)</label>
+                  <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Fixed Amount Discount ($)</label>
                   <input
                     type="number"
                     min="0"
                     value={directDiscountAmount}
                     onChange={(e) => setDirectDiscountAmount(parseFloat(e.target.value) || 0)}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
+                    className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white"
                     placeholder="0"
                   />
                 </div>
@@ -307,20 +307,20 @@ export default function CreateSubscriptionPage() {
 
         {/* Price Summary */}
         {selectedPlan && (
-          <div className="p-4 bg-gray-800 rounded border border-gray-700">
+          <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-gray-400">Plan Price:</span>
-              <span className="text-white">${selectedPlan.price.toFixed(2)}/month</span>
+              <span className="text-gray-500 dark:text-gray-400">Plan Price:</span>
+              <span className="text-gray-900 dark:text-white">${selectedPlan.price.toFixed(2)}/month</span>
             </div>
             {finalPrice !== selectedPlan.price && (
               <>
-                <div className="flex justify-between items-center mb-2 text-green-400">
+                <div className="flex justify-between items-center mb-2 text-green-600 dark:text-green-400">
                   <span>Discount Applied:</span>
                   <span>-${(selectedPlan.price - finalPrice).toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between items-center pt-2 border-t border-gray-700">
-                  <span className="text-white font-semibold">Final Price:</span>
-                  <span className="text-white font-bold text-lg">${finalPrice.toFixed(2)}/month</span>
+                <div className="flex justify-between items-center pt-2 border-t border-gray-300 dark:border-gray-700">
+                  <span className="text-gray-900 dark:text-white font-semibold">Final Price:</span>
+                  <span className="text-gray-900 dark:text-white font-bold text-lg">${finalPrice.toFixed(2)}/month</span>
                 </div>
               </>
             )}
@@ -328,7 +328,7 @@ export default function CreateSubscriptionPage() {
         )}
 
         {/* Actions */}
-        <div className="flex gap-4 pt-4 border-t border-gray-800">
+        <div className="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-800">
           <button
             onClick={handleCreate}
             disabled={saving || !selectedUserId || !selectedPlanId}
@@ -338,7 +338,7 @@ export default function CreateSubscriptionPage() {
           </button>
           <button
             onClick={() => router.back()}
-            className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded font-medium"
+            className="px-6 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded font-medium"
           >
             Cancel
           </button>
@@ -347,4 +347,3 @@ export default function CreateSubscriptionPage() {
     </div>
   )
 }
-

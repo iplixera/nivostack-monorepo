@@ -66,12 +66,12 @@ export default function LocalizationExport({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-lg w-full max-w-md">
-        <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-white">Export Translations</h3>
+      <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-md border border-gray-200 dark:border-gray-800">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Export Translations</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -82,11 +82,11 @@ export default function LocalizationExport({
         <div className="p-4 space-y-4">
           {/* Format Selection */}
           <div>
-            <label className="block text-sm text-gray-400 mb-2">Export Format</label>
+            <label className="block text-sm text-gray-500 dark:text-gray-400 mb-2">Export Format</label>
             <select
               value={format}
               onChange={(e) => setFormat(e.target.value as any)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
             >
               <option value="csv">CSV (All languages)</option>
               <option value="json">JSON</option>
@@ -99,11 +99,11 @@ export default function LocalizationExport({
           {/* Language Selection */}
           {requiresLanguage && (
             <div>
-              <label className="block text-sm text-gray-400 mb-2">Language</label>
+              <label className="block text-sm text-gray-500 dark:text-gray-400 mb-2">Language</label>
               <select
                 value={languageCode}
                 onChange={(e) => setLanguageCode(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                 required={requiresLanguage}
               >
                 <option value="">Select language...</option>
@@ -119,11 +119,11 @@ export default function LocalizationExport({
           {/* Category Filter */}
           {categories.length > 0 && (
             <div>
-              <label className="block text-sm text-gray-400 mb-2">Category (Optional)</label>
+              <label className="block text-sm text-gray-500 dark:text-gray-400 mb-2">Category (Optional)</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
               >
                 <option value="">All categories</option>
                 {categories.map((cat) => (
@@ -142,17 +142,17 @@ export default function LocalizationExport({
                 type="checkbox"
                 checked={includeEmpty}
                 onChange={(e) => setIncludeEmpty(e.target.checked)}
-                className="rounded bg-gray-800 border-gray-700"
+                className="rounded bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700"
               />
-              <span className="text-gray-300 text-sm">Include keys without translations</span>
+              <span className="text-gray-600 dark:text-gray-300 text-sm">Include keys without translations</span>
             </label>
           </div>
         </div>
 
-        <div className="p-4 border-t border-gray-800 flex justify-end gap-2">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800 flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-400 hover:text-white"
+            className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
             disabled={loading}
           >
             Cancel

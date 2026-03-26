@@ -181,7 +181,7 @@ export default function BuildsSubTab({ projectId, featureType, featureLabel, tok
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">Loading builds...</div>
+        <div className="text-gray-500 dark:text-gray-400">Loading builds...</div>
       </div>
     )
   }
@@ -205,10 +205,10 @@ export default function BuildsSubTab({ projectId, featureType, featureLabel, tok
                         <span>🚫</span>
                         <span>Business Config Keys Quota Exceeded</span>
                       </h3>
-                      <p className="text-gray-300 text-sm mb-2">
+                      <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                         You have reached your business config keys limit: <strong>{businessConfigUsage.used}/{businessConfigUsage.limit} keys</strong> ({percentage.toFixed(1)}%).
                       </p>
-                      <p className="text-gray-300 text-sm">
+                      <p className="text-gray-600 dark:text-gray-300 text-sm">
                         Build creation is disabled. Please upgrade your plan to create more config keys.
                       </p>
                     </div>
@@ -230,10 +230,10 @@ export default function BuildsSubTab({ projectId, featureType, featureLabel, tok
                         <span>⚠️</span>
                         <span>Approaching Business Config Keys Limit</span>
                       </h3>
-                      <p className="text-gray-300 text-sm mb-2">
+                      <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                         You are approaching your business config keys limit: <strong>{businessConfigUsage.used}/{businessConfigUsage.limit} keys</strong> ({percentage.toFixed(1)}%).
                       </p>
-                      <p className="text-gray-300 text-sm">
+                      <p className="text-gray-600 dark:text-gray-300 text-sm">
                         You can create {Math.max(0, businessConfigUsage.limit - businessConfigUsage.used)} more key{businessConfigUsage.limit - businessConfigUsage.used !== 1 ? 's' : ''} before reaching your limit.
                       </p>
                     </div>
@@ -263,10 +263,10 @@ export default function BuildsSubTab({ projectId, featureType, featureLabel, tok
                     <span>🚫</span>
                     <span>Localization Languages Quota Exceeded</span>
                   </h3>
-                  <p className="text-gray-300 text-sm mb-2">
+                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                     You have reached your localization languages limit: <strong>{localizationLanguagesUsage.used}/{localizationLanguagesUsage.limit} languages</strong> ({localizationLanguagesUsage.percentage.toFixed(1)}%).
                   </p>
-                  <p className="text-gray-300 text-sm">
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">
                     Build creation is disabled. Please upgrade your plan to add more languages.
                   </p>
                 </div>
@@ -287,10 +287,10 @@ export default function BuildsSubTab({ projectId, featureType, featureLabel, tok
                     <span>🚫</span>
                     <span>Localization Keys Quota Exceeded</span>
                   </h3>
-                  <p className="text-gray-300 text-sm mb-2">
+                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                     You have reached your localization keys limit: <strong>{localizationKeysUsage.used}/{localizationKeysUsage.limit} keys</strong> ({localizationKeysUsage.percentage.toFixed(1)}%).
                   </p>
-                  <p className="text-gray-300 text-sm">
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">
                     Build creation is disabled. Please upgrade your plan to create more keys.
                   </p>
                 </div>
@@ -308,8 +308,8 @@ export default function BuildsSubTab({ projectId, featureType, featureLabel, tok
       {/* Header with Create Build */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-white">{featureLabel} Builds</h3>
-          <p className="text-sm text-gray-400 mt-1">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{featureLabel} Builds</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {builds.length} build{builds.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -319,7 +319,7 @@ export default function BuildsSubTab({ projectId, featureType, featureLabel, tok
             placeholder="Build name (optional)"
             value={buildName}
             onChange={(e) => setBuildName(e.target.value)}
-            className="px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500 text-sm"
+            className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white placeholder-gray-500 text-sm"
           />
           <button
             onClick={handleCreateBuild}
@@ -348,24 +348,24 @@ export default function BuildsSubTab({ projectId, featureType, featureLabel, tok
       </div>
 
       {/* Builds Table */}
-      <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-800">
+            <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Version</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Items</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Created By</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Created</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Mode</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Version</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Items</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created By</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Mode</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800">
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
               {builds.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-400">
+                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                     No builds yet. Create your first build for {featureLabel}!
                   </td>
                 </tr>
@@ -377,34 +377,34 @@ export default function BuildsSubTab({ projectId, featureType, featureLabel, tok
                   return (
                     <tr
                       key={build.id}
-                      className={`hover:bg-gray-800/50 cursor-pointer ${
+                      className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer ${
                         selectedBuild?.id === build.id ? 'bg-blue-900/20' : ''
                       }`}
                       onClick={() => setSelectedBuild(build)}
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-white">v{build.version}</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">v{build.version}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-white">{build.name || `v${build.version}`}</div>
+                        <div className="text-sm text-gray-900 dark:text-white">{build.name || `v${build.version}`}</div>
                         {build.description && (
-                          <div className="text-xs text-gray-400 mt-1">{build.description}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{build.description}</div>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                         {itemCount} item{itemCount !== 1 ? 's' : ''}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {build.creator ? (
                           <div>
-                            <div className="text-sm text-white">{build.creator.name || build.creator.email}</div>
-                            <div className="text-xs text-gray-400">{build.creator.email}</div>
+                            <div className="text-sm text-gray-900 dark:text-white">{build.creator.name || build.creator.email}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">{build.creator.email}</div>
                           </div>
                         ) : (
                           <span className="text-sm text-gray-500">Unknown</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                         {new Date(build.createdAt).toLocaleDateString()}
                         <div className="text-xs text-gray-500">
                           {new Date(build.createdAt).toLocaleTimeString()}
@@ -432,7 +432,7 @@ export default function BuildsSubTab({ projectId, featureType, featureLabel, tok
                             className={`px-3 py-1 rounded text-xs ${
                               build.mode === 'preview' && build.isActive
                                 ? 'bg-blue-600 text-white cursor-not-allowed'
-                                : 'bg-gray-700 hover:bg-gray-600 text-white'
+                                : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
                             }`}
                             title="Set as Preview"
                           >
@@ -444,7 +444,7 @@ export default function BuildsSubTab({ projectId, featureType, featureLabel, tok
                             className={`px-3 py-1 rounded text-xs ${
                               build.mode === 'production' && build.isActive
                                 ? 'bg-green-600 text-white cursor-not-allowed'
-                                : 'bg-gray-700 hover:bg-gray-600 text-white'
+                                : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
                             }`}
                             title="Set as Production"
                           >
@@ -457,7 +457,7 @@ export default function BuildsSubTab({ projectId, featureType, featureLabel, tok
                                   handleShowDiff(e.target.value, build.id)
                                 }
                               }}
-                              className="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs"
+                              className="px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded text-xs"
                               onClick={(e) => e.stopPropagation()}
                               title="Compare with"
                               defaultValue=""
@@ -494,16 +494,16 @@ export default function BuildsSubTab({ projectId, featureType, featureLabel, tok
       {/* Diff View Modal */}
       {showDiff && diffData && selectedBuild && diffBuildId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto border border-gray-800">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto border border-gray-200 dark:border-gray-800">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-white">Build Comparison</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Build Comparison</h2>
               <button
                 onClick={() => {
                   setShowDiff(false)
                   setDiffData(null)
                   setDiffBuildId(null)
                 }}
-                className="text-gray-400 hover:text-white text-2xl"
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-2xl"
               >
                 ×
               </button>
@@ -511,8 +511,8 @@ export default function BuildsSubTab({ projectId, featureType, featureLabel, tok
 
             <div className="space-y-6">
               {Object.entries(diffData.diff || {}).map(([featureType, changes]: [string, any]) => (
-                <div key={featureType} className="border border-gray-700 rounded p-4">
-                  <h3 className="text-lg font-semibold text-white mb-3 capitalize">
+                <div key={featureType} className="border border-gray-300 dark:border-gray-700 rounded p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 capitalize">
                     {featureType.replace('_', ' ')}
                   </h3>
                   <div className="space-y-2">
@@ -537,19 +537,19 @@ export default function BuildsSubTab({ projectId, featureType, featureLabel, tok
                           }`}>
                             {change.changeType.toUpperCase()}
                           </span>
-                          <span className="text-white font-medium">{change.itemLabel || change.itemKey}</span>
+                          <span className="text-gray-900 dark:text-white font-medium">{change.itemLabel || change.itemKey}</span>
                         </div>
                         {change.changeType === 'changed' && (
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
-                              <div className="text-gray-400 mb-1">Old Value</div>
-                              <div className="text-red-300 break-all font-mono text-xs">
+                              <div className="text-gray-500 dark:text-gray-400 mb-1">Old Value</div>
+                              <div className="text-red-500 dark:text-red-300 break-all font-mono text-xs">
                                 {JSON.stringify(change.oldValue, null, 2)}
                               </div>
                             </div>
                             <div>
-                              <div className="text-gray-400 mb-1">New Value</div>
-                              <div className="text-green-300 break-all font-mono text-xs">
+                              <div className="text-gray-500 dark:text-gray-400 mb-1">New Value</div>
+                              <div className="text-green-600 dark:text-green-300 break-all font-mono text-xs">
                                 {JSON.stringify(change.newValue, null, 2)}
                               </div>
                             </div>
@@ -557,16 +557,16 @@ export default function BuildsSubTab({ projectId, featureType, featureLabel, tok
                         )}
                         {change.changeType === 'added' && (
                           <div className="text-sm">
-                            <div className="text-gray-400 mb-1">Value</div>
-                            <div className="text-green-300 break-all font-mono text-xs">
+                            <div className="text-gray-500 dark:text-gray-400 mb-1">Value</div>
+                            <div className="text-green-600 dark:text-green-300 break-all font-mono text-xs">
                               {JSON.stringify(change.newValue, null, 2)}
                             </div>
                           </div>
                         )}
                         {change.changeType === 'deleted' && (
                           <div className="text-sm">
-                            <div className="text-gray-400 mb-1">Value</div>
-                            <div className="text-red-300 break-all font-mono text-xs">
+                            <div className="text-gray-500 dark:text-gray-400 mb-1">Value</div>
+                            <div className="text-red-500 dark:text-red-300 break-all font-mono text-xs">
                               {JSON.stringify(change.oldValue, null, 2)}
                             </div>
                           </div>
@@ -574,7 +574,7 @@ export default function BuildsSubTab({ projectId, featureType, featureLabel, tok
                       </div>
                     ))}
                     {changes.length === 0 && (
-                      <div className="text-gray-400 text-sm">No changes</div>
+                      <div className="text-gray-500 dark:text-gray-400 text-sm">No changes</div>
                     )}
                   </div>
                 </div>

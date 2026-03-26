@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NivoStack — Devices Mock (v0.1)</title>
+    <style>
+        :root {
+            --bg: #0b1020;
+            --panel: rgba(255, 255, 255, .03);
+            --panel2: rgba(255, 255, 255, .02);
+            --text: #e8eefc;
+            --muted: #9fb0d0;
+            --border: rgba(255, 255, 255, .10);
+            --accent: #6aa6ff;
+            --ok: #5ee6a8;
+            --warn: #f5c96a;
+            --danger: #ff6a6a;
+            --shadow: 0 12px 30px rgba(0, 0, 0, .35);
+            --r: 16px;
+            --maxw: 1440px;
+            --pad: 24px;
+            --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+        }
+
+        [data-theme="light"] {
+            --bg: #f7f8fb;
+            --panel: #fff;
+            --panel2: #fff;
+            --text: #0b1220;
+            --muted: #5b6b86;
+            --border: rgba(15, 25, 45, .12);
+            --accent: #2563eb;
+            --ok: #059669;
+            --warn: #b7791f;
+            --danger: #e11d48;
+            --shadow: 0 12px 30px rgba(15, 25, 45, .10);
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            font-family: var(--sans);
+            color: var(--text);
+            background:
+                radial-gradient(1200px 800px at 18% -10%, rgba(106, 166, 255, .18), transparent 60%),
+                radial-gradient(900px 600px at 100% 0%, rgba(94, 230, 168, .10), transparent 55%),
+                var(--bg);
+        }
+
+        .app {
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 280px;
+            padding: 20px 14px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            border-right: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(255, 255, 255, .03), rgba(255, 255, 255, 0));
+        }
+
+        .brand {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 10px 10px 16px;
+        }
+
+        .logo {
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), rgba(106, 166, 255, .35));
+            box-shadow: var(--shadow);
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: 15px
+        }
+
+        .brand p {
+            margin: 3px 0 0;
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .nav .sec {
+            padding: 12px 10px 6px;
+            font-size: 11px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--muted)
+        }
+
+        .nav a {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 10px;
+            border-radius: 12px;
+            opacity: .92;
+        }
+
+        .nav a:hover {
+            background: rgba(255, 255, 255, .04)
+        }
+
+        .nav a.active {
+            background: rgba(106, 166, 255, .12);
+            border: 1px solid rgba(106, 166, 255, .18)
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: var(--muted);
+            opacity: .75
+        }
+
+        .main {
+            flex: 1;
+            padding: 18px 0 30px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: center;
+            padding: 0 var(--pad);
+        }
+
+        .topbar-inner {
+            width: min(var(--maxw), 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .crumb {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .mono {
+            font-family: var(--mono)
+        }
+
+        .btn {
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .03);
+            color: var(--text);
+            padding: 8px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, .06)
+        }
+
+        .btn.primary {
+            border-color: rgba(106, 166, 255, .35);
+            background: rgba(106, 166, 255, .12)
+        }
+
+        .content {
+            display: flex;
+            justify-content: center;
+            padding: 14px var(--pad) 0;
+        }
+
+        .container {
+            width: min(var(--maxw), 100%);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .pagehead {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .pagehead h2 {
+            margin: 0;
+            font-size: 22px;
+            letter-spacing: -.02em
+        }
+
+        .pagehead p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+            max-width: 80ch;
+            line-height: 1.4
+        }
+
+        .hint {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .seg {
+            display: flex;
+            gap: 6px;
+            padding: 4px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: var(--panel2);
+        }
+
+        .seg button {
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            font-size: 12px;
+            padding: 7px 10px;
+            border-radius: 11px;
+            cursor: pointer
+        }
+
+        .seg button.active {
+            background: rgba(106, 166, 255, .14);
+            color: var(--text)
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            background: var(--panel2);
+            border-radius: var(--r);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .hd {
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(255, 255, 255, .03), rgba(255, 255, 255, 0))
+        }
+
+        .bd {
+            padding: 14px;
+        }
+
+        .badge {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            white-space: nowrap
+        }
+
+        .badge.ok {
+            border-color: rgba(94, 230, 168, .35);
+            background: rgba(94, 230, 168, .08);
+            color: var(--ok)
+        }
+
+        .badge.warn {
+            border-color: rgba(245, 201, 106, .35);
+            background: rgba(245, 201, 106, .08);
+            color: var(--warn)
+        }
+
+        .badge.err {
+            border-color: rgba(255, 106, 106, .35);
+            background: rgba(255, 106, 106, .08);
+            color: var(--danger)
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 12px;
+        }
+
+        .kpi {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .kpi .v {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -.02em
+        }
+
+        .kpi .d {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .progress {
+            height: 10px;
+            width: 260px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .02);
+            overflow: hidden
+        }
+
+        .progress>div {
+            height: 100%;
+            width: 92%;
+            background: linear-gradient(90deg, rgba(245, 201, 106, .95), rgba(255, 106, 106, .95))
+        }
+
+        .banner {
+            display: flex;
+            gap: 14px;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 12px 14px;
+            border: 1px solid rgba(245, 201, 106, .40);
+            background: rgba(245, 201, 106, .10);
+            border-radius: var(--r);
+        }
+
+        .banner .t {
+            font-weight: 800
+        }
+
+        .banner .s {
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.35
+        }
+
+        .segbox {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 10px;
+            background: var(--panel2)
+        }
+
+        .segtitle {
+            font-size: 12px;
+            color: var(--muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .chipbtn {
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .02);
+            color: var(--text);
+            padding: 7px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            cursor: pointer
+        }
+
+        .chipbtn:hover {
+            background: rgba(255, 255, 255, .05)
+        }
+
+        .chipbtn .n {
+            color: var(--muted);
+            margin-left: 6px;
+            font-variant-numeric: tabular-nums
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            background: var(--panel2)
+        }
+
+        .input,
+        .select {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 8px 10px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .02);
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        .input input {
+            border: 0;
+            outline: none;
+            background: transparent;
+            color: var(--text);
+            width: 240px;
+            font-size: 12px
+        }
+
+        .select select {
+            border: 0;
+            outline: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 12px
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            overflow: hidden;
+            background: var(--panel2)
+        }
+
+        thead th {
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, .02);
+            border-bottom: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 12px;
+            padding: 10px 12px;
+            text-align: left
+        }
+
+        tbody td {
+            border-bottom: 1px solid rgba(255, 255, 255, .05);
+            padding: 10px 12px;
+            font-size: 12px
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, .03)
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px
+        }
+
+        .tiny {
+            padding: 6px 8px;
+            border-radius: 10px;
+            font-size: 12px
+        }
+
+        .switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .02);
+            color: var(--muted)
+        }
+
+        .doton {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: var(--ok)
+        }
+
+        .dotoff {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .18)
+        }
+
+        @media (max-width:1100px) {
+            .sidebar {
+                display: none
+            }
+
+            .progress {
+                width: 180px
+            }
+
+            .input input {
+                width: 180px
+            }
+        }
+    </style>
+</head>
+
+<body data-theme="dark">
+    <div class="app">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo"></div>
+                <div>
+                    <h1>NivoStack Studio</h1>
+                    <p>Observe • Debug • Ship</p>
+                </div>
+            </div>
+            <nav class="nav">
+                <div class="sec">Overview</div>
+                <a href="#"><span class="dot"></span>Dashboard</a>
+                <div class="sec">Debug</div>
+                <a class="active" href="#"><span class="dot"></span>Devices</a>
+                <a href="#"><span class="dot"></span>API Traces</a>
+                <a href="#"><span class="dot"></span>Logs</a>
+                <a href="#"><span class="dot"></span>Crashes</a>
+                <a href="#"><span class="dot"></span>Sessions</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <div class="topbar">
+                <div class="topbar-inner">
+                    <div class="crumb">Project: <span class="mono">Virgin Connect</span> • Env: <span
+                            class="mono">Production</span></div>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <button class="btn" id="themeBtn">Toggle theme</button>
+                        <button class="btn">Export CSV</button>
+                        <button class="btn primary">Upgrade</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content">
+                <div class="container">
+                    <div class="pagehead">
+                        <div>
+                            <h2>Devices</h2>
+                            <p>Competitor-grade pattern: segmented overview + strong raw table. Debug-enabled devices
+                                must support near-real-time raw row monitoring.</p>
+                            <div class="hint">
+                                Rule: <span class="badge ok">Aggregated = counts & segments</span> • <span
+                                    class="badge">Raw = rows & actions</span> (both required).
+                            </div>
+                        </div>
+                        <div class="seg" role="tablist" aria-label="Mode">
+                            <button class="active" data-mode="agg">Overview (Aggregated)</button>
+                            <button data-mode="raw">Inspect (Raw)</button>
+                        </div>
+                    </div>
+
+                    <!-- Usage warning placement (80/90%) -->
+                    <div class="card">
+                        <div class="hd">
+                            <div style="color:var(--muted); font-size:13px;">Plan usage — Devices</div>
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <div class="progress">
+                                    <div></div>
+                                </div>
+                                <span class="badge warn">92% used</span>
+                            </div>
+                        </div>
+                        <div class="bd">
+                            <div class="banner">
+                                <div>
+                                    <div class="t">Approaching device quota limit.</div>
+                                    <div class="s">At 100%, new device registrations may be blocked. Show this banner at
+                                        ≥80% and escalate at ≥90%.</div>
+                                </div>
+                                <button class="btn primary">Upgrade</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aggregated overview -->
+                    <section class="grid" id="aggPanel">
+                        <div class="card" style="grid-column: span 3;">
+                            <div class="hd">
+                                <div style="color:var(--muted); font-size:13px;">Total devices</div><span
+                                    class="badge">All-time</span>
+                            </div>
+                            <div class="bd">
+                                <div class="kpi">
+                                    <div class="v">96,175</div>
+                                    <div class="d">distinct</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card" style="grid-column: span 3;">
+                            <div class="hd">
+                                <div style="color:var(--muted); font-size:13px;">Active devices</div><span
+                                    class="badge">24h</span>
+                            </div>
+                            <div class="bd">
+                                <div class="kpi">
+                                    <div class="v">17,381</div>
+                                    <div class="d">last_seen in range</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card" style="grid-column: span 3;">
+                            <div class="hd">
+                                <div style="color:var(--muted); font-size:13px;">Debug enabled</div><span
+                                    class="badge ok">Live</span>
+                            </div>
+                            <div class="bd">
+                                <div class="kpi">
+                                    <div class="v">312</div>
+                                    <div class="d">devices</div>
+                                </div>
+                                <div class="hint">Must match Debug=ON filter below.</div>
+                            </div>
+                        </div>
+                        <div class="card" style="grid-column: span 3;">
+                            <div class="hd">
+                                <div style="color:var(--muted); font-size:13px;">New devices</div><span
+                                    class="badge">24h</span>
+                            </div>
+                            <div class="bd">
+                                <div class="kpi">
+                                    <div class="v">1,204</div>
+                                    <div class="d">first_seen in range</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card" style="grid-column: span 6;">
+                            <div class="hd">
+                                <div style="color:var(--muted); font-size:13px;">Segmentation (drilldown)</div><span
+                                    class="badge">Click → Inspect</span>
+                            </div>
+                            <div class="bd" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                                <div class="segbox">
+                                    <div class="segtitle"><span>Platform</span><a href="#"
+                                            style="color:var(--muted)">View all</a></div>
+                                    <div class="chips">
+                                        <button class="chipbtn">iOS <span class="n">41,920</span></button>
+                                        <button class="chipbtn">Android <span class="n">53,210</span></button>
+                                        <button class="chipbtn">Web <span class="n">1,002</span></button>
+                                        <button class="chipbtn">Other <span class="n">43</span></button>
+                                    </div>
+                                </div>
+                                <div class="segbox">
+                                    <div class="segtitle"><span>Environment</span><a href="#"
+                                            style="color:var(--muted)">View all</a></div>
+                                    <div class="chips">
+                                        <button class="chipbtn">Production <span class="n">82,311</span></button>
+                                        <button class="chipbtn">Staging <span class="n">10,420</span></button>
+                                        <button class="chipbtn">Dev <span class="n">3,444</span></button>
+                                    </div>
+                                </div>
+                                <div class="segbox">
+                                    <div class="segtitle"><span>OS versions (top)</span><a href="#"
+                                            style="color:var(--muted)">View all</a></div>
+                                    <div class="chips">
+                                        <button class="chipbtn">iOS 17 <span class="n">18,210</span></button>
+                                        <button class="chipbtn">Android 14 <span class="n">16,744</span></button>
+                                        <button class="chipbtn">Android 13 <span class="n">12,508</span></button>
+                                    </div>
+                                </div>
+                                <div class="segbox">
+                                    <div class="segtitle"><span>App versions (top)</span><a href="#"
+                                            style="color:var(--muted)">View all</a></div>
+                                    <div class="chips">
+                                        <button class="chipbtn">1.12.0 <span class="n">22,811</span></button>
+                                        <button class="chipbtn">1.11.3 <span class="n">18,221</span></button>
+                                        <button class="chipbtn">1.10.9 <span class="n">14,055</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bd" style="padding-top:0;">
+                                <div class="hint">This replaces wasted whitespace. Filters should not consume half the
+                                    screen.</div>
+                            </div>
+                        </div>
+
+                        <div class="card" style="grid-column: span 6;">
+                            <div class="hd">
+                                <div style="color:var(--muted); font-size:13px;">Mini trends (optional)</div><span
+                                    class="badge">24h</span>
+                            </div>
+                            <div class="bd">
+                                <div class="segbox"
+                                    style="height:132px; display:flex; align-items:center; justify-content:center; color:var(--muted); border-style:dashed;">
+                                    Active devices by hour (placeholder)
+                                </div>
+                                <div style="height:10px"></div>
+                                <div class="segbox"
+                                    style="height:132px; display:flex; align-items:center; justify-content:center; color:var(--muted); border-style:dashed;">
+                                    New devices by hour (placeholder)
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Raw inspect table -->
+                    <section class="card" id="rawPanel" style="display:none;">
+                        <div class="hd">
+                            <div style="color:var(--muted); font-size:13px;">Inspect (Raw) — Device registry</div>
+                            <span class="badge">Rows are paginated</span>
+                        </div>
+                        <div class="bd">
+                            <div class="filters">
+                                <div class="input">Search <input placeholder="deviceId / userId / email / model" />
+                                </div>
+                                <div class="select">Platform
+                                    <select>
+                                        <option>All</option>
+                                        <option>iOS</option>
+                                        <option>Android</option>
+                                        <option>Web</option>
+                                        <option>Other</option>
+                                    </select>
+                                </div>
+                                <div class="select">Env
+                                    <select>
+                                        <option>All</option>
+                                        <option>Production</option>
+                                        <option>Staging</option>
+                                        <option>Dev</option>
+                                    </select>
+                                </div>
+                                <div class="select">Debug
+                                    <select>
+                                        <option>All</option>
+                                        <option>Debug ON</option>
+                                        <option>Debug OFF</option>
+                                    </select>
+                                </div>
+                                <div class="select">Last seen
+                                    <select>
+                                        <option>Last 15m</option>
+                                        <option>Last 1h</option>
+                                        <option selected>Last 24h</option>
+                                        <option>Last 7d</option>
+                                        <option>Last 30d</option>
+                                    </select>
+                                </div>
+                                <button class="btn tiny">More filters</button>
+                                <button class="btn tiny">Clear</button>
+                                <button class="btn tiny">Export</button>
+                            </div>
+
+                            <div class="hint" style="margin:10px 2px 12px;">
+                                Critical: dropdowns must not “collapse” to one option; empty-state text must only show
+                                when results truly empty; Debug count must match Debug=ON filter definition/time window.
+                            </div>
+
+                            <div style="max-height:520px; overflow:auto; border-radius:var(--r);">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th style="min-width:190px;">Device ID</th>
+                                            <th>Platform</th>
+                                            <th>Env</th>
+                                            <th>App</th>
+                                            <th>OS</th>
+                                            <th>Model</th>
+                                            <th>Last seen</th>
+                                            <th>Debug</th>
+                                            <th style="min-width:170px;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="mono">dvc_8F2A...19B</td>
+                                            <td>Android</td>
+                                            <td>Production</td>
+                                            <td class="mono">1.12.0</td>
+                                            <td class="mono">Android 14</td>
+                                            <td>Samsung A52</td>
+                                            <td>2m ago</td>
+                                            <td><span class="switch"><span class="doton"></span> ON</span></td>
+                                            <td>
+                                                <div class="actions"><button class="btn tiny">View</button><button
+                                                        class="btn tiny primary">Toggle debug</button></div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="mono">dvc_73C1...0A9</td>
+                                            <td>iOS</td>
+                                            <td>Production</td>
+                                            <td class="mono">1.11.3</td>
+                                            <td class="mono">iOS 17</td>
+                                            <td>iPhone 14</td>
+                                            <td>12m ago</td>
+                                            <td><span class="switch"><span class="dotoff"></span> OFF</span></td>
+                                            <td>
+                                                <div class="actions"><button class="btn tiny">View</button><button
+                                                        class="btn tiny">Toggle debug</button></div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="mono">dvc_11B0...AA3</td>
+                                            <td>Web</td>
+                                            <td>Staging</td>
+                                            <td class="mono">1.10.9</td>
+                                            <td class="mono">Chrome</td>
+                                            <td>Mac</td>
+                                            <td>1h ago</td>
+                                            <td><span class="switch"><span class="dotoff"></span> OFF</span></td>
+                                            <td>
+                                                <div class="actions"><button class="btn tiny">View</button><button
+                                                        class="btn tiny">Toggle debug</button></div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="hint" style="margin-top:12px;">
+                                Add-on (competitor parity): Debug ON devices should optionally show a “Live tail” tab
+                                (logs/traces for that device) without leaving Devices.
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const root = document.body;
+        document.getElementById('themeBtn').addEventListener('click', () => {
+            root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        });
+
+        const modeBtns = document.querySelectorAll('.seg button');
+        const aggPanel = document.getElementById('aggPanel');
+        const rawPanel = document.getElementById('rawPanel');
+
+        modeBtns.forEach(btn => btn.addEventListener('click', () => {
+            modeBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const mode = btn.dataset.mode;
+            aggPanel.style.display = mode === 'agg' ? 'grid' : 'none';
+            rawPanel.style.display = mode === 'raw' ? 'block' : 'none';
+        }));
+    </script>
+</body>
+
+</html>

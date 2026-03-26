@@ -45,43 +45,43 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Profile Settings</h1>
-        <p className="text-gray-400">Manage your account information</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Profile Settings</h1>
+        <p className="text-gray-500 dark:text-gray-400">Manage your account information</p>
       </div>
 
-      <div className="bg-gray-900 rounded-lg p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
               Name
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
+              className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white"
               placeholder="Enter your name"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
               Email
             </label>
             <input
               type="email"
               value={formData.email}
               disabled
-              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-gray-500 cursor-not-allowed"
+              className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-500 cursor-not-allowed"
             />
             <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
               Account Type
             </label>
-            <div className="px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white">
+            <div className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white">
               {user?.isAdmin ? 'Admin Account' : 'Standard Account'}
             </div>
           </div>
@@ -92,7 +92,7 @@ export default function ProfilePage() {
             </div>
           )}
 
-          <div className="pt-4 border-t border-gray-800">
+          <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
             <button
               type="submit"
               disabled={loading}

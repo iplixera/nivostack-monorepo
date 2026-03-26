@@ -92,7 +92,7 @@ export default function LocalizationProviderSettings({
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-gray-900 rounded-lg p-6">
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
         </div>
       </div>
@@ -101,13 +101,13 @@ export default function LocalizationProviderSettings({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-lg w-full max-w-2xl border border-gray-800">
-        <div className="p-6 border-b border-gray-800">
+      <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-2xl border border-gray-200 dark:border-gray-800">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-800">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold text-white">Translation Providers</h3>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Translation Providers</h3>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors"
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -119,7 +119,7 @@ export default function LocalizationProviderSettings({
         <div className="p-6 space-y-4">
           {!editingProvider ? (
             <>
-              <p className="text-gray-400 text-sm mb-4">
+              <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
                 Configure machine translation providers to automatically translate your keys.
               </p>
               <div className="space-y-3">
@@ -128,11 +128,11 @@ export default function LocalizationProviderSettings({
                   return (
                     <div
                       key={provider}
-                      className="bg-gray-800 rounded-lg p-4 border border-gray-700 flex items-center justify-between"
+                      className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-300 dark:border-gray-700 flex items-center justify-between"
                     >
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-white font-medium capitalize">{provider}</span>
+                          <span className="text-gray-900 dark:text-white font-medium capitalize">{provider}</span>
                           {existing?.isEnabled && (
                             <span className="px-2 py-0.5 bg-green-600/20 text-green-400 text-xs rounded">Enabled</span>
                           )}
@@ -148,7 +148,7 @@ export default function LocalizationProviderSettings({
                       </div>
                       <button
                         onClick={() => handleEditProvider(provider)}
-                        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors"
+                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg text-sm transition-colors"
                       >
                         {existing ? 'Edit' : 'Configure'}
                       </button>
@@ -160,17 +160,17 @@ export default function LocalizationProviderSettings({
           ) : (
             <div className="space-y-4">
               <div>
-                <h4 className="text-lg font-medium text-white mb-4 capitalize">Configure {editingProvider}</h4>
+                <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4 capitalize">Configure {editingProvider}</h4>
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">API Key</label>
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">API Key</label>
                     <input
                       type="password"
                       value={formData.apiKey}
                       onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
                       placeholder={`Enter ${editingProvider} API key`}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                      className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                     />
                     <p className="text-gray-500 text-xs mt-1">
                       Leave empty to keep existing key unchanged
@@ -179,23 +179,23 @@ export default function LocalizationProviderSettings({
 
                   {editingProvider === 'azure' && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">API Secret / Region</label>
+                      <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">API Secret / Region</label>
                       <input
                         type="password"
                         value={formData.apiSecret}
                         onChange={(e) => setFormData({ ...formData, apiSecret: e.target.value })}
                         placeholder="Enter Azure region or secret"
-                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                       />
                     </div>
                   )}
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Default Source Language</label>
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Default Source Language</label>
                     <select
                       value={formData.defaultSourceLanguageId}
                       onChange={(e) => setFormData({ ...formData, defaultSourceLanguageId: e.target.value })}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                      className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                     >
                       <option value="">Select default source language</option>
                       {languages.map(lang => (
@@ -209,9 +209,9 @@ export default function LocalizationProviderSettings({
                       type="checkbox"
                       checked={formData.isEnabled}
                       onChange={(e) => setFormData({ ...formData, isEnabled: e.target.checked })}
-                      className="rounded bg-gray-800 border-gray-700"
+                      className="rounded bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700"
                     />
-                    <span className="text-gray-300 text-sm">Enable this provider</span>
+                    <span className="text-gray-600 dark:text-gray-300 text-sm">Enable this provider</span>
                   </label>
 
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -219,20 +219,20 @@ export default function LocalizationProviderSettings({
                       type="checkbox"
                       checked={formData.autoTranslate}
                       onChange={(e) => setFormData({ ...formData, autoTranslate: e.target.checked })}
-                      className="rounded bg-gray-800 border-gray-700"
+                      className="rounded bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700"
                     />
-                    <span className="text-gray-300 text-sm">Auto-translate new keys</span>
+                    <span className="text-gray-600 dark:text-gray-300 text-sm">Auto-translate new keys</span>
                   </label>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-800">
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-800">
                 <button
                   onClick={() => {
                     setEditingProvider(null)
                     setFormData({ apiKey: '', apiSecret: '', isEnabled: true, autoTranslate: false, defaultSourceLanguageId: '' })
                   }}
-                  className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                  className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                   disabled={saving}
                 >
                   Cancel

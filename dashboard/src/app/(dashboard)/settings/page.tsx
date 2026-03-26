@@ -153,7 +153,7 @@ export default function DevBridgeSettingsPage() {
   if (!token) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">Please log in to access settings.</div>
+        <div className="text-gray-500 dark:text-gray-400">Please log in to access settings.</div>
       </div>
     )
   }
@@ -161,19 +161,19 @@ export default function DevBridgeSettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">DevBridge Settings</h1>
-        <p className="text-gray-400">Manage global DevBridge configuration and features</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">DevBridge Settings</h1>
+        <p className="text-gray-500 dark:text-gray-400">Manage global DevBridge configuration and features</p>
       </div>
 
       {/* Settings Tabs */}
-      <div className="border-b border-gray-800">
+      <div className="border-b border-gray-200 dark:border-gray-800">
         <nav className="flex space-x-8">
           <button
             onClick={() => setActiveTab('features')}
             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeTab === 'features'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-white'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
             Product Features
@@ -183,7 +183,7 @@ export default function DevBridgeSettingsPage() {
             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeTab === 'performance'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-white'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
             Performance Settings
@@ -201,7 +201,7 @@ export default function DevBridgeSettingsPage() {
                 <span className="text-2xl">⚠️</span>
                 <div className="flex-1">
                   <h3 className="text-red-400 font-semibold mb-1">Trial Expired</h3>
-                  <p className="text-gray-300 text-sm mb-3">
+                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-3">
                     Your free trial has ended. Features are disabled and no new data will be collected. 
                     Upgrade your subscription to re-enable all features.
                   </p>
@@ -216,12 +216,12 @@ export default function DevBridgeSettingsPage() {
             </div>
           )}
           
-          <div className="bg-gray-900 rounded-lg p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-3 mb-4">
               <span className="text-2xl">⚙️</span>
               <div>
-                <h3 className="text-white font-medium">SDK Feature Flags</h3>
-                <p className="text-gray-400 text-sm">Control which features are enabled in the SDK. Changes take effect on next app launch.</p>
+                <h3 className="text-gray-900 dark:text-white font-medium">SDK Feature Flags</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Control which features are enabled in the SDK. Changes take effect on next app launch.</p>
                 {subscriptionStatus && !subscriptionStatus.trialActive && (
                   <p className="text-red-400 text-sm mt-1">
                     ⚠️ Features are disabled due to expired trial subscription.
@@ -232,11 +232,11 @@ export default function DevBridgeSettingsPage() {
 
             {featureFlagsLoading ? (
               <div className="flex items-center justify-center py-8">
-                <svg className="animate-spin h-6 w-6 text-gray-400" viewBox="0 0 24 24">
+                <svg className="animate-spin h-6 w-6 text-gray-500 dark:text-gray-400" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                <span className="ml-2 text-gray-400">Loading feature flags...</span>
+                <span className="ml-2 text-gray-500 dark:text-gray-400">Loading feature flags...</span>
               </div>
             ) : featureFlags ? (
               <div className="space-y-6">
@@ -246,7 +246,7 @@ export default function DevBridgeSettingsPage() {
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{featureFlags.sdkEnabled ? '🟢' : '🔴'}</span>
                       <div>
-                        <p className="text-white font-medium">SDK Enabled (Master Switch)</p>
+                        <p className="text-gray-900 dark:text-white font-medium">SDK Enabled (Master Switch)</p>
                         <p className={`text-sm ${featureFlags.sdkEnabled ? 'text-green-400' : 'text-red-400'}`}>
                           {featureFlags.sdkEnabled
                             ? 'SDK is active - all enabled features will work'
@@ -274,7 +274,7 @@ export default function DevBridgeSettingsPage() {
 
                 {/* Core Features */}
                 <div className={featureFlags.sdkEnabled && (!subscriptionStatus || subscriptionStatus.trialActive) ? '' : 'opacity-50 pointer-events-none'}>
-                  <h4 className="text-gray-400 text-sm font-medium mb-3">
+                  <h4 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-3">
                     Core Features 
                     {!featureFlags.sdkEnabled && <span className="text-red-400"> (SDK Disabled)</span>}
                     {subscriptionStatus && !subscriptionStatus.trialActive && <span className="text-red-400"> (Trial Expired)</span>}
@@ -292,11 +292,11 @@ export default function DevBridgeSettingsPage() {
                       { key: 'offlineSupport', icon: '📴', name: 'Offline Support', desc: 'Queue events when offline' },
                       { key: 'batchEvents', icon: '📦', name: 'Batch Events', desc: 'Batch events before sending' },
                     ].map((feature) => (
-                      <div key={feature.key} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                      <div key={feature.key} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">{feature.icon}</span>
                           <div>
-                            <p className="text-white text-sm font-medium">{feature.name}</p>
+                            <p className="text-gray-900 dark:text-white text-sm font-medium">{feature.name}</p>
                             <p className="text-gray-500 text-xs">{feature.desc}</p>
                           </div>
                         </div>
@@ -316,7 +316,7 @@ export default function DevBridgeSettingsPage() {
                 </div>
               </div>
             ) : (
-              <p className="text-gray-400 text-center py-8">Failed to load feature flags</p>
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8">Failed to load feature flags</p>
             )}
           </div>
         </div>
@@ -325,13 +325,13 @@ export default function DevBridgeSettingsPage() {
       {/* Performance Settings Tab */}
       {activeTab === 'performance' && (
         <div className="space-y-6">
-          <div className="bg-gray-900 rounded-lg p-6">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-3 mb-4">
               <span className="text-2xl">⚡</span>
               <div>
-                <h3 className="text-white font-medium">Performance Settings</h3>
-                <p className="text-gray-400 text-sm">Configure data retention and performance optimizations</p>
-                <p className="text-yellow-400 text-xs mt-1">⚠️ Note: Performance settings are managed per-project. These settings apply to your first project. To manage settings for other projects, go to the project settings.</p>
+                <h3 className="text-gray-900 dark:text-white font-medium">Performance Settings</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Configure data retention and performance optimizations</p>
+                <p className="text-yellow-600 dark:text-yellow-400 text-xs mt-1">⚠️ Note: Performance settings are managed per-project. These settings apply to your first project. To manage settings for other projects, go to the project settings.</p>
               </div>
             </div>
 
@@ -339,24 +339,24 @@ export default function DevBridgeSettingsPage() {
               {/* Queue and Batching Settings */}
               {sdkSettingsLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <svg className="animate-spin h-6 w-6 text-gray-400" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-6 w-6 text-gray-500 dark:text-gray-400" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  <span className="ml-2 text-gray-400">Loading SDK settings...</span>
+                  <span className="ml-2 text-gray-500 dark:text-gray-400">Loading SDK settings...</span>
                 </div>
               ) : sdkSettings ? (
-                <div className="p-4 bg-gray-800 rounded-lg">
-                  <h4 className="text-white font-medium mb-2">Queue and Batching</h4>
-                  <p className="text-gray-400 text-sm mb-4">
+                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <h4 className="text-gray-900 dark:text-white font-medium mb-2">Queue and Batching</h4>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
                     Configure batching and queue behavior for SDK event collection.
                   </p>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                    <div className="flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
                       <div className="flex items-center gap-3">
                         <span className="text-lg">📦</span>
                         <div>
-                          <p className="text-white text-sm font-medium">Enable Batching</p>
+                          <p className="text-gray-900 dark:text-white text-sm font-medium">Enable Batching</p>
                           <p className="text-gray-500 text-xs">Batch events before sending to reduce network calls</p>
                         </div>
                       </div>
@@ -371,11 +371,11 @@ export default function DevBridgeSettingsPage() {
                       </label>
                     </div>
 
-                    <div className="p-3 bg-gray-700 rounded-lg">
+                    <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
                       <div className="flex items-center gap-3 mb-3">
                         <span className="text-lg">📝</span>
                         <div>
-                          <p className="text-white text-sm font-medium">Max Log Queue Size</p>
+                          <p className="text-gray-900 dark:text-white text-sm font-medium">Max Log Queue Size</p>
                           <p className="text-gray-500 text-xs">Maximum logs to queue before flushing</p>
                         </div>
                       </div>
@@ -385,15 +385,15 @@ export default function DevBridgeSettingsPage() {
                         onChange={(e) => updateSdkSetting({ maxLogQueueSize: parseInt(e.target.value) || 100 })}
                         min="10"
                         max="1000"
-                        className="w-full px-3 py-2 bg-gray-600 text-white rounded border border-gray-500 text-sm focus:border-blue-500 focus:outline-none"
+                        className="w-full px-3 py-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-500 text-sm focus:border-blue-500 focus:outline-none"
                       />
                     </div>
 
-                    <div className="p-3 bg-gray-700 rounded-lg">
+                    <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
                       <div className="flex items-center gap-3 mb-3">
                         <span className="text-lg">📡</span>
                         <div>
-                          <p className="text-white text-sm font-medium">Max Trace Queue Size</p>
+                          <p className="text-gray-900 dark:text-white text-sm font-medium">Max Trace Queue Size</p>
                           <p className="text-gray-500 text-xs">Maximum API traces to queue before flushing</p>
                         </div>
                       </div>
@@ -403,15 +403,15 @@ export default function DevBridgeSettingsPage() {
                         onChange={(e) => updateSdkSetting({ maxTraceQueueSize: parseInt(e.target.value) || 50 })}
                         min="5"
                         max="500"
-                        className="w-full px-3 py-2 bg-gray-600 text-white rounded border border-gray-500 text-sm focus:border-blue-500 focus:outline-none"
+                        className="w-full px-3 py-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-500 text-sm focus:border-blue-500 focus:outline-none"
                       />
                     </div>
 
-                    <div className="p-3 bg-gray-700 rounded-lg">
+                    <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
                       <div className="flex items-center gap-3 mb-3">
                         <span className="text-lg">⏱️</span>
                         <div>
-                          <p className="text-white text-sm font-medium">Flush Interval (seconds)</p>
+                          <p className="text-gray-900 dark:text-white text-sm font-medium">Flush Interval (seconds)</p>
                           <p className="text-gray-500 text-xs">How often to send queued events</p>
                         </div>
                       </div>
@@ -421,38 +421,38 @@ export default function DevBridgeSettingsPage() {
                         onChange={(e) => updateSdkSetting({ flushIntervalSeconds: parseInt(e.target.value) || 30 })}
                         min="5"
                         max="300"
-                        className="w-full px-3 py-2 bg-gray-600 text-white rounded border border-gray-500 text-sm focus:border-blue-500 focus:outline-none"
+                        className="w-full px-3 py-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white rounded border border-gray-300 dark:border-gray-500 text-sm focus:border-blue-500 focus:outline-none"
                       />
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="p-4 bg-gray-800 rounded-lg">
-                  <p className="text-gray-400 text-sm">No projects found. Please create a project first to configure SDK settings.</p>
+                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">No projects found. Please create a project first to configure SDK settings.</p>
                 </div>
               )}
 
-              <div className="p-4 bg-gray-800 rounded-lg">
-                <h4 className="text-white font-medium mb-2">Data Retention</h4>
-                <p className="text-gray-400 text-sm mb-4">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <h4 className="text-gray-900 dark:text-white font-medium mb-2">Data Retention</h4>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
                   Configure how long data is retained before automatic cleanup. This helps manage storage costs and improve performance.
                 </p>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-300 text-sm">API Traces Retention</span>
-                    <span className="text-gray-400 text-sm">30 days (default)</span>
+                    <span className="text-gray-600 dark:text-gray-300 text-sm">API Traces Retention</span>
+                    <span className="text-gray-500 dark:text-gray-400 text-sm">30 days (default)</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-300 text-sm">Logs Retention</span>
-                    <span className="text-gray-400 text-sm">30 days (default)</span>
+                    <span className="text-gray-600 dark:text-gray-300 text-sm">Logs Retention</span>
+                    <span className="text-gray-500 dark:text-gray-400 text-sm">30 days (default)</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-300 text-sm">Sessions Retention</span>
-                    <span className="text-gray-400 text-sm">90 days (default)</span>
+                    <span className="text-gray-600 dark:text-gray-300 text-sm">Sessions Retention</span>
+                    <span className="text-gray-500 dark:text-gray-400 text-sm">90 days (default)</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-300 text-sm">Crashes Retention</span>
-                    <span className="text-gray-400 text-sm">365 days (default)</span>
+                    <span className="text-gray-600 dark:text-gray-300 text-sm">Crashes Retention</span>
+                    <span className="text-gray-500 dark:text-gray-400 text-sm">365 days (default)</span>
                   </div>
                 </div>
                 <p className="text-gray-500 text-xs mt-4">
@@ -460,15 +460,15 @@ export default function DevBridgeSettingsPage() {
                 </p>
               </div>
 
-              <div className="p-4 bg-gray-800 rounded-lg">
-                <h4 className="text-white font-medium mb-2">Performance Optimizations</h4>
-                <p className="text-gray-400 text-sm mb-4">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <h4 className="text-gray-900 dark:text-white font-medium mb-2">Performance Optimizations</h4>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
                   Enable performance optimizations to improve dashboard loading times and reduce database load.
                 </p>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-gray-300 text-sm">Enable Caching</span>
+                      <span className="text-gray-600 dark:text-gray-300 text-sm">Enable Caching</span>
                       <p className="text-gray-500 text-xs">Cache frequently accessed data</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">

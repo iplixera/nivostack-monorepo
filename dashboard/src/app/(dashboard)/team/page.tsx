@@ -373,10 +373,10 @@ export default function TeamPage() {
     return (
       <div className="space-y-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-800 rounded w-48 mb-4"></div>
+          <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-48 mb-4"></div>
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-16 bg-gray-800 rounded"></div>
+              <div key={i} className="h-16 bg-gray-200 dark:bg-gray-800 rounded"></div>
             ))}
           </div>
         </div>
@@ -389,11 +389,11 @@ export default function TeamPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">Team Management</h2>
-          <p className="text-gray-400 mt-1">Manage team members across your projects</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Team Management</h2>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Manage team members across your projects</p>
         </div>
-        <div className="bg-gray-900 rounded-lg border border-gray-800 p-8 text-center">
-          <p className="text-gray-400 mb-4">You don't have any projects where you can manage teams.</p>
+        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-8 text-center">
+          <p className="text-gray-500 dark:text-gray-400 mb-4">You don't have any projects where you can manage teams.</p>
           <p className="text-sm text-gray-500">Only project owners and admins can manage teams.</p>
         </div>
       </div>
@@ -404,8 +404,8 @@ export default function TeamPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white">Team Management</h2>
-          <p className="text-gray-400 mt-1">Manage team members and invitations</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Team Management</h2>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Manage team members and invitations</p>
           {seatInfo && seatInfo.limit !== null && (
             <p className="text-sm text-gray-500 mt-1">
               Seats: {seatInfo.current} / {seatInfo.limit}
@@ -427,19 +427,19 @@ export default function TeamPage() {
 
       {/* Pending Invitations for User */}
       {pendingInvitationsForUser.length > 0 && (
-        <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Pending Invitations ({pendingInvitationsForUser.length})
           </h3>
           <div className="space-y-3">
             {pendingInvitationsForUser.map((invitation) => (
               <div
                 key={invitation.id}
-                className="bg-gray-900 rounded-lg border border-gray-800 p-4 flex items-center justify-between"
+                className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4 flex items-center justify-between"
               >
                 <div className="flex-1">
-                  <div className="text-white font-medium">{invitation.project.name}</div>
-                  <div className="text-sm text-gray-400 mt-1">
+                  <div className="text-gray-900 dark:text-white font-medium">{invitation.project.name}</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     Invited by {invitation.invitedBy.name || invitation.invitedBy.email} as{' '}
                     <span className="capitalize">{invitation.role}</span>
                   </div>
@@ -463,11 +463,11 @@ export default function TeamPage() {
       {/* Project Selector - Show if there are projects (including ones from pending invitations) */}
       {projects.length > 0 && (
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Select Project</label>
+          <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Select Project</label>
           <select
             value={selectedProject || ''}
             onChange={(e) => setSelectedProject(e.target.value)}
-            className="w-full max-w-md px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full max-w-md px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {projects.map((project) => (
               <option key={project.id} value={project.id}>
@@ -494,16 +494,16 @@ export default function TeamPage() {
         <>
           {/* Members Section */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Members ({members.length})</h3>
-            <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Members ({members.length})</h3>
+            <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
               {loading ? (
-                <div className="p-8 text-center text-gray-400">Loading...</div>
+                <div className="p-8 text-center text-gray-500 dark:text-gray-400">Loading...</div>
               ) : members.length === 0 ? (
-                <div className="p-8 text-center text-gray-400">No members yet</div>
+                <div className="p-8 text-center text-gray-500 dark:text-gray-400">No members yet</div>
               ) : (
-                <div className="divide-y divide-gray-800">
+                <div className="divide-y divide-gray-200 dark:divide-gray-800">
                   {members.map((member) => (
-                    <div key={member.id} className="p-4 hover:bg-gray-800/50 transition-colors">
+                    <div key={member.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
                           <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium">
@@ -517,10 +517,10 @@ export default function TeamPage() {
                               : member.user.email[0].toUpperCase()}
                           </div>
                           <div>
-                            <div className="text-white font-medium">
+                            <div className="text-gray-900 dark:text-white font-medium">
                               {member.user.name || member.user.email}
                             </div>
-                            <div className="text-sm text-gray-400">{member.user.email}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{member.user.email}</div>
                             {member.joinedAt && (
                               <div className="text-xs text-gray-500 mt-1">
                                 Joined {new Date(member.joinedAt).toLocaleDateString()}
@@ -552,19 +552,19 @@ export default function TeamPage() {
           {/* Invitations Section */}
           {invitations.length > 0 && (
             <div>
-              <h3 className="text-lg font-semibold text-white mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Pending Invitations ({invitations.filter((i) => i.status === 'pending').length})
               </h3>
-              <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
-                <div className="divide-y divide-gray-800">
+              <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+                <div className="divide-y divide-gray-200 dark:divide-gray-800">
                   {invitations
                     .filter((i) => i.status === 'pending')
                     .map((invitation) => (
-                      <div key={invitation.id} className="p-4 hover:bg-gray-800/50 transition-colors">
+                      <div key={invitation.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="text-white font-medium">{invitation.email}</div>
-                            <div className="text-sm text-gray-400 mt-1">
+                            <div className="text-gray-900 dark:text-white font-medium">{invitation.email}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                               Invited by {invitation.invitedBy.name || invitation.invitedBy.email} as{' '}
                               <span className="capitalize">{invitation.role}</span>
                             </div>
@@ -577,7 +577,7 @@ export default function TeamPage() {
                               <>
                                 <button
                                   onClick={() => handleResendInvitation(invitation.id)}
-                                  className="px-3 py-1 text-sm bg-gray-800 hover:bg-gray-700 text-white rounded transition-colors"
+                                  className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded transition-colors border border-gray-200 dark:border-gray-700"
                                 >
                                   Resend
                                 </button>
@@ -611,8 +611,8 @@ export default function TeamPage() {
             }
           }}
         >
-          <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 w-full max-w-md">
-            <h3 className="text-xl font-bold text-white mb-4">Invite Team Member</h3>
+          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6 w-full max-w-md">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Invite Team Member</h3>
             {error && (
               <div className="mb-4 p-3 bg-red-900/30 border border-red-800 rounded text-red-400 flex items-center justify-between text-sm">
                 <span>{error}</span>
@@ -626,21 +626,21 @@ export default function TeamPage() {
             )}
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Email</label>
                 <input
                   type="email"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   placeholder="user@example.com"
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Role</label>
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Role</label>
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value as any)}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="admin">Admin</option>
                   <option value="member">Member</option>
@@ -654,7 +654,7 @@ export default function TeamPage() {
                   setShowInviteModal(false)
                   setError(null)
                 }}
-                className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
+                className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 Cancel
               </button>

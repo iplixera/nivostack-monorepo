@@ -142,7 +142,7 @@ export default function BuildsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">Loading builds...</div>
+        <div className="text-gray-500 dark:text-gray-400">Loading builds...</div>
       </div>
     )
   }
@@ -150,8 +150,8 @@ export default function BuildsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Build Versioning</h1>
-        <p className="text-gray-400">Create and manage version builds for each feature</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Build Versioning</h1>
+        <p className="text-gray-500 dark:text-gray-400">Create and manage version builds for each feature</p>
       </div>
 
       {/* Builds grouped by feature type */}
@@ -162,12 +162,12 @@ export default function BuildsPage() {
         )
 
         return (
-          <div key={feature.value} className="bg-gray-900 rounded-lg border border-gray-800">
-            <div className="p-6 border-b border-gray-800">
+          <div key={feature.value} className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-800">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold text-white">{feature.label}</h2>
-                  <p className="text-sm text-gray-400 mt-1">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{feature.label}</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     {featureBuilds.length} build{featureBuilds.length !== 1 ? 's' : ''}
                   </p>
                 </div>
@@ -177,7 +177,7 @@ export default function BuildsPage() {
                     placeholder="Build name (optional)"
                     value={buildNames[feature.value] || ''}
                     onChange={(e) => setBuildNames({ ...buildNames, [feature.value]: e.target.value })}
-                    className="px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500 text-sm"
+                    className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white placeholder-gray-500 text-sm"
                   />
                   <button
                     onClick={() => handleCreateBuild(feature.value)}
@@ -193,21 +193,21 @@ export default function BuildsPage() {
             {/* Builds Table */}
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-800">
+                <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Version</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Items</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Created By</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Created</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Mode</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Version</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Items</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created By</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Mode</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                   {featureBuilds.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-6 py-8 text-center text-gray-400">
+                      <td colSpan={7} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                         No builds yet. Create your first build for {feature.label}!
                       </td>
                     </tr>
@@ -219,34 +219,34 @@ export default function BuildsPage() {
                       return (
                         <tr
                           key={build.id}
-                          className={`hover:bg-gray-800/50 cursor-pointer ${
-                            selectedBuild?.id === build.id ? 'bg-blue-900/20' : ''
+                          className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer ${
+                            selectedBuild?.id === build.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                           }`}
                           onClick={() => setSelectedBuild(build)}
                         >
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-white">v{build.version}</div>
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">v{build.version}</div>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="text-sm text-white">{build.name || `v${build.version}`}</div>
+                            <div className="text-sm text-gray-900 dark:text-white">{build.name || `v${build.version}`}</div>
                             {build.description && (
-                              <div className="text-xs text-gray-400 mt-1">{build.description}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{build.description}</div>
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                             {itemCount} item{itemCount !== 1 ? 's' : ''}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             {build.creator ? (
                               <div>
-                                <div className="text-sm text-white">{build.creator.name || build.creator.email}</div>
-                                <div className="text-xs text-gray-400">{build.creator.email}</div>
+                                <div className="text-sm text-gray-900 dark:text-white">{build.creator.name || build.creator.email}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">{build.creator.email}</div>
                               </div>
                             ) : (
                               <span className="text-sm text-gray-500">Unknown</span>
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                             {new Date(build.createdAt).toLocaleDateString()}
                             <div className="text-xs text-gray-500">
                               {new Date(build.createdAt).toLocaleTimeString()}
@@ -339,16 +339,16 @@ export default function BuildsPage() {
       {/* Diff View Modal */}
       {showDiff && diffData && selectedBuild && diffBuildId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto border border-gray-800">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto border border-gray-200 dark:border-gray-800">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-white">Build Comparison</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Build Comparison</h2>
               <button
                 onClick={() => {
                   setShowDiff(false)
                   setDiffData(null)
                   setDiffBuildId(null)
                 }}
-                className="text-gray-400 hover:text-white text-2xl"
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-2xl"
               >
                 ×
               </button>
@@ -356,8 +356,8 @@ export default function BuildsPage() {
 
             <div className="space-y-6">
               {Object.entries(diffData.diff || {}).map(([featureType, changes]: [string, any]) => (
-                <div key={featureType} className="border border-gray-700 rounded p-4">
-                  <h3 className="text-lg font-semibold text-white mb-3 capitalize">
+                <div key={featureType} className="border border-gray-300 dark:border-gray-700 rounded p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 capitalize">
                     {featureType.replace('_', ' ')}
                   </h3>
                   <div className="space-y-2">
@@ -382,19 +382,19 @@ export default function BuildsPage() {
                           }`}>
                             {change.changeType.toUpperCase()}
                           </span>
-                          <span className="text-white font-medium">{change.itemLabel || change.itemKey}</span>
+                          <span className="text-gray-900 dark:text-white font-medium">{change.itemLabel || change.itemKey}</span>
                         </div>
                         {change.changeType === 'changed' && (
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
-                              <div className="text-gray-400 mb-1">Old Value</div>
-                              <div className="text-red-300 break-all font-mono text-xs">
+                              <div className="text-gray-500 dark:text-gray-400 mb-1">Old Value</div>
+                              <div className="text-red-600 dark:text-red-300 break-all font-mono text-xs">
                                 {JSON.stringify(change.oldValue, null, 2)}
                               </div>
                             </div>
                             <div>
-                              <div className="text-gray-400 mb-1">New Value</div>
-                              <div className="text-green-300 break-all font-mono text-xs">
+                              <div className="text-gray-500 dark:text-gray-400 mb-1">New Value</div>
+                              <div className="text-green-600 dark:text-green-300 break-all font-mono text-xs">
                                 {JSON.stringify(change.newValue, null, 2)}
                               </div>
                             </div>
@@ -402,16 +402,16 @@ export default function BuildsPage() {
                         )}
                         {change.changeType === 'added' && (
                           <div className="text-sm">
-                            <div className="text-gray-400 mb-1">Value</div>
-                            <div className="text-green-300 break-all font-mono text-xs">
+                            <div className="text-gray-500 dark:text-gray-400 mb-1">Value</div>
+                            <div className="text-green-600 dark:text-green-300 break-all font-mono text-xs">
                               {JSON.stringify(change.newValue, null, 2)}
                             </div>
                           </div>
                         )}
                         {change.changeType === 'deleted' && (
                           <div className="text-sm">
-                            <div className="text-gray-400 mb-1">Value</div>
-                            <div className="text-red-300 break-all font-mono text-xs">
+                            <div className="text-gray-500 dark:text-gray-400 mb-1">Value</div>
+                            <div className="text-red-600 dark:text-red-300 break-all font-mono text-xs">
                               {JSON.stringify(change.oldValue, null, 2)}
                             </div>
                           </div>
@@ -419,7 +419,7 @@ export default function BuildsPage() {
                       </div>
                     ))}
                     {changes.length === 0 && (
-                      <div className="text-gray-400 text-sm">No changes</div>
+                      <div className="text-gray-500 dark:text-gray-400 text-sm">No changes</div>
                     )}
                   </div>
                 </div>

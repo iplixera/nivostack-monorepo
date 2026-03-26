@@ -101,7 +101,7 @@ export default function ExperimentsTab({ projectId, token }: ExperimentsTabProps
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">Loading experiments...</div>
+        <div className="text-gray-500 dark:text-gray-400">Loading experiments...</div>
       </div>
     )
   }
@@ -110,14 +110,14 @@ export default function ExperimentsTab({ projectId, token }: ExperimentsTabProps
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-white">A/B Testing Experiments</h2>
-          <p className="text-gray-400 text-sm mt-1">Create and manage A/B tests for your configs</p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">A/B Testing Experiments</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Create and manage A/B tests for your configs</p>
         </div>
         <div className="flex items-center gap-3">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+            className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm"
           >
             <option value="all">All Status</option>
             <option value="draft">Draft</option>
@@ -135,8 +135,8 @@ export default function ExperimentsTab({ projectId, token }: ExperimentsTabProps
       </div>
 
       {experiments.length === 0 ? (
-        <div className="bg-gray-900 rounded-lg p-8 text-center border border-gray-800">
-          <p className="text-gray-400 mb-4">No experiments yet</p>
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-8 text-center border border-gray-200 dark:border-gray-800">
+          <p className="text-gray-500 dark:text-gray-400 mb-4">No experiments yet</p>
           <button
             onClick={() => setShowCreateForm(true)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
@@ -147,20 +147,20 @@ export default function ExperimentsTab({ projectId, token }: ExperimentsTabProps
       ) : (
         <div className="space-y-4">
           {experiments.map((experiment) => (
-            <div key={experiment.id} className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+            <div key={experiment.id} className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-white font-medium">{experiment.name}</h3>
+                    <h3 className="text-gray-900 dark:text-white font-medium">{experiment.name}</h3>
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(experiment.status)}`}>
                       {experiment.status}
                     </span>
-                    <code className="text-gray-400 text-xs bg-gray-800 px-2 py-0.5 rounded">
+                    <code className="text-gray-500 dark:text-gray-400 text-xs bg-gray-50 dark:bg-gray-800 px-2 py-0.5 rounded">
                       {experiment.config.key}
                     </code>
                   </div>
                   {experiment.description && (
-                    <p className="text-gray-400 text-sm mb-2">{experiment.description}</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">{experiment.description}</p>
                   )}
                   <div className="flex items-center gap-4 text-xs text-gray-500">
                     <span>{experiment._count.assignments} assignments</span>
@@ -205,16 +205,16 @@ export default function ExperimentsTab({ projectId, token }: ExperimentsTabProps
               </div>
 
               {/* Variants */}
-              <div className="mt-4 pt-4 border-t border-gray-800">
-                <p className="text-xs text-gray-400 mb-2">Variants:</p>
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Variants:</p>
                 <div className="flex flex-wrap gap-2">
                   {experiment.variants.map((variant, idx) => (
                     <div
                       key={idx}
-                      className="bg-gray-800 rounded-lg px-3 py-2 border border-gray-700"
+                      className="bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2 border border-gray-300 dark:border-gray-700"
                     >
-                      <div className="text-white text-sm font-medium">{variant.name}</div>
-                      <div className="text-gray-400 text-xs mt-1">
+                      <div className="text-gray-900 dark:text-white text-sm font-medium">{variant.name}</div>
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                         {variant.weight}% • {typeof variant.value === 'object' ? JSON.stringify(variant.value) : String(variant.value)}
                       </div>
                     </div>
@@ -357,18 +357,18 @@ function ExperimentForm({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-gray-800">
-        <div className="p-6 border-b border-gray-800">
-          <h3 className="text-xl font-semibold text-white">Create Experiment</h3>
+      <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-800">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Create Experiment</h3>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Config</label>
+            <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Config</label>
             <select
               value={formData.configId}
               onChange={(e) => setFormData(prev => ({ ...prev, configId: e.target.value }))}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
+              className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white"
               required
             >
               <option value="">Select a config...</option>
@@ -381,23 +381,23 @@ function ExperimentForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Experiment Name</label>
+            <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Experiment Name</label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
+              className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white"
               placeholder="e.g., Button Color Test"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+            <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Description</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
+              className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white"
               rows={3}
               placeholder="What are you testing?"
             />
@@ -405,7 +405,7 @@ function ExperimentForm({
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-300">Variants</label>
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-300">Variants</label>
               <button
                 type="button"
                 onClick={handleAddVariant}
@@ -416,31 +416,31 @@ function ExperimentForm({
             </div>
             <div className="space-y-3">
               {formData.variants.map((variant, index) => (
-                <div key={index} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <div key={index} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-300 dark:border-gray-700">
                   <div className="grid grid-cols-3 gap-3 mb-3">
                     <div>
-                      <label className="block text-xs text-gray-400 mb-1">Name</label>
+                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Name</label>
                       <input
                         type="text"
                         value={variant.name}
                         onChange={(e) => handleVariantChange(index, 'name', e.target.value)}
-                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-2 py-1.5 text-white text-sm"
+                        className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 text-gray-900 dark:text-white text-sm"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-400 mb-1">Value</label>
+                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Value</label>
                       <input
                         type="text"
                         value={variant.value}
                         onChange={(e) => handleVariantChange(index, 'value', e.target.value)}
-                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-2 py-1.5 text-white text-sm"
+                        className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 text-gray-900 dark:text-white text-sm"
                         placeholder={selectedConfig?.valueType === 'boolean' ? 'true/false' : 'value'}
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-400 mb-1">Weight (%)</label>
+                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Weight (%)</label>
                       <div className="flex items-center gap-2">
                         <input
                           type="number"
@@ -448,7 +448,7 @@ function ExperimentForm({
                           max="100"
                           value={variant.weight}
                           onChange={(e) => handleVariantChange(index, 'weight', parseFloat(e.target.value) || 0)}
-                          className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-2 py-1.5 text-white text-sm"
+                          className="flex-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 text-gray-900 dark:text-white text-sm"
                           required
                         />
                         {formData.variants.length > 1 && (
@@ -475,11 +475,11 @@ function ExperimentForm({
             </button>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-800">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-800">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+              className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               Cancel
             </button>
@@ -507,13 +507,13 @@ function ExperimentResults({
 }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-800">
-        <div className="p-6 border-b border-gray-800">
+      <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-800">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-800">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold text-white">Experiment Results</h3>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Experiment Results</h3>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors"
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -524,19 +524,19 @@ function ExperimentResults({
 
         <div className="p-6 space-y-6">
           <div>
-            <h4 className="text-white font-medium mb-2">{results.experiment.name}</h4>
+            <h4 className="text-gray-900 dark:text-white font-medium mb-2">{results.experiment.name}</h4>
             <div className="grid grid-cols-3 gap-4">
-              <div className="bg-gray-800 rounded-lg p-4">
-                <div className="text-gray-400 text-xs mb-1">Total Assignments</div>
-                <div className="text-white text-2xl font-bold">{results.stats.totalAssignments}</div>
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Total Assignments</div>
+                <div className="text-gray-900 dark:text-white text-2xl font-bold">{results.stats.totalAssignments}</div>
               </div>
-              <div className="bg-gray-800 rounded-lg p-4">
-                <div className="text-gray-400 text-xs mb-1">Total Conversions</div>
-                <div className="text-white text-2xl font-bold">{results.stats.totalConversions}</div>
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Total Conversions</div>
+                <div className="text-gray-900 dark:text-white text-2xl font-bold">{results.stats.totalConversions}</div>
               </div>
-              <div className="bg-gray-800 rounded-lg p-4">
-                <div className="text-gray-400 text-xs mb-1">Overall Conversion Rate</div>
-                <div className="text-white text-2xl font-bold">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Overall Conversion Rate</div>
+                <div className="text-gray-900 dark:text-white text-2xl font-bold">
                   {(results.stats.overallConversionRate * 100).toFixed(2)}%
                 </div>
               </div>
@@ -544,26 +544,26 @@ function ExperimentResults({
           </div>
 
           <div>
-            <h4 className="text-white font-medium mb-4">Variant Performance</h4>
-            <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+            <h4 className="text-gray-900 dark:text-white font-medium mb-4">Variant Performance</h4>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700 overflow-hidden">
               <table className="w-full">
-                <thead className="bg-gray-700/50">
+                <thead className="bg-gray-100 dark:bg-gray-700/50">
                   <tr>
-                    <th className="text-left px-4 py-3 text-gray-300 text-sm font-medium">Variant</th>
-                    <th className="text-right px-4 py-3 text-gray-300 text-sm font-medium">Assignments</th>
-                    <th className="text-right px-4 py-3 text-gray-300 text-sm font-medium">Conversions</th>
-                    <th className="text-right px-4 py-3 text-gray-300 text-sm font-medium">Conversion Rate</th>
+                    <th className="text-left px-4 py-3 text-gray-600 dark:text-gray-300 text-sm font-medium">Variant</th>
+                    <th className="text-right px-4 py-3 text-gray-600 dark:text-gray-300 text-sm font-medium">Assignments</th>
+                    <th className="text-right px-4 py-3 text-gray-600 dark:text-gray-300 text-sm font-medium">Conversions</th>
+                    <th className="text-right px-4 py-3 text-gray-600 dark:text-gray-300 text-sm font-medium">Conversion Rate</th>
                   </tr>
                 </thead>
                 <tbody>
                   {results.stats.variants.map((variant: any, index: number) => (
-                    <tr key={index} className="border-t border-gray-700">
-                      <td className="px-4 py-3 text-white text-sm">
+                    <tr key={index} className="border-t border-gray-300 dark:border-gray-700">
+                      <td className="px-4 py-3 text-gray-900 dark:text-white text-sm">
                         {results.experiment.variants[index]?.name || `Variant ${index}`}
                       </td>
-                      <td className="px-4 py-3 text-gray-300 text-sm text-right">{variant.assignments}</td>
-                      <td className="px-4 py-3 text-gray-300 text-sm text-right">{variant.conversions}</td>
-                      <td className="px-4 py-3 text-gray-300 text-sm text-right">
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300 text-sm text-right">{variant.assignments}</td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300 text-sm text-right">{variant.conversions}</td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300 text-sm text-right">
                         {(variant.conversionRate * 100).toFixed(2)}%
                       </td>
                     </tr>
@@ -575,12 +575,12 @@ function ExperimentResults({
 
           {results.significance && results.significance.length > 0 && (
             <div>
-              <h4 className="text-white font-medium mb-4">Statistical Significance</h4>
+              <h4 className="text-gray-900 dark:text-white font-medium mb-4">Statistical Significance</h4>
               <div className="space-y-2">
                 {results.significance.map((sig: any, index: number) => (
-                  <div key={index} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                  <div key={index} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-300 dark:border-gray-700">
                     <div className="flex items-center justify-between">
-                      <span className="text-white text-sm">
+                      <span className="text-gray-900 dark:text-white text-sm">
                         Variant {sig.variantA} vs Variant {sig.variantB}
                       </span>
                       <div className="flex items-center gap-3">
@@ -591,7 +591,7 @@ function ExperimentResults({
                         }`}>
                           {sig.significant ? 'Significant' : 'Not Significant'}
                         </span>
-                        <span className="text-gray-400 text-xs">
+                        <span className="text-gray-500 dark:text-gray-400 text-xs">
                           {sig.confidence}% confidence
                         </span>
                       </div>

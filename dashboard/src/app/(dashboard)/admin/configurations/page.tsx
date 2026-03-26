@@ -221,7 +221,7 @@ export default function AdminConfigurationsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">Loading configurations...</div>
+        <div className="text-gray-500 dark:text-gray-400">Loading configurations...</div>
       </div>
     )
   }
@@ -233,13 +233,13 @@ export default function AdminConfigurationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">System Configuration</h1>
-          <p className="text-gray-400 mt-1">Manage system-wide settings and integrations</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">System Configuration</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Manage system-wide settings and integrations</p>
         </div>
       </div>
 
       {/* Category Tabs */}
-      <div className="flex flex-wrap gap-2 border-b border-gray-800 pb-4">
+      <div className="flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-800 pb-4">
         {(Object.keys(CATEGORY_CONFIGS) as ConfigurationCategory[]).map(category => (
           <button
             key={category}
@@ -250,7 +250,7 @@ export default function AdminConfigurationsPage() {
             }}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeCategory === category
               ? 'bg-blue-600 text-white'
-              : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-750'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-750'
               }`}
           >
             {CATEGORY_CONFIGS[category].label}
@@ -259,9 +259,9 @@ export default function AdminConfigurationsPage() {
       </div>
 
       {/* Category Description */}
-      <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-        <h2 className="text-lg font-semibold text-white mb-1">{categoryConfig.label}</h2>
-        <p className="text-gray-400 text-sm">{categoryConfig.description}</p>
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{categoryConfig.label}</h2>
+        <p className="text-gray-500 dark:text-gray-400 text-sm">{categoryConfig.description}</p>
       </div>
 
       {/* Configurations List */}
@@ -277,21 +277,21 @@ export default function AdminConfigurationsPage() {
           const isEncrypted = configDef.encrypted || existingConfig?.encrypted || false
 
           return (
-            <div key={configDef.key} className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+            <div key={configDef.key} className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-white font-medium">{configDef.label}</h3>
+                    <h3 className="text-gray-900 dark:text-white font-medium">{configDef.label}</h3>
                     {isEncrypted && (
-                      <span className="px-2 py-0.5 bg-yellow-600/20 text-yellow-400 text-xs rounded">Encrypted</span>
+                      <span className="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-600/20 text-yellow-600 dark:text-yellow-400 text-xs rounded">Encrypted</span>
                     )}
                     {existingConfig && !existingConfig.isActive && (
-                      <span className="px-2 py-0.5 bg-gray-600/20 text-gray-400 text-xs rounded">Inactive</span>
+                      <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-600/20 text-gray-500 dark:text-gray-400 text-xs rounded">Inactive</span>
                     )}
                   </div>
-                  <p className="text-gray-400 text-sm">{configDef.description}</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">{configDef.description}</p>
                   {existingConfig && (
-                    <p className="text-gray-500 text-xs mt-1">
+                    <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">
                       Last updated: {new Date(existingConfig.updatedAt).toLocaleString()}
                     </p>
                   )}
@@ -326,13 +326,13 @@ export default function AdminConfigurationsPage() {
               {/* Test Result */}
               {testResult && testResult.key === configDef.key && (
                 <div className={`mb-3 p-3 rounded-lg border ${testResult.success
-                  ? 'bg-green-900/20 border-green-600 text-green-300'
-                  : 'bg-red-900/20 border-red-600 text-red-300'
+                  ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-600 text-green-700 dark:text-green-300'
+                  : 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-600 text-red-700 dark:text-red-300'
                   }`}>
-                  <p className="text-sm font-medium">{testResult.success ? '✓ Test Passed' : '✗ Test Failed'}</p>
+                  <p className="text-sm font-medium">{testResult.success ? 'Test Passed' : 'Test Failed'}</p>
                   <p className="text-xs mt-1">{testResult.message}</p>
                   {testResult.result && (
-                    <pre className="text-xs mt-2 bg-gray-800 p-2 rounded overflow-auto">
+                    <pre className="text-xs mt-2 bg-gray-100 dark:bg-gray-800 p-2 rounded overflow-auto">
                       {JSON.stringify(testResult.result, null, 2)}
                     </pre>
                   )}
@@ -341,7 +341,7 @@ export default function AdminConfigurationsPage() {
 
               {/* Edit Form */}
               {isEditing && (
-                <div className="mt-4 pt-4 border-t border-gray-800">
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
                   <div className="space-y-3">
                     {configDef.type === 'boolean' ? (
                       <label className="flex items-center gap-2 cursor-pointer">
@@ -349,9 +349,9 @@ export default function AdminConfigurationsPage() {
                           type="checkbox"
                           checked={editingConfig.value === 'true'}
                           onChange={(e) => setEditingConfig({ ...editingConfig, value: e.target.checked ? 'true' : 'false' })}
-                          className="rounded bg-gray-800 border-gray-700"
+                          className="rounded bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700"
                         />
-                        <span className="text-gray-300 text-sm">Enabled</span>
+                        <span className="text-gray-600 dark:text-gray-300 text-sm">Enabled</span>
                       </label>
                     ) : (
                       <input
@@ -359,7 +359,7 @@ export default function AdminConfigurationsPage() {
                         value={editingConfig.value}
                         onChange={(e) => setEditingConfig({ ...editingConfig, value: e.target.value })}
                         placeholder={isEncrypted && !existingConfig ? 'Enter new value' : `Enter ${configDef.label.toLowerCase()}`}
-                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                       />
                     )}
                     <div className="flex justify-end gap-2">
@@ -368,7 +368,7 @@ export default function AdminConfigurationsPage() {
                           setEditingConfig(null)
                           setTestResult(null)
                         }}
-                        className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                        className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                         disabled={saving}
                       >
                         Cancel
@@ -388,9 +388,9 @@ export default function AdminConfigurationsPage() {
               {/* Display Value (when not editing) */}
               {!isEditing && (
                 <div className="mt-2">
-                  <div className="bg-gray-800 rounded-lg px-3 py-2">
-                    <code className="text-sm text-gray-300 break-all">
-                      {value || <span className="text-gray-500 italic">Not configured</span>}
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2">
+                    <code className="text-sm text-gray-600 dark:text-gray-300 break-all">
+                      {value || <span className="text-gray-400 dark:text-gray-500 italic">Not configured</span>}
                     </code>
                   </div>
                 </div>
@@ -402,4 +402,3 @@ export default function AdminConfigurationsPage() {
     </div>
   )
 }
-

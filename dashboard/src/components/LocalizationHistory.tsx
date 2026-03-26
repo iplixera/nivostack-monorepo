@@ -60,13 +60,13 @@ export default function LocalizationHistory({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col border border-gray-800">
-        <div className="p-6 border-b border-gray-800">
+      <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col border border-gray-200 dark:border-gray-800">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-800">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold text-white">Translation History</h3>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Translation History</h3>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors"
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -82,12 +82,12 @@ export default function LocalizationHistory({
             </div>
           ) : history.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-400">No history available</p>
+              <p className="text-gray-500 dark:text-gray-400">No history available</p>
             </div>
           ) : (
             <div className="space-y-4">
               {history.map((entry, idx) => (
-                <div key={entry.id} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <div key={entry.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-300 dark:border-gray-700">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
@@ -102,16 +102,16 @@ export default function LocalizationHistory({
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-white font-medium text-sm">
+                          <span className="text-gray-900 dark:text-white font-medium text-sm">
                             {formatChangeType(entry.changeType)}
                           </span>
                           {entry.metadata?.provider && (
-                            <span className="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded">
+                            <span className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs rounded">
                               {entry.metadata.provider}
                             </span>
                           )}
                           {entry.metadata?.confidence && (
-                            <span className="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded">
+                            <span className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs rounded">
                               {Math.round(entry.metadata.confidence * 100)}% confidence
                             </span>
                           )}

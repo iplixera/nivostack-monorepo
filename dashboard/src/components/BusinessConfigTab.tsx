@@ -219,19 +219,19 @@ function TemplatesModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-        <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-white">Add Template Configs</h3>
+      <div className="bg-white dark:bg-gray-900 rounded-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col border border-gray-200 dark:border-gray-800">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Add Template Configs</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
           >
             ✕
           </button>
         </div>
 
-        <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-          <span className="text-sm text-gray-400">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
             {selected.size} selected
           </span>
           <button
@@ -245,7 +245,7 @@ function TemplatesModal({
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           {Object.entries(groupedTemplates).map(([category, categoryTemplates]) => (
             <div key={category}>
-              <h4 className="text-sm font-medium text-gray-400 uppercase mb-3">{category}</h4>
+              <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase mb-3">{category}</h4>
               <div className="space-y-2">
                 {categoryTemplates.map((template) => {
                   const exists = existingKeys.includes(template.key)
@@ -254,10 +254,10 @@ function TemplatesModal({
                       key={template.key}
                       className={`flex items-start p-3 rounded-lg border cursor-pointer transition-colors ${
                         exists
-                          ? 'border-gray-700 bg-gray-800/50 opacity-50 cursor-not-allowed'
+                          ? 'border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-50 cursor-not-allowed'
                           : selected.has(template.key)
                           ? 'border-blue-500 bg-blue-900/20'
-                          : 'border-gray-700 bg-gray-800 hover:border-gray-600'
+                          : 'border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-600'
                       }`}
                     >
                       <input
@@ -269,12 +269,12 @@ function TemplatesModal({
                       />
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-white font-medium">{template.label}</span>
+                          <span className="text-gray-900 dark:text-white font-medium">{template.label}</span>
                           <span className="text-xs text-gray-500 font-mono">{template.key}</span>
                         </div>
-                        <p className="text-sm text-gray-400 mt-1">{template.description}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{template.description}</p>
                         <div className="flex items-center gap-2 mt-2">
-                          <span className="text-xs px-2 py-0.5 bg-gray-700 rounded text-gray-300">
+                          <span className="text-xs px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300">
                             {template.valueType}
                           </span>
                           {exists && (
@@ -292,10 +292,10 @@ function TemplatesModal({
           ))}
         </div>
 
-        <div className="p-4 border-t border-gray-800 flex items-center justify-end space-x-3">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800 flex items-center justify-end space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+            className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             Cancel
           </button>
@@ -791,20 +791,20 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
   }, {} as Record<string, BusinessConfig[]>)
 
   if (loading && configs.length === 0) {
-    return <div className="text-gray-400 text-center py-8">Loading configurations...</div>
+    return <div className="text-gray-500 dark:text-gray-400 text-center py-8">Loading configurations...</div>
   }
 
   return (
     <div className="space-y-6">
       {/* Sub-tabs */}
-      <div className="border-b border-gray-800">
+      <div className="border-b border-gray-200 dark:border-gray-800">
         <nav className="flex space-x-8">
           <button
             onClick={() => setActiveSubTab('configs')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeSubTab === 'configs'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
             }`}
           >
             Translation
@@ -814,7 +814,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeSubTab === 'categories'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
             }`}
           >
             Categories
@@ -824,7 +824,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeSubTab === 'analytics'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
             }`}
           >
             Analytics
@@ -834,7 +834,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeSubTab === 'builds'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
             }`}
           >
             Builds
@@ -844,7 +844,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeSubTab === 'experiments'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
             }`}
           >
             Experiments
@@ -856,11 +856,11 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
       {activeSubTab === 'categories' && (
         <div className="space-y-6">
           {loading && configCategories.length === 0 && categories.length === 0 ? (
-            <div className="text-gray-400 text-center py-8">Loading categories...</div>
+            <div className="text-gray-500 dark:text-gray-400 text-center py-8">Loading categories...</div>
           ) : (
             <>
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">Categories</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Categories</h3>
                 <button
                   onClick={() => {
                     resetCategoryForm()
@@ -903,8 +903,8 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
             
             if (allCategories.length === 0) {
               return (
-                <div className="bg-gray-900 rounded-lg border border-gray-800 p-12 text-center">
-                  <p className="text-gray-400 mb-2">No categories yet.</p>
+                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-12 text-center">
+                  <p className="text-gray-500 dark:text-gray-400 mb-2">No categories yet.</p>
                   <p className="text-gray-500 text-sm">Create your first category to organize your configs.</p>
                 </div>
               )
@@ -913,20 +913,20 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
             return (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {allCategories.map((cat: any) => (
-                  <div key={cat.id} className="bg-gray-900 rounded-lg border border-gray-800 p-4">
+                  <div key={cat.id} className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           {cat.icon && <span className="text-xl">{cat.icon}</span>}
-                          <h4 className="text-white font-medium">{cat.label || cat.name}</h4>
+                          <h4 className="text-gray-900 dark:text-white font-medium">{cat.label || cat.name}</h4>
                           {!cat.isManaged && (
-                            <span className="text-xs px-2 py-0.5 bg-gray-700 text-gray-400 rounded">
+                            <span className="text-xs px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded">
                               Auto
                             </span>
                           )}
                         </div>
                         {cat.description && (
-                          <p className="text-gray-400 text-sm mb-2">{cat.description}</p>
+                          <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">{cat.description}</p>
                         )}
                         <p className="text-gray-500 text-xs font-mono">{cat.name}</p>
                         {cat.isManaged && (
@@ -937,7 +937,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
                         <div className="flex items-center gap-1 ml-2">
                           <button
                             onClick={() => handleEditCategory(cat)}
-                            className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors"
+                            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded transition-colors"
                             title="Edit category"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -946,7 +946,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
                           </button>
                           <button
                             onClick={() => handleDeleteCategory(cat.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-900/30 rounded transition-colors"
+                            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-400 hover:bg-red-900/30 rounded transition-colors"
                             title="Delete category"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -970,7 +970,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
       {activeSubTab === 'analytics' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Analytics</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Analytics</h3>
             <button
               onClick={() => setShowAnalytics(true)}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
@@ -978,8 +978,8 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
               View Detailed Analytics
             </button>
           </div>
-          <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
-            <p className="text-gray-400 text-center py-8">
+          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
+            <p className="text-gray-500 dark:text-gray-400 text-center py-8">
               Analytics dashboard coming soon. Click "View Detailed Analytics" to see per-config analytics.
             </p>
           </div>
@@ -1069,12 +1069,12 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <h2 className="text-xl font-semibold text-white">Business Configurations</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Business Configurations</h2>
           {categories.length > 0 && (
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="bg-gray-800 text-gray-300 px-3 py-1.5 rounded-lg border border-gray-700 text-sm"
+              className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700 text-sm"
             >
               <option value="">All Categories</option>
               {categories.map((cat) => (
@@ -1118,65 +1118,65 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
             resetCategoryForm()
           }
         }}>
-          <div className="bg-gray-900 rounded-xl w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Manage Categories</h3>
+          <div className="bg-white dark:bg-gray-900 rounded-xl w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col border border-gray-200 dark:border-gray-800" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Manage Categories</h3>
               <button
                 onClick={() => {
                   setShowCategoryManager(false)
                   resetCategoryForm()
                 }}
-                className="text-gray-400 hover:text-white text-xl leading-none"
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-xl leading-none"
               >
                 ✕
               </button>
             </div>
 
             {/* Add/Edit Category Form */}
-            <div className="p-4 border-b border-gray-800 bg-gray-800/30">
-              <h4 className="text-sm font-medium text-white mb-3">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/30">
+              <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
                 {editingCategory ? '✏️ Edit Category' : '➕ Add New Category'}
               </h4>
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-gray-400 text-xs mb-1">Name *</label>
+                    <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">Name *</label>
                     <input
                       type="text"
                       value={categoryForm.name}
                       onChange={(e) => setCategoryForm(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
+                      className="w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
                       placeholder="features"
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-400 text-xs mb-1">Label</label>
+                    <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">Label</label>
                     <input
                       type="text"
                       value={categoryForm.label}
                       onChange={(e) => setCategoryForm(prev => ({ ...prev, label: e.target.value }))}
-                      className="w-full bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
+                      className="w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
                       placeholder="Features"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-gray-400 text-xs mb-1">Description</label>
+                  <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">Description</label>
                   <input
                     type="text"
                     value={categoryForm.description}
                     onChange={(e) => setCategoryForm(prev => ({ ...prev, description: e.target.value }))}
-                    className="w-full bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
+                    className="w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
                     placeholder="Feature toggles and settings"
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-400 text-xs mb-1">Icon (emoji)</label>
+                  <label className="block text-gray-500 dark:text-gray-400 text-xs mb-1">Icon (emoji)</label>
                   <input
                     type="text"
                     value={categoryForm.icon}
                     onChange={(e) => setCategoryForm(prev => ({ ...prev, icon: e.target.value }))}
-                    className="w-full bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
+                    className="w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
                     placeholder="⚡"
                     maxLength={2}
                   />
@@ -1185,7 +1185,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
                   {editingCategory && (
                     <button
                       onClick={resetCategoryForm}
-                      className="px-3 py-2 text-gray-400 hover:text-white text-sm transition-colors"
+                      className="px-3 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors"
                     >
                       Cancel
                     </button>
@@ -1203,7 +1203,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
 
             {/* Categories List */}
             <div className="flex-1 overflow-y-auto p-4">
-              <h4 className="text-xs font-medium text-gray-400 uppercase mb-3">Existing Categories</h4>
+              <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-3">Existing Categories</h4>
               {configCategories.length === 0 ? (
                 <p className="text-gray-500 text-center py-8 text-sm">
                   No categories yet.<br />
@@ -1214,22 +1214,22 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
                   {configCategories.map((category) => (
                     <div
                       key={category.id}
-                      className="flex items-center justify-between p-3 bg-gray-800 rounded-lg hover:bg-gray-750 transition-colors"
+                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors"
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         {category.icon && <span className="text-lg flex-shrink-0">{category.icon}</span>}
                         <div className="min-w-0 flex-1">
-                          <p className="text-white font-medium text-sm truncate">{category.label || category.name}</p>
+                          <p className="text-gray-900 dark:text-white font-medium text-sm truncate">{category.label || category.name}</p>
                           <p className="text-gray-500 text-xs font-mono">{category.name}</p>
                           {category.description && (
-                            <p className="text-gray-400 text-xs mt-0.5 truncate">{category.description}</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5 truncate">{category.description}</p>
                           )}
                         </div>
                       </div>
                       <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
                         <button
                           onClick={() => handleEditCategory(category)}
-                          className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
                           title="Edit category"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1238,7 +1238,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
                         </button>
                         <button
                           onClick={() => handleDeleteCategory(category.id)}
-                          className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-900/30 rounded-lg transition-colors"
+                          className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-400 hover:bg-red-900/30 rounded-lg transition-colors"
                           title="Delete category"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1252,7 +1252,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
               )}
             </div>
 
-            <div className="p-4 border-t border-gray-800 bg-gray-800/30">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/30">
               <p className="text-gray-500 text-xs">
                 💡 Categories help organize your business configs. Use them in the config form to group related settings.
               </p>
@@ -1275,21 +1275,21 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
       {/* Add/Edit Form Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-900 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-800">
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 {editingConfig ? 'Edit Configuration' : 'Add Configuration'}
               </h3>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Key */}
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Key *</label>
+                  <label className="block text-gray-500 dark:text-gray-400 text-sm mb-1">Key *</label>
                   <input
                     type="text"
                     value={formData.key}
                     onChange={(e) => setFormData(prev => ({ ...prev, key: e.target.value }))}
-                    className="w-full bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none font-mono"
+                    className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none font-mono"
                     placeholder="feature_enabled"
                     required
                     pattern="^[a-zA-Z_][a-zA-Z0-9_]*$"
@@ -1299,23 +1299,23 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
 
                 {/* Label */}
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Label</label>
+                  <label className="block text-gray-500 dark:text-gray-400 text-sm mb-1">Label</label>
                   <input
                     type="text"
                     value={formData.label}
                     onChange={(e) => setFormData(prev => ({ ...prev, label: e.target.value }))}
-                    className="w-full bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
+                    className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                     placeholder="Feature Enabled"
                   />
                 </div>
 
                 {/* Description */}
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Description</label>
+                  <label className="block text-gray-500 dark:text-gray-400 text-sm mb-1">Description</label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    className="w-full bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
+                    className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                     rows={2}
                     placeholder="Controls whether the feature is enabled"
                   />
@@ -1323,12 +1323,12 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
 
                 {/* Category */}
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Category</label>
+                  <label className="block text-gray-500 dark:text-gray-400 text-sm mb-1">Category</label>
                   <input
                     type="text"
                     value={formData.category}
                     onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
+                    className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                     placeholder="Features"
                     list="category-suggestions"
                   />
@@ -1344,7 +1344,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
 
                 {/* Value Type */}
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Value Type *</label>
+                  <label className="block text-gray-500 dark:text-gray-400 text-sm mb-1">Value Type *</label>
                   <select
                     value={formData.valueType}
                     onChange={(e) => {
@@ -1355,7 +1355,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
                       if (newType === 'json') defaultValue = {}
                       setFormData(prev => ({ ...prev, valueType: newType, value: defaultValue }))
                     }}
-                    className="w-full bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
+                    className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none"
                   >
                     {VALUE_TYPES.map((type) => (
                       <option key={type.value} value={type.value}>{type.label}</option>
@@ -1365,7 +1365,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
 
                 {/* Value */}
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Value</label>
+                  <label className="block text-gray-500 dark:text-gray-400 text-sm mb-1">Value</label>
                   {renderValueInput()}
                 </div>
 
@@ -1378,15 +1378,15 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
                     onChange={(e) => setFormData(prev => ({ ...prev, isEnabled: e.target.checked }))}
                     className="w-4 h-4 text-blue-600 rounded"
                   />
-                  <label htmlFor="isEnabled" className="text-gray-300">Enabled</label>
+                  <label htmlFor="isEnabled" className="text-gray-600 dark:text-gray-300">Enabled</label>
                 </div>
 
                 {/* Actions */}
-                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-800">
+                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-800">
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                    className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                   >
                     Cancel
                   </button>
@@ -1406,8 +1406,8 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
 
       {/* Configs List */}
       {configs.length === 0 ? (
-        <div className="text-center py-12 bg-gray-900 rounded-lg">
-          <p className="text-gray-400 mb-4">No configurations yet</p>
+        <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+          <p className="text-gray-500 dark:text-gray-400 mb-4">No configurations yet</p>
           <p className="text-gray-500 text-sm">
             Create your first configuration to manage app behavior remotely
           </p>
@@ -1417,7 +1417,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
           {Object.entries(groupedConfigs).map(([category, categoryConfigs]) => {
             const isCollapsed = collapsedCategories.has(category)
             return (
-            <div key={category} className="bg-gray-900 rounded-lg overflow-hidden">
+            <div key={category} className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800">
               <button
                 onClick={() => {
                   const newCollapsed = new Set(collapsedCategories)
@@ -1428,33 +1428,33 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
                   }
                   setCollapsedCategories(newCollapsed)
                 }}
-                className="w-full px-4 py-3 bg-gray-800/50 border-b border-gray-800 flex items-center justify-between hover:bg-gray-800/70 transition-colors"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800/70 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <svg
-                    className={`w-4 h-4 text-gray-400 transition-transform ${isCollapsed ? '' : 'rotate-90'}`}
+                    className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform ${isCollapsed ? '' : 'rotate-90'}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
-                  <h3 className="text-gray-300 font-medium">{category}</h3>
-                  <span className="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded-full">
+                  <h3 className="text-gray-600 dark:text-gray-300 font-medium">{category}</h3>
+                  <span className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs rounded-full">
                     {categoryConfigs.length}
                   </span>
                 </div>
               </button>
               {!isCollapsed && (
-              <div className="divide-y divide-gray-800">
+              <div className="divide-y divide-gray-200 dark:divide-gray-800">
                 {categoryConfigs.map((config) => (
-                  <div key={config.id} className="p-4 hover:bg-gray-800/30 transition-colors">
+                  <div key={config.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <code className="text-blue-400 font-mono text-sm">{config.key}</code>
                           {!config.isEnabled && (
-                            <span className="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded">
+                            <span className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs rounded">
                               Disabled
                             </span>
                           )}
@@ -1470,7 +1470,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
                           </span>
                         </div>
                         {config.label && (
-                          <p className="text-white text-sm font-medium">{config.label}</p>
+                          <p className="text-gray-900 dark:text-white text-sm font-medium">{config.label}</p>
                         )}
                         {config.description && (
                           <p className="text-gray-500 text-xs mt-0.5">{config.description}</p>
@@ -1483,7 +1483,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
                               className="h-16 w-16 object-cover rounded-lg border border-gray-700"
                             />
                           ) : config.valueType === 'json' ? (
-                            <pre className="text-gray-300 text-xs bg-gray-800 p-2 rounded-lg overflow-x-auto max-w-md">
+                            <pre className="text-gray-600 dark:text-gray-300 text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded-lg overflow-x-auto max-w-md">
                               {formatValue(config)}
                             </pre>
                           ) : config.valueType === 'boolean' ? (
@@ -1493,7 +1493,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
                               {config.booleanValue ? 'true' : 'false'}
                             </span>
                           ) : (
-                            <span className="text-gray-300 text-sm font-mono">{formatValue(config)}</span>
+                            <span className="text-gray-600 dark:text-gray-300 text-sm font-mono">{formatValue(config)}</span>
                           )}
                         </div>
                       </div>
@@ -1501,7 +1501,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
                         <span className="text-gray-600 text-xs">v{config.version}</span>
                         <button
                           onClick={() => handleEdit(config)}
-                          className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
                           title="Edit"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1510,7 +1510,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
                         </button>
                         <button
                           onClick={() => handleDelete(config.id)}
-                          className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-900/30 rounded-lg transition-colors"
+                          className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-400 hover:bg-red-900/30 rounded-lg transition-colors"
                           title="Delete"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1522,7 +1522,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
                             setTargetingConfig(config)
                             setShowTargeting(true)
                           }}
-                          className="p-2 text-gray-400 hover:text-blue-400 hover:bg-blue-900/30 rounded-lg transition-colors"
+                          className="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-400 hover:bg-blue-900/30 rounded-lg transition-colors"
                           title="Targeting Rules"
                         >
                           🎯
@@ -1532,7 +1532,7 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
                             setTargetingConfig(config)
                             setShowHistory(true)
                           }}
-                          className="p-2 text-gray-400 hover:text-green-400 hover:bg-green-900/30 rounded-lg transition-colors"
+                          className="p-2 text-gray-500 dark:text-gray-400 hover:text-green-400 hover:bg-green-900/30 rounded-lg transition-colors"
                           title="Change History"
                         >
                           📜
@@ -1549,12 +1549,12 @@ export default function BusinessConfigTab({ projectId, token, sharedUsage }: Pro
       )}
 
       {/* SDK Info */}
-      <div className="bg-gray-900 rounded-lg p-4">
-        <h3 className="text-white font-medium mb-2">SDK Integration</h3>
-        <p className="text-gray-400 text-sm mb-3">
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+        <h3 className="text-gray-900 dark:text-white font-medium mb-2">SDK Integration</h3>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mb-3">
           Fetch configurations in your mobile app using the SDK endpoint:
         </p>
-        <code className="block bg-gray-800 text-green-400 text-sm p-3 rounded-lg font-mono">
+        <code className="block bg-gray-50 dark:bg-gray-800 text-green-600 dark:text-green-400 text-sm p-3 rounded-lg font-mono">
           GET /api/business-config?category=optional
         </code>
         <p className="text-gray-500 text-xs mt-2">

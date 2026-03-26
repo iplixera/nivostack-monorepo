@@ -78,7 +78,7 @@ export default function AdminOffersPage() {
       setCreating(true)
       setError('')
       const result = await api.admin.createOffers(createType, createOptions, token!)
-      
+
       if (result.success) {
         alert(`Successfully created ${result.created} ${createType} offers!`)
         setCreateType('')
@@ -108,7 +108,7 @@ export default function AdminOffersPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">Loading offers...</div>
+        <div className="text-gray-500 dark:text-gray-400">Loading offers...</div>
       </div>
     )
   }
@@ -121,33 +121,33 @@ export default function AdminOffersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Offers Management</h1>
-          <p className="text-gray-400">Create and manage early renewal, extension, and upgrade offers</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Offers Management</h1>
+          <p className="text-gray-500 dark:text-gray-400">Create and manage early renewal, extension, and upgrade offers</p>
         </div>
         <Link
           href="/admin"
-          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
+          className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg transition-colors"
         >
           ← Back to Dashboard
         </Link>
       </div>
 
       {error && (
-        <div className="bg-red-900/20 border border-red-600 text-red-400 px-4 py-3 rounded-lg">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg">
           {error}
         </div>
       )}
 
       {/* Create Offers Section */}
-      <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-        <h2 className="text-xl font-semibold text-white mb-4">Create Offers</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Create Offers</h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Offer Type</label>
+            <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Offer Type</label>
             <select
               value={createType}
               onChange={(e) => setCreateType(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
+              className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white"
             >
               <option value="">Select offer type...</option>
               <option value="early_renewal">Early Renewal (80%+ usage)</option>
@@ -159,7 +159,7 @@ export default function AdminOffersPage() {
           {createType && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                   Discount (%)
                 </label>
                 <input
@@ -170,12 +170,12 @@ export default function AdminOffersPage() {
                   onChange={(e) =>
                     setCreateOptions({ ...createOptions, discountPercent: parseInt(e.target.value) || 0 })
                   }
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
+                  className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white"
                 />
               </div>
               {createType === 'extension' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                     Extension Days
                   </label>
                   <input
@@ -185,13 +185,13 @@ export default function AdminOffersPage() {
                     onChange={(e) =>
                       setCreateOptions({ ...createOptions, extensionDays: parseInt(e.target.value) || 30 })
                     }
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
+                    className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white"
                   />
                 </div>
               )}
               {createType === 'early_renewal' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                     Days Until Expiry
                   </label>
                   <input
@@ -201,7 +201,7 @@ export default function AdminOffersPage() {
                     onChange={(e) =>
                       setCreateOptions({ ...createOptions, daysUntilExpiry: parseInt(e.target.value) || 7 })
                     }
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
+                    className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white"
                   />
                 </div>
               )}
@@ -211,7 +211,7 @@ export default function AdminOffersPage() {
           <button
             onClick={handleCreateOffers}
             disabled={!createType || creating}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
           >
             {creating ? 'Creating...' : 'Create Offers'}
           </button>
@@ -220,21 +220,21 @@ export default function AdminOffersPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-gray-900 rounded-lg p-6 border border-yellow-600">
-          <div className="text-sm text-gray-400 mb-1">Pending Offers</div>
-          <div className="text-3xl font-bold text-yellow-400">{pendingOffers.length}</div>
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-yellow-300 dark:border-yellow-600">
+          <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Pending Offers</div>
+          <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{pendingOffers.length}</div>
         </div>
-        <div className="bg-gray-900 rounded-lg p-6 border border-green-600">
-          <div className="text-sm text-gray-400 mb-1">Accepted</div>
-          <div className="text-3xl font-bold text-green-400">{acceptedOffers.length}</div>
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-green-300 dark:border-green-600">
+          <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Accepted</div>
+          <div className="text-3xl font-bold text-green-600 dark:text-green-400">{acceptedOffers.length}</div>
         </div>
-        <div className="bg-gray-900 rounded-lg p-6 border border-red-600">
-          <div className="text-sm text-gray-400 mb-1">Expired</div>
-          <div className="text-3xl font-bold text-red-400">{expiredOffers.length}</div>
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-red-300 dark:border-red-600">
+          <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Expired</div>
+          <div className="text-3xl font-bold text-red-600 dark:text-red-400">{expiredOffers.length}</div>
         </div>
-        <div className="bg-gray-900 rounded-lg p-6 border border-blue-600">
-          <div className="text-sm text-gray-400 mb-1">Total Offers</div>
-          <div className="text-3xl font-bold text-blue-400">{offers.length}</div>
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-blue-300 dark:border-blue-600">
+          <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Offers</div>
+          <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{offers.length}</div>
         </div>
       </div>
 
@@ -243,7 +243,7 @@ export default function AdminOffersPage() {
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
+          className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white"
         >
           <option value="all">All Status</option>
           <option value="pending">Pending</option>
@@ -255,7 +255,7 @@ export default function AdminOffersPage() {
         <select
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
-          className="px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
+          className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white"
         >
           <option value="all">All Types</option>
           <option value="early_renewal">Early Renewal</option>
@@ -265,50 +265,50 @@ export default function AdminOffersPage() {
       </div>
 
       {/* Offers Table */}
-      <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-800">
-          <h2 className="text-xl font-semibold text-white">Offers</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Offers</h2>
         </div>
 
         {offers.length === 0 ? (
           <div className="p-12 text-center">
-            <div className="text-gray-400 mb-4">No offers found</div>
-            <p className="text-sm text-gray-500">Create offers to target users at risk or with conversion opportunities</p>
+            <div className="text-gray-500 dark:text-gray-400 mb-4">No offers found</div>
+            <p className="text-sm text-gray-400 dark:text-gray-500">Create offers to target users at risk or with conversion opportunities</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-800">
+              <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">User</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Plan</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Discount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Expires</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">User</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">Plan</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">Discount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">Expires</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                 {offers.map((offer) => (
-                  <tr key={offer.id} className="hover:bg-gray-800/50">
+                  <tr key={offer.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                     <td className="px-6 py-4">
-                      <div className="text-sm text-white">{offer.user.email}</div>
+                      <div className="text-sm text-gray-900 dark:text-white">{offer.user.email}</div>
                       {offer.user.name && (
-                        <div className="text-xs text-gray-400">{offer.user.name}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{offer.user.name}</div>
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-xs px-2 py-1 rounded bg-blue-900/30 text-blue-400 capitalize">
+                      <span className="text-xs px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 capitalize">
                         {offer.type.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-300 capitalize">
+                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 capitalize">
                       {offer.subscription.plan.displayName}
                     </td>
                     <td className="px-6 py-4">
                       {offer.discountPercent && (
-                        <div className="text-sm text-green-400">
+                        <div className="text-sm text-green-600 dark:text-green-400">
                           {offer.discountPercent}% (${offer.discountAmount?.toFixed(2) || '0.00'})
                         </div>
                       )}
@@ -317,18 +317,18 @@ export default function AdminOffersPage() {
                       <span
                         className={`text-xs px-2 py-1 rounded ${
                           offer.status === 'accepted'
-                            ? 'bg-green-900/30 text-green-400'
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
                             : offer.status === 'pending'
-                            ? 'bg-yellow-900/30 text-yellow-400'
+                            ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
                             : offer.status === 'expired'
-                            ? 'bg-red-900/30 text-red-400'
-                            : 'bg-gray-800 text-gray-400'
+                            ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                         }`}
                       >
                         {offer.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-400">
+                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                       {new Date(offer.expiresAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4">
@@ -336,14 +336,14 @@ export default function AdminOffersPage() {
                         {offer.status === 'pending' && (
                           <button
                             onClick={() => handleAcceptOffer(offer.id)}
-                            className="text-xs text-blue-400 hover:text-blue-300"
+                            className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
                           >
                             Accept
                           </button>
                         )}
                         <Link
                           href={`/admin/subscriptions?user=${offer.userId}`}
-                          className="text-xs text-gray-400 hover:text-gray-300"
+                          className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                         >
                           View →
                         </Link>
@@ -359,4 +359,3 @@ export default function AdminOffersPage() {
     </div>
   )
 }
-

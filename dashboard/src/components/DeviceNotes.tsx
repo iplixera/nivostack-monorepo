@@ -76,15 +76,15 @@ export default function DeviceNotes({ deviceId, token }: DeviceNotesProps) {
 
   if (loading) {
     return (
-      <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-        <div className="text-gray-400">Loading notes...</div>
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+        <div className="text-gray-500 dark:text-gray-400">Loading notes...</div>
       </div>
     )
   }
 
   return (
-    <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-      <h3 className="text-lg font-semibold text-white mb-4">Device Notes</h3>
+    <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Device Notes</h3>
 
       {/* Add Note Form */}
       <div className="mb-6">
@@ -92,14 +92,14 @@ export default function DeviceNotes({ deviceId, token }: DeviceNotesProps) {
           value={newNote}
           onChange={(e) => setNewNote(e.target.value)}
           placeholder="Add a note about this device..."
-          className="w-full px-3 py-2 bg-gray-800 text-white rounded-lg text-sm border border-gray-700 focus:border-blue-500 focus:outline-none resize-none"
+          className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm border border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:outline-none resize-none"
           rows={3}
         />
         <div className="flex justify-end mt-2">
           <button
             onClick={handleAddNote}
             disabled={!newNote.trim() || addingNote}
-            className="px-4 py-2 bg-gray-800 hover:bg-gray-750 text-white rounded-lg text-sm font-medium transition-colors border border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-750 text-gray-900 dark:text-white rounded-lg text-sm font-medium transition-colors border border-gray-300 dark:border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {addingNote ? 'Adding...' : 'Add Note'}
           </button>
@@ -108,7 +108,7 @@ export default function DeviceNotes({ deviceId, token }: DeviceNotesProps) {
 
       {/* Notes List */}
       {notes.length === 0 ? (
-        <div className="text-center py-8 text-gray-400">
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           <p>No notes yet. Add a note to document important information about this device.</p>
         </div>
       ) : (
@@ -116,12 +116,12 @@ export default function DeviceNotes({ deviceId, token }: DeviceNotesProps) {
           {notes.map((note) => (
             <div
               key={note.id}
-              className="bg-gray-800 rounded-lg p-4 border border-gray-700"
+              className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-300 dark:border-gray-700"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <p className="text-white text-sm whitespace-pre-wrap">{note.content}</p>
-                  <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
+                  <p className="text-gray-900 dark:text-white text-sm whitespace-pre-wrap">{note.content}</p>
+                  <div className="flex items-center gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
                     <span>{note.author}</span>
                     <span>•</span>
                     <span>{formatDate(note.createdAt)}</span>
@@ -130,7 +130,7 @@ export default function DeviceNotes({ deviceId, token }: DeviceNotesProps) {
                 <button
                   onClick={() => handleDeleteNote(note.id)}
                   disabled={deletingNoteId === note.id}
-                  className="px-2 py-1 text-gray-400 hover:text-white rounded text-sm transition-colors disabled:opacity-50"
+                  className="px-2 py-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded text-sm transition-colors disabled:opacity-50"
                   title="Delete note"
                 >
                   {deletingNoteId === note.id ? (

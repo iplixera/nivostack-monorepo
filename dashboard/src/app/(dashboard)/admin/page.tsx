@@ -68,7 +68,7 @@ function MigrationManager({ token }: { token: string | null }) {
       <button
         onClick={loadStatus}
         disabled={loading}
-        className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-sm disabled:opacity-50"
+        className="px-4 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg transition-colors text-sm disabled:opacity-50"
       >
         {loading ? 'Loading...' : 'Check Migrations'}
       </button>
@@ -84,23 +84,23 @@ function MigrationManager({ token }: { token: string | null }) {
         disabled={running || loading}
         className={`px-4 py-2 rounded-lg transition-colors text-sm disabled:opacity-50 ${needsMigration
             ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
-            : 'bg-gray-800 hover:bg-gray-700 text-white'
+            : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white'
           }`}
       >
         {running ? 'Running...' : needsMigration ? 'Run Migrations' : '✓ Migrations OK'}
       </button>
 
       {message && (
-        <div className="absolute top-full left-0 mt-2 w-96 bg-gray-900 border border-gray-700 rounded-lg p-4 shadow-xl z-50">
-          <div className="text-sm text-white whitespace-pre-wrap">{message}</div>
+        <div className="absolute top-full left-0 mt-2 w-96 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg p-4 shadow-xl z-50">
+          <div className="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{message}</div>
           {status.missingItems && status.missingItems.length > 0 && (
-            <div className="mt-2 text-xs text-gray-400">
+            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
               Missing: {status.missingItems.join(', ')}
             </div>
           )}
           <button
             onClick={() => setMessage(null)}
-            className="mt-2 text-xs text-gray-400 hover:text-white"
+            className="mt-2 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
           >
             Close
           </button>
@@ -148,7 +148,7 @@ export default function AdminDashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">Loading admin dashboard...</div>
+        <div className="text-gray-500 dark:text-gray-400">Loading admin dashboard...</div>
       </div>
     )
   }
@@ -197,14 +197,14 @@ export default function AdminDashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h1>
-          <p className="text-gray-400">Platform analytics, forecasting, and user management</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Admin Dashboard</h1>
+          <p className="text-gray-500 dark:text-gray-400">Platform analytics, forecasting, and user management</p>
         </div>
         <div className="flex gap-2">
           <MigrationManager token={token} />
           <Link
             href="/admin/offers"
-            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-sm"
+            className="px-4 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg transition-colors text-sm"
           >
             Manage Offers
           </Link>
@@ -212,13 +212,13 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-800">
+      <div className="border-b border-gray-200 dark:border-gray-800">
         <nav className="flex space-x-8">
           <button
             onClick={() => setActiveTab('overview')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'overview'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
               }`}
           >
             Overview
@@ -227,7 +227,7 @@ export default function AdminDashboardPage() {
             onClick={() => setActiveTab('analytics')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'analytics'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
               }`}
           >
             Analytics
@@ -236,7 +236,7 @@ export default function AdminDashboardPage() {
             onClick={() => setActiveTab('forecast')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'forecast'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
               }`}
           >
             Forecasting
@@ -276,8 +276,8 @@ export default function AdminDashboardPage() {
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Plan Distribution Chart */}
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-              <h3 className="text-lg font-semibold text-white mb-4">Plan Distribution</h3>
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Plan Distribution</h3>
               {analytics?.planDistribution && analytics.planDistribution.length > 0 ? (
                 <BarChart
                   data={analytics.planDistribution.map((plan: any) => ({
@@ -288,15 +288,15 @@ export default function AdminDashboardPage() {
                   height={200}
                 />
               ) : (
-                <div className="flex items-center justify-center h-[200px] text-gray-400">
+                <div className="flex items-center justify-center h-[200px] text-gray-500 dark:text-gray-400">
                   No plan distribution data available
                 </div>
               )}
             </div>
 
             {/* Usage Segmentation */}
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-              <h3 className="text-lg font-semibold text-white mb-4">Devices Usage Segmentation</h3>
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Devices Usage Segmentation</h3>
               {analytics?.usageSegmentation?.devices && analytics.usageSegmentation.devices.length > 0 ? (
                 <PieChart
                   data={analytics.usageSegmentation.devices.map((seg: any) => ({
@@ -307,7 +307,7 @@ export default function AdminDashboardPage() {
                   size={200}
                 />
               ) : (
-                <div className="flex items-center justify-center h-[200px] text-gray-400">
+                <div className="flex items-center justify-center h-[200px] text-gray-500 dark:text-gray-400">
                   No usage segmentation data available
                 </div>
               )}
@@ -318,52 +318,52 @@ export default function AdminDashboardPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             <Link
               href="/admin/users"
-              className="bg-gray-900 rounded-lg p-4 hover:bg-gray-800 transition-colors border border-gray-800"
+              className="bg-white dark:bg-gray-900 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-800"
             >
-              <div className="text-sm font-medium text-white">Users</div>
-              <div className="text-xs text-gray-400 mt-1">Manage</div>
+              <div className="text-sm font-medium text-gray-900 dark:text-white">Users</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Manage</div>
             </Link>
             <Link
               href="/admin/subscriptions"
-              className="bg-gray-900 rounded-lg p-4 hover:bg-gray-800 transition-colors border border-gray-800"
+              className="bg-white dark:bg-gray-900 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-800"
             >
-              <div className="text-sm font-medium text-white">Subscriptions</div>
-              <div className="text-xs text-gray-400 mt-1">Manage</div>
+              <div className="text-sm font-medium text-gray-900 dark:text-white">Subscriptions</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Manage</div>
             </Link>
             <Link
               href="/admin/plans"
-              className="bg-gray-900 rounded-lg p-4 hover:bg-gray-800 transition-colors border border-gray-800"
+              className="bg-white dark:bg-gray-900 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-800"
             >
-              <div className="text-sm font-medium text-white">Plans</div>
-              <div className="text-xs text-gray-400 mt-1">Configure</div>
+              <div className="text-sm font-medium text-gray-900 dark:text-white">Plans</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Configure</div>
             </Link>
             <Link
               href="/admin/promo-codes"
-              className="bg-gray-900 rounded-lg p-4 hover:bg-gray-800 transition-colors border border-gray-800"
+              className="bg-white dark:bg-gray-900 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-800"
             >
-              <div className="text-sm font-medium text-white">Promo Codes</div>
-              <div className="text-xs text-gray-400 mt-1">Manage</div>
+              <div className="text-sm font-medium text-gray-900 dark:text-white">Promo Codes</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Manage</div>
             </Link>
             <Link
               href="/admin/offers"
-              className="bg-gray-900 rounded-lg p-4 hover:bg-gray-800 transition-colors border border-gray-800"
+              className="bg-white dark:bg-gray-900 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-800"
             >
-              <div className="text-sm font-medium text-white">Offers</div>
-              <div className="text-xs text-gray-400 mt-1">Manage</div>
+              <div className="text-sm font-medium text-gray-900 dark:text-white">Offers</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Manage</div>
             </Link>
             <Link
               href="/admin/configurations"
-              className="bg-gray-900 rounded-lg p-4 hover:bg-gray-800 transition-colors border border-gray-800"
+              className="bg-white dark:bg-gray-900 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-800"
             >
-              <div className="text-sm font-medium text-white">Configurations</div>
-              <div className="text-xs text-gray-400 mt-1">System Settings</div>
+              <div className="text-sm font-medium text-gray-900 dark:text-white">Configurations</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">System Settings</div>
             </Link>
             <Link
               href="/admin/revenue"
-              className="bg-gray-900 rounded-lg p-4 hover:bg-gray-800 transition-colors border border-gray-800"
+              className="bg-white dark:bg-gray-900 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-800"
             >
-              <div className="text-sm font-medium text-white">Revenue</div>
-              <div className="text-xs text-gray-400 mt-1">View</div>
+              <div className="text-sm font-medium text-gray-900 dark:text-white">Revenue</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">View</div>
             </Link>
           </div>
         </div>
@@ -399,9 +399,9 @@ export default function AdminDashboardPage() {
 
 function MetricCard({ title, value, subtitle, link }: { title: string; value: string | number; subtitle?: string; link?: string }) {
   const content = (
-    <div className="bg-gray-900 rounded-lg p-6 border border-gray-800 hover:border-gray-700 transition-colors">
-      <div className="text-sm text-gray-400 mb-1">{title}</div>
-      <div className="text-2xl font-bold text-white mb-1">{value}</div>
+    <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
+      <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">{title}</div>
+      <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{value}</div>
       {subtitle && <div className="text-xs text-gray-500">{subtitle}</div>}
     </div>
   )
@@ -434,7 +434,7 @@ function AnalyticsView({
   if (!analytics) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">No analytics data available</div>
+        <div className="text-gray-500 dark:text-gray-400">No analytics data available</div>
       </div>
     )
   }
@@ -466,8 +466,8 @@ function AnalyticsView({
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Plan Distribution */}
-        <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-          <h3 className="text-lg font-semibold text-white mb-4">Plan Distribution</h3>
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Plan Distribution</h3>
           {analytics.planDistribution && analytics.planDistribution.length > 0 ? (
             <BarChart
               data={analytics.planDistribution.map((plan: any) => ({
@@ -478,15 +478,15 @@ function AnalyticsView({
               height={200}
             />
           ) : (
-            <div className="flex items-center justify-center h-[200px] text-gray-400">
+            <div className="flex items-center justify-center h-[200px] text-gray-500 dark:text-gray-400">
               No plan distribution data available
             </div>
           )}
         </div>
 
         {/* Usage Segmentation - API Traces */}
-        <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-          <h3 className="text-lg font-semibold text-white mb-4">API Traces Usage</h3>
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">API Traces Usage</h3>
           {analytics.usageSegmentation?.apiTraces && analytics.usageSegmentation.apiTraces.length > 0 ? (
             <PieChart
               data={analytics.usageSegmentation.apiTraces.map((seg: any) => ({
@@ -497,7 +497,7 @@ function AnalyticsView({
               size={200}
             />
           ) : (
-            <div className="flex items-center justify-center h-[200px] text-gray-400">
+            <div className="flex items-center justify-center h-[200px] text-gray-500 dark:text-gray-400">
               No usage segmentation data available
             </div>
           )}
@@ -505,9 +505,9 @@ function AnalyticsView({
       </div>
 
       {/* Filters and Section Tabs */}
-      <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div className="flex gap-2 border-b border-gray-800">
+          <div className="flex gap-2 border-b border-gray-200 dark:border-gray-800">
             <button
               onClick={() => {
                 setActiveSection('atRisk')
@@ -515,7 +515,7 @@ function AnalyticsView({
               }}
               className={`px-4 py-2 text-sm font-medium transition-colors ${activeSection === 'atRisk'
                   ? 'border-b-2 border-blue-500 text-blue-400'
-                  : 'text-gray-400 hover:text-gray-300'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                 }`}
             >
               At Risk ({filteredAtRiskUsers.length})
@@ -527,7 +527,7 @@ function AnalyticsView({
               }}
               className={`px-4 py-2 text-sm font-medium transition-colors ${activeSection === 'atLimit'
                   ? 'border-b-2 border-blue-500 text-blue-400'
-                  : 'text-gray-400 hover:text-gray-300'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                 }`}
             >
               At Limit ({filteredAtLimitUsers.length})
@@ -539,7 +539,7 @@ function AnalyticsView({
               }}
               className={`px-4 py-2 text-sm font-medium transition-colors ${activeSection === 'conversions'
                   ? 'border-b-2 border-blue-500 text-blue-400'
-                  : 'text-gray-400 hover:text-gray-300'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                 }`}
             >
               Conversions ({filteredConversionOpps.length})
@@ -553,7 +553,7 @@ function AnalyticsView({
                 setPlanFilter(e.target.value)
                 setCurrentPage(1)
               }}
-              className="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+              className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white text-sm"
             >
               <option value="all">All Plans</option>
               <option value="free">Free</option>
@@ -567,7 +567,7 @@ function AnalyticsView({
                 setUsageFilter(e.target.value)
                 setCurrentPage(1)
               }}
-              className="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+              className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white text-sm"
             >
               <option value="all">All Usage</option>
               <option value="high">High (90%+)</option>
@@ -581,33 +581,33 @@ function AnalyticsView({
           <div>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-800">
+                <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">User</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Plan</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Highest Usage</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Meters</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Action</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">User</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">Plan</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">Highest Usage</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">Meters</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                   {paginatedAtRisk.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                      <td colSpan={5} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                         No users found matching filters
                       </td>
                     </tr>
                   ) : (
                     paginatedAtRisk.map((user: any) => (
-                      <tr key={user.userId} className="hover:bg-gray-800/50">
-                        <td className="px-4 py-3 text-sm text-white">{user.email}</td>
-                        <td className="px-4 py-3 text-sm text-gray-300 capitalize">{user.planName}</td>
+                      <tr key={user.userId} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{user.email}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 capitalize">{user.planName}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-white font-medium">
+                            <span className="text-sm text-gray-900 dark:text-white font-medium">
                               {user.highestUsage.percentage.toFixed(1)}%
                             </span>
-                            <div className="w-24 bg-gray-800 rounded-full h-2">
+                            <div className="w-24 bg-gray-50 dark:bg-gray-800 rounded-full h-2">
                               <div
                                 className={`h-2 rounded-full ${user.highestUsage.percentage >= 100
                                     ? 'bg-red-600'
@@ -626,10 +626,10 @@ function AnalyticsView({
                               <span
                                 key={key}
                                 className={`text-xs px-2 py-1 rounded ${meter.percentage >= 100
-                                    ? 'bg-red-900/30 text-red-400'
+                                    ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                                     : meter.percentage >= 80
-                                      ? 'bg-yellow-900/30 text-yellow-400'
-                                      : 'bg-gray-800 text-gray-400'
+                                      ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
+                                      : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                                   }`}
                               >
                                 {key}: {meter.percentage.toFixed(0)}%
@@ -656,24 +656,24 @@ function AnalyticsView({
             </div>
             {totalPages > 1 && (
               <div className="mt-4 flex items-center justify-between">
-                <div className="text-sm text-gray-400">
+                <div className="text-sm text-gray-500 dark:text-gray-400">
                   Showing {(currentPage - 1) * 10 + 1} to {Math.min(currentPage * 10, filteredAtRiskUsers.length)} of {filteredAtRiskUsers.length}
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded text-sm"
+                    className="px-3 py-1 bg-gray-50 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:bg-white dark:disabled:bg-gray-900 disabled:text-gray-400 dark:disabled:text-gray-600 disabled:cursor-not-allowed text-gray-900 dark:text-white rounded text-sm"
                   >
                     Previous
                   </button>
-                  <span className="px-3 py-1 text-sm text-gray-400">
+                  <span className="px-3 py-1 text-sm text-gray-500 dark:text-gray-400">
                     Page {currentPage} of {totalPages}
                   </span>
                   <button
                     onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded text-sm"
+                    className="px-3 py-1 bg-gray-50 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:bg-white dark:disabled:bg-gray-900 disabled:text-gray-400 dark:disabled:text-gray-600 disabled:cursor-not-allowed text-gray-900 dark:text-white rounded text-sm"
                   >
                     Next
                   </button>
@@ -688,32 +688,32 @@ function AnalyticsView({
           <div>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-800">
+                <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">User</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Plan</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Exceeded Meters</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Action</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">User</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">Plan</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">Exceeded Meters</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                   {paginatedAtLimit.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                      <td colSpan={4} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                         No users found matching filters
                       </td>
                     </tr>
                   ) : (
                     paginatedAtLimit.map((user: any) => (
-                      <tr key={user.userId} className="hover:bg-gray-800/50">
-                        <td className="px-4 py-3 text-sm text-white">{user.email}</td>
-                        <td className="px-4 py-3 text-sm text-gray-300 capitalize">{user.planName}</td>
+                      <tr key={user.userId} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{user.email}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 capitalize">{user.planName}</td>
                         <td className="px-4 py-3">
                           <div className="flex flex-wrap gap-2">
                             {user.exceededMeters.map((meter: string) => (
                               <span
                                 key={meter}
-                                className="text-xs px-2 py-1 rounded bg-red-900/30 text-red-400"
+                                className="text-xs px-2 py-1 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
                               >
                                 {meter}
                               </span>
@@ -736,24 +736,24 @@ function AnalyticsView({
             </div>
             {totalPages > 1 && (
               <div className="mt-4 flex items-center justify-between">
-                <div className="text-sm text-gray-400">
+                <div className="text-sm text-gray-500 dark:text-gray-400">
                   Showing {(currentPage - 1) * 10 + 1} to {Math.min(currentPage * 10, filteredAtLimitUsers.length)} of {filteredAtLimitUsers.length}
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded text-sm"
+                    className="px-3 py-1 bg-gray-50 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:bg-white dark:disabled:bg-gray-900 disabled:text-gray-400 dark:disabled:text-gray-600 disabled:cursor-not-allowed text-gray-900 dark:text-white rounded text-sm"
                   >
                     Previous
                   </button>
-                  <span className="px-3 py-1 text-sm text-gray-400">
+                  <span className="px-3 py-1 text-sm text-gray-500 dark:text-gray-400">
                     Page {currentPage} of {totalPages}
                   </span>
                   <button
                     onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded text-sm"
+                    className="px-3 py-1 bg-gray-50 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:bg-white dark:disabled:bg-gray-900 disabled:text-gray-400 dark:disabled:text-gray-600 disabled:cursor-not-allowed text-gray-900 dark:text-white rounded text-sm"
                   >
                     Next
                   </button>
@@ -768,38 +768,38 @@ function AnalyticsView({
           <div>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-800">
+                <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">User</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Current Plan</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Recommended</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Usage</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Action</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">User</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">Current Plan</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">Recommended</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">Usage</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                   {paginatedOpps.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                      <td colSpan={5} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                         No opportunities found matching filters
                       </td>
                     </tr>
                   ) : (
                     paginatedOpps.map((opp: any) => (
-                      <tr key={opp.userId} className="hover:bg-gray-800/50">
-                        <td className="px-4 py-3 text-sm text-white">{opp.email}</td>
-                        <td className="px-4 py-3 text-sm text-gray-300 capitalize">{opp.currentPlan}</td>
+                      <tr key={opp.userId} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{opp.email}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 capitalize">{opp.currentPlan}</td>
                         <td className="px-4 py-3">
-                          <span className="text-sm text-green-400 font-medium capitalize">
+                          <span className="text-sm text-green-600 dark:text-green-400 font-medium capitalize">
                             {opp.recommendedPlan}
                           </span>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-white font-medium">
+                            <span className="text-sm text-gray-900 dark:text-white font-medium">
                               {opp.usagePercentage.toFixed(1)}%
                             </span>
-                            <div className="w-24 bg-gray-800 rounded-full h-2">
+                            <div className="w-24 bg-gray-50 dark:bg-gray-800 rounded-full h-2">
                               <div
                                 className="bg-yellow-600 h-2 rounded-full"
                                 style={{ width: `${Math.min(100, opp.usagePercentage)}%` }}
@@ -823,24 +823,24 @@ function AnalyticsView({
             </div>
             {totalPages > 1 && (
               <div className="mt-4 flex items-center justify-between">
-                <div className="text-sm text-gray-400">
+                <div className="text-sm text-gray-500 dark:text-gray-400">
                   Showing {(currentPage - 1) * 10 + 1} to {Math.min(currentPage * 10, filteredConversionOpps.length)} of {filteredConversionOpps.length}
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded text-sm"
+                    className="px-3 py-1 bg-gray-50 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:bg-white dark:disabled:bg-gray-900 disabled:text-gray-400 dark:disabled:text-gray-600 disabled:cursor-not-allowed text-gray-900 dark:text-white rounded text-sm"
                   >
                     Previous
                   </button>
-                  <span className="px-3 py-1 text-sm text-gray-400">
+                  <span className="px-3 py-1 text-sm text-gray-500 dark:text-gray-400">
                     Page {currentPage} of {totalPages}
                   </span>
                   <button
                     onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 disabled:cursor-not-allowed text-white rounded text-sm"
+                    className="px-3 py-1 bg-gray-50 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:bg-white dark:disabled:bg-gray-900 disabled:text-gray-400 dark:disabled:text-gray-600 disabled:cursor-not-allowed text-gray-900 dark:text-white rounded text-sm"
                   >
                     Next
                   </button>
@@ -858,7 +858,7 @@ function ForecastView({ forecast }: { forecast: any }) {
   if (!forecast) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">No forecast data available</div>
+        <div className="text-gray-500 dark:text-gray-400">No forecast data available</div>
       </div>
     )
   }
@@ -886,8 +886,8 @@ function ForecastView({ forecast }: { forecast: any }) {
       </div>
 
       {/* Churn Risk Chart */}
-      <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-        <h3 className="text-lg font-semibold text-white mb-4">Churn Risk Distribution</h3>
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Churn Risk Distribution</h3>
         {forecast?.churnRisk ? (
           <BarChart
             data={[
@@ -898,7 +898,7 @@ function ForecastView({ forecast }: { forecast: any }) {
             height={200}
           />
         ) : (
-          <div className="flex items-center justify-center h-[200px] text-gray-400">
+          <div className="flex items-center justify-center h-[200px] text-gray-500 dark:text-gray-400">
             No churn risk data available
           </div>
         )}
@@ -906,23 +906,23 @@ function ForecastView({ forecast }: { forecast: any }) {
 
       {/* Revenue Forecast */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-          <h3 className="text-lg font-semibold text-white mb-4">Conversion Forecast</h3>
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Conversion Forecast</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-gray-300">Opportunities</span>
-              <span className="text-white font-semibold">{forecast.conversionForecast?.opportunities || 0}</span>
+              <span className="text-gray-600 dark:text-gray-300">Opportunities</span>
+              <span className="text-gray-900 dark:text-white font-semibold">{forecast.conversionForecast?.opportunities || 0}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-gray-300">Estimated Conversions</span>
-              <span className="text-green-400 font-semibold">{forecast.conversionForecast?.estimatedConversions || 0}</span>
+              <span className="text-gray-600 dark:text-gray-300">Estimated Conversions</span>
+              <span className="text-green-600 dark:text-green-400 font-semibold">{forecast.conversionForecast?.estimatedConversions || 0}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-gray-300">Conversion Rate</span>
-              <span className="text-white font-semibold">{forecast.conversionForecast?.conversionRate?.toFixed(1) || 0}%</span>
+              <span className="text-gray-600 dark:text-gray-300">Conversion Rate</span>
+              <span className="text-gray-900 dark:text-white font-semibold">{forecast.conversionForecast?.conversionRate?.toFixed(1) || 0}%</span>
             </div>
-            <div className="flex items-center justify-between pt-4 border-t border-gray-800">
-              <span className="text-gray-300">Estimated Revenue</span>
+            <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-800">
+              <span className="text-gray-600 dark:text-gray-300">Estimated Revenue</span>
               <span className="text-blue-400 font-semibold text-lg">
                 ${forecast.conversionForecast?.estimatedRevenue?.toFixed(2) || '0.00'}/mo
               </span>
@@ -930,20 +930,20 @@ function ForecastView({ forecast }: { forecast: any }) {
           </div>
         </div>
 
-        <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-          <h3 className="text-lg font-semibold text-white mb-4">Usage Trends</h3>
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Usage Trends</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-gray-300">Average Usage</span>
-              <span className="text-white font-semibold">{forecast.usageTrends?.averageUsageGrowth?.toFixed(1) || 0}%</span>
+              <span className="text-gray-600 dark:text-gray-300">Average Usage</span>
+              <span className="text-gray-900 dark:text-white font-semibold">{forecast.usageTrends?.averageUsageGrowth?.toFixed(1) || 0}%</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-gray-300">Approaching Limits</span>
-              <span className="text-yellow-400 font-semibold">{forecast.usageTrends?.usersApproachingLimits || 0}</span>
+              <span className="text-gray-600 dark:text-gray-300">Approaching Limits</span>
+              <span className="text-yellow-600 dark:text-yellow-400 font-semibold">{forecast.usageTrends?.usersApproachingLimits || 0}</span>
             </div>
-            <div className="flex items-center justify-between pt-4 border-t border-gray-800">
-              <span className="text-gray-300">Projected Churn</span>
-              <span className="text-red-400 font-semibold text-lg">{forecast.usageTrends?.projectedChurn || 0}</span>
+            <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-800">
+              <span className="text-gray-600 dark:text-gray-300">Projected Churn</span>
+              <span className="text-red-600 dark:text-red-400 font-semibold text-lg">{forecast.usageTrends?.projectedChurn || 0}</span>
             </div>
           </div>
         </div>

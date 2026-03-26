@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 import { api } from '@/lib/api'
+import { PageContainer } from '@/components/ui'
 
 type Project = {
   id: string
@@ -101,23 +102,27 @@ export default function ProjectsPage() {
   }
 
   if (loading) {
-    return <div className="text-gray-400">Loading projects...</div>
+    return (
+      <PageContainer density="normal">
+        <div className="text-gray-500 dark:text-gray-400">Loading projects...</div>
+      </PageContainer>
+    )
   }
 
   const limitReached = isLimitReached()
   const projectsUsage = usageStats?.projects
 
   return (
-    <div>
+    <PageContainer density="normal">
       {/* Warning Banner */}
       {limitReached && (
-        <div className="mb-6 bg-yellow-900/20 border border-yellow-600 text-yellow-400 px-4 py-3 rounded-lg">
+        <div className="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-400 dark:border-yellow-600 text-yellow-700 dark:text-yellow-400 px-4 py-3 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Project limit reached</p>
-              <p className="text-sm text-yellow-300 mt-1">
-                You have used {projectsUsage?.used} of {projectsUsage?.limit} projects. 
-                <Link href="/subscription" className="underline ml-1 hover:text-yellow-200">
+              <p className="text-sm text-yellow-600 dark:text-yellow-300 mt-1">
+                You have used {projectsUsage?.used} of {projectsUsage?.limit} projects.
+                <Link href="/subscription" className="underline ml-1 hover:text-yellow-800 dark:hover:text-yellow-200">
                   Upgrade your plan
                 </Link>
                 {' '}to create more projects.
@@ -129,14 +134,14 @@ export default function ProjectsPage() {
 
       {/* Usage Info */}
       {usageStats && !limitReached && projectsUsage && projectsUsage.limit !== null && (
-        <div className="mb-6 bg-gray-900 border border-gray-800 rounded-lg p-4">
+        <div className="mb-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-400">Projects Usage</span>
-            <span className="text-sm text-gray-300">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Projects Usage</span>
+            <span className="text-sm text-gray-700 dark:text-gray-300">
               {projectsUsage.used} / {projectsUsage.limit}
             </span>
           </div>
-          <div className="w-full bg-gray-800 rounded-full h-2">
+          <div className="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-2">
             <div
               className={`h-2 rounded-full ${
                 projectsUsage.percentage >= 80
@@ -152,13 +157,13 @@ export default function ProjectsPage() {
       )}
 
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-white">Projects</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Projects</h1>
         <button
           onClick={() => setShowCreateModal(true)}
           disabled={limitReached}
-          className={`px-4 py-2 rounded transition-colors ${
+          className={`px-4 py-2 rounded-lg transition-colors ${
             limitReached
-              ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+              ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
               : 'bg-blue-600 hover:bg-blue-700 text-white'
           }`}
         >
@@ -167,14 +172,14 @@ export default function ProjectsPage() {
       </div>
 
       {projects.length === 0 ? (
-        <div className="text-center py-12 bg-gray-900 rounded-lg">
-          <p className="text-gray-400 mb-4">No projects yet</p>
+        <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+          <p className="text-gray-500 dark:text-gray-400 mb-4">No projects yet</p>
           <button
             onClick={() => setShowCreateModal(true)}
             disabled={limitReached}
-            className={`px-4 py-2 rounded transition-colors ${
+            className={`px-4 py-2 rounded-lg transition-colors ${
               limitReached
-                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
                 : 'bg-blue-600 hover:bg-blue-700 text-white'
             }`}
           >
@@ -193,30 +198,30 @@ export default function ProjectsPage() {
                 href={`/projects/${project.id}`}
                 className={`block p-6 rounded-lg transition-all ${
                   isOwned
-                    ? 'bg-gray-900 hover:bg-gray-800 border border-gray-800'
-                    : 'bg-gray-900/80 hover:bg-gray-800/80 border border-blue-900/50 hover:border-blue-800/70'
+                    ? 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-800'
+                    : 'bg-blue-50/50 dark:bg-gray-900/80 hover:bg-blue-50 dark:hover:bg-gray-800/80 border border-blue-200 dark:border-blue-900/50 hover:border-blue-300 dark:hover:border-blue-800/70'
                 }`}
               >
                 <div className="flex items-start justify-between mb-3">
-                  <h2 className="text-lg font-semibold text-white flex-1 pr-2">{project.name}</h2>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex-1 pr-2">{project.name}</h2>
                   {isOwned && (
-                    <span className="flex-shrink-0 px-2 py-1 text-xs font-medium rounded bg-purple-900/30 text-purple-400 border border-purple-800/50">
+                    <span className="flex-shrink-0 px-2 py-1 text-xs font-medium rounded bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800/50">
                       Owned
                     </span>
                   )}
                   {isInvited && (
                     <span className={`flex-shrink-0 px-2 py-1 text-xs font-medium rounded ${
                       project.role === 'admin'
-                        ? 'bg-blue-900/30 text-blue-400 border border-blue-800/50'
+                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50'
                         : project.role === 'member'
-                        ? 'bg-green-900/30 text-green-400 border border-green-800/50'
-                        : 'bg-gray-700/30 text-gray-400 border border-gray-600/50'
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-800/50'
+                        : 'bg-gray-100 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600/50'
                     }`}>
                       {project.role === 'admin' ? 'Admin' : project.role === 'member' ? 'Member' : 'Viewer'}
                     </span>
                   )}
                 </div>
-                
+
                 {/* Show inviter info for invited projects */}
                 {isInvited && project.invitedBy && (
                   <div className="mb-3 text-xs text-gray-500">
@@ -228,20 +233,26 @@ export default function ProjectsPage() {
                     )}
                   </div>
                 )}
-                
+
+                {/* Stats - v4: 0 values neutral, crashes > 0 red, add time context */}
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="text-gray-400">
-                    <span className="text-white font-medium">{project._count.devices}</span> devices
+                  <div className="text-gray-500 dark:text-gray-400">
+                    <span className="text-gray-900 dark:text-white font-medium">{project._count.devices.toLocaleString()}</span> devices
                   </div>
-                  <div className="text-gray-400">
-                    <span className="text-white font-medium">{project._count.logs}</span> logs
+                  <div className="text-gray-500 dark:text-gray-400">
+                    <span className="text-gray-900 dark:text-white font-medium">{project._count.logs.toLocaleString()}</span> logs
                   </div>
-                  <div className="text-gray-400">
-                    <span className="text-red-400 font-medium">{project._count.crashes}</span> crashes
+                  <div className="text-gray-500 dark:text-gray-400">
+                    <span className={`font-medium ${project._count.crashes > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
+                      {project._count.crashes.toLocaleString()}
+                    </span> crashes
                   </div>
-                  <div className="text-gray-400">
-                    <span className="text-white font-medium">{project._count.apiTraces}</span> traces
+                  <div className="text-gray-500 dark:text-gray-400">
+                    <span className="text-gray-900 dark:text-white font-medium">{project._count.apiTraces.toLocaleString()}</span> traces
                   </div>
+                </div>
+                <div className="mt-2 text-xs text-gray-400 dark:text-gray-500">
+                  All time
                 </div>
               </Link>
             )
@@ -250,16 +261,16 @@ export default function ProjectsPage() {
       )}
 
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold text-white mb-4">Create Project</h2>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 w-full max-w-md shadow-xl">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Create Project</h2>
             {limitReached && (
-              <div className="mb-4 bg-yellow-900/20 border border-yellow-600 text-yellow-400 px-3 py-2 rounded text-sm">
+              <div className="mb-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-400 dark:border-yellow-600 text-yellow-700 dark:text-yellow-400 px-3 py-2 rounded text-sm">
                 Project limit reached. Please upgrade your plan to create more projects.
               </div>
             )}
             {createError && (
-              <div className="mb-4 bg-red-900/20 border border-red-600 text-red-400 px-3 py-2 rounded text-sm">
+              <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-400 px-3 py-2 rounded text-sm">
                 {createError}
               </div>
             )}
@@ -272,7 +283,7 @@ export default function ProjectsPage() {
                   setCreateError('')
                 }}
                 placeholder="Project name"
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
                 required
                 disabled={limitReached}
               />
@@ -284,14 +295,14 @@ export default function ProjectsPage() {
                     setCreateError('')
                     setNewProjectName('')
                   }}
-                  className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                  className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={creating || limitReached}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded transition-colors"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
                 >
                   {creating ? 'Creating...' : 'Create'}
                 </button>
@@ -300,6 +311,6 @@ export default function ProjectsPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }

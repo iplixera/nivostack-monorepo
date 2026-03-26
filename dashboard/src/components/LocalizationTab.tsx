@@ -315,14 +315,14 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
       )}
 
       {/* Sub-tabs */}
-      <div className="border-b border-gray-800">
+      <div className="border-b border-gray-200 dark:border-gray-800">
         <nav className="flex space-x-8">
           <button
             onClick={() => setActiveSubTab('keys')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeSubTab === 'keys'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
             }`}
           >
             Keys ({keys.length})
@@ -332,7 +332,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeSubTab === 'languages'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
             }`}
           >
             Languages ({languages.length})
@@ -342,7 +342,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeSubTab === 'import-export'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
             }`}
           >
             Import/Export
@@ -352,7 +352,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeSubTab === 'builds'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
             }`}
           >
             Builds
@@ -362,7 +362,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeSubTab === 'statistics'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
             }`}
           >
             Statistics
@@ -372,7 +372,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeSubTab === 'providers'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
             }`}
           >
             Providers
@@ -382,7 +382,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeSubTab === 'glossary'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
             }`}
           >
             Glossary
@@ -459,12 +459,12 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <h2 className="text-xl font-semibold text-white">Translation Keys</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Translation Keys</h2>
               {categories.length > 0 && (
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="bg-gray-800 text-gray-300 px-3 py-1.5 rounded-lg border border-gray-700 text-sm"
+                  className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700 text-sm"
                 >
                   <option value="">All Categories</option>
                   {categories.map((cat) => (
@@ -489,11 +489,11 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
             {/* Category Filter */}
             {categories.length > 0 && (
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-gray-400 text-sm">Filter:</span>
+                <span className="text-gray-500 dark:text-gray-400 text-sm">Filter:</span>
                 <button
                   onClick={() => setSelectedCategory('')}
                   className={`px-3 py-1 rounded-full text-sm ${
-                    !selectedCategory ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'
+                    !selectedCategory ? 'bg-blue-600 text-white' : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
                   All
@@ -503,7 +503,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
                     className={`px-3 py-1 rounded-full text-sm ${
-                      selectedCategory === cat ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'
+                      selectedCategory === cat ? 'bg-blue-600 text-white' : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                     }`}
                   >
                     {cat}
@@ -513,8 +513,8 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
             )}
 
             {keys.length === 0 ? (
-              <div className="text-center py-12 bg-gray-900 rounded-lg">
-                <p className="text-gray-400 mb-4">No translation keys yet</p>
+              <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+                <p className="text-gray-500 dark:text-gray-400 mb-4">No translation keys yet</p>
                 {languages.length === 0 ? (
                   <p className="text-gray-500 text-sm">Add a language first before creating keys</p>
                 ) : (
@@ -529,16 +529,16 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
             ) : (
               <div className="space-y-4">
                 {Object.entries(groupedKeys).map(([category, categoryKeys]) => (
-                  <div key={category} className="bg-gray-900 rounded-lg overflow-hidden">
-                    <div className="px-4 py-3 bg-gray-800/50 border-b border-gray-800">
-                      <h3 className="text-gray-300 font-medium flex items-center gap-2">
+                  <div key={category} className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800">
+                    <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
+                      <h3 className="text-gray-600 dark:text-gray-300 font-medium flex items-center gap-2">
                         {category}
-                        <span className="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded-full">
+                        <span className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs rounded-full">
                           {categoryKeys.length}
                         </span>
                       </h3>
                     </div>
-                    <div className="divide-y divide-gray-800">
+                    <div className="divide-y divide-gray-200 dark:divide-gray-800">
                       {categoryKeys.map(key => (
                         <div key={key.id} className="p-4">
                           <div className="flex items-start justify-between mb-3 gap-4">
@@ -553,7 +553,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
                             <div className="flex items-center gap-2 flex-shrink-0">
                               <button
                                 onClick={() => setEditingKey({ ...key })}
-                                className="text-gray-400 hover:text-white p-1"
+                                className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-1"
                                 title="Edit key"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -562,7 +562,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
                               </button>
                               <button
                                 onClick={() => handleDeleteKey(key.id)}
-                                className="text-gray-400 hover:text-red-400 p-1"
+                                className="text-gray-500 dark:text-gray-400 hover:text-red-400 p-1"
                                 title="Delete key"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -580,11 +580,11 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
                               const hasTranslation = translation?.value && translation.value.trim().length > 0
 
                               return (
-                                <div key={lang.id} className="bg-gray-800/50 rounded-lg p-3">
+                                <div key={lang.id} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
                                   <div className="flex items-start gap-3">
                                     {/* Language Code Badge */}
-                                    <div className="w-12 h-6 flex items-center justify-center bg-gray-700 rounded flex-shrink-0">
-                                      <span className="text-xs font-semibold text-gray-300">{lang.code.toUpperCase()}</span>
+                                    <div className="w-12 h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded flex-shrink-0">
+                                      <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">{lang.code.toUpperCase()}</span>
                                     </div>
                                     
                                     {/* Translation Content */}
@@ -596,7 +596,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
                                             value={editingTranslation?.value || ''}
                                             onChange={(e) => setEditingTranslation(prev => prev ? { ...prev, value: e.target.value } : null)}
                                             placeholder="Enter translation..."
-                                            className="w-full bg-gray-700 border border-gray-600 text-white px-3 py-2 rounded text-sm focus:outline-none focus:border-blue-500"
+                                            className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white px-3 py-2 rounded text-sm focus:outline-none focus:border-blue-500"
                                             dir={lang.isRTL ? 'rtl' : 'ltr'}
                                             autoFocus
                                           />
@@ -627,7 +627,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
                                             <button
                                               onClick={() => setEditingTranslation(null)}
                                               disabled={saving}
-                                              className="px-3 py-1.5 bg-gray-700 text-white rounded text-sm hover:bg-gray-600 disabled:opacity-50 flex-shrink-0"
+                                              className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded text-sm hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 flex-shrink-0"
                                             >
                                               Cancel
                                             </button>
@@ -637,8 +637,8 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
                                         <div className="flex items-start justify-between gap-3">
                                           <div className="flex-1 min-w-0">
                                             {hasTranslation ? (
-                                              <p 
-                                                className="text-white text-sm break-words"
+                                              <p
+                                                className="text-gray-900 dark:text-white text-sm break-words"
                                                 dir={lang.isRTL ? 'rtl' : 'ltr'}
                                               >
                                                 {translation.value}
@@ -657,7 +657,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
                                                 languageId: lang.id,
                                                 value: translation?.value?.trim() || ''
                                               })}
-                                              className="text-gray-400 hover:text-blue-400 p-1.5 flex-shrink-0 transition-colors"
+                                              className="text-gray-500 dark:text-gray-400 hover:text-blue-400 p-1.5 flex-shrink-0 transition-colors"
                                               title="Edit translation"
                                             >
                                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -752,7 +752,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
           )}
           {/* Header */}
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-xl font-semibold text-white">Languages</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Languages</h2>
             <button
               onClick={() => setShowAddLanguage(true)}
               disabled={!!(localizationLanguagesUsage && localizationLanguagesUsage.limit !== null && localizationLanguagesUsage.percentage >= 100)}
@@ -764,8 +764,8 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
 
           {/* Languages Content */}
           {languages.length === 0 ? (
-            <div className="text-center py-12 bg-gray-900 rounded-lg">
-              <p className="text-gray-400 mb-4">No languages configured yet</p>
+            <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+              <p className="text-gray-500 dark:text-gray-400 mb-4">No languages configured yet</p>
               <button
                 onClick={() => setShowAddLanguage(true)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -778,15 +778,15 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
               {languages.map(lang => (
                 <div
                   key={lang.id}
-                  className="bg-gray-900 rounded-lg p-4 flex items-center justify-between gap-4"
+                  className="bg-white dark:bg-gray-900 rounded-lg p-4 flex items-center justify-between gap-4 border border-gray-200 dark:border-gray-800"
                 >
                   <div className="flex items-center gap-4 min-w-0 flex-1">
-                    <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center text-lg font-bold text-gray-300 flex-shrink-0">
+                    <div className="w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-lg flex items-center justify-center text-lg font-bold text-gray-600 dark:text-gray-300 flex-shrink-0">
                       {lang.code.toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-white font-medium break-words">{lang.name}</span>
+                        <span className="text-gray-900 dark:text-white font-medium break-words">{lang.name}</span>
                         {lang.nativeName && lang.nativeName !== lang.name && (
                           <span className="text-gray-500 break-words">({lang.nativeName})</span>
                         )}
@@ -807,7 +807,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
                     {!lang.isDefault && (
                       <button
                         onClick={() => handleSetDefault(lang.id)}
-                        className="px-3 py-1.5 text-sm text-gray-400 hover:text-white transition-colors whitespace-nowrap"
+                        className="px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors whitespace-nowrap"
                         disabled={saving}
                       >
                         Set Default
@@ -845,44 +845,44 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
       {activeSubTab === 'import-export' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Import & Export</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Import & Export</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
               onClick={() => setShowImport(true)}
-              className="p-6 bg-gray-900 rounded-lg border border-gray-800 hover:border-blue-600 transition-colors text-left"
+              className="p-6 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-blue-600 transition-colors text-left"
             >
               <div className="flex items-center gap-3 mb-2">
                 <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
-                <h4 className="text-white font-medium">Import</h4>
+                <h4 className="text-gray-900 dark:text-white font-medium">Import</h4>
               </div>
-              <p className="text-gray-400 text-sm">Import translations from CSV, JSON, or XLIFF files</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Import translations from CSV, JSON, or XLIFF files</p>
             </button>
             <button
               onClick={() => setShowExport(true)}
-              className="p-6 bg-gray-900 rounded-lg border border-gray-800 hover:border-blue-600 transition-colors text-left"
+              className="p-6 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-blue-600 transition-colors text-left"
             >
               <div className="flex items-center gap-3 mb-2">
                 <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4-4m0 0L8 8m4-4v12" />
                 </svg>
-                <h4 className="text-white font-medium">Export</h4>
+                <h4 className="text-gray-900 dark:text-white font-medium">Export</h4>
               </div>
-              <p className="text-gray-400 text-sm">Export translations to CSV, JSON, or XLIFF format</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Export translations to CSV, JSON, or XLIFF format</p>
             </button>
             <button
               onClick={() => setShowBulkOperations(true)}
-              className="p-6 bg-gray-900 rounded-lg border border-gray-800 hover:border-blue-600 transition-colors text-left"
+              className="p-6 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-blue-600 transition-colors text-left"
             >
               <div className="flex items-center gap-3 mb-2">
                 <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <h4 className="text-white font-medium">Bulk Operations</h4>
+                <h4 className="text-gray-900 dark:text-white font-medium">Bulk Operations</h4>
               </div>
-              <p className="text-gray-400 text-sm">Perform bulk updates, assignments, and translations</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Perform bulk updates, assignments, and translations</p>
             </button>
           </div>
         </div>
@@ -907,7 +907,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
       {activeSubTab === 'providers' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Translation Providers</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Translation Providers</h3>
             <button
               onClick={() => setShowProviderSettings(true)}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
@@ -915,8 +915,8 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
               Configure Providers
             </button>
           </div>
-          <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
-            <p className="text-gray-400 text-center py-8">
+          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
+            <p className="text-gray-500 dark:text-gray-400 text-center py-8">
               Configure machine translation providers to enable automatic translations.
             </p>
           </div>
@@ -927,7 +927,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
       {activeSubTab === 'glossary' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Glossary</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Glossary</h3>
             <button
               onClick={() => setShowGlossary(true)}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
@@ -935,8 +935,8 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
               Manage Glossary
             </button>
           </div>
-          <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
-            <p className="text-gray-400 text-center py-8">
+          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
+            <p className="text-gray-500 dark:text-gray-400 text-center py-8">
               Manage terminology and glossary terms for consistent translations.
             </p>
           </div>
@@ -946,14 +946,14 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
       {/* Add Language Modal */}
       {showAddLanguage && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-lg w-full max-w-md">
-            <div className="p-4 border-b border-gray-800">
-              <h3 className="text-lg font-semibold text-white">Add Language</h3>
+          <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-md border border-gray-200 dark:border-gray-800">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Add Language</h3>
             </div>
             <div className="p-4 space-y-4">
               {/* Quick select common languages */}
               <div>
-                <label className="block text-sm text-gray-400 mb-2">Quick Select</label>
+                <label className="block text-sm text-gray-500 dark:text-gray-400 mb-2">Quick Select</label>
                 <div className="flex flex-wrap gap-1">
                   {COMMON_LANGUAGES.slice(0, 10).map(lang => (
                     <button
@@ -962,7 +962,7 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
                       className={`px-2 py-1 text-xs rounded ${
                         newLanguage.code === lang.code
                           ? 'bg-blue-600 text-white'
-                          : 'bg-gray-800 text-gray-400 hover:text-white'
+                          : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                       }`}
                     >
                       {lang.code.toUpperCase()}
@@ -972,35 +972,35 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
               </div>
 
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Language Code *</label>
+                <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Language Code *</label>
                 <input
                   type="text"
                   value={newLanguage.code}
                   onChange={(e) => setNewLanguage({ ...newLanguage, code: e.target.value.toLowerCase() })}
                   placeholder="e.g., en, ar, es"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Display Name *</label>
+                <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Display Name *</label>
                 <input
                   type="text"
                   value={newLanguage.name}
                   onChange={(e) => setNewLanguage({ ...newLanguage, name: e.target.value })}
                   placeholder="e.g., English, Arabic"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Native Name</label>
+                <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Native Name</label>
                 <input
                   type="text"
                   value={newLanguage.nativeName}
                   onChange={(e) => setNewLanguage({ ...newLanguage, nativeName: e.target.value })}
                   placeholder="e.g., العربية"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -1009,18 +1009,18 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
                   type="checkbox"
                   checked={newLanguage.isRTL}
                   onChange={(e) => setNewLanguage({ ...newLanguage, isRTL: e.target.checked })}
-                  className="rounded bg-gray-800 border-gray-700"
+                  className="rounded bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700"
                 />
-                <span className="text-gray-300 text-sm">Right-to-Left (RTL) Language</span>
+                <span className="text-gray-600 dark:text-gray-300 text-sm">Right-to-Left (RTL) Language</span>
               </label>
             </div>
-            <div className="p-4 border-t border-gray-800 flex justify-end gap-2">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-800 flex justify-end gap-2">
               <button
                 onClick={() => {
                   setShowAddLanguage(false)
                   setNewLanguage({ code: '', name: '', nativeName: '', isRTL: false })
                 }}
-                className="px-4 py-2 text-gray-400 hover:text-white"
+                className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               >
                 Cancel
               </button>
@@ -1039,42 +1039,42 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
       {/* Add Key Modal */}
       {showAddKey && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-lg w-full max-w-md">
-            <div className="p-4 border-b border-gray-800">
-              <h3 className="text-lg font-semibold text-white">Add Translation Key</h3>
+          <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-md border border-gray-200 dark:border-gray-800">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Add Translation Key</h3>
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Key *</label>
+                <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Key *</label>
                 <input
                   type="text"
                   value={newKey.key}
                   onChange={(e) => setNewKey({ ...newKey, key: e.target.value })}
                   placeholder="e.g., welcome_message, button.submit"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Description</label>
+                <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Description</label>
                 <input
                   type="text"
                   value={newKey.description}
                   onChange={(e) => setNewKey({ ...newKey, description: e.target.value })}
                   placeholder="Describe where this key is used"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Category</label>
+                <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Category</label>
                 <input
                   type="text"
                   value={newKey.category}
                   onChange={(e) => setNewKey({ ...newKey, category: e.target.value })}
                   placeholder="e.g., buttons, errors, screens"
                   list="categories"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                 />
                 <datalist id="categories">
                   {categories.map(cat => (
@@ -1083,13 +1083,13 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
                 </datalist>
               </div>
             </div>
-            <div className="p-4 border-t border-gray-800 flex justify-end gap-2">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-800 flex justify-end gap-2">
               <button
                 onClick={() => {
                   setShowAddKey(false)
                   setNewKey({ key: '', description: '', category: '' })
                 }}
-                className="px-4 py-2 text-gray-400 hover:text-white"
+                className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               >
                 Cancel
               </button>
@@ -1108,39 +1108,39 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
       {/* Edit Key Modal */}
       {editingKey && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-lg w-full max-w-md">
-            <div className="p-4 border-b border-gray-800">
-              <h3 className="text-lg font-semibold text-white">Edit Translation Key</h3>
+          <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-md border border-gray-200 dark:border-gray-800">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Edit Translation Key</h3>
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Key *</label>
+                <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Key *</label>
                 <input
                   type="text"
                   value={editingKey.key}
                   onChange={(e) => setEditingKey({ ...editingKey, key: e.target.value })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Description</label>
+                <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Description</label>
                 <input
                   type="text"
                   value={editingKey.description || ''}
                   onChange={(e) => setEditingKey({ ...editingKey, description: e.target.value })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Category</label>
+                <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Category</label>
                 <input
                   type="text"
                   value={editingKey.category || ''}
                   onChange={(e) => setEditingKey({ ...editingKey, category: e.target.value })}
                   list="categories-edit"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                 />
                 <datalist id="categories-edit">
                   {categories.map(cat => (
@@ -1149,10 +1149,10 @@ export default function LocalizationTab({ projectId, token, sharedUsage }: Local
                 </datalist>
               </div>
             </div>
-            <div className="p-4 border-t border-gray-800 flex justify-end gap-2">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-800 flex justify-end gap-2">
               <button
                 onClick={() => setEditingKey(null)}
-                className="px-4 py-2 text-gray-400 hover:text-white"
+                className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               >
                 Cancel
               </button>

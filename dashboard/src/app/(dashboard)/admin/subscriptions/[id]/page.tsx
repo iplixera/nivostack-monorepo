@@ -167,15 +167,15 @@ export default function AdminSubscriptionDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">Loading subscription...</div>
+        <div className="text-gray-500 dark:text-gray-400">Loading subscription...</div>
       </div>
     )
   }
 
   if (!subscription) {
     return (
-      <div className="bg-red-900/20 border border-red-600 rounded-lg p-4">
-        <p className="text-red-400">Subscription not found</p>
+      <div className="bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-600 rounded-lg p-4">
+        <p className="text-red-600 dark:text-red-400">Subscription not found</p>
       </div>
     )
   }
@@ -186,12 +186,12 @@ export default function AdminSubscriptionDetailPage() {
         <div>
           <Link
             href="/admin/subscriptions"
-            className="text-gray-400 hover:text-white mb-4 flex items-center gap-2"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
           >
             ← Back to Subscriptions
           </Link>
-          <h1 className="text-3xl font-bold text-white mb-2">Subscription Management</h1>
-          <p className="text-gray-400">Manage quotas and limits for {subscription.user.email}</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Subscription Management</h1>
+          <p className="text-gray-500 dark:text-gray-400">Manage quotas and limits for {subscription.user.email}</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -207,48 +207,48 @@ export default function AdminSubscriptionDetailPage() {
       </div>
 
       {/* Subscription Info */}
-      <div className="bg-gray-900 rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-white mb-4">Subscription Details</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Subscription Details</h2>
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <div className="text-sm text-gray-400 mb-1">User</div>
-            <div className="text-white">{subscription.user.email}</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">User</div>
+            <div className="text-gray-900 dark:text-white">{subscription.user.email}</div>
             {subscription.user.name && (
-              <div className="text-sm text-gray-400">{subscription.user.name}</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">{subscription.user.name}</div>
             )}
           </div>
           <div>
-            <div className="text-sm text-gray-400 mb-1">Plan</div>
-            <div className="text-white">{subscription.plan.displayName}</div>
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Plan</div>
+            <div className="text-gray-900 dark:text-white">{subscription.plan.displayName}</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
               ${subscription.plan.price === 0 ? 'Free' : subscription.plan.price.toFixed(2)}/month
             </div>
             {subscription.promoCode && (
-              <div className="text-xs text-green-400 mt-1">
+              <div className="text-xs text-green-600 dark:text-green-400 mt-1">
                 Promo: {subscription.promoCode.code} ({subscription.promoCode.discountType === 'percent' ? `${subscription.promoCode.discountValue}%` : `$${subscription.promoCode.discountValue}`})
               </div>
             )}
             {subscription.discountedPrice && subscription.discountedPrice !== subscription.plan.price && (
-              <div className="text-xs text-blue-400 mt-1">
+              <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                 Final Price: ${subscription.discountedPrice.toFixed(2)}/month
               </div>
             )}
           </div>
           <div>
-            <div className="text-sm text-gray-400 mb-1">Status</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Status</div>
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${
               !subscription.enabled
-                ? 'bg-red-900/30 text-red-400'
+                ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                 : subscription.status === 'active'
-                ? 'bg-green-900/30 text-green-400'
-                : 'bg-yellow-900/30 text-yellow-400'
+                ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
             }`}>
               {!subscription.enabled ? 'Disabled' : subscription.status}
             </span>
           </div>
           <div>
-            <div className="text-sm text-gray-400 mb-1">Trial Ends</div>
-            <div className="text-white">
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Trial Ends</div>
+            <div className="text-gray-900 dark:text-white">
               {new Date(subscription.trialEndDate).toLocaleDateString()}
             </div>
           </div>
@@ -256,23 +256,23 @@ export default function AdminSubscriptionDetailPage() {
       </div>
 
       {/* Quota Management */}
-      <div className="bg-gray-900 rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-white mb-4">Quota Limits</h2>
-        <p className="text-sm text-gray-400 mb-6">
-          Set custom limits for this subscription. Leave empty or set to ∞ for unlimited (uses plan default). 
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Quota Limits</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+          Set custom limits for this subscription. Leave empty or set to ∞ for unlimited (uses plan default).
           Setting a value overrides the plan limit for this user.
         </p>
-        <div className="mb-4 p-3 bg-blue-900/20 border border-blue-600 rounded text-sm text-blue-300">
-          <strong>Plan Defaults:</strong> Projects: {subscription.plan.maxProjects === null ? '∞' : subscription.plan.maxProjects} | 
-          Devices: {subscription.plan.maxDevices === null ? '∞' : subscription.plan.maxDevices} | 
-          Mock Endpoints: {(subscription.plan as any).maxMockEndpoints === null ? '∞' : (subscription.plan as any).maxMockEndpoints} | 
-          API Endpoints: {(subscription.plan as any).maxApiEndpoints === null ? '∞' : (subscription.plan as any).maxApiEndpoints.toLocaleString()} | 
-          API Requests: {(subscription.plan as any).maxApiRequests === null ? '∞' : (subscription.plan as any).maxApiRequests.toLocaleString()} | 
-          Logs: {subscription.plan.maxLogs === null ? '∞' : subscription.plan.maxLogs.toLocaleString()} | 
-          Sessions: {subscription.plan.maxSessions === null ? '∞' : subscription.plan.maxSessions.toLocaleString()} | 
-          Crashes: {subscription.plan.maxCrashes === null ? '∞' : subscription.plan.maxCrashes} | 
-          Business Config Keys: {(subscription.plan as any).maxBusinessConfigKeys === null ? '∞' : (subscription.plan as any).maxBusinessConfigKeys} | 
-          Localization Languages: {(subscription.plan as any).maxLocalizationLanguages === null ? '∞' : (subscription.plan as any).maxLocalizationLanguages} | 
+        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-600 rounded text-sm text-blue-700 dark:text-blue-300">
+          <strong>Plan Defaults:</strong> Projects: {subscription.plan.maxProjects === null ? '∞' : subscription.plan.maxProjects} |
+          Devices: {subscription.plan.maxDevices === null ? '∞' : subscription.plan.maxDevices} |
+          Mock Endpoints: {(subscription.plan as any).maxMockEndpoints === null ? '∞' : (subscription.plan as any).maxMockEndpoints} |
+          API Endpoints: {(subscription.plan as any).maxApiEndpoints === null ? '∞' : (subscription.plan as any).maxApiEndpoints.toLocaleString()} |
+          API Requests: {(subscription.plan as any).maxApiRequests === null ? '∞' : (subscription.plan as any).maxApiRequests.toLocaleString()} |
+          Logs: {subscription.plan.maxLogs === null ? '∞' : subscription.plan.maxLogs.toLocaleString()} |
+          Sessions: {subscription.plan.maxSessions === null ? '∞' : subscription.plan.maxSessions.toLocaleString()} |
+          Crashes: {subscription.plan.maxCrashes === null ? '∞' : subscription.plan.maxCrashes} |
+          Business Config Keys: {(subscription.plan as any).maxBusinessConfigKeys === null ? '∞' : (subscription.plan as any).maxBusinessConfigKeys} |
+          Localization Languages: {(subscription.plan as any).maxLocalizationLanguages === null ? '∞' : (subscription.plan as any).maxLocalizationLanguages} |
           Localization Keys: {(subscription.plan as any).maxLocalizationKeys === null ? '∞' : (subscription.plan as any).maxLocalizationKeys.toLocaleString()}
         </div>
 
@@ -334,7 +334,7 @@ export default function AdminSubscriptionDetailPage() {
           />
         </div>
 
-        <div className="mt-6 pt-6 border-t border-gray-800 flex gap-4">
+        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800 flex gap-4">
           <button
             onClick={handleSave}
             disabled={saving}
@@ -344,7 +344,7 @@ export default function AdminSubscriptionDetailPage() {
           </button>
           <button
             onClick={() => router.back()}
-            className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded font-medium"
+            className="px-6 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded font-medium"
           >
             Cancel
           </button>
@@ -354,17 +354,17 @@ export default function AdminSubscriptionDetailPage() {
       {/* Change Plan Modal */}
       {showPlanChangeModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 w-full max-w-md">
-            <h2 className="text-2xl font-bold text-white mb-4">Change Subscription Plan</h2>
-            <p className="text-gray-400 mb-4">
-              Current plan: <strong className="text-white">{subscription.plan.displayName}</strong>
+          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6 w-full max-w-md">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Change Subscription Plan</h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
+              Current plan: <strong className="text-gray-900 dark:text-white">{subscription.plan.displayName}</strong>
             </p>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Select New Plan</label>
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Select New Plan</label>
               <select
                 value={selectedPlanId}
                 onChange={(e) => setSelectedPlanId(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white"
               >
                 <option value="">Select a plan...</option>
                 {plans.map((plan) => (
@@ -380,7 +380,7 @@ export default function AdminSubscriptionDetailPage() {
                   setShowPlanChangeModal(false)
                   setSelectedPlanId('')
                 }}
-                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg transition-colors"
               >
                 Cancel
               </button>
@@ -402,7 +402,7 @@ export default function AdminSubscriptionDetailPage() {
 function QuotaInput({ label, value, onChange }: { label: string; value: number | null; onChange: (value: string) => void }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-300 mb-2">{label}</label>
+      <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">{label}</label>
       <div className="flex items-center gap-2">
         <input
           type="number"
@@ -410,11 +410,11 @@ function QuotaInput({ label, value, onChange }: { label: string; value: number |
           onChange={(e) => onChange(e.target.value)}
           placeholder="Unlimited"
           min="0"
-          className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
+          className="flex-1 px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white"
         />
         <button
           onClick={() => onChange('null')}
-          className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm"
+          className="px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded text-sm"
           title="Set to unlimited"
         >
           ∞
@@ -423,4 +423,3 @@ function QuotaInput({ label, value, onChange }: { label: string; value: number |
     </div>
   )
 }
-

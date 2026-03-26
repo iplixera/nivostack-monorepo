@@ -46,14 +46,14 @@ export default function AdminUsersPage() {
   }, [token])
 
   const filteredUsers = users.filter((user) => {
-    const matchesSearch = 
+    const matchesSearch =
       user.email.toLowerCase().includes(search.toLowerCase()) ||
       (user.name && user.name.toLowerCase().includes(search.toLowerCase()))
-    
+
     if (statusFilter === 'all') return matchesSearch
     if (statusFilter === 'admin') return matchesSearch && user.isAdmin
     if (!user.subscription) return false
-    
+
     if (statusFilter === 'active') {
       return matchesSearch && user.subscription.enabled && user.subscription.status === 'active'
     }
@@ -63,14 +63,14 @@ export default function AdminUsersPage() {
     if (statusFilter === 'disabled') {
       return matchesSearch && !user.subscription.enabled
     }
-    
+
     return matchesSearch
   })
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">Loading users...</div>
+        <div className="text-gray-500 dark:text-gray-400">Loading users...</div>
       </div>
     )
   }
@@ -78,23 +78,23 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Users Management</h1>
-        <p className="text-gray-400">View and manage all registered users</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Users Management</h1>
+        <p className="text-gray-500 dark:text-gray-400">View and manage all registered users</p>
       </div>
 
       {/* Filters */}
-      <div className="bg-gray-900 rounded-lg p-4 flex flex-col md:flex-row gap-4">
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-4 flex flex-col md:flex-row gap-4 border border-gray-200 dark:border-gray-800">
         <input
           type="text"
           placeholder="Search by email or name..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500"
+          className="flex-1 px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white placeholder-gray-500"
         />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white"
+          className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white"
         >
           <option value="all">All Users</option>
           <option value="active">Active</option>
@@ -105,39 +105,39 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Users Table */}
-      <div className="bg-gray-900 rounded-lg overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-800">
+            <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">User</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Subscription</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Projects</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Registered</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">User</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Subscription</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Projects</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Registered</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800">
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
               {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-800/50">
+                <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="text-sm font-medium text-white">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
                         {user.email}
                         {user.isAdmin && (
-                          <span className="ml-2 px-2 py-0.5 text-xs bg-purple-600/20 text-purple-400 rounded">Admin</span>
+                          <span className="ml-2 px-2 py-0.5 text-xs bg-purple-100 dark:bg-purple-600/20 text-purple-600 dark:text-purple-400 rounded">Admin</span>
                         )}
                       </div>
                       {user.name && (
-                        <div className="text-sm text-gray-400">{user.name}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">{user.name}</div>
                       )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {user.subscription ? (
                       <div>
-                        <div className="text-sm text-white">{user.subscription.plan.displayName}</div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-sm text-gray-900 dark:text-white">{user.subscription.plan.displayName}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
                           ${user.subscription.plan.price === 0 ? 'Free' : user.subscription.plan.price.toFixed(2)}/mo
                         </div>
                       </div>
@@ -150,10 +150,10 @@ export default function AdminUsersPage() {
                       <div>
                         <span className={`px-2 py-1 text-xs rounded ${
                           !user.subscription.enabled
-                            ? 'bg-red-900/30 text-red-400'
+                            ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                             : user.subscription.status === 'active'
-                            ? 'bg-green-900/30 text-green-400'
-                            : 'bg-yellow-900/30 text-yellow-400'
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                            : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
                         }`}>
                           {!user.subscription.enabled
                             ? 'Disabled'
@@ -166,10 +166,10 @@ export default function AdminUsersPage() {
                       <span className="text-sm text-gray-500">-</span>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                     {user._count.projects}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </td>
                 </tr>
@@ -178,16 +178,15 @@ export default function AdminUsersPage() {
           </table>
         </div>
         {filteredUsers.length === 0 && (
-          <div className="text-center py-12 text-gray-400">
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
             No users found
           </div>
         )}
       </div>
 
-      <div className="text-sm text-gray-400">
+      <div className="text-sm text-gray-500 dark:text-gray-400">
         Showing {filteredUsers.length} of {users.length} users
       </div>
     </div>
   )
 }
-

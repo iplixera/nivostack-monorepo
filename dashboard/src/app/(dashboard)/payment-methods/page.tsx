@@ -86,7 +86,7 @@ export default function PaymentMethodsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-gray-400">Loading payment methods...</div>
+        <div className="text-gray-500 dark:text-gray-400">Loading payment methods...</div>
       </div>
     )
   }
@@ -95,12 +95,12 @@ export default function PaymentMethodsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Payment Methods</h1>
-          <p className="text-gray-400">Manage your payment methods for subscription billing</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Payment Methods</h1>
+          <p className="text-gray-500 dark:text-gray-400">Manage your payment methods for subscription billing</p>
         </div>
         <Link
           href="/subscription"
-          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
+          className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg transition-colors border border-gray-200 dark:border-gray-700"
         >
           ← Back to Subscription
         </Link>
@@ -113,8 +113,8 @@ export default function PaymentMethodsPage() {
       )}
 
       {/* Add Payment Method Section */}
-      <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-        <h2 className="text-xl font-semibold text-white mb-4">Add Payment Method</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Add Payment Method</h2>
         <div className="bg-blue-900/20 border border-blue-600 text-blue-300 px-4 py-3 rounded-lg mb-4">
           <p className="text-sm">
             <strong>Note:</strong> Payment method integration with Stripe Elements will be added here.
@@ -132,28 +132,28 @@ export default function PaymentMethodsPage() {
       </div>
 
       {/* Payment Methods List */}
-      <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-800">
-          <h2 className="text-xl font-semibold text-white">Saved Payment Methods</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Saved Payment Methods</h2>
         </div>
 
         {paymentMethods.length === 0 ? (
           <div className="p-12 text-center">
-            <div className="text-gray-400 mb-4">No payment methods found</div>
+            <div className="text-gray-500 dark:text-gray-400 mb-4">No payment methods found</div>
             <p className="text-sm text-gray-500">
               Add a payment method to enable automatic subscription renewals
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-800">
+          <div className="divide-y divide-gray-200 dark:divide-gray-800">
             {paymentMethods.map((method) => (
-              <div key={method.id} className="p-6 hover:bg-gray-800/50 transition-colors">
+              <div key={method.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="text-3xl">{getCardBrandIcon(method.brand || method.stripe?.brand)}</div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-white font-medium">
+                        <span className="text-gray-900 dark:text-white font-medium">
                           {formatCardNumber(method.last4 || method.stripe?.last4 || null)}
                         </span>
                         {method.isDefault && (
@@ -162,7 +162,7 @@ export default function PaymentMethodsPage() {
                           </span>
                         )}
                       </div>
-                      <div className="text-sm text-gray-400 mt-1">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                         {method.brand || method.stripe?.brand || 'Card'} • Expires{' '}
                         {method.expMonth || method.stripe?.expMonth
                           ? `${String(method.expMonth || method.stripe?.expMonth).padStart(2, '0')}/${method.expYear || method.stripe?.expYear}`
@@ -177,7 +177,7 @@ export default function PaymentMethodsPage() {
                     {!method.isDefault && (
                       <button
                         onClick={() => handleSetDefault(method.id)}
-                        className="px-3 py-1 text-sm bg-gray-800 hover:bg-gray-700 text-white rounded transition-colors"
+                        className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded transition-colors border border-gray-200 dark:border-gray-700"
                       >
                         Set as Default
                       </button>
@@ -197,9 +197,9 @@ export default function PaymentMethodsPage() {
       </div>
 
       {/* Info Section */}
-      <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-        <h3 className="text-lg font-semibold text-white mb-2">About Payment Methods</h3>
-        <ul className="text-sm text-gray-400 space-y-2 list-disc list-inside">
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">About Payment Methods</h3>
+        <ul className="text-sm text-gray-500 dark:text-gray-400 space-y-2 list-disc list-inside">
           <li>Your default payment method will be used for automatic subscription renewals</li>
           <li>You can add multiple payment methods and switch between them</li>
           <li>Payment methods are securely stored by Stripe</li>

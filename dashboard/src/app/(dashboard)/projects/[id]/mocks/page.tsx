@@ -232,7 +232,7 @@ export default function MocksPage() {
   }
 
   if (loading) {
-    return <div className="p-6 text-gray-400">Loading...</div>
+    return <div className="p-6 text-gray-500 dark:text-gray-400">Loading...</div>
   }
 
   const currentEnv = environments.find((e) => e.id === selectedEnvironment)
@@ -240,14 +240,14 @@ export default function MocksPage() {
   return (
     <div className="p-6">
       {/* Sub-tabs */}
-      <div className="mb-6 border-b border-gray-800">
+      <div className="mb-6 border-b border-gray-200 dark:border-gray-800">
         <nav className="flex space-x-8">
           <button
             onClick={() => setActiveSubTab('mocks')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeSubTab === 'mocks'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
             }`}
           >
             API Mocks
@@ -257,7 +257,7 @@ export default function MocksPage() {
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeSubTab === 'builds'
                 ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
             }`}
           >
             Builds
@@ -278,7 +278,7 @@ export default function MocksPage() {
       {activeSubTab === 'mocks' && (
         <>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">API Mocking</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">API Mocking</h1>
         <button
           onClick={() => setShowCreateEnv(true)}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -288,41 +288,41 @@ export default function MocksPage() {
       </div>
 
       {/* Environments Table */}
-      <div className="bg-gray-900 rounded-lg border border-gray-800 mb-6">
-        <div className="p-4 border-b border-gray-800">
-          <h2 className="text-lg font-semibold text-white">Environments</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 mb-6">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Environments</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-800">
+            <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Mode</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Endpoints</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Mode</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Endpoints</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800">
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
               {environments.map((env) => (
                 <tr
                   key={env.id}
-                  className={`cursor-pointer hover:bg-gray-800/50 ${
-                    selectedEnvironment === env.id ? 'bg-blue-900/20' : ''
+                  className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 ${
+                    selectedEnvironment === env.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                   }`}
                   onClick={() => setSelectedEnvironment(env.id)}
                 >
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <div className="text-sm font-medium text-white">
+                    <div className="text-sm font-medium text-gray-900 dark:text-white">
                       {env.name}
-                      {env.isDefault && <span className="ml-2 text-xs text-gray-400">(Default)</span>}
+                      {env.isDefault && <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">(Default)</span>}
                     </div>
                     {env.description && (
-                      <div className="text-xs text-gray-400 mt-1">{env.description}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{env.description}</div>
                     )}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">{env.mode}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">{env._count?.endpoints || 0}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{env.mode}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{env._count?.endpoints || 0}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs rounded ${
                       env.isEnabled ? 'bg-green-900/30 text-green-400' : 'bg-gray-700 text-gray-400'
@@ -354,9 +354,9 @@ export default function MocksPage() {
 
       {/* Endpoints Table */}
       {selectedEnvironment && (
-        <div className="bg-gray-900 rounded-lg border border-gray-800 mb-6">
-          <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white">
+        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 mb-6">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Endpoints {currentEnv && `(${currentEnv.name})`}
             </h2>
             <button
@@ -368,22 +368,22 @@ export default function MocksPage() {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-800">
+              <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Method</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Path</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Description</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Responses</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Method</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Path</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Responses</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                 {endpoints.map((endpoint) => (
                   <tr
                     key={endpoint.id}
-                    className={`cursor-pointer hover:bg-gray-800/50 ${
-                      selectedEndpoint === endpoint.id ? 'bg-blue-900/20' : ''
+                    className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 ${
+                      selectedEndpoint === endpoint.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                     }`}
                     onClick={() => setSelectedEndpoint(endpoint.id)}
                   >
@@ -391,12 +391,12 @@ export default function MocksPage() {
                       <span className="font-mono text-sm font-medium text-blue-400">{endpoint.method}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="font-mono text-sm text-gray-300">{endpoint.path}</span>
+                      <span className="font-mono text-sm text-gray-600 dark:text-gray-300">{endpoint.path}</span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-400">
+                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                       {endpoint.description || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                       {endpoint.responses.length} response{endpoint.responses.length !== 1 ? 's' : ''}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
@@ -419,7 +419,7 @@ export default function MocksPage() {
                 ))}
                 {endpoints.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                       No endpoints yet. Click &quot;+ Add Endpoint&quot; to create one.
                     </td>
                   </tr>
@@ -432,13 +432,13 @@ export default function MocksPage() {
 
       {/* Responses Table */}
       {selectedEndpointData && (
-        <div className="bg-gray-900 rounded-lg border border-gray-800">
-          <div className="p-4 border-b border-gray-800">
-            <h2 className="text-lg font-semibold text-white mb-2">
+        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               Responses for {selectedEndpointData.method} {selectedEndpointData.path}
             </h2>
             {selectedEndpointData.description && (
-              <p className="text-sm text-gray-400">{selectedEndpointData.description}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{selectedEndpointData.description}</p>
             )}
           </div>
           <div className="p-4">
@@ -452,19 +452,19 @@ export default function MocksPage() {
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-800">
+                <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Delay</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Flags</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Preview</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Delay</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Flags</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Preview</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                   {selectedEndpointData.responses.map((response) => (
-                    <tr key={response.id} className="hover:bg-gray-800/50">
+                    <tr key={response.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                       <td className="px-4 py-3 whitespace-nowrap">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
                           response.statusCode >= 200 && response.statusCode < 300
@@ -476,8 +476,8 @@ export default function MocksPage() {
                           {response.statusCode}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-300">{response.name || '-'}</td>
-                      <td className="px-4 py-3 text-sm text-gray-300">{response.delay}ms</td>
+                      <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{response.name || '-'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{response.delay}ms</td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="flex gap-2">
                           {response.isDefault && (
@@ -490,7 +490,7 @@ export default function MocksPage() {
                       </td>
                       <td className="px-4 py-3">
                         {response.responseBody && (
-                          <div className="text-xs font-mono text-gray-400 max-w-xs truncate">
+                          <div className="text-xs font-mono text-gray-500 dark:text-gray-400 max-w-xs truncate">
                             {JSON.stringify(response.responseBody).slice(0, 50)}...
                           </div>
                         )}
@@ -569,34 +569,34 @@ function CreateEnvironmentModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 w-96">
-        <h2 className="text-xl font-bold mb-4 text-white">Create Mock Environment</h2>
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-6 w-96">
+        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Create Mock Environment</h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Name</label>
+            <label className="block text-sm font-medium mb-1 text-gray-600 dark:text-gray-300">Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500"
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white placeholder-gray-500"
               placeholder="e.g., Development, Staging"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Description</label>
+            <label className="block text-sm font-medium mb-1 text-gray-600 dark:text-gray-300">Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500"
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white placeholder-gray-500"
               rows={2}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Mode</label>
+            <label className="block text-sm font-medium mb-1 text-gray-600 dark:text-gray-300">Mode</label>
             <select
               value={mode}
               onChange={(e) => setMode(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white"
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white"
             >
               <option value="selective">Selective (only mocked endpoints)</option>
               <option value="global">Global (check all, fallback to real API)</option>
@@ -607,7 +607,7 @@ function CreateEnvironmentModal({
           <div className="flex gap-2 justify-end">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-700 rounded hover:bg-gray-800 text-gray-300"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"
             >
               Cancel
             </button>
@@ -641,15 +641,15 @@ function CreateEndpointModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 w-96">
-        <h2 className="text-xl font-bold mb-4 text-white">Create Mock Endpoint</h2>
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-6 w-96">
+        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Create Mock Endpoint</h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Method</label>
+            <label className="block text-sm font-medium mb-1 text-gray-600 dark:text-gray-300">Method</label>
             <select
               value={method}
               onChange={(e) => setMethod(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white"
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white"
             >
               <option value="GET">GET</option>
               <option value="POST">POST</option>
@@ -659,31 +659,31 @@ function CreateEndpointModal({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Path</label>
+            <label className="block text-sm font-medium mb-1 text-gray-600 dark:text-gray-300">Path</label>
             <input
               type="text"
               value={path}
               onChange={(e) => setPath(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded font-mono text-white placeholder-gray-500"
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded font-mono text-gray-900 dark:text-white placeholder-gray-500"
               placeholder="e.g., /api/users/:id"
             />
-            <div className="text-xs text-gray-400 mt-1">
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Use :param for path parameters, * for wildcards
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Description</label>
+            <label className="block text-sm font-medium mb-1 text-gray-600 dark:text-gray-300">Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500"
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white placeholder-gray-500"
               rows={2}
             />
           </div>
           <div className="flex gap-2 justify-end">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-700 rounded hover:bg-gray-800 text-gray-300"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"
             >
               Cancel
             </button>
@@ -784,63 +784,63 @@ function ResponseEditorModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4 text-white">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
           {response ? 'Edit Response' : 'Create Response'}
         </h2>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Status Code</label>
+              <label className="block text-sm font-medium mb-1 text-gray-600 dark:text-gray-300">Status Code</label>
               <input
                 type="number"
                 value={statusCode}
                 onChange={(e) => setStatusCode(parseInt(e.target.value) || 200)}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white"
                 min={100}
                 max={599}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Delay (ms)</label>
+              <label className="block text-sm font-medium mb-1 text-gray-600 dark:text-gray-300">Delay (ms)</label>
               <input
                 type="number"
                 value={delay}
                 onChange={(e) => setDelay(parseInt(e.target.value) || 0)}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white"
                 min={0}
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Name</label>
+            <label className="block text-sm font-medium mb-1 text-gray-600 dark:text-gray-300">Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500"
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white placeholder-gray-500"
               placeholder="e.g., Success, Not Found"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Description</label>
+            <label className="block text-sm font-medium mb-1 text-gray-600 dark:text-gray-300">Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500"
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white placeholder-gray-500"
               rows={2}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Response Body (JSON)</label>
+            <label className="block text-sm font-medium mb-1 text-gray-600 dark:text-gray-300">Response Body (JSON)</label>
             <textarea
               value={responseBody}
               onChange={(e) => {
                 setResponseBody(e.target.value)
                 setBodyError('')
               }}
-              className={`w-full px-3 py-2 bg-gray-800 border rounded font-mono text-sm text-white ${
-                bodyError ? 'border-red-500' : 'border-gray-700'
+              className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border rounded font-mono text-sm text-gray-900 dark:text-white ${
+                bodyError ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
               }`}
               rows={10}
             />
@@ -848,7 +848,7 @@ function ResponseEditorModal({
           </div>
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-sm font-medium text-gray-300">Response Headers</label>
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-300">Response Headers</label>
               <button
                 onClick={addHeader}
                 className="text-xs px-2 py-1 bg-blue-900/30 text-blue-400 rounded hover:bg-blue-900/50"
@@ -863,14 +863,14 @@ function ResponseEditorModal({
                     type="text"
                     value={header.key}
                     onChange={(e) => updateHeader(index, 'key', e.target.value)}
-                    className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500"
+                    className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white placeholder-gray-500"
                     placeholder="Header name"
                   />
                   <input
                     type="text"
                     value={header.value}
                     onChange={(e) => updateHeader(index, 'value', e.target.value)}
-                    className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500"
+                    className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-gray-900 dark:text-white placeholder-gray-500"
                     placeholder="Header value"
                   />
                   <button
@@ -891,13 +891,13 @@ function ResponseEditorModal({
                 onChange={(e) => setIsDefault(e.target.checked)}
                 className="text-blue-600"
               />
-              <span className="text-sm text-gray-300">Set as default response</span>
+              <span className="text-sm text-gray-600 dark:text-gray-300">Set as default response</span>
             </label>
           </div>
           <div className="flex gap-2 justify-end">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-700 rounded hover:bg-gray-800 text-gray-300"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"
             >
               Cancel
             </button>

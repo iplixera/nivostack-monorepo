@@ -78,10 +78,10 @@ export const Pagination = memo(function Pagination({
   return (
     <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 ${className}`}>
       {/* Results info */}
-      <div className="text-sm text-gray-400">
-        Showing <span className="font-medium text-white">{startItem}</span> to{' '}
-        <span className="font-medium text-white">{endItem}</span> of{' '}
-        <span className="font-medium text-white">{total.toLocaleString()}</span> results
+      <div className="text-sm text-gray-500 dark:text-gray-400">
+        Showing <span className="font-medium text-gray-900 dark:text-white">{startItem}</span> to{' '}
+        <span className="font-medium text-gray-900 dark:text-white">{endItem}</span> of{' '}
+        <span className="font-medium text-gray-900 dark:text-white">{total.toLocaleString()}</span> results
       </div>
 
       {/* Controls */}
@@ -89,11 +89,11 @@ export const Pagination = memo(function Pagination({
         {/* Limit selector */}
         {showLimitSelector && onLimitChange && (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">Per page:</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">Per page:</span>
             <select
               value={limit}
               onChange={(e) => onLimitChange(Number(e.target.value))}
-              className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-2 py-1 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {limitOptions.map((opt) => (
                 <option key={opt} value={opt}>
@@ -112,8 +112,8 @@ export const Pagination = memo(function Pagination({
             disabled={!hasPrev}
             className={`p-2 rounded ${
               hasPrev
-                ? 'text-gray-400 hover:text-white hover:bg-gray-700'
-                : 'text-gray-600 cursor-not-allowed'
+                ? 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
+                : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
             }`}
             aria-label="Previous page"
           >
@@ -125,7 +125,7 @@ export const Pagination = memo(function Pagination({
           {/* Page numbers */}
           {getVisiblePages().map((pageNum, index) =>
             pageNum === 'ellipsis' ? (
-              <span key={`ellipsis-${index}`} className="px-2 text-gray-500">
+              <span key={`ellipsis-${index}`} className="px-2 text-gray-400 dark:text-gray-500">
                 ...
               </span>
             ) : (
@@ -135,7 +135,7 @@ export const Pagination = memo(function Pagination({
                 className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                   pageNum === page
                     ? 'bg-blue-600 text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
               >
                 {pageNum}
@@ -149,8 +149,8 @@ export const Pagination = memo(function Pagination({
             disabled={!hasNext}
             className={`p-2 rounded ${
               hasNext
-                ? 'text-gray-400 hover:text-white hover:bg-gray-700'
-                : 'text-gray-600 cursor-not-allowed'
+                ? 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
+                : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
             }`}
             aria-label="Next page"
           >
@@ -178,7 +178,7 @@ export const CompactPagination = memo(function CompactPagination({
 
   return (
     <div className={`flex items-center justify-between gap-4 ${className}`}>
-      <span className="text-sm text-gray-400">
+      <span className="text-sm text-gray-500 dark:text-gray-400">
         {startItem}-{endItem} of {total}
       </span>
       <div className="flex items-center gap-1">
@@ -186,21 +186,21 @@ export const CompactPagination = memo(function CompactPagination({
           onClick={() => onPageChange(page - 1)}
           disabled={!hasPrev}
           className={`p-1.5 rounded ${
-            hasPrev ? 'text-gray-400 hover:text-white hover:bg-gray-700' : 'text-gray-600 cursor-not-allowed'
+            hasPrev ? 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700' : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
           }`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <span className="text-sm text-gray-300 px-2">
+        <span className="text-sm text-gray-600 dark:text-gray-300 px-2">
           {page} / {totalPages}
         </span>
         <button
           onClick={() => onPageChange(page + 1)}
           disabled={!hasNext}
           className={`p-1.5 rounded ${
-            hasNext ? 'text-gray-400 hover:text-white hover:bg-gray-700' : 'text-gray-600 cursor-not-allowed'
+            hasNext ? 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700' : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
           }`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

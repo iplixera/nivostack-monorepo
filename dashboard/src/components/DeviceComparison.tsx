@@ -93,8 +93,8 @@ export default function DeviceComparison({ deviceIds, token, onClose }: DeviceCo
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-          <div className="text-gray-400">Loading comparison...</div>
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+          <div className="text-gray-500 dark:text-gray-400">Loading comparison...</div>
         </div>
       </div>
     )
@@ -103,12 +103,12 @@ export default function DeviceComparison({ deviceIds, token, onClose }: DeviceCo
   if (error) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-gray-900 rounded-lg p-6 border border-gray-800 max-w-md">
-          <h3 className="text-lg font-semibold text-white mb-2">Error</h3>
-          <p className="text-gray-400 mb-4">{error}</p>
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800 max-w-md">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Error</h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">{error}</p>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-800 hover:bg-gray-750 text-white rounded-lg text-sm font-medium transition-colors border border-gray-700"
+            className="px-4 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-750 text-gray-900 dark:text-white rounded-lg text-sm font-medium transition-colors border border-gray-300 dark:border-gray-700"
           >
             Close
           </button>
@@ -167,13 +167,13 @@ export default function DeviceComparison({ deviceIds, token, onClose }: DeviceCo
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-lg border border-gray-800 max-w-7xl w-full max-h-[90vh] overflow-auto">
+      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 max-w-7xl w-full max-h-[90vh] overflow-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-gray-900 border-b border-gray-800 p-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">Device Comparison</h2>
+        <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-6 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Device Comparison</h2>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-800 hover:bg-gray-750 text-white rounded-lg text-sm font-medium transition-colors border border-gray-700"
+            className="px-4 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-750 text-gray-900 dark:text-white rounded-lg text-sm font-medium transition-colors border border-gray-300 dark:border-gray-700"
           >
             Close
           </button>
@@ -183,25 +183,25 @@ export default function DeviceComparison({ deviceIds, token, onClose }: DeviceCo
         <div className="p-6">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-800">
+              <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase border-b border-gray-700">Property</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase border-b border-gray-300 dark:border-gray-700">Property</th>
                   {devices.map((device, idx) => (
-                    <th key={device.id} className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase border-b border-gray-700 min-w-[200px]">
-                      <div className="font-semibold text-white">
+                    <th key={device.id} className="px-4 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase border-b border-gray-300 dark:border-gray-700 min-w-[200px]">
+                      <div className="font-semibold text-gray-900 dark:text-white">
                         {device.manufacturer ? `${device.manufacturer} ` : ''}{device.model || 'Device ' + (idx + 1)}
                       </div>
-                      <div className="text-gray-400 text-xs mt-1 font-mono">
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mt-1 font-mono">
                         {device.deviceCode || device.deviceId.slice(0, 12)}
                       </div>
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                 {comparisonFields.map((field) => (
-                  <tr key={field.key} className="hover:bg-gray-800/50">
-                    <td className="px-4 py-3 text-sm font-medium text-gray-300 border-r border-gray-800">
+                  <tr key={field.key} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td className="px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300 border-r border-gray-200 dark:border-gray-800">
                       {field.label}
                     </td>
                     {devices.map((device) => {
@@ -222,14 +222,14 @@ export default function DeviceComparison({ deviceIds, token, onClose }: DeviceCo
                         : '-'
 
                       return (
-                        <td key={device.id} className="px-4 py-3 text-sm text-white">
+                        <td key={device.id} className="px-4 py-3 text-sm text-gray-900 dark:text-white">
                           {field.key === 'tags' && Array.isArray(value) ? (
                             <div className="flex flex-wrap gap-1">
                               {value.length > 0 ? (
                                 value.map((tag: string, i: number) => (
                                   <span
                                     key={i}
-                                    className="px-2 py-0.5 bg-gray-800 text-gray-300 text-xs rounded border border-gray-700"
+                                    className="px-2 py-0.5 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs rounded border border-gray-300 dark:border-gray-700"
                                   >
                                     {tag}
                                   </span>

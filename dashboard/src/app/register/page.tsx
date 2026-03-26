@@ -158,15 +158,50 @@ export default function RegisterPage() {
   const retentionDays = freePlan?.retentionDays || 30
 
   return (
-    <div className="min-h-screen bg-gray-950 flex">
-      {/* Left Side - Information */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 p-12 flex-col justify-center border-r border-gray-800">
+    <div className="min-h-screen bg-white">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16 items-center">
+            <Link href="/" className="flex items-center space-x-2">
+              <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
+                <span className="text-white font-bold text-lg">N</span>
+              </div>
+              <span className="text-xl font-bold text-gray-900">NivoStack</span>
+            </Link>
+            <div className="hidden md:flex items-center space-x-8">
+              <Link href="/#features" className="text-gray-600 hover:text-gray-900 transition-colors font-medium">Features</Link>
+              <Link href="/#pricing" className="text-gray-600 hover:text-gray-900 transition-colors font-medium">Pricing</Link>
+              <Link href="/#integrations" className="text-gray-600 hover:text-gray-900 transition-colors font-medium">Integrations</Link>
+              <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors font-medium">Contact</Link>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/login"
+                className="text-gray-600 hover:text-gray-900 transition-colors font-medium"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/register"
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all font-medium shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/30 hover:-translate-y-0.5"
+              >
+                Start Free
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="flex min-h-screen pt-16">
+        {/* Left Side - Information */}
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 p-12 flex-col justify-center">
         <div className="max-w-lg">
           <div className="mb-10">
             <h1 className="text-4xl font-bold text-white mb-3">
               Start Free Forever
             </h1>
-            <p className="text-lg text-gray-400">
+            <p className="text-lg text-blue-100">
               Full access to all features. No credit card required. No expiration.
             </p>
           </div>
@@ -174,11 +209,11 @@ export default function RegisterPage() {
           {/* What You Get - Condensed */}
           {planLoading ? (
             <div className="mb-8">
-              <div className="text-gray-400">Loading plan information...</div>
+              <div className="text-blue-100">Loading plan information...</div>
             </div>
           ) : freePlan ? (
             <div className="mb-8">
-              <h2 className="text-xs font-semibold text-gray-400 mb-4 uppercase tracking-wider">
+              <h2 className="text-xs font-semibold text-blue-200 mb-4 uppercase tracking-wider">
                 Included Features
               </h2>
               <div className="grid grid-cols-1 gap-2.5">
@@ -187,14 +222,14 @@ export default function RegisterPage() {
                 ))}
               </div>
               {generateFeatures(freePlan).length > 6 && (
-                <p className="text-sm text-gray-500 mt-3">
+                <p className="text-sm text-blue-200 mt-3">
                   + {generateFeatures(freePlan).length - 6} more features
                 </p>
               )}
             </div>
           ) : (
             <div className="mb-8">
-              <div className="text-yellow-400">Free plan information unavailable</div>
+              <div className="text-yellow-200">Free plan information unavailable</div>
             </div>
           )}
 
@@ -216,23 +251,28 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      {/* Right Side - Registration Form */}
-      <div className="w-full lg:w-1/2 flex justify-center p-8 pt-20">
-        <div className="w-full max-w-md">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-white mb-2">Create Your Account</h1>
-            <p className="text-gray-400">Start free forever - no expiration</p>
-          </div>
+        {/* Right Side - Registration Form */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">
+          <div className="w-full max-w-md">
+            <div className="mb-8">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center lg:hidden">
+                  <span className="text-white font-bold text-xl">N</span>
+                </div>
+                <h1 className="text-3xl font-bold text-gray-900">Create Your Account</h1>
+              </div>
+              <p className="text-gray-600">Start free forever - no expiration</p>
+            </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="p-3 bg-red-900/50 border border-red-500 rounded text-red-200 text-sm">
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                 {error}
               </div>
             )}
 
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                 Name
               </label>
               <input
@@ -240,13 +280,13 @@ export default function RegisterPage() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="John Doe"
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email
               </label>
               <input
@@ -254,14 +294,14 @@ export default function RegisterPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="you@example.com"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Password
               </label>
               <input
@@ -269,7 +309,7 @@ export default function RegisterPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="••••••••"
                 required
                 minLength={6}
@@ -280,29 +320,30 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
             >
               {loading ? 'Creating account...' : 'Start Free Forever'}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-gray-400 text-sm">
+          <p className="mt-6 text-center text-gray-600 text-sm">
             Already have an account?{' '}
-            <Link href="/login" className="text-blue-400 hover:text-blue-300 font-medium">
+            <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
               Sign in
             </Link>
           </p>
 
-          <p className="mt-4 text-center text-xs text-gray-500">
-            By creating an account, you agree to our{' '}
-            <Link href="#" className="text-blue-400 hover:text-blue-300">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="#" className="text-blue-400 hover:text-blue-300">
-              Privacy Policy
-            </Link>
-          </p>
+            <p className="mt-8 text-center text-xs text-gray-500">
+              By creating an account, you agree to our{' '}
+              <Link href="/terms" className="text-blue-600 hover:text-blue-700">
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link href="/privacy" className="text-blue-600 hover:text-blue-700">
+                Privacy Policy
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -312,17 +353,17 @@ export default function RegisterPage() {
 function FeatureItem({ text }: { text: string }) {
   return (
     <div className="flex items-center text-sm">
-      <CheckIcon className="w-4 h-4 text-green-400 mr-3 flex-shrink-0" />
-      <span className="text-gray-400">{text}</span>
+      <CheckIcon className="w-4 h-4 text-green-300 mr-3 flex-shrink-0" />
+      <span className="text-blue-100">{text}</span>
     </div>
   )
 }
 
 function InfoCard({ title, description }: { title: string; description: string }) {
   return (
-    <div className="p-3 bg-gray-800/50 border border-gray-700/50 rounded-lg">
+    <div className="p-3 bg-white/10 border border-white/20 rounded-lg backdrop-blur-sm">
       <h3 className="text-sm font-semibold text-white mb-1">{title}</h3>
-      <p className="text-xs text-gray-400 leading-relaxed">{description}</p>
+      <p className="text-xs text-blue-100 leading-relaxed">{description}</p>
     </div>
   )
 }

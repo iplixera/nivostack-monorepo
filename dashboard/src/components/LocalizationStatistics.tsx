@@ -86,43 +86,43 @@ export default function LocalizationStatistics({ projectId, token }: Localizatio
     <div className="space-y-6">
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-gray-900 rounded-lg p-4">
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
           <div className="text-gray-400 text-sm mb-1">Total Keys</div>
-          <div className="text-2xl font-bold text-white">{stats.overview.totalKeys}</div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.overview.totalKeys}</div>
         </div>
-        <div className="bg-gray-900 rounded-lg p-4">
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
           <div className="text-gray-400 text-sm mb-1">Languages</div>
-          <div className="text-2xl font-bold text-white">{stats.overview.totalLanguages}</div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.overview.totalLanguages}</div>
         </div>
-        <div className="bg-gray-900 rounded-lg p-4">
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
           <div className="text-gray-400 text-sm mb-1">Translations</div>
-          <div className="text-2xl font-bold text-white">{stats.overview.totalTranslations}</div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.overview.totalTranslations}</div>
         </div>
-        <div className="bg-gray-900 rounded-lg p-4">
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
           <div className="text-gray-400 text-sm mb-1">Completion Rate</div>
-          <div className="text-2xl font-bold text-white">{stats.overview.completionRate.toFixed(1)}%</div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.overview.completionRate.toFixed(1)}%</div>
         </div>
       </div>
 
       {/* Language Statistics */}
-      <div className="bg-gray-900 rounded-lg p-4">
-        <h3 className="text-lg font-semibold text-white mb-4">Language Completion</h3>
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Language Completion</h3>
         <div className="space-y-3">
           {stats.languages.map((lang) => (
-            <div key={lang.id} className="bg-gray-800 rounded-lg p-3">
+            <div key={lang.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-white font-medium">{lang.name}</span>
+                  <span className="text-gray-900 dark:text-white font-medium">{lang.name}</span>
                   <span className="text-gray-500 text-sm">({lang.code})</span>
                 </div>
                 <div className="text-right">
-                  <div className="text-white font-medium">{lang.completionRate.toFixed(1)}%</div>
+                  <div className="text-gray-900 dark:text-white font-medium">{lang.completionRate.toFixed(1)}%</div>
                   <div className="text-gray-500 text-xs">
                     {lang.translatedKeys} / {lang.totalKeys}
                   </div>
                 </div>
               </div>
-              <div className="w-full bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                 <div
                   className="bg-blue-600 h-2 rounded-full transition-all"
                   style={{ width: `${lang.completionRate}%` }}
@@ -141,13 +141,13 @@ export default function LocalizationStatistics({ projectId, token }: Localizatio
 
       {/* Category Statistics */}
       {stats.categories.length > 0 && (
-        <div className="bg-gray-900 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-white mb-4">Category Breakdown</h3>
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Category Breakdown</h3>
           <div className="space-y-2">
             {stats.categories.map((cat, idx) => (
-              <div key={idx} className="flex items-center justify-between bg-gray-800 rounded-lg p-2">
+              <div key={idx} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-700">
                 <div>
-                  <div className="text-white font-medium">{cat.category}</div>
+                  <div className="text-gray-900 dark:text-white font-medium">{cat.category}</div>
                   <div className="text-gray-500 text-sm">{cat.totalKeys} keys</div>
                 </div>
                 <div className="text-right">
@@ -162,11 +162,11 @@ export default function LocalizationStatistics({ projectId, token }: Localizatio
 
       {/* Recent Activity */}
       {stats.recentActivity.length > 0 && (
-        <div className="bg-gray-900 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-white mb-4">Recent Activity</h3>
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h3>
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {stats.recentActivity.slice(0, 20).map((activity, idx) => (
-              <div key={idx} className="flex items-start gap-3 bg-gray-800 rounded-lg p-2">
+              <div key={idx} className="flex items-start gap-3 bg-gray-50 dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-700">
                 <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                 <div className="flex-1">
                   <div className="text-white text-sm">

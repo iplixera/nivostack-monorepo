@@ -80,10 +80,10 @@ const formatTime = (date: string) => {
 }
 
 const getStatusColor = (status: number) => {
-  if (status >= 200 && status < 300) return 'text-green-400'
-  if (status >= 400 && status < 500) return 'text-yellow-400'
-  if (status >= 500) return 'text-red-400'
-  return 'text-gray-400'
+  if (status >= 200 && status < 300) return 'text-green-600 dark:text-green-400'
+  if (status >= 400 && status < 500) return 'text-yellow-600 dark:text-yellow-400'
+  if (status >= 500) return 'text-red-600 dark:text-red-400'
+  return 'text-gray-500 dark:text-gray-400'
 }
 
 const formatBody = (body?: string) => {
@@ -143,12 +143,12 @@ export const DeviceCard = memo(function DeviceCard({
     {/* Delete Confirmation Modal */}
     {showDeleteConfirm && (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-gray-900 rounded-lg p-6 max-w-md mx-4 border border-gray-700">
-          <h3 className="text-lg font-semibold text-white mb-2">Delete Device?</h3>
-          <p className="text-gray-400 mb-4">
-            This will permanently delete the device <span className="text-white font-mono">{device.deviceCode || device.deviceId.slice(0, 12)}</span> and all its associated data:
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-md mx-4 border border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Delete Device?</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            This will permanently delete the device <span className="text-gray-900 dark:text-white font-mono">{device.deviceCode || device.deviceId.slice(0, 12)}</span> and all its associated data:
           </p>
-          <ul className="text-gray-400 text-sm mb-4 space-y-1">
+          <ul className="text-gray-600 dark:text-gray-400 text-sm mb-4 space-y-1">
             <li>All logs from this device</li>
             <li>All API traces from this device</li>
             <li>All sessions from this device</li>
@@ -160,7 +160,7 @@ export const DeviceCard = memo(function DeviceCard({
           <div className="flex gap-3 justify-end">
             <button
               onClick={() => setShowDeleteConfirm(false)}
-              className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+              className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               disabled={deletingDevice === device.id}
             >
               Cancel
@@ -191,7 +191,7 @@ export const DeviceCard = memo(function DeviceCard({
     )}
 
     {/* Device Card */}
-    <div className={`bg-gray-900 rounded-lg p-6 border ${selected ? 'border-blue-500' : 'border-gray-800'} ${device.debugModeEnabled ? 'border-blue-500/50' : ''}`}>
+    <div className={`bg-white dark:bg-gray-900 rounded-lg p-6 border ${selected ? 'border-blue-500' : 'border-gray-200 dark:border-gray-800'} ${device.debugModeEnabled ? 'border-blue-500/50' : ''}`}>
       {/* Device Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
@@ -203,27 +203,27 @@ export const DeviceCard = memo(function DeviceCard({
               className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-blue-500 focus:ring-blue-500"
             />
           )}
-          <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-lg">
+          <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-lg">
             {device.platform === 'android' ? '🤖' : '🍎'}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-white font-medium">
+              <h3 className="text-gray-900 dark:text-white font-medium">
                 {device.manufacturer ? `${device.manufacturer} ` : ''}{device.model || 'Unknown Device'}
               </h3>
               {device.debugModeEnabled && (
-                <span className="px-2 py-0.5 bg-gray-800 text-gray-300 text-xs rounded font-medium border border-gray-700">
+                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs rounded font-medium border border-gray-200 dark:border-gray-700">
                   Debug
                 </span>
               )}
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               {device.deviceCode && (
-                <span className="text-gray-300 text-sm font-mono bg-gray-800 px-2 py-0.5 rounded border border-gray-700">
+                <span className="text-gray-600 dark:text-gray-300 text-sm font-mono bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-700">
                   {device.deviceCode}
                 </span>
               )}
-              <span className="text-gray-500 text-sm font-mono">{device.deviceId.slice(0, 12)}...</span>
+              <span className="text-gray-400 dark:text-gray-500 text-sm font-mono">{device.deviceId.slice(0, 12)}...</span>
             </div>
           </div>
         </div>
@@ -232,7 +232,7 @@ export const DeviceCard = memo(function DeviceCard({
           {onViewDetails && (
             <button
               onClick={onViewDetails}
-              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors bg-gray-800 text-gray-300 hover:text-white border border-gray-700 hover:border-gray-600"
+              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
               title="View device details and notes"
             >
               View Details
@@ -268,7 +268,7 @@ export const DeviceCard = memo(function DeviceCard({
           <button
             onClick={() => setShowDeleteConfirm(true)}
             disabled={deletingDevice === device.id}
-            className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors bg-gray-800 text-gray-400 hover:text-white border border-gray-700 hover:border-gray-600 flex items-center gap-1"
+            className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 flex items-center gap-1"
             title="Delete device and all data"
           >
             {deletingDevice === device.id ? (
@@ -283,29 +283,29 @@ export const DeviceCard = memo(function DeviceCard({
             )}
           </button>
           <div className="text-right">
-            <div className="text-gray-400 text-sm">Last seen: {formatTime(device.lastSeenAt)}</div>
-            <div className="text-gray-500 text-xs">Registered: {formatTime(device.createdAt)}</div>
+            <div className="text-gray-500 dark:text-gray-400 text-sm">Last seen: {formatTime(device.lastSeenAt)}</div>
+            <div className="text-gray-400 dark:text-gray-500 text-xs">Registered: {formatTime(device.createdAt)}</div>
           </div>
         </div>
       </div>
 
       {/* User Info (if associated) */}
       {(device.userEmail || device.userName) && (
-        <div className="flex items-center gap-2 mb-3 p-2 bg-gray-800/50 rounded-lg">
-          <span className="text-gray-400">👤</span>
+        <div className="flex items-center gap-2 mb-3 p-2 bg-gray-100 dark:bg-gray-800/50 rounded-lg">
+          <span className="text-gray-500 dark:text-gray-400">👤</span>
           <div className="text-sm">
-            {device.userName && <span className="text-white">{device.userName}</span>}
-            {device.userName && device.userEmail && <span className="text-gray-500 mx-1">·</span>}
-            {device.userEmail && <span className="text-gray-400">{device.userEmail}</span>}
-            {device.userId && <span className="text-gray-600 text-xs ml-2">(ID: {device.userId})</span>}
+            {device.userName && <span className="text-gray-900 dark:text-white">{device.userName}</span>}
+            {device.userName && device.userEmail && <span className="text-gray-400 dark:text-gray-500 mx-1">·</span>}
+            {device.userEmail && <span className="text-gray-500 dark:text-gray-400">{device.userEmail}</span>}
+            {device.userId && <span className="text-gray-400 dark:text-gray-600 text-xs ml-2">(ID: {device.userId})</span>}
           </div>
         </div>
       )}
 
       {/* Debug Mode Expiry Info */}
       {device.debugModeEnabled && device.debugModeExpiresAt && (
-        <div className="flex items-center gap-2 mb-3 p-2 bg-gray-800/50 rounded-lg border border-gray-700">
-          <span className="text-gray-300 text-sm">
+        <div className="flex items-center gap-2 mb-3 p-2 bg-gray-100 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+          <span className="text-gray-600 dark:text-gray-300 text-sm">
             Debug expires: {formatTime(device.debugModeExpiresAt)}
           </span>
         </div>
@@ -314,85 +314,85 @@ export const DeviceCard = memo(function DeviceCard({
       {/* Device Info Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm">
         <div>
-          <span className="text-gray-400 text-xs">Platform</span>
-          <p className="text-white">{device.platform}</p>
+          <span className="text-gray-500 dark:text-gray-400 text-xs">Platform</span>
+          <p className="text-gray-900 dark:text-white">{device.platform}</p>
         </div>
         <div>
-          <span className="text-gray-400 text-xs">OS Version</span>
-          <p className="text-white">{device.osVersion || '-'}</p>
+          <span className="text-gray-500 dark:text-gray-400 text-xs">OS Version</span>
+          <p className="text-gray-900 dark:text-white">{device.osVersion || '-'}</p>
         </div>
         <div>
-          <span className="text-gray-400 text-xs">App Version</span>
-          <p className="text-white">{device.appVersion || '-'}</p>
+          <span className="text-gray-500 dark:text-gray-400 text-xs">App Version</span>
+          <p className="text-gray-900 dark:text-white">{device.appVersion || '-'}</p>
         </div>
         {(device as any).deviceCategory && (
           <div>
-            <span className="text-gray-400 text-xs">Category</span>
-            <p className="text-white capitalize">{(device as any).deviceCategory}</p>
+            <span className="text-gray-500 dark:text-gray-400 text-xs">Category</span>
+            <p className="text-gray-900 dark:text-white capitalize">{(device as any).deviceCategory}</p>
           </div>
         )}
         {(device as any).deviceBrand && (
           <div>
-            <span className="text-gray-400 text-xs">Brand</span>
-            <p className="text-white">{(device as any).deviceBrand}</p>
+            <span className="text-gray-500 dark:text-gray-400 text-xs">Brand</span>
+            <p className="text-gray-900 dark:text-white">{(device as any).deviceBrand}</p>
           </div>
         )}
         {(device as any).locale && (
           <div>
-            <span className="text-gray-400 text-xs">Locale</span>
-            <p className="text-white">{(device as any).locale}</p>
+            <span className="text-gray-500 dark:text-gray-400 text-xs">Locale</span>
+            <p className="text-gray-900 dark:text-white">{(device as any).locale}</p>
           </div>
         )}
         {(device as any).language && (
           <div>
-            <span className="text-gray-400 text-xs">Language</span>
-            <p className="text-white">{(device as any).language}</p>
+            <span className="text-gray-500 dark:text-gray-400 text-xs">Language</span>
+            <p className="text-gray-900 dark:text-white">{(device as any).language}</p>
           </div>
         )}
         {(device as any).timeZone && (
           <div>
-            <span className="text-gray-400 text-xs">Timezone</span>
-            <p className="text-white text-xs">{(device as any).timeZone}</p>
+            <span className="text-gray-500 dark:text-gray-400 text-xs">Timezone</span>
+            <p className="text-gray-900 dark:text-white text-xs">{(device as any).timeZone}</p>
           </div>
         )}
         {(device as any).appId && (
           <div>
-            <span className="text-gray-400 text-xs">App ID</span>
-            <p className="text-white text-xs font-mono truncate" title={(device as any).appId}>
+            <span className="text-gray-500 dark:text-gray-400 text-xs">App ID</span>
+            <p className="text-gray-900 dark:text-white text-xs font-mono truncate" title={(device as any).appId}>
               {(device as any).appId}
             </p>
           </div>
         )}
         {device.metadata?.sdk && (
           <div>
-            <span className="text-gray-400 text-xs">SDK Level</span>
-            <p className="text-white">{device.metadata.sdk}</p>
+            <span className="text-gray-500 dark:text-gray-400 text-xs">SDK Level</span>
+            <p className="text-gray-900 dark:text-white">{device.metadata.sdk}</p>
           </div>
         )}
         {device.metadata?.country && (
           <div>
-            <span className="text-gray-400 text-xs">Country</span>
-            <p className="text-white">{device.metadata.country}</p>
+            <span className="text-gray-500 dark:text-gray-400 text-xs">Country</span>
+            <p className="text-gray-900 dark:text-white">{device.metadata.country}</p>
           </div>
         )}
         {device.metadata?.carrier && (
           <div>
-            <span className="text-gray-400 text-xs">Carrier</span>
-            <p className="text-white">{device.metadata.carrier}</p>
+            <span className="text-gray-500 dark:text-gray-400 text-xs">Carrier</span>
+            <p className="text-gray-900 dark:text-white">{device.metadata.carrier}</p>
           </div>
         )}
       </div>
 
       {/* Additional Metadata Tags */}
       {device.metadata && (device.metadata.device || device.metadata.product) && (
-        <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-800">
+        <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-800">
           {device.metadata.device && (
-            <span className="px-2 py-0.5 bg-gray-800 text-gray-400 text-xs rounded">
+            <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs rounded">
               device: {device.metadata.device}
             </span>
           )}
           {device.metadata.product && (
-            <span className="px-2 py-0.5 bg-gray-800 text-gray-400 text-xs rounded">
+            <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs rounded">
               product: {device.metadata.product}
             </span>
           )}
@@ -420,7 +420,7 @@ export const LogItem = memo(function LogItem({
 }: LogItemProps) {
   return (
     <div
-      className={`bg-gray-900 rounded-lg overflow-hidden border-l-4 ${
+      className={`bg-white dark:bg-gray-900 rounded-lg overflow-hidden border-l-4 ${
         log.level === 'error' || log.level === 'assert'
           ? 'border-red-500'
           : log.level === 'warn'
@@ -435,7 +435,7 @@ export const LogItem = memo(function LogItem({
       {/* Log Header - Always Visible */}
       <button
         onClick={onToggleExpand}
-        className="w-full p-3 text-left hover:bg-gray-800/50 transition-colors"
+        className="w-full p-3 text-left hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors"
       >
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -453,11 +453,11 @@ export const LogItem = memo(function LogItem({
               {log.level.toUpperCase()}
             </span>
             {log.tag && (
-              <span className="px-2 py-0.5 bg-gray-700 text-gray-300 text-xs rounded shrink-0">
+              <span className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs rounded shrink-0">
                 {log.tag}
               </span>
             )}
-            <span className="text-white text-sm truncate">{log.message}</span>
+            <span className="text-gray-900 dark:text-white text-sm truncate">{log.message}</span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {log.device && (
@@ -473,11 +473,11 @@ export const LogItem = memo(function LogItem({
 
       {/* Expanded Details */}
       {isExpanded && (
-        <div className="px-4 pb-4 border-t border-gray-800">
+        <div className="px-4 pb-4 border-t border-gray-200 dark:border-gray-800">
           {/* Full Message */}
           <div className="mt-3">
             <span className="text-gray-500 text-xs font-medium">Message</span>
-            <pre className="mt-1 p-3 bg-gray-800 rounded text-sm text-gray-300 overflow-x-auto whitespace-pre-wrap">
+            <pre className="mt-1 p-3 bg-gray-100 dark:bg-gray-800 rounded text-sm text-gray-600 dark:text-gray-300 overflow-x-auto whitespace-pre-wrap">
               {log.message}
             </pre>
           </div>
@@ -488,19 +488,19 @@ export const LogItem = memo(function LogItem({
               {log.className && (
                 <div>
                   <span className="text-gray-500 text-xs">Class</span>
-                  <p className="text-gray-300 text-sm font-mono">{log.className}</p>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm font-mono">{log.className}</p>
                 </div>
               )}
               {log.functionName && (
                 <div>
                   <span className="text-gray-500 text-xs">Function</span>
-                  <p className="text-gray-300 text-sm font-mono">{log.functionName}</p>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm font-mono">{log.functionName}</p>
                 </div>
               )}
               {log.fileName && (
                 <div>
                   <span className="text-gray-500 text-xs">File</span>
-                  <p className="text-gray-300 text-sm font-mono">
+                  <p className="text-gray-600 dark:text-gray-300 text-sm font-mono">
                     {log.fileName}{log.lineNumber ? `:${log.lineNumber}` : ''}
                   </p>
                 </div>
@@ -508,7 +508,7 @@ export const LogItem = memo(function LogItem({
               {log.threadName && (
                 <div>
                   <span className="text-gray-500 text-xs">Thread</span>
-                  <p className="text-gray-300 text-sm font-mono">{log.threadName}</p>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm font-mono">{log.threadName}</p>
                 </div>
               )}
             </div>
@@ -519,13 +519,13 @@ export const LogItem = memo(function LogItem({
             {log.screenName && (
               <div>
                 <span className="text-gray-500 text-xs">Screen</span>
-                <p className="text-gray-300 text-sm">{log.screenName}</p>
+                <p className="text-gray-600 dark:text-gray-300 text-sm">{log.screenName}</p>
               </div>
             )}
             {log.device && (
               <div>
                 <span className="text-gray-500 text-xs">Device</span>
-                <p className="text-gray-300 text-sm">
+                <p className="text-gray-600 dark:text-gray-300 text-sm">
                   {log.device.model || log.device.deviceId} ({log.device.platform})
                 </p>
               </div>
@@ -533,14 +533,14 @@ export const LogItem = memo(function LogItem({
             {log.session && (
               <div>
                 <span className="text-gray-500 text-xs">Session</span>
-                <p className="text-gray-300 text-sm font-mono text-xs">
+                <p className="text-gray-600 dark:text-gray-300 text-sm font-mono text-xs">
                   {log.session.sessionToken.slice(0, 16)}...
                 </p>
               </div>
             )}
             <div>
               <span className="text-gray-500 text-xs">Timestamp</span>
-              <p className="text-gray-300 text-sm">{new Date(log.timestamp).toLocaleString()}</p>
+              <p className="text-gray-600 dark:text-gray-300 text-sm">{new Date(log.timestamp).toLocaleString()}</p>
             </div>
           </div>
 
@@ -548,7 +548,7 @@ export const LogItem = memo(function LogItem({
           {log.data && (
             <div className="mt-3">
               <span className="text-gray-500 text-xs font-medium">Additional Data</span>
-              <pre className="mt-1 p-3 bg-gray-800 rounded text-sm text-gray-300 overflow-x-auto">
+              <pre className="mt-1 p-3 bg-gray-100 dark:bg-gray-800 rounded text-sm text-gray-600 dark:text-gray-300 overflow-x-auto">
                 {JSON.stringify(log.data, null, 2)}
               </pre>
             </div>
@@ -579,21 +579,21 @@ export const TraceItem = memo(function TraceItem({
   onToggleMonitor
 }: TraceItemProps) {
   return (
-    <div className="bg-gray-900 rounded-lg overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden border border-gray-200 dark:border-transparent">
       {/* Trace Header - Clickable */}
       <button
         onClick={onToggleExpand}
-        className="w-full p-4 text-left hover:bg-gray-800/50 transition-colors"
+        className="w-full p-4 text-left hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3 min-w-0">
-            <span className="px-2 py-0.5 bg-gray-700 rounded text-xs font-medium text-gray-300 flex-shrink-0">
+            <span className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs font-medium text-gray-600 dark:text-gray-300 flex-shrink-0">
               {trace.method}
             </span>
             <span className={`font-medium flex-shrink-0 ${getStatusColor(trace.statusCode)}`}>
               {trace.statusCode || 'ERR'}
             </span>
-            <span className="text-gray-300 font-mono text-sm break-all">
+            <span className="text-gray-700 dark:text-gray-300 font-mono text-sm break-all">
               {trace.url}
             </span>
           </div>
@@ -614,7 +614,7 @@ export const TraceItem = memo(function TraceItem({
             </span>
           )}
           {trace.device && (
-            <span className="px-2 py-0.5 bg-gray-700/50 text-gray-400 rounded">
+            <span className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 rounded">
               {trace.device.platform} - {trace.device.model || trace.device.deviceId.slice(0, 8)}
             </span>
           )}
@@ -638,14 +638,14 @@ export const TraceItem = memo(function TraceItem({
 
       {/* Expanded Details */}
       {isExpanded && (
-        <div className="border-t border-gray-800 p-4 space-y-4">
+        <div className="border-t border-gray-200 dark:border-gray-800 p-4 space-y-4">
           {/* Request Section */}
           <div>
-            <h4 className="text-sm font-medium text-gray-300 mb-2">Request</h4>
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Request</h4>
             {trace.requestHeaders && Object.keys(trace.requestHeaders).length > 0 && (
               <div className="mb-2">
                 <span className="text-xs text-gray-500">Headers:</span>
-                <pre className="mt-1 p-2 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-32">
+                <pre className="mt-1 p-2 bg-gray-100 dark:bg-gray-950 rounded text-xs text-gray-500 dark:text-gray-400 overflow-x-auto max-h-32">
                   {JSON.stringify(trace.requestHeaders, null, 2)}
                 </pre>
               </div>
@@ -653,7 +653,7 @@ export const TraceItem = memo(function TraceItem({
             {trace.requestBody && (
               <div>
                 <span className="text-xs text-gray-500">Body:</span>
-                <pre className="mt-1 p-2 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-48">
+                <pre className="mt-1 p-2 bg-gray-100 dark:bg-gray-950 rounded text-xs text-gray-500 dark:text-gray-400 overflow-x-auto max-h-48">
                   {formatBody(trace.requestBody)}
                 </pre>
               </div>
@@ -665,11 +665,11 @@ export const TraceItem = memo(function TraceItem({
 
           {/* Response Section */}
           <div>
-            <h4 className="text-sm font-medium text-gray-300 mb-2">Response</h4>
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Response</h4>
             {trace.responseHeaders && Object.keys(trace.responseHeaders).length > 0 && (
               <div className="mb-2">
                 <span className="text-xs text-gray-500">Headers:</span>
-                <pre className="mt-1 p-2 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-32">
+                <pre className="mt-1 p-2 bg-gray-100 dark:bg-gray-950 rounded text-xs text-gray-500 dark:text-gray-400 overflow-x-auto max-h-32">
                   {JSON.stringify(trace.responseHeaders, null, 2)}
                 </pre>
               </div>
@@ -677,7 +677,7 @@ export const TraceItem = memo(function TraceItem({
             {trace.responseBody && (
               <div>
                 <span className="text-xs text-gray-500">Body:</span>
-                <pre className="mt-1 p-2 bg-gray-950 rounded text-xs text-gray-400 overflow-x-auto max-h-64">
+                <pre className="mt-1 p-2 bg-gray-100 dark:bg-gray-950 rounded text-xs text-gray-500 dark:text-gray-400 overflow-x-auto max-h-64">
                   {formatBody(trace.responseBody)}
                 </pre>
               </div>
@@ -688,25 +688,25 @@ export const TraceItem = memo(function TraceItem({
           </div>
 
           {/* Additional Metadata */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 border-t border-gray-800">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 border-t border-gray-200 dark:border-gray-800">
             {trace.ipAddress && (
               <div>
                 <span className="text-xs text-gray-500">IP Address</span>
-                <p className="text-sm text-gray-300">{trace.ipAddress}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">{trace.ipAddress}</p>
               </div>
             )}
             {trace.userAgent && (
               <div className="col-span-2">
                 <span className="text-xs text-gray-500">User Agent</span>
-                <p className="text-sm text-gray-300 truncate">{trace.userAgent}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 truncate">{trace.userAgent}</p>
               </div>
             )}
           </div>
 
           {/* Monitoring Toggle */}
-          <div className="border-t border-gray-800 pt-4 mt-4 flex items-center justify-between">
+          <div className="border-t border-gray-200 dark:border-gray-800 pt-4 mt-4 flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-medium text-gray-300">Monitor Endpoint</h4>
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Monitor Endpoint</h4>
               <p className="text-xs text-gray-500 mt-1">
                 {isMonitored
                   ? 'This endpoint is being monitored for errors'
@@ -720,7 +720,7 @@ export const TraceItem = memo(function TraceItem({
                 onChange={(e) => onToggleMonitor(e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-gray-300 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             </label>
           </div>
         </div>

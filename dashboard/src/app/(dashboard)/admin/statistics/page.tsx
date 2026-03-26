@@ -25,7 +25,7 @@ export default function AdminStatisticsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">Loading statistics...</div>
+        <div className="text-gray-500 dark:text-gray-400">Loading statistics...</div>
       </div>
     )
   }
@@ -33,13 +33,13 @@ export default function AdminStatisticsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Platform Statistics</h1>
-        <p className="text-gray-400">Platform-wide metrics and feature usage</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Platform Statistics</h1>
+        <p className="text-gray-500 dark:text-gray-400">Platform-wide metrics and feature usage</p>
       </div>
 
       {/* User Statistics */}
-      <div className="bg-gray-900 rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-white mb-4">User Statistics</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">User Statistics</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatItem label="Total Users" value={stats?.users?.total || 0} />
           <StatItem label="Active Subscriptions" value={stats?.users?.active || 0} color="green" />
@@ -49,8 +49,8 @@ export default function AdminStatisticsPage() {
       </div>
 
       {/* Platform Statistics */}
-      <div className="bg-gray-900 rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-white mb-4">Platform Statistics</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Platform Statistics</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <StatItem label="Total Projects" value={stats?.platform?.projects || 0} />
           <StatItem label="Total Devices" value={stats?.platform?.devices || 0} />
@@ -62,8 +62,8 @@ export default function AdminStatisticsPage() {
       </div>
 
       {/* Feature Usage */}
-      <div className="bg-gray-900 rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-white mb-4">Feature Usage</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-800">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Feature Usage</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <StatItem label="Business Configs" value={stats?.features?.businessConfig || 0} />
           <StatItem label="Localization Keys" value={stats?.features?.localization || 0} />
@@ -75,19 +75,18 @@ export default function AdminStatisticsPage() {
 
 function StatItem({ label, value, color = 'blue' }: { label: string; value: string | number; color?: string }) {
   const colorClasses: Record<string, string> = {
-    blue: 'text-blue-400',
-    green: 'text-green-400',
-    yellow: 'text-yellow-400',
-    red: 'text-red-400',
+    blue: 'text-blue-600 dark:text-blue-400',
+    green: 'text-green-600 dark:text-green-400',
+    yellow: 'text-yellow-600 dark:text-yellow-400',
+    red: 'text-red-600 dark:text-red-400',
   }
 
   return (
-    <div className="p-4 bg-gray-800 rounded">
-      <div className="text-sm text-gray-400 mb-1">{label}</div>
+    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded">
+      <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">{label}</div>
       <div className={`text-2xl font-bold ${colorClasses[color] || colorClasses.blue}`}>
         {value}
       </div>
     </div>
   )
 }
-

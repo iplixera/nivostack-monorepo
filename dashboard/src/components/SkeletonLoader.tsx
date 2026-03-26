@@ -52,7 +52,7 @@ export const Skeleton = memo(function Skeleton({
 
   return (
     <div
-      className={`bg-gray-700 ${getVariantClasses()} ${getAnimationClasses()} ${className}`}
+      className={`bg-gray-200 dark:bg-gray-700 ${getVariantClasses()} ${getAnimationClasses()} ${className}`}
       style={style}
     />
   )
@@ -123,7 +123,7 @@ export const SkeletonStats = memo(function SkeletonStats({ count = 4, className 
   return (
     <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${className}`}>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="bg-gray-800 rounded-lg p-4">
+        <div key={i} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
           <Skeleton variant="text" className="h-4 w-20 mb-2" />
           <Skeleton variant="text" className="h-8 w-16" />
         </div>
@@ -147,14 +147,14 @@ export const SkeletonTable = memo(function SkeletonTable({
   return (
     <div className={`space-y-2 ${className}`}>
       {/* Header */}
-      <div className="flex gap-4 p-3 bg-gray-800 rounded-lg">
+      <div className="flex gap-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
         {Array.from({ length: columns }).map((_, i) => (
           <Skeleton key={i} variant="text" className="h-4 flex-1" />
         ))}
       </div>
       {/* Rows */}
       {Array.from({ length: rows }).map((_, rowIndex) => (
-        <div key={rowIndex} className="flex gap-4 p-3 bg-gray-900 rounded">
+        <div key={rowIndex} className="flex gap-4 p-3 bg-white dark:bg-gray-900 rounded">
           {Array.from({ length: columns }).map((_, colIndex) => (
             <Skeleton key={colIndex} variant="text" className="h-4 flex-1" />
           ))}
@@ -196,7 +196,7 @@ export const SkeletonSessionList = memo(function SkeletonSessionList({
   return (
     <div className={`space-y-3 ${className}`}>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="bg-gray-800 rounded-lg p-4">
+        <div key={i} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Skeleton variant="rounded" width={32} height={32} />
@@ -230,7 +230,7 @@ export const SkeletonLogList = memo(function SkeletonLogList({
   return (
     <div className={`space-y-2 ${className}`}>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="bg-gray-900 rounded p-3 flex items-start gap-3">
+        <div key={i} className="bg-white dark:bg-gray-900 rounded p-3 flex items-start gap-3">
           <Skeleton variant="rounded" width={48} height={20} />
           <div className="flex-1 space-y-1">
             <Skeleton variant="text" className="h-4 w-full" />
@@ -256,7 +256,7 @@ export const SkeletonTraceList = memo(function SkeletonTraceList({
   return (
     <div className={`space-y-2 ${className}`}>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="bg-gray-900 rounded-lg p-4">
+        <div key={i} className="bg-white dark:bg-gray-900 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Skeleton variant="rounded" width={48} height={24} />
@@ -291,7 +291,7 @@ export const SkeletonCrashList = memo(function SkeletonCrashList({
   return (
     <div className={`space-y-3 ${className}`}>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="bg-gray-900 rounded-lg p-4 border border-red-900/50">
+        <div key={i} className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-red-200 dark:border-red-900/50">
           <div className="flex items-start justify-between mb-2">
             <div className="flex-1">
               <Skeleton variant="text" className="h-5 w-3/4 mb-2" />
@@ -328,7 +328,7 @@ export const SkeletonPage = memo(function SkeletonPage({ className = '' }: { cla
       <SkeletonStats />
 
       {/* Content */}
-      <div className="bg-gray-800 rounded-lg p-4">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
         <div className="flex items-center gap-4 mb-4">
           <Skeleton variant="rounded" width={200} height={40} />
           <Skeleton variant="rounded" width={120} height={40} />

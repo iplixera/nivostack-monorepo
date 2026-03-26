@@ -238,11 +238,11 @@ export default function NotificationBell() {
             fetchNotifications()
           }
         }}
-        className="relative p-2 rounded-lg hover:bg-gray-800 transition-colors"
+        className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         aria-label="Notifications"
       >
         <svg
-          className="w-6 h-6 text-gray-400"
+          className="w-6 h-6 text-gray-500 dark:text-gray-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -262,9 +262,9 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-gray-900 rounded-lg shadow-xl border border-gray-800 z-50 max-h-[600px] flex flex-col">
-          <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Notifications</h3>
+        <div className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-800 z-50 max-h-[600px] flex flex-col">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Notifications</h3>
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
@@ -277,11 +277,11 @@ export default function NotificationBell() {
 
           <div className="overflow-y-auto flex-1">
             {loading ? (
-              <div className="p-8 text-center text-gray-400">Loading...</div>
+              <div className="p-8 text-center text-gray-500 dark:text-gray-400">Loading...</div>
             ) : notifications.length === 0 ? (
-              <div className="p-8 text-center text-gray-400">
+              <div className="p-8 text-center text-gray-500 dark:text-gray-400">
                 <svg
-                  className="w-12 h-12 mx-auto mb-4 text-gray-600"
+                  className="w-12 h-12 mx-auto mb-4 text-gray-400 dark:text-gray-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -296,13 +296,13 @@ export default function NotificationBell() {
                 <p>No notifications</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-800">
+              <div className="divide-y divide-gray-200 dark:divide-gray-800">
                 {notifications.map((notification) => (
                   <button
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
-                    className={`w-full text-left p-4 hover:bg-gray-800 transition-colors ${
-                      !notification.read ? 'bg-gray-800/50' : ''
+                    className={`w-full text-left p-4 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+                      !notification.read ? 'bg-gray-100 dark:bg-gray-800/50' : ''
                     }`}
                   >
                     <div className="flex items-start space-x-3">
@@ -317,7 +317,7 @@ export default function NotificationBell() {
                         <div className="flex items-start justify-between">
                           <p
                             className={`text-sm font-medium ${
-                              notification.read ? 'text-gray-400' : 'text-white'
+                              notification.read ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'
                             }`}
                           >
                             {notification.title}
@@ -326,10 +326,10 @@ export default function NotificationBell() {
                             <span className="ml-2 flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full"></span>
                           )}
                         </div>
-                        <p className="mt-1 text-sm text-gray-400 line-clamp-2">
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
                           {notification.message}
                         </p>
-                        <p className="mt-2 text-xs text-gray-500">
+                        <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
                           {formatTimeAgo(notification.createdAt)}
                         </p>
                       </div>

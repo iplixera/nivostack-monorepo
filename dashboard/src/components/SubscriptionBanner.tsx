@@ -48,12 +48,12 @@ export default function SubscriptionBanner() {
   // Admin disabled - highest priority
   if (isAdminDisabled) {
     return (
-      <div className="bg-red-900 border-b border-red-700 text-white text-center p-4 mb-6">
+      <div className="bg-red-100 dark:bg-red-900 border-b border-red-300 dark:border-red-700 text-red-900 dark:text-white text-center p-4 mb-6">
         <div className="max-w-7xl mx-auto">
           <p className="text-sm font-medium mb-1">
-            ⚠️ Your subscription has been disabled by an administrator
+            Your subscription has been disabled by an administrator
           </p>
-          <p className="text-xs text-red-200">
+          <p className="text-xs text-red-700 dark:text-red-200">
             Some features may be unavailable. Please contact support for assistance.
           </p>
         </div>
@@ -66,17 +66,17 @@ export default function SubscriptionBanner() {
   return (
     <div className={`border-l-4 p-4 mb-6 rounded ${
       isExpired
-        ? 'bg-red-900/20 border-red-600'
-        : 'bg-yellow-900/20 border-yellow-600'
+        ? 'bg-red-50 dark:bg-red-900/20 border-red-600'
+        : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-600'
     }`}>
       <div className="flex items-center justify-between">
         <div>
           <h3 className={`font-semibold mb-1 ${
-            isExpired ? 'text-red-400' : 'text-yellow-400'
+            isExpired ? 'text-red-600 dark:text-red-400' : 'text-yellow-600 dark:text-yellow-400'
           }`}>
             {isExpired ? 'Trial Expired' : 'Trial Ending Soon'}
           </h3>
-          <p className="text-gray-300 text-sm">
+          <p className="text-gray-600 dark:text-gray-300 text-sm">
             {isExpired
               ? 'Your free trial has ended. SDK is disabled. Upgrade to continue using NivoStack and access your data.'
               : `Your free trial expires in ${usage.daysRemaining} ${usage.daysRemaining === 1 ? 'day' : 'days'}. Upgrade to continue using all features.`}

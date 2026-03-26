@@ -1,8 +1,33 @@
 @import "tailwindcss";
 
+/* ========================================
+   NivoStack Studio Theme System
+   Default: Light theme (matches production website)
+   ======================================== */
+
+/* Override dark mode to use class-based selector instead of media query */
+@variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #111827;
+
+  /* NivoStack Design System - Light Theme */
+  --nivo-bg: #f7f8fb;
+  --nivo-panel: #ffffff;
+  --nivo-panel-secondary: #ffffff;
+  --nivo-text: #0b1220;
+  --nivo-muted: #5b6b86;
+  --nivo-border: rgba(15, 25, 45, 0.12);
+  --nivo-accent: #2563eb;
+  --nivo-ok: #059669;
+  --nivo-warn: #b7791f;
+  --nivo-danger: #e11d48;
+  --nivo-shadow: 0 12px 30px rgba(15, 25, 45, 0.10);
+  --nivo-radius: 16px;
+  --nivo-radius-sm: 12px;
+  --nivo-max-width: 1440px;
+  --nivo-padding: 24px;
 }
 
 @theme inline {
@@ -12,15 +37,80 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Dark theme (for dashboard internal pages) */
+html.dark,
+[data-theme="dark"] {
+  --background: #030712;
+  --foreground: #f9fafb;
+
+  /* NivoStack Design System - Dark Theme */
+  --nivo-bg: #0b1020;
+  --nivo-panel: rgba(255, 255, 255, 0.03);
+  --nivo-panel-secondary: rgba(255, 255, 255, 0.02);
+  --nivo-text: #e8eefc;
+  --nivo-muted: #9fb0d0;
+  --nivo-border: rgba(255, 255, 255, 0.10);
+  --nivo-accent: #6aa6ff;
+  --nivo-ok: #5ee6a8;
+  --nivo-warn: #f5c96a;
+  --nivo-danger: #ff6a6a;
+  --nivo-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* 12-Column Grid System */
+.nivo-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 12px;
+}
+
+/* Container with max-width */
+.nivo-container {
+  width: min(var(--nivo-max-width), 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar styling for light theme (default) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Dark theme scrollbar */
+html.dark ::-webkit-scrollbar-track,
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+html.dark ::-webkit-scrollbar-thumb,
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #374151;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover,
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
 }

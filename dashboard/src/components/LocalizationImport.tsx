@@ -118,12 +118,12 @@ export default function LocalizationImport({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-white">Import Translations</h3>
+      <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-800">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Import Translations</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -134,11 +134,11 @@ export default function LocalizationImport({
         <div className="p-4 space-y-4">
           {/* File Selection */}
           <div>
-            <label className="block text-sm text-gray-400 mb-2">File Format</label>
+            <label className="block text-sm text-gray-500 dark:text-gray-400 mb-2">File Format</label>
             <select
               value={format}
               onChange={(e) => setFormat(e.target.value as any)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
             >
               <option value="csv">CSV</option>
               <option value="json">JSON</option>
@@ -151,11 +151,11 @@ export default function LocalizationImport({
           {/* Language Selection */}
           {requiresLanguage && (
             <div>
-              <label className="block text-sm text-gray-400 mb-2">Language</label>
+              <label className="block text-sm text-gray-500 dark:text-gray-400 mb-2">Language</label>
               <select
                 value={languageCode}
                 onChange={(e) => setLanguageCode(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                 required={requiresLanguage}
               >
                 <option value="">Select language...</option>
@@ -170,12 +170,12 @@ export default function LocalizationImport({
 
           {/* File Upload */}
           <div>
-            <label className="block text-sm text-gray-400 mb-2">File</label>
+            <label className="block text-sm text-gray-500 dark:text-gray-400 mb-2">File</label>
             <input
               type="file"
               onChange={handleFileChange}
               accept={format === 'csv' ? '.csv' : format === 'json' ? '.json' : format === 'android_xml' ? '.xml' : format === 'ios_strings' ? '.strings' : '.xliff'}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
             />
             {file && (
               <p className="text-sm text-gray-500 mt-1">{file.name} ({(file.size / 1024).toFixed(2)} KB)</p>
@@ -190,18 +190,18 @@ export default function LocalizationImport({
                 type="checkbox"
                 checked={options.createMissingKeys}
                 onChange={(e) => setOptions({ ...options, createMissingKeys: e.target.checked })}
-                className="rounded bg-gray-800 border-gray-700"
+                className="rounded bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700"
               />
-              <span className="text-gray-300 text-sm">Create missing keys</span>
+              <span className="text-gray-600 dark:text-gray-300 text-sm">Create missing keys</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={options.updateExisting}
                 onChange={(e) => setOptions({ ...options, updateExisting: e.target.checked })}
-                className="rounded bg-gray-800 border-gray-700"
+                className="rounded bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700"
               />
-              <span className="text-gray-300 text-sm">Update existing translations</span>
+              <span className="text-gray-600 dark:text-gray-300 text-sm">Update existing translations</span>
             </label>
             <div>
               <input
@@ -216,11 +216,11 @@ export default function LocalizationImport({
 
           {/* Preview */}
           {preview && (
-            <div className="bg-gray-800 rounded-lg p-4">
-              <h4 className="text-white font-medium mb-2">Preview ({preview.length} items)</h4>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-300 dark:border-gray-700">
+              <h4 className="text-gray-900 dark:text-white font-medium mb-2">Preview ({preview.length} items)</h4>
               <div className="max-h-40 overflow-y-auto space-y-1">
                 {preview.slice(0, 10).map((item, idx) => (
-                  <div key={idx} className="text-sm text-gray-400">
+                  <div key={idx} className="text-sm text-gray-500 dark:text-gray-400">
                     <code className="text-blue-400">{item.key}</code>: {item.value.substring(0, 50)}
                     {item.value.length > 50 ? '...' : ''}
                   </div>
@@ -237,8 +237,8 @@ export default function LocalizationImport({
             <div className={`rounded-lg p-4 ${result.success ? 'bg-green-900/50 border border-green-500' : 'bg-red-900/50 border border-red-500'}`}>
               {result.success && result.stats ? (
                 <div>
-                  <h4 className="text-white font-medium mb-2">Import Successful!</h4>
-                  <div className="text-sm text-gray-300 space-y-1">
+                  <h4 className="text-gray-900 dark:text-white font-medium mb-2">Import Successful!</h4>
+                  <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
                     <div>Keys created: {result.stats.keysCreated}</div>
                     <div>Keys updated: {result.stats.keysUpdated}</div>
                     <div>Translations created: {result.stats.translationsCreated}</div>
@@ -252,7 +252,7 @@ export default function LocalizationImport({
                 </div>
               ) : (
                 <div>
-                  <h4 className="text-white font-medium mb-2">Import Failed</h4>
+                  <h4 className="text-gray-900 dark:text-white font-medium mb-2">Import Failed</h4>
                   <div className="text-sm text-red-300">
                     {result.errors?.map((err, idx) => (
                       <div key={idx}>{err.message}</div>
@@ -264,10 +264,10 @@ export default function LocalizationImport({
           )}
         </div>
 
-        <div className="p-4 border-t border-gray-800 flex justify-end gap-2">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800 flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-400 hover:text-white"
+            className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
             disabled={loading}
           >
             Cancel
@@ -276,7 +276,7 @@ export default function LocalizationImport({
             <button
               onClick={handlePreview}
               disabled={loading || (requiresLanguage && !languageCode)}
-              className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50"
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50"
             >
               Preview
             </button>
